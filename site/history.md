@@ -32,6 +32,7 @@ For a full list of releases, see
 Downloads are available on the
 [downloads page]({{ site.baseurl }}/download).
 
+{% comment %}
 ## <a href="https://github.com/apache/{{ site.data.project.incubator_slash_name }}/releases/tag/{{ site.data.project.unix_name }}-0.2.0">0.2.0</a> / 2015-11-10
 {: #v0-2-0}
 
@@ -48,3 +49,4 @@ New features
 {: #v0-1-0}
 
 Our first release!
+{% endcomment %}

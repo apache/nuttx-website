@@ -36,7 +36,7 @@ You can:
 * Use our project and provide a feedback.
 * Provide us with the use-cases.
 * Report bugs and submit patches.
-* Contribute code, javadocs, documentation.
+* Contribute code or documentation.
 
 Visit the [Contributing] page for more information.
 
