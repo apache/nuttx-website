@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 source 'https://rubygems.org'
-gem 'github-pages'
+gem 'github-pages', '~> 203'
 gem 'rouge'
-gem 'jekyll-oembed', :require => 'jekyll_oembed'
 # End Gemfile
