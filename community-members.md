@@ -32,7 +32,12 @@ limitations under the License.
 {% if site.data.contributors %}
 <table class="table table-hover">
     <tr>
-        <th><b></b></th><th><b>Full Name</b></th><th><b>Apache ID</b></th><th><b>GitHub</b><th><b>Role</b></th><th><b>Affiliation</b></th>
+        <th></th>
+        <th><b>Full Name</b></th>
+        <th><b>Apache ID</b></th>
+        <th><b>GitHub</b></th>
+        <th><b>Role</b></th>
+        <th><b>Affiliation</b></th>
     </tr>
     {% for member in site.data.contributors %}
         <tr>
