@@ -38,4 +38,4 @@ as fork()).
 
 ## Documentation
 
-Extensive documentation can be found on the project [wiki](https://cwiki.apache.org/{{ site.data.project.wiki }}/Nuttx)
+Extensive documentation can be found on the project [wiki](https://cwiki.apache.org/{{ site.data.project.wiki }}/Nuttx).
