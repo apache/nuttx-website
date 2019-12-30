@@ -81,5 +81,5 @@ see the results at
 
 To add a contributor to the project, or to modify existing contributors,
 edit `site/_data/contributors.yml`.
-The [project members]([http://localhost:4000/community.html#project-members)
+The [project members](http://localhost:4000/community.html#project-members)
 list will re-generate.
