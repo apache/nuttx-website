@@ -57,13 +57,13 @@ Get help using {{ site.data.project.short_name }} or contribute to the project o
 
 #### Bug Reports
 
-Found bug? Enter an issue in the [Issue Tracker](https://issues.apache.org/jira/browse/{{ site.data.project.jira }}).
+Found bug? Send an email to the dev list {{ site.data.project.dev_list }}.
 
 Before submitting an issue, please:
 
 * Verify that the bug does in fact exist.
-* Search the issue tracker to verify there is no existing issue reporting the bug you've found.
-* Consider tracking down the bug yourself in the Wink's source and submitting a patch along with your bug report. This is a great time saver for the Wink developers and helps ensure the bug will be fixed quickly.
+* Search the mailing list [archives]({{ site.data.project.dev_list_archive_mailarchive }}) to verify there is no existing issue reporting the bug you've found.
+* Consider tracking down the bug yourself in the NuttX's source and submitting a patch along with your bug report. This is a great time saver for the NuttX developers and helps ensure the bug will be fixed quickly.
 
 
 
@@ -72,12 +72,11 @@ Before submitting an issue, please:
 Enhancement requests for new features are also welcome. The more concrete and rationale the request is, the greater the chance it will incorporated into future releases.
 
 
-  [https://issues.apache.org/jira/browse/{{ site.data.project.jira }}](https://issues.apache.org/jira/browse/{{ site.data.project.jira }})
-
-
 ### Source Code
 
-The project sources are accessible via the [source code repository]({{ site.data.project.source_repository }}) which is also mirrored in [GitHub]({{ site.data.project.source_repository_mirror }})
+The project sources are in two repositories:
+* Core OS accessible via the [source code repository]({{ site.data.project.source_repository_os }}) which is also mirrored in [GitHub]({{ site.data.project.source_repository_os_mirror }})
+* Apps accessible via the [source code repository]({{ site.data.project.source_repository_apps }}) which is also mirrored in [GitHub]({{ site.data.project.source_repository_apps_mirror }})
 
 
 ### Website Source Code
