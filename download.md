@@ -26,55 +26,77 @@ limitations under the License.
 
 ## {{ site.data.project.name }} Downloads
 
-{{ site.data.project.name }} is released as a source artifact, and also through Maven.
+{{ site.data.project.name }} is released as two source artifacts one for the OS
+and another for the integrated Apps.
 
 ### Release Artifacts
 
-<table class="table table-hover sortable">
-    <thead>
-        <tr>
-            <th><b>Name</b></th>
-            <th><b>Archive</b></th>
-            <th><b>SHA-512</b></th>
-            <th><b>Signature</b></th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ site.data.project.name }} {{site.data.project.latest_release}} (tar.gz)</td>
-            <td><a href="http://www.apache.org/dyn/closer.lua/{{site.data.project.incubator_slash_name}}/{{site.data.project.latest_release}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{site.data.project.latest_release}}-bin.tar.gz">tar.gz</a></td>
-            <td><a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{site.data.project.latest_release}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{site.data.project.latest_release}}-bin.tar.gz.sha512">SHA-512</a></td>
-            <td><a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{site.data.project.latest_release}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{site.data.project.latest_release}}-bin.tar.gz.asc">ASC</a></td>
-        </tr>
-        <tr>
-            <td>{{ site.data.project.name }} {{site.data.project.latest_release}} (source tar.gz)</td>
-            <td><a href="http://www.apache.org/dyn/closer.lua/{{site.data.project.incubator_slash_name}}/{{site.data.project.latest_release}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{site.data.project.latest_release}}-src.tar.gz">tar.gz</a></td>
-            <td><a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{site.data.project.latest_release}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{site.data.project.latest_release}}-src.tar.gz.sha512">SHA-512</a></td>
-            <td><a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{site.data.project.latest_release}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{site.data.project.latest_release}}-src.tar.gz.asc">ASC</a></td>
-        </tr>
-        <!--tr>
-            <td>Release Notes</td>
-            <td><a href="/releases/spark/{{ site.data.project.latest_release }}/release-notes">{{ site.data.project.latest_release }}</a></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr-->
-    </tbody>
+{% assign releases = site.releases  | where: 'released', 'true' | where: 'apache', 'true' | sort: 'date' %}
+{% if releases.size > 0 %}
+<table class="table">
+    <tr>
+        <th class="col-md-1">Version</th>
+        <th>Summary</th>
+        <th class="col-md-1 text-right">Archive</th>
+        <th class="col-md-1 text-right">SHA-512</th>
+        <th class="col-md-1 text-right">Signature</th>
+        <th class="col-md-2 text-right">Release&nbsp;Date</th>
+    </tr>
+    {% for release in releases reversed %}
+        {% if release.title %}
+            <tr>
+                <td style="vertical-align: middle; line-height: 2.5em;" class="col-md-1"><a href="{{ release.url | prepend: site.baseurl }}">{{ release.title }}</a></td>
+                <td style="vertical-align: middle;" >{{ release.summary }}</td>
+                <td style="vertical-align: middle;" class="col-md-1 text-right"><a href="{{release.artifact-root}}/{{source-os-dist}}">OS</a>/<a href="{{release.artifact-root}}/{{source-apps-dist}}">Apps</a></td>
+                <td><a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{release.title}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{release.title}}-os.tar.gz.sha512">OS SHA-512</a>/<a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{release.title}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{release.title}}-os.tar.gz.sha512">Apps SHA-512</a></td>
+                <td><a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{release.title}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{release.title}}-os.tar.gz.asc">OS ASC</a>/<a href="http://www.apache.org/dist/{{site.data.project.incubator_slash_name}}/{{release.title}}/{{site.data.project.unix_name}}/{{site.data.project.unix_name}}-{{release.title}}-os.tar.gz.asc">Apps ASC</a></td>
+                <td style="vertical-align: middle;" class="col-md-2 text-right">{{ release.date | date: "%Y-%m-%d" }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
 </table>
 
-Choose a source distribution in either *tar* or *zip* format,
+Choose a source distribution in *tar.gz* format,
 and [verify](http://www.apache.org/dyn/closer.cgi#verify)
 using the corresponding *pgp* signature (using the committer file in
 [KEYS](http://www.apache.org/dist/{{ site.data.project.incubator_slash_name }}/KEYS)).
 If you cannot do that, the *md5* hash file may be used to check that the
 download has completed OK.
 
-For fast downloads, current source distributions are hosted on mirror servers;
-older source distributions are in the
-[archive](http://archive.apache.org/dist/{{ site.data.project.incubator_slash_name }}/).
-If a download from a mirror fails, retry, and the second download will likely
-succeed.
+For fast downloads, current source distributions are hosted on mirror servers.
 
 For security, hash and signature files are always hosted at
 [Apache](https://www.apache.org/dist).
+{% else %}
+<div class="alert alert-warning">
+No official Apache releases have been made yet!
+</div>
+{% endif %}
 
+<div class="alert alert-warning">
+    All releases below are from prior to Apache NuttX's acceptance into the
+    Incubator. They are not Apache Software Foundation releases, and are
+    licensed primarily under the
+    <a href="https://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause license </a>.
+    See COPYING file for more details on a specific releases licensing.
+</div>
+
+{% assign releases = site.releases  | where: 'released', 'true' | where: 'apache', 'false' | sort: 'date' %}
+<table class="table">
+    <tr>
+        <th class="col-md-1">Version</th>
+        <th>Summary</th>
+        <th class="col-md-1 text-right">Archive</th>
+        <th class="col-md-2 text-right">Release&nbsp;Date</th>
+    </tr>
+    {% for release in releases reversed %}
+        {% if release.title %}
+            <tr>
+                <td style="vertical-align: middle; line-height: 2.5em;" class="col-md-1"><a href="{{ release.url | prepend: site.baseurl }}">{{ release.title }}</a></td>
+                <td style="vertical-align: middle;" >{{ release.summary }}</td>
+                <td style="vertical-align: middle;" class="col-md-1 text-right"><a href="{{release.artifact-root}}{{release.source-os-dist}}">OS</a>/<a href="{{release.artifact-root}}{{release.source-app-dist}}">Apps</a></td>
+                <td style="vertical-align: middle;" class="col-md-2 text-right">{{ release.date | date: "%Y-%m-%d" }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+</table>
