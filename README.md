@@ -17,42 +17,7 @@ limitations under the License.
 {% endcomment %}
 -->
 
-# Apache Website Template
-
-This project contains a template web site that aims to follow all the various required
-Apache Website Policies.
-
-This template was generated using [Jekyll](https://jekyllrb.com/).
-
-To use it, copy the `site` directory into your project.  You must also
-include licensing information from the `LICENSE` and `NOTICE` files in
-your own project.
-
-# How to deploy your project's web site
-
-(In the following instructions we assume that your project is called
-'Apache Foo'; search and replace with your actual project name.)
-
-## Setup
-
-```
-1. cd site
-2. svn co https://svn.apache.org/repos/asf/foo/site target
-3. sudo apt-get install rubygems ruby2.1-dev zlib1g-dev
-4. sudo gem install bundler github-pages jekyll
-5. bundle install
-```
-
-## Add javadoc
-
-If your project supports javadoc, you can copy the generated javadoc
-into svn each time you need to re-generate.
-
-```
-1. cd ..
-2. mvn -DskipTests site
-3. mv target/site/apidocs site/target
-```
+# How to update the project's web site
 
 ## Running locally
 
@@ -66,16 +31,8 @@ running from within the directory:
 
 ## Pushing to site
 
-```
-1. cd site/target
-2. svn status
-3. You'll need to `svn add` any new files
-4. svn ci
-```
-
-Within a few minutes, svnpubsub should kick in and you'll be able to
-see the results at
-[foo.apache.org](https://foo.apache.org/).
+Site is updated by a CI job that runs the `publish.sh` script. Once this
+runs it the results will be visible [https://nuttx.apache.org](here).
 
 ## Adding contributors
 
