@@ -39,3 +39,13 @@ as fork()).
 ## Documentation
 
 Extensive documentation can be found on the project [wiki](https://cwiki.apache.org/{{ site.data.project.wiki }}/Nuttx).
+
+
+## News and Announcements
+
+* **2020-05-11** &mdash; We are pleased to announce the release of Apache NuttX
+  (Incubating) 9.0. For more information about this release, please see the
+  [release announcement](https://lists.apache.org/thread.html/rf7678c2a47c71ba9acb2c4a5392cea75d936a44f32d49f4f287b4aa9%40%3Cgeneral.incubator.apache.org%3E)
+  and the [release notes](releases/9.0.0/).
+  To get this release from the nearest mirror, please visit our
+  [download page](https://nuttx.apache.org/download/).
