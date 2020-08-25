@@ -18,20 +18,28 @@
 
 set -e
 
+echo "Prior to running this make sure that the NuttX repo is checked out"
+echo "to nuttx/master and the documentation html has been generated."
+
 gem install bundler:2.1.2
 bundle config set path 'vendor/bundle'
 bundle install 
 bundle exec jekyll clean --source .
 bundle exec jekyll build --source .
 
-COMMIT_HASH=`git rev-parse HEAD`
+mkdir -p target/docs/
+cp -r nuttx/master/Documentation/_build/html target/docs/latest
+
+COMMIT_HASH_WEB=`git rev-parse HEAD`
+COMMIT_HASH_NUTTX=`git -C nuttx/master rev-parse HEAD`
 git checkout asf-site
 #git pull --rebase
 rm -rf content
 mv target content
 git add content
-echo "Publishing changes from master branch $COMMIT_HASH"
-git commit -a -m "Publishing from $COMMIT_HASH"
+echo "Publishing website master branch $COMMIT_HASH_WEB"
+echo "Publishing docs from NuttX master branch $COMMIT_HASH_WEB"
+git commit -a -m "Publishing web: $COMMIT_HASH_WEB docs: $COMMIT_HASH_NUTTX"
 echo " "
 echo "==================================================================="
 echo "You are now on the asf-site branch with your new changes committed."
