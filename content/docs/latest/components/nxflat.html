@@ -115,7 +115,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of Nuttx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">OS Components</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="nsh/index.html">NuttShell (NSH)</a></li>
@@ -142,7 +142,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#making-an-nxflat-module">Making an NXFLAT module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#binary-loader-apis">Binary Loader APIs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#appendix-a-no-got-operation">Appendix A: No GOT Operation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#appendix-b-pic-text-workaround">Appendix B: PIC Text Workaround</a></li>
 </ul>
@@ -535,106 +534,9 @@ and this linker script should be used.</p></li>
 <p><strong>Target 4</strong>. Finally, this target will use the <code class="docutils literal notranslate"><span class="pre">hello.r2</span></code> relocatable
 object to create the final, NXFLAT module <code class="docutils literal notranslate"><span class="pre">hello</span></code> by executing
 <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code>.</p>
+<p><strong>binfmt Registration</strong> NXFLAT calls <a class="reference internal" href="binfmt.html#c.register_binfmt" title="register_binfmt"><code class="xref c c-func docutils literal notranslate"><span class="pre">register_binfmt()</span></code></a> to
+incorporate itself into the system.</p>
 </div>
-</div>
-<div class="section" id="binary-loader-apis">
-<h2>Binary Loader APIs<a class="headerlink" href="#binary-loader-apis" title="Permalink to this headline">¶</a></h2>
-<p><strong>Relevant Header Files:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p>The interface to the binary loader is described in the header file
-<code class="docutils literal notranslate"><span class="pre">`include/nuttx/binfmt/binfmt.h</span></code>.
-A brief summary of the APIs prototyped in that header file are listed
-below.</p></li>
-<li><p>NXFLAT APIs needed to register NXFLAT as a binary loader appear in
-the header file
-<code class="docutils literal notranslate"><span class="pre">include/nuttx/binfmt/nxflat.h</span></code>.</p></li>
-<li><p>The format of an NXFLAT object itself is described in the header
-file:
-<code class="docutils literal notranslate"><span class="pre">include/nuttx/binfmt/nxflat.h</span></code>.</p></li>
-</ul>
-</div></blockquote>
-<p><strong>binfmt Registration</strong> These first interfaces are used only by a binary
-loader module, such as NXFLAT itself. NXFLAT (or any future binary
-loader) calls <code class="docutils literal notranslate"><span class="pre">register_binfmt()</span></code> to incorporate itself into the
-system. In this way, the binary loader logic is dynamically extensible
-to support any kind of loader. Normal application code should not be
-concerned with these interfaces.</p>
-<dl class="c function">
-<dt id="c.register_binfmt">
-int <code class="sig-name descname">register_binfmt</code><span class="sig-paren">(</span>FAR <em class="property">struct</em> <a class="reference internal" href="binfmt.html#c.binfmt_s" title="binfmt_s">binfmt_s</a> *<em>binfmt</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Register a loader for a binary format</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>This is a NuttX internal function so it follows the
-convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success and a
-negated errno is returned on failure.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="c function">
-<dt id="c.unregister_binfmt">
-int <code class="sig-name descname">unregister_binfmt</code><span class="sig-paren">(</span>FAR <em class="property">struct</em> <a class="reference internal" href="binfmt.html#c.binfmt_s" title="binfmt_s">binfmt_s</a> *<em>binfmt</em><span class="sig-paren">)</span><br /></dt>
-<dd><blockquote>
-<div><p>Register a loader for a binary format</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>This is a NuttX internal function so it follows the
-convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success and a
-negated errno is returned on failure.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<p><strong>Binary Loader Interfaces</strong>. The remaining APIs are called by user
-applications to maintain modules in the file system.</p>
-<dl class="c function">
-<dt id="c.load_module">
-int <code class="sig-name descname">load_module</code><span class="sig-paren">(</span>FAR <em class="property">struct</em> <a class="reference internal" href="binfmt.html#c.binary_s" title="binary_s">binary_s</a> *<em>bin</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Load a module into memory, bind it to an exported symbol take,
-and prep the module for execution.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>This is a NuttX internal function so it follows the
-convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success and a
-negated errno is returned on failure.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="c function">
-<dt id="c.unload_module">
-int <code class="sig-name descname">unload_module</code><span class="sig-paren">(</span>FAR <em class="property">struct</em> <a class="reference internal" href="binfmt.html#c.binary_s" title="binary_s">binary_s</a> *<em>bin</em><span class="sig-paren">)</span><br /></dt>
-<dd><blockquote>
-<div><p>Unload a (non-executing) module from memory. If the module
-has been started (via <a class="reference internal" href="binfmt.html#c.exec_module" title="exec_module"><code class="xref c c-func docutils literal notranslate"><span class="pre">exec_module()</span></code></a>), calling this
-will be fatal.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>This is a NuttX internal function so it follows the
-convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success and a
-negated errno is returned on failure.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="c function">
-<dt id="c.exec_module">
-int <code class="sig-name descname">exec_module</code><span class="sig-paren">(</span>FAR <em class="property">const</em> <em class="property">struct</em> <a class="reference internal" href="binfmt.html#c.binary_s" title="binary_s">binary_s</a> *<em>bin</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Execute a module that has been loaded into memory by
-<a class="reference internal" href="binfmt.html#c.load_module" title="load_module"><code class="xref c c-func docutils literal notranslate"><span class="pre">load_module()</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>This is a NuttX internal function so it follows the
-convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success and a
-negated errno is returned on failure.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 <div class="section" id="appendix-a-no-got-operation">
 <h2>Appendix A: No GOT Operation<a class="headerlink" href="#appendix-a-no-got-operation" title="Permalink to this headline">¶</a></h2>
@@ -643,19 +545,19 @@ appear in your programs. One of these is the GOT (Global Offset Table)
 and, in ELF environments, another is the PLT (Procedure Lookup Table.
 For example, if your C code generated (ARM) assembly language like this
 without PIC:</p>
-<div class="highlight-c-objdump notranslate"><div class="highlight"><pre><span></span>        <span class="n">ldr</span>     <span class="n">r1</span><span class="p">,</span> <span class="p">.</span><span class="n">L0</span>         <span class="cm">/* Fetch the offset to &#39;x&#39; */</span>
-        <span class="n">ldr</span>     <span class="n">r0</span><span class="p">,</span> <span class="p">[</span><span class="n">r10</span><span class="p">,</span> <span class="n">r1</span><span class="p">]</span>   <span class="cm">/* Load the value of &#39;x&#39; with PIC offset */</span>
+<div class="highlight-asm notranslate"><div class="highlight"><pre><span></span>        <span class="nf">ldr</span>     <span class="no">r1</span><span class="p">,</span> <span class="no">.L0</span>         <span class="cm">/* Fetch the offset to &#39;x&#39; */</span>
+        <span class="nf">ldr</span>     <span class="no">r0</span><span class="p">,</span> <span class="p">[</span><span class="no">r10</span><span class="p">,</span> <span class="no">r1</span><span class="p">]</span>   <span class="cm">/* Load the value of &#39;x&#39; with PIC offset */</span>
         <span class="cm">/* ... */</span>
-<span class="p">.</span><span class="nl">L0</span><span class="p">:</span>    <span class="p">.</span><span class="n">word</span>   <span class="n">x</span>               <span class="cm">/* Offset to &#39;x&#39; */</span>
+<span class="nl">.L0:</span>    <span class="na">.word</span>   <span class="no">x</span>               <span class="cm">/* Offset to &#39;x&#39; */</span>
 </pre></div>
 </div>
 <p>Then when PIC is enabled (say with the -fpic compiler option), it will
 generate code like this:</p>
-<div class="highlight-c-objdump notranslate"><div class="highlight"><pre><span></span>        ldr     r1, .L0         /* Fetch the offset to the GOT entry */
-        ldr     r1, [r10, r1]   /* Fetch the (relocated) address of &#39;x&#39; from the GOT */
-        ldr     r0, [r1, #0]    /* Fetch the value of &#39;x&#39; */
-        /* ... */
-.L1     .word   x(GOT)          /* Offset to entry in the GOT */
+<div class="highlight-asm notranslate"><div class="highlight"><pre><span></span>        <span class="nf">ldr</span>     <span class="no">r1</span><span class="p">,</span> <span class="no">.L0</span>         <span class="cm">/* Fetch the offset to the GOT entry */</span>
+        <span class="nf">ldr</span>     <span class="no">r1</span><span class="p">,</span> <span class="p">[</span><span class="no">r10</span><span class="p">,</span> <span class="no">r1</span><span class="p">]</span>   <span class="cm">/* Fetch the (relocated) address of &#39;x&#39; from the GOT */</span>
+        <span class="nf">ldr</span>     <span class="no">r0</span><span class="p">,</span> <span class="p">[</span><span class="no">r1</span><span class="p">,</span> <span class="c1">#0]    /* Fetch the value of &#39;x&#39; */</span>
+        <span class="cm">/* ... */</span>
+<span class="na">.L1</span>     <span class="no">.word</span>   <span class="no">x</span><span class="p">(</span><span class="no">GOT</span><span class="p">)</span>          <span class="cm">/* Offset to entry in the GOT */</span>
 </pre></div>
 </div>
 <p>See
