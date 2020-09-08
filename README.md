@@ -34,6 +34,15 @@ running from within the directory:
 Site is updated by a CI job that runs the `publish.sh` script. Once this
 runs it the results will be visible [https://nuttx.apache.org](here).
 
+### Force Deployment
+
+If a dependency has changed such as the external documentation you may
+need to force the deployment CI to run. This can be done from the [CI
+Actions](https://github.com/apache/incubator-nuttx-website/actions?query=workflow%3ACI)
+tab and selecting **Run workflow** -> **Branch: master** --> **Run workflow**
+
+![Trigger Workflow](ci-workflow.png)
+
 ## Adding contributors
 
 To add a contributor to the project, or to modify existing contributors,
