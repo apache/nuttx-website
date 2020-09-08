@@ -125,7 +125,6 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#debug-logging">Debug Logging</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changing-debug-settings-quickly">Changing Debug Settings Quickly</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#custom-debug-logging">Custom Debug Logging</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#jtag-debugging">JTAG Debugging</a></li>
 </ul>
 </li>
@@ -212,34 +211,38 @@
 <span id="id1"></span><h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h1>
 <p>Finding and fixing bugs is an important part of the hardware and software development process. Sometimes you also need
 to use debugging techniques to understand how the system works. Two tools that are helpful are debug logging and
-debugging using the Gnu Debugger (gdb).</p>
+debugging using the GNU Debugger (gdb).</p>
 <div class="section" id="debug-logging">
 <h2>Debug Logging<a class="headerlink" href="#debug-logging" title="Permalink to this headline">¶</a></h2>
-<p>NuttX has a powerful logging facility with <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">warn</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code> levels. You can enable debugging for your
-build for the <code class="docutils literal notranslate"><span class="pre">net</span></code> feature (TCP/IP stack) by putting the following lines in your <code class="docutils literal notranslate"><span class="pre">.config</span></code> file:</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_DEBUG_ALERT=y
-CONFIG_DEBUG_FEATURES=y
-CONFIG_DEBUG_ERROR=y
-CONFIG_DEBUG_WARN=y
-CONFIG_DEBUG_INFO=y
-CONFIG_DEBUG_ASSERTIONS=y
-CONFIG_DEBUG_NET=y
-CONFIG_DEBUG_NET_ERROR=y
-CONFIG_DEBUG_NET_WARN=y
-CONFIG_DEBUG_NET_INFO=y
-CONFIG_DEBUG_SYMBOLS=y
-CONFIG_DEBUG_NOOPT=y
-CONFIG_SYSLOG_TIMESTAMP=y
+<p>NuttX has a powerful system logging facility (syslog) with <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">warn</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code> levels. You can enable
+debugging for your build for the subsystem or feature by using the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> make menuconfig
 </pre></div>
 </div>
-</div></blockquote>
-<p>Note that turning all these to <code class="docutils literal notranslate"><span class="pre">y</span></code> will produce an incredible amount of logging output. Set the level you want and
-the area you’re interested in to <code class="docutils literal notranslate"><span class="pre">y</span></code>, and the rest to <code class="docutils literal notranslate"><span class="pre">n</span></code>, and then recompile. You can see the full list of
-debug feature areas in the file <a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>.</p>
-<p>Timestamps can be enabled by setting <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP=y</span></code>.</p>
+<p>The debug options are available under <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">Setup</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">Debug</span> <span class="pre">Options</span></code>. You will most likely have to enable the
+following options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Debug</span> <span class="pre">Features</span></code> — selecting this will turn on subsystem-level debugging options, they will become visible
+on the page below. You can then select the ones you want.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Error</span> <span class="pre">Output</span></code> — this will only log errors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Warnings</span> <span class="pre">Output</span></code> — this will log warnings and errors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Informational</span> <span class="pre">Debug</span> <span class="pre">Output</span></code> — this will produce informational output, warnings, and errors.</p></li>
+</ul>
+<p>You can then select from the subsystems that are available, Network, Scheduler, USB, etc. Note that you will need to
+separately enable the subsystem elsewhere in the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system. To see the <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> define that is set,
+use the arrow keys to highlight the subsystem (for instance, <code class="docutils literal notranslate"><span class="pre">Network</span> <span class="pre">Debug</span> <span class="pre">Features</span></code>) and type ‘?’. This will show
+you that the C macro that is set is called <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_NET</span></code>. <code class="docutils literal notranslate"><span class="pre">debug.h</span></code> defines the <code class="docutils literal notranslate"><span class="pre">netinfo()</span></code> logging
+function that will log output if this macro is set. You can search the source code for <code class="docutils literal notranslate"><span class="pre">netinfo</span></code> to see how it is
+used.</p>
+<a class="reference internal image-reference" href="../_images/menuconfig-debug.png"><img alt="Screenshot of menuconfig system main screen" class="align-center" src="../_images/menuconfig-debug.png" style="width: 800px;" /></a>
+<p>Note that enabling all these will produce an incredible amount of logging output. Enable the level you want and
+the area you’re interested in, and leave the rest disabled, save the config, and then recompile. You can see the full
+list of debug feature logging functions in the file
+<a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>.</p>
+<p>Syslog timestamps can be enabled in the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system using <code class="docutils literal notranslate"><span class="pre">Device</span> <span class="pre">Drivers</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">System</span> <span class="pre">Logging</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">Prepend</span>
+<span class="pre">timestamp</span> <span class="pre">to</span> <span class="pre">syslog</span> <span class="pre">message</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>).</p>
 <p>You may need to do a little bit of experimenting to find the combination of logging settings that work for the problem
-you’re trying to solve. See the file <a class="reference external" href="https://github.com/starcat-io/incubator-nuttx/blob/master/include/debug.h">debug.h</a>
+you’re trying to solve. See the file <a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>
 for available debug settings that are available. This can also be configured via the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system.</p>
 <p>There are also subsystems that enable USB trace debugging, and you can log to memory too, if you need the logging to be
 faster than what the console can output.</p>
@@ -248,51 +251,29 @@ faster than what the console can output.</p>
 <h2>Changing Debug Settings Quickly<a class="headerlink" href="#changing-debug-settings-quickly" title="Permalink to this headline">¶</a></h2>
 <p>You can use the <code class="docutils literal notranslate"><span class="pre">kconfig-tweak</span></code> script that comes with the <code class="docutils literal notranslate"><span class="pre">kconfig-frontends</span></code> tools to quickly change debug settings,
 for instance turning them on or off before doing a build:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ kconfig-tweak --disable CONFIG_DEBUG_NET
-$ kconfig-tweak --enable CONFIG_DEBUG_NET
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> kconfig-tweak --disable CONFIG_DEBUG_NET
+<span class="gp">$</span> make olddefconfig  <span class="c1"># needed to have the kconfig system check the config</span>
+<span class="gp">$</span> kconfig-tweak --enable CONFIG_DEBUG_NET
+<span class="gp">$</span> make olddefconfig
 </pre></div>
 </div>
 <p>You can put a bunch of these into a simple script to configure the logging the way you want:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>!/bin/bash
 
-$ kconfig-tweak --disable CONFIG_DEBUG_ALERT
-$ kconfig-tweak --disable CONFIG_DEBUG_FEATURES
-$ kconfig-tweak --disable CONFIG_DEBUG_ERROR
-$ kconfig-tweak --disable CONFIG_DEBUG_WARN
-$ kconfig-tweak --disable CONFIG_DEBUG_INFO
-$ kconfig-tweak --disable CONFIG_DEBUG_ASSERTIONS
-$ kconfig-tweak --disable CONFIG_DEBUG_NET
-$ kconfig-tweak --disable CONFIG_DEBUG_NET_ERROR
-$ kconfig-tweak --disable CONFIG_DEBUG_NET_WARN
-$ kconfig-tweak --disable CONFIG_DEBUG_NET_INFO
-$ kconfig-tweak --disable CONFIG_DEBUG_SYMBOLS
-$ kconfig-tweak --disable CONFIG_DEBUG_NOOPT
-$ kconfig-tweak --disable CONFIG_SYSLOG_TIMESTAMP
-</pre></div>
-</div>
-</div>
-<div class="section" id="custom-debug-logging">
-<h2>Custom Debug Logging<a class="headerlink" href="#custom-debug-logging" title="Permalink to this headline">¶</a></h2>
-<p>Sometimes you need to see debug logs specific to your feature, and you don’t want the rest of the built-in logs
-because they’re either not relevant or have too much information. Debugging using logs is surprisingly powerful.</p>
-<p>You can add your own custom debug logging by adding the following lines to
-<a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* after the CONFIG_DEBUG_WATCHDOG_INFO block near line 721 */</span>
-<span class="cp">#ifdef CONFIG_DEBUG_CUSTOM_INFO</span>
-<span class="cp">#  define custinfo    _info</span>
-<span class="cp">#else</span>
-<span class="cp">#  define custinfo    _none</span>
-<span class="cp">#endif</span>
-</pre></div>
-</div>
-<p>You need to add the following line to your <code class="docutils literal notranslate"><span class="pre">.config</span></code> file:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_DEBUG_CUSTOM_INFO</span><span class="o">=</span><span class="n">y</span>
-</pre></div>
-</div>
-<p>You would use it like this:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Custom debug logging */</span>
-<span class="n">custinfo</span><span class="p">(</span><span class="s">&quot;This is a custom log message.&quot;</span><span class="p">);</span>
-<span class="n">custinfo</span><span class="p">(</span><span class="s">&quot;Custom log data: %d&quot;</span><span class="p">,</span> <span class="n">my</span><span class="o">-</span><span class="n">integer</span><span class="o">-</span><span class="n">variable</span><span class="p">);</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ALERT</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_FEATURES</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ERROR</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_WARN</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_INFO</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ASSERTIONS</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_ERROR</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_WARN</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_INFO</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_SYMBOLS</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NOOPT</span>
+<span class="go">kconfig-tweak --disable CONFIG_SYSLOG_TIMESTAMP</span>
+<span class="go">make oldconfig</span>
 </pre></div>
 </div>
 </div>
