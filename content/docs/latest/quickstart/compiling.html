@@ -32,6 +32,10 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/tabs.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
 
   
@@ -119,7 +123,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installing</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Compiling</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Compiling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#initialize-configuration">Initialize Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#customize-your-configuration-optional">Customize Your Configuration (Optional)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#build-nuttx">Build NuttX</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="running.html">Running</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuring.html">Configuring</a></li>
 <li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
@@ -204,57 +213,78 @@
             
   <div class="section" id="compiling">
 <span id="id1"></span><h1>Compiling<a class="headerlink" href="#compiling" title="Permalink to this headline">¶</a></h1>
-<p>Now that we’ve installed Apache NuttX prerequisites and downloaded the source code, we are ready to compile the source code
-into an executable binary file that can be run on the embedded board.</p>
-<ol class="arabic">
-<li><p>List Possible Apache NuttX Base Configurations</p>
-<p>Find your hardware and a good starting application in the list of base configurations. In the application list,
-<code class="docutils literal notranslate"><span class="pre">nsh</span></code> is the Apache NuttX Shell, an interactive commandline that’s a good starting place if you’re new.</p>
+<p>Now that we’ve installed Apache NuttX prerequisites and downloaded the source code,
+we are ready to compile the source code into an executable binary file that can
+be run on the embedded board.</p>
+<div class="section" id="initialize-configuration">
+<h2>Initialize Configuration<a class="headerlink" href="#initialize-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The first step is to initialize NuttX configuration for a given board, based from
+a pre-existing configuration. To list all supported configurations you can do:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> nuttx
-$ ./tools/configure.sh -L <span class="p">|</span> less
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx
+<span class="gp">$</span> ./tools/configure.sh -L <span class="p">|</span> less
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-<li><p>Initialize Configuration</p>
-<p>Pick one of the board:application base configuration pairs from the list, and feed it to the
-configuration script. The <code class="docutils literal notranslate"><span class="pre">-l</span></code> tells use that we’re on Linux. macOS and Windows builds are
-possible, this guide doesn’t cover them yet.</p>
+<p>The output is in the format <code class="docutils literal notranslate"><span class="pre">&lt;board</span> <span class="pre">name&gt;:&lt;board</span> <span class="pre">configuration&gt;</span></code>. You will see that
+generally all boards support the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration which is a good sarting point
+since it enables booting into the interactive command line
+<a class="reference internal" href="../components/nsh/index.html"><span class="doc">NuttShell (NSH)</span></a>.</p>
+<p>To choose a configuration you pass the <code class="docutils literal notranslate"><span class="pre">&lt;board</span> <span class="pre">name&gt;:&lt;board</span> <span class="pre">configuration&gt;</span></code> option
+to <code class="docutils literal notranslate"><span class="pre">configure.sh</span></code> and indicate your host platform, such as:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> nuttx
-$ <span class="c1"># this is the basic layout of the command:</span>
-$ <span class="c1"># ./tools/configure.sh -l &lt;board-name&gt;:&lt;config-dir&gt;</span>
-$ <span class="c1"># for example:</span>
-$ ./tools/configure.sh -l sama5d2-xult:nsh
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx
+<span class="gp">$</span> ./tools/configure.sh -l stm32f4discovery:nsh
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-<li><p>Customize Your Configuration (Optional)</p>
-<p>This step is optional. Right now, this is mainly to get familiar with how it works– you don’t need to change
-any of the options now, but knowing how to do this will come in handy later.</p>
-<p>There are a lot of options. We’ll cover a few of them here. Don’t worry about the complexity– you don’t have to use most of the options.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-l</span></code> tells use that we’re on Linux (macOS and Windows builds are
+possible). Use the <code class="docutils literal notranslate"><span class="pre">-h</span></code> argument to see all available options.</p>
+</div>
+<div class="section" id="customize-your-configuration-optional">
+<h2>Customize Your Configuration (Optional)<a class="headerlink" href="#customize-your-configuration-optional" title="Permalink to this headline">¶</a></h2>
+<p>This step is optional. Right now, this is mainly to get familiar with how it
+works– you don’t need to change any of the options now, but knowing how
+to do this will come in handy later.</p>
+<p>There are a lot of options. We’ll cover a few of them here.
+Don’t worry about the complexity– you don’t have to use most of the options.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
+<span class="gp">$</span> make menuconfig
+</pre></div>
+</div>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Explain some useful options.</p>
+</div>
+</div>
+<div class="section" id="build-nuttx">
+<h2>Build NuttX<a class="headerlink" href="#build-nuttx" title="Permalink to this headline">¶</a></h2>
+<p>We can now build NuttX. To do so, you can simply run:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
+<span class="gp">$</span> make make
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-<li><p>Compile NuttX</p>
+<p>The build will complete by generating the binary outputs
+inside <cite>nuttx</cite> directory. Typically this includes the <cite>nuttx</cite>
+ELF file (suitable for debugging using <cite>gdb</cite>) and a <cite>nuttx.bin</cite>
+file that can be flashed to the board.</p>
+<p>To clean the build, you can do:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ make clean<span class="p">;</span> make
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> make clean
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-<li><p>Install the Executable Program on Your Board</p>
-<p>This step is a bit more complicated, depending on your board. It’s covered in the section
-<a class="reference internal" href="running.html#running"><span class="std std-ref">Running Apache NuttX</span></a>.</p>
-</li>
-</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>At the moment it is recommended that after modifying the
+configuration you first clean before building again. This
+is currently worked on.</p>
+</div>
 <hr class="docutils" />
 <p>Next up is <a class="reference internal" href="running.html#running"><span class="std std-ref">Running</span></a>.</p>
+</div>
 </div>
 
 
