@@ -249,6 +249,7 @@ If the following bits are set, the corresponding instrumentations are enabled on
 <li><p>Bit 0 = Enable instrumentation</p></li>
 <li><p>Bit 1 = Enable syscall instrumentation</p></li>
 <li><p>Bit 2 = Enable IRQ instrumentation</p></li>
+<li><p>Bit 3 = Enable collecting syscall arguments</p></li>
 </ul>
 </li>
 </ul>
@@ -263,6 +264,11 @@ Higher value can hold more note records, but consumes more kernel memory.</p></l
 <ul>
 <li><p>If enabled, stop overwriting old notes in the circular buffer when the buffer is full by default.
 This is useful to keep instrumentation data of the beginning of a system boot.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_INSTRUMENTATION_HIRES</span></code></p>
+<ul>
+<li><p>If enabled, use higher resolution system timer for instrumentation.</p></li>
 </ul>
 </li>
 </ul>
@@ -392,7 +398,7 @@ If not specified, the trace result is displayed to console.</p></li>
 <p>Set the task trace mode options.
 The default value is given by the kernel configuration <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_INSTRUMENTATION_FILTER_DEFAULT_MODE</span></code>.</p>
 <p><strong>Command Syntax:</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>trace mode [{+|-}{o|s|i}...]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>trace mode [{+|-}{o|s|a|i}...]
 </pre></div>
 </div>
 <ul class="simple">
@@ -406,6 +412,9 @@ This is useful to keep the data of the beginning of the trace.</p></li>
 It records the event of enter/leave system call which is issued by the application.
 All system calls are recorded by default. <code class="docutils literal notranslate"><span class="pre">trace</span> <span class="pre">syscall</span></code> command can filter the system calls to be recorded.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-s</span></code> : Disable system call trace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">+a</span></code> : Enable recording the system call arguments.
+It records the arguments passed to the issued system call to the trace data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-a</span></code> : Disable recording the system call arguments.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">+i</span></code> : Enable interrupt trace.
 It records the event of enter/leave interrupt handler which is occured while the tracing.
 All IRQs are recorded by default. <code class="docutils literal notranslate"><span class="pre">trace</span> <span class="pre">irq</span></code> command can filter the IRQs to be recorded.</p></li>
@@ -419,6 +428,7 @@ Task trace mode:
  Overwrite               : on  (+o)
  Syscall trace           : on  (+s)
   Filtered Syscalls      : 16
+ Syscall trace with args : on  (+a)
  IRQ trace               : on  (+i)
   Filtered IRQs          : 2
 </pre></div>
