@@ -222,7 +222,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="binary-loader">
-<h1>Binary Loader<a class="headerlink" href="#binary-loader" title="Permalink to this headline">¶</a></h1>
+<span id="binfmt"></span><h1>Binary Loader<a class="headerlink" href="#binary-loader" title="Permalink to this headline">¶</a></h1>
 <p>The purpose of a <em>binary loader</em> is to load and
 execute modules in various <em>binary formats</em> that reside in a file
 system. Loading refers instantiating the binary module in some fashion,
@@ -246,8 +246,8 @@ object and failed.</p>
 <div><ul class="simple">
 <li><p><strong>ELF</strong>. Standard ELF formatted files.</p></li>
 <li><p><strong>NXFLAT</strong>. NuttX NXFLAT formatted files. More information about the
-NXFLAT binary format can be found in the <a class="reference external" href="NuttXNxFlat.html">NXFLAT
-documentation</a>.</p></li>
+NXFLAT binary format can be found in the <a class="reference internal" href="nxflat.html#nxflat"><span class="std std-ref">NXFLAT
+documentation</span></a>.</p></li>
 </ul>
 </div></blockquote>
 <p><strong>Executables and Libraries</strong> The generic binary loader logic does not
@@ -280,10 +280,10 @@ pointer to a write-able instance of <a class="reference internal" href="#c.binfm
 <dl class="c struct">
 <dt id="c.binfmt_s">
 <em class="property">struct </em><code class="sig-name descname">binfmt_s</code><a class="headerlink" href="#c.binfmt_s" title="Permalink to this definition">¶</a><br /></dt>
-<dd><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">binfmt_s</span>
+<dd><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">binfmt_s</span>
 <span class="p">{</span>
-  <span class="n">FAR</span> <span class="k">struct</span> <span class="n">binfmt_s</span> <span class="o">*</span><span class="n">next</span><span class="p">;</span>             <span class="cm">/* Supports a singly-linked list */</span>
-  <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">load</span><span class="p">)(</span><span class="n">FAR</span> <span class="k">struct</span> <span class="n">binary_s</span> <span class="o">*</span><span class="n">bin</span><span class="p">);</span> <span class="cm">/* Verify and load binary into memory */</span>
+  <span class="n">FAR</span> <span class="k">struct</span> <span class="nc">binfmt_s</span> <span class="o">*</span><span class="n">next</span><span class="p">;</span>             <span class="cm">/* Supports a singly-linked list */</span>
+  <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">load</span><span class="p">)(</span><span class="n">FAR</span> <span class="k">struct</span> <span class="nc">binary_s</span> <span class="o">*</span><span class="n">bin</span><span class="p">);</span> <span class="cm">/* Verify and load binary into memory */</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -300,14 +300,14 @@ loaded.</p>
 object to be loaded, and if successfully loaded, (2) to provide
 information about where and how the binary object was loaded. That
 structure is shown below:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">symtab_s</span><span class="p">;</span>
-<span class="k">struct</span> <span class="n">binary_s</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">symtab_s</span><span class="p">;</span>
+<span class="k">struct</span> <span class="nc">binary_s</span>
 <span class="p">{</span>
   <span class="cm">/* Information provided to the loader to load and bind a module */</span>
 
   <span class="n">FAR</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">;</span>            <span class="cm">/* Full path to the binary to be loaded */</span>
   <span class="n">FAR</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">;</span>               <span class="cm">/* Argument list */</span>
-  <span class="n">FAR</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">symtab_s</span> <span class="o">*</span><span class="n">exports</span><span class="p">;</span>  <span class="cm">/* Table of exported symbols */</span>
+  <span class="n">FAR</span> <span class="k">const</span> <span class="k">struct</span> <span class="nc">symtab_s</span> <span class="o">*</span><span class="n">exports</span><span class="p">;</span>  <span class="cm">/* Table of exported symbols */</span>
   <span class="kt">int</span> <span class="n">nexports</span><span class="p">;</span>                        <span class="cm">/* The number of symbols in exports[] */</span>
 
   <span class="cm">/* Information provided from the loader (if successful) describing the</span>
@@ -350,8 +350,8 @@ structure is shown below:</p>
 </div>
 <p>Where the types <code class="docutils literal notranslate"><span class="pre">binfmt_ctor_t</span></code> and <code class="docutils literal notranslate"><span class="pre">binfmt_dtor_t</span></code> define the type
 of one C++ constructor or destructor:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="n">FAR</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">binfmt_ctor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
-<span class="k">typedef</span> <span class="n">FAR</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">binfmt_dtor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="n">FAR</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">binfmt_ctor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="n">FAR</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">binfmt_dtor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -549,7 +549,7 @@ header file are listed below.</p>
 <dt id="c.symbtab_s">
 <em class="property">struct </em><code class="sig-name descname">symbtab_s</code><a class="headerlink" href="#c.symbtab_s" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Describes one entry in the symbol table.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">symtab_s</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">symtab_s</span>
 <span class="p">{</span>
   <span class="n">FAR</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">sym_name</span><span class="p">;</span>          <span class="cm">/* A pointer to the symbol name string */</span>
   <span class="n">FAR</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">sym_value</span><span class="p">;</span>         <span class="cm">/* The value associated with the string */</span>
