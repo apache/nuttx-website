@@ -118,25 +118,26 @@
               <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compiling.html">Compiling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="running.html">Running</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuring</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuring</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fast-configuration-changes">Fast configuration changes</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
 <li class="toctree-l2"><a class="reference internal" href="organization.html">Directory Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="build_and_make.html">Build and Make Details</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boards/index.html">Supported Boards</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../releases/index.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 </ul>
@@ -210,101 +211,114 @@
 <span id="id1"></span><h1>Configuring<a class="headerlink" href="#configuring" title="Permalink to this headline">¶</a></h1>
 <p>Apache NuttX is a very configurable operating system. Nearly all features can be configured in or
 out of the system. This makes it possible to compile a build tailored for your hardware and
-application. It also makes configuring the system complex at times.</p>
-<p>There is a configuration system that can be used on the commandline or in a GUI. I’ve found
-the easiest way to configured Apache NuttX is to use the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system. This is used
-via a terminal program and allows quick access to all of Apache NuttX’s features via a system of
-menus.</p>
+application.</p>
 <p>The Apache NuttX configuration system uses Linux’s
-<a class="reference external" href="https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt">kconfig system</a> adapted for use with Apache
-NuttX. Here’s info on Linux’s kconfig <a class="reference external" href="https://en.wikipedia.org/wiki/Menuconfig">menuconfig</a> system.</p>
-<p>After you’ve configured your board (see <a class="reference internal" href="compiling.html#compiling"><span class="std std-ref">Compiling</span></a>), you can use the menuconfig system
-to change the configuration. Once you’ve configured, you can compile to make a build that
-has your configuration options selected.</p>
+<a class="reference external" href="https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt">kconfig system</a> which
+includes various frontends that allow you to modify configuration easily. Usually, the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code>
+frontend is used, which is a console based menu system (more info <a class="reference external" href="https://en.wikipedia.org/wiki/Menuconfig">here</a>).</p>
+<p>As previously explained in <a class="reference internal" href="compiling.html"><span class="doc">Compiling</span></a>, the first step is to load a premade configuration for
+your board. Then, you can modify this configuration to your liking.</p>
+<p>In this example, we will show how you modify the default configuration of the <code class="docutils literal notranslate"><span class="pre">sim</span></code> build.</p>
 <ol class="arabic">
 <li><p>Initialize Board Configuration</p>
-<p>Here we’ll use the simulator since that’s the simplest to explain. You can do this with
-any board and base configuration.  Note here you should be supplying <cite>configure.sh</cite> the correct flag
-for your build environment:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>-l selects the Linux <span class="o">(</span>l<span class="o">)</span> host environment.
--m selects the macOS <span class="o">(</span>m<span class="o">)</span> host environment.
--c selects the Windows host and Cygwin <span class="o">(</span>c<span class="o">)</span> environment.
--g selects the Windows host and MinGW/MSYS environment.
--n selects the Windows host and Windows native <span class="o">(</span>n<span class="o">)</span> environment.
-</pre></div>
-</div>
-</div></blockquote>
-<p>Select the simulator configuration for a Linux host:</p>
-<blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> nuttx
-$ make distclean  <span class="c1"># make a clean start, clearing out old configurations</span>
-$ ./tools/configure.sh -l sim:nsh
-  Copy files
-  Select <span class="nv">CONFIG_HOST_LINUX</span><span class="o">=</span>y
-  Refreshing...
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx
+<span class="gp">$</span> ./tools/configure.sh -l sim:nsh
+<span class="go">  Copy files</span>
+<span class="go">  Select CONFIG_HOST_LINUX=y</span>
+<span class="go">  Refreshing...</span>
 </pre></div>
 </div>
 </div></blockquote>
 </li>
-<li><p>Make</p>
+<li><p>Build &amp; run</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ make clean<span class="p">;</span> make
-$ ./nuttx
-login:
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> make clean<span class="p">;</span> make
+<span class="gp">$</span> ./nuttx
+<span class="go">login:</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>From another terminal window, kill the simulator:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pkill nuttx
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pkill nuttx
 </pre></div>
 </div>
 </div></blockquote>
 </li>
-<li><p>Menu Configuration</p>
-<p>Showing that <code class="docutils literal notranslate"><span class="pre">login:</span></code> is annyoing. Let’s use the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system to turn it off.</p>
+<li><p>Modify configuration</p>
+<p>In this case we will remove the login feature (which will boot straight to the prompt). To
+do so, we use the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> frontend.</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> make menuconfig
 </pre></div>
 </div>
 </div></blockquote>
 <p>Here’s what you should see:</p>
 <a class="reference internal image-reference" href="../_images/menuconfig.png"><img alt="Screenshot of menuconfig system main screen" class="align-center" src="../_images/menuconfig.png" style="width: 800px;" /></a>
 <p><br/></p>
+<p>The NSH Login setting is under <span class="menuselection">Application Configuration ‣ NSH Library</span>. You
+can use <kbd class="kbd docutils literal notranslate">🢁</kbd> and <kbd class="kbd docutils literal notranslate">🢃</kbd> keys to navigate and <kbd class="kbd docutils literal notranslate">↵</kbd> to enter a submenu.
+To disable the corresponding setting go to <span class="menuselection">Console Login</span> and press <kbd class="kbd docutils literal notranslate">spacebar</kbd> to
+it (so that it has a blank space instead of a star in it).</p>
+<p>Now you need to exit <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> and save the modified configuration. Use the <kbd class="kbd docutils literal notranslate">🡸</kbd> and
+<kbd class="kbd docutils literal notranslate">🡺</kbd> arrow keys to navigate the lower menu. If you select <span class="menuselection">Exit</span> you will be
+prompted to save the config.</p>
 </li>
-<li><p>Application Configuration</p>
-<p>The NSH Login setting is under <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">Configuration</span> <span class="pre">&gt;</span> <span class="pre">NSH</span> <span class="pre">Library</span></code>. Use
-the up and down arrows to navigate to <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">Configuration</span></code>; hit <code class="docutils literal notranslate"><span class="pre">&lt;return&gt;</span></code> to
-select it. Now you’re in the <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">Configuration</span></code> menu. Use the arrows to go
-down to <code class="docutils literal notranslate"><span class="pre">NSH</span> <span class="pre">Library</span></code> and select that. Now navigate down to <code class="docutils literal notranslate"><span class="pre">Console</span> <span class="pre">Login</span></code> and use
-the spacebar to uncheck that setting (so that it has a blank space instead of a star in it).</p>
-<p>Now let’s save. Use the right and left arrow keys to select the <code class="docutils literal notranslate"><span class="pre">Exit</span></code> menu item at the
-bottom of the screen. Hit <code class="docutils literal notranslate"><span class="pre">&lt;return&gt;</span></code> to select it, hit <code class="docutils literal notranslate"><span class="pre">&lt;return&gt;</span></code> again, and again, finally
-hitting <code class="docutils literal notranslate"><span class="pre">&lt;return&gt;</span></code> in the <code class="docutils literal notranslate"><span class="pre">Save</span> <span class="pre">Configuration</span></code> dialog box.</p>
-</li>
-<li><p>Make the New Configuration</p>
+<li><p>Build with the new Configuration</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ make clean<span class="p">;</span> make
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> make
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p>Run</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./nuttx
-NuttShell <span class="o">(</span>NSH<span class="o">)</span> NuttX-8.2
-MOTD: <span class="nv">username</span><span class="o">=</span>admin <span class="nv">password</span><span class="o">=</span>Administrator
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> ./nuttx
+<span class="go">NuttShell (NSH) NuttX-8.2</span>
+<span class="go">MOTD: username=admin password=Administrator</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>Success!</p>
-<p>If you find that message of the day (MOTD) annoying and want to turn that off, it’s
-configured in <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">Configuration</span> <span class="pre">&gt;</span> <span class="pre">NSH</span> <span class="pre">Library</span> <span class="pre">&gt;&gt;</span> <span class="pre">Message</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">Day</span> <span class="pre">(MOTD)</span></code>.</p>
 </li>
 </ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you find that message of the day (MOTD) annoying and want to turn that off, it’s
+configured in <span class="menuselection">Application Configuration ‣ NSH Library ‣ Message of the Day (MOTD)</span>.</p>
+</div>
+<div class="section" id="fast-configuration-changes">
+<h2>Fast configuration changes<a class="headerlink" href="#fast-configuration-changes" title="Permalink to this headline">¶</a></h2>
+<p>If you know exactly which configuration symbol you want to change, you can use the <code class="docutils literal notranslate"><span class="pre">kconfig-tweak</span></code> tool (comes with the <code class="docutils literal notranslate"><span class="pre">kconfig-frontends</span></code> package) to quickly change a setting without going into the configuration frontend. This is useful to change settings such as debug options:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> kconfig-tweak --disable CONFIG_DEBUG_NET
+<span class="gp">$</span> make olddefconfig  <span class="c1"># needed to have the kconfig system check the config</span>
+<span class="gp">$</span> kconfig-tweak --enable CONFIG_DEBUG_NET
+<span class="gp">$</span> make olddefconfig
+</pre></div>
+</div>
+<p>This is also useful to script configuration changes that you perform often:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>!/bin/bash
+
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ALERT</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_FEATURES</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ERROR</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_WARN</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_INFO</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ASSERTIONS</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_ERROR</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_WARN</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_INFO</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_SYMBOLS</span>
+<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NOOPT</span>
+<span class="go">kconfig-tweak --disable CONFIG_SYSLOG_TIMESTAMP</span>
+<span class="go">make oldconfig</span>
+</pre></div>
+</div>
 <hr class="docutils" />
 <p>Next up is <a class="reference internal" href="debugging.html#debugging"><span class="std std-ref">Debugging</span></a>.</p>
+</div>
 </div>
 
 

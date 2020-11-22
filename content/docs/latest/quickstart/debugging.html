@@ -118,6 +118,7 @@
               <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installing</a></li>
@@ -126,22 +127,20 @@
 <li class="toctree-l2"><a class="reference internal" href="configuring.html">Configuring</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#debug-logging">Debug Logging</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#changing-debug-settings-quickly">Changing Debug Settings Quickly</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#jtag-swd-debugging">JTAG/SWD Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-with-openocd-and-gdb">Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-with-an-external-jtag-adapter">Debugging with an external JTAG adapter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-shortcuts">Debugging Shortcuts</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="organization.html">Directory Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="build_and_make.html">Build and Make Details</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boards/index.html">Supported Boards</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../releases/index.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 </ul>
@@ -220,10 +219,7 @@ debugging using the GNU Debugger (gdb).</p>
 <h2>Debug Logging<a class="headerlink" href="#debug-logging" title="Permalink to this headline">¶</a></h2>
 <p>NuttX has a powerful system logging facility (syslog) with <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">warn</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code> levels. You can enable
 debugging for your build for the subsystem or feature by using the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> make menuconfig
-</pre></div>
-</div>
-<p>The debug options are available under <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">Setup</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">Debug</span> <span class="pre">Options</span></code>. You will most likely have to enable the
+<p>The debug options are available under <span class="menuselection">Build Setup ‣ Debug Options</span>. You will most likely have to enable the
 following options:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Debug</span> <span class="pre">Features</span></code> — selecting this will turn on subsystem-level debugging options, they will become visible
@@ -243,66 +239,134 @@ used.</p>
 the area you’re interested in, and leave the rest disabled, save the config, and then recompile. You can see the full
 list of debug feature logging functions in the file
 <a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>.</p>
-<p>Syslog timestamps can be enabled in the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system using <code class="docutils literal notranslate"><span class="pre">Device</span> <span class="pre">Drivers</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">System</span> <span class="pre">Logging</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">Prepend</span>
-<span class="pre">timestamp</span> <span class="pre">to</span> <span class="pre">syslog</span> <span class="pre">message</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>).</p>
+<p>Syslog timestamps can be enabled in the configuration in <span class="menuselection">Device Drivers ‣ System Logging ‣ Prepend
+timestamp to syslog message</span> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>).</p>
 <p>You may need to do a little bit of experimenting to find the combination of logging settings that work for the problem
 you’re trying to solve. See the file <a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>
-for available debug settings that are available. This can also be configured via the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system.</p>
+for available debug settings that are available.</p>
 <p>There are also subsystems that enable USB trace debugging, and you can log to memory too, if you need the logging to be
 faster than what the console can output.</p>
 </div>
-<div class="section" id="changing-debug-settings-quickly">
-<h2>Changing Debug Settings Quickly<a class="headerlink" href="#changing-debug-settings-quickly" title="Permalink to this headline">¶</a></h2>
-<p>You can use the <code class="docutils literal notranslate"><span class="pre">kconfig-tweak</span></code> script that comes with the <code class="docutils literal notranslate"><span class="pre">kconfig-frontends</span></code> tools to quickly change debug settings,
-for instance turning them on or off before doing a build:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> kconfig-tweak --disable CONFIG_DEBUG_NET
-<span class="gp">$</span> make olddefconfig  <span class="c1"># needed to have the kconfig system check the config</span>
-<span class="gp">$</span> kconfig-tweak --enable CONFIG_DEBUG_NET
-<span class="gp">$</span> make olddefconfig
+<div class="section" id="debugging-with-openocd-and-gdb">
+<h2>Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code><a class="headerlink" href="#debugging-with-openocd-and-gdb" title="Permalink to this headline">¶</a></h2>
+<p>To debug our Nucleo board using its embedded SWD debug adapter,
+start <code class="docutils literal notranslate"><span class="pre">openocd</span></code> with the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> openocd -f interface/st-link-v2.cfg -f target/stm32f1x.cfg
 </pre></div>
 </div>
-<p>You can put a bunch of these into a simple script to configure the logging the way you want:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>!/bin/bash
+<p>This will start a <code class="docutils literal notranslate"><span class="pre">gdb</span></code> server. Then, start <code class="docutils literal notranslate"><span class="pre">gdb</span></code> with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
+<span class="gp">$</span> gdb-multiarch nuttx/nuttx
+</pre></div>
+</div>
+<p>Inside <code class="docutils literal notranslate"><span class="pre">gdb</span></code> console, connect to the <code class="docutils literal notranslate"><span class="pre">gdb</span></code> server with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) target extended-remote :3333
+</pre></div>
+</div>
+<p>You can now use standard <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands.</p>
+</div>
+<div class="section" id="debugging-with-an-external-jtag-adapter">
+<h2>Debugging with an external JTAG adapter<a class="headerlink" href="#debugging-with-an-external-jtag-adapter" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Explain this with openocd. It gives the impression that JTAG requires
+a specific tool. Also, some of the example commands apply to both cases.
+This repeats some of the above.</p>
+</div>
+<p>If your board does not have an embedded programmer and uses
+<a class="reference external" href="https://en.wikipedia.org/wiki/JTAG">JTAG</a> connector instead,
+things are a bit different. This guide assumes you have a JTAG hardware debugger like a
+<a class="reference external" href="https://www.segger.com/products/debug-probes/j-link/">Segger J-Link</a>.
+JTAG is a set of standards that let you
+attach a hardware device to your embedded board, and then remotely control the CPU.
+You can load code, start, stop, step through the program, and examine variables and memory.</p>
+<ol class="arabic">
+<li><p>Attach the Debugger Cables</p></li>
+<li><p>Start the Debugger</p>
+<p>Refer to your JTAG debugger’s documentation for information on how to start a GDB Server process that gdb can
+communicate with to load code and start, stop, and step the embedded board’s CPU. Your command line may be
+different from this one.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> JLinkGDBServer -device ATSAMA5D27 -if JTAG -speed <span class="m">1000</span> -JTAGConf -1,-1
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Launch the GNU Debugger</p>
+<p>In another terminal window, launch the GDB. In the case of this guide, this came with the
+ARM Embedded GNU Toolchain we downloaded in the Install step.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
+<span class="gp">$</span> gdb-multiarch nuttx/nuttx
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Set gdb to talk with the J-Link</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) target extended-remote :2331
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Reset the board</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon reset
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>You may need to switch to the serial console to hit a key to stop the board from booting from its boot monitor
+(U-Boot, in the case of the SAMA5 boards from Microchip).</p></li>
+<li><p>Halt the board</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon halt
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Load nuttx</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) load nuttx
+`/home/adamf/src/nuttx-sama5d36-xplained/nuttx/nuttx&#39; has changed; re-reading symbols.
+Loading section .text, size 0x9eae4 lma 0x20008000
+Loading section .ARM.exidx, size 0x8 lma 0x200a6ae4
+Loading section .data, size 0x125c lma 0x200a6aec
+Start address 0x20008040, load size 654664
+Transfer rate: 75 KB/sec, 15587 bytes/write.
+(gdb)
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Set a breakpoint</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) breakpoint nsh_main
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Start nuttx</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) continue
+Continuing.
 
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ALERT</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_FEATURES</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ERROR</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_WARN</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_INFO</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_ASSERTIONS</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_ERROR</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_WARN</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NET_INFO</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_SYMBOLS</span>
-<span class="go">kconfig-tweak --disable CONFIG_DEBUG_NOOPT</span>
-<span class="go">kconfig-tweak --disable CONFIG_SYSLOG_TIMESTAMP</span>
-<span class="go">make oldconfig</span>
+Breakpoint 1, nsh_main (argc=1, argv=0x200ddfac) at nsh_main.c:208
+208        sched_getparam(0, &amp;param);
+(gdb) continue
+Continuing.
 </pre></div>
 </div>
+</div></blockquote>
+</li>
+</ol>
 </div>
-<div class="section" id="jtag-swd-debugging">
-<h2>JTAG/SWD Debugging<a class="headerlink" href="#jtag-swd-debugging" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="https://en.wikipedia.org/wiki/JTAG">JTAG</a> is a set of standards that specify a way to attach a hardware device to
-your embedded board, and then remotely control the CPU. You can load code, start, stop, step through the program, and
-examine variables and memory. <a class="reference external" href="https://en.wikipedia.org/wiki/JTAG#Similar_interface_standards">SWD</a> is an
-Arm-specific interface with a reduced number of signals which can be used alternatively.</p>
-<p>The NuttX operating system uses <a class="reference external" href="https://en.wikipedia.org/wiki/Thread_(computing)">threads</a>, so you need a
-thread-aware debugger to do more than load code, start, and stop it. A thread-aware debugger will allow you to switch
-threads to the one that is running the code you’re interested in, for instance your application, or an operating system
-network thread. So far, <a class="reference external" href="http://openocd.org/">OpenOCD</a> is the only supported NuttX thread-aware debugger.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>OpenOCD hasn’t announced a stable release for a few years but the development remains active. You’ll need to use a
-version of OpenOCD recent enough so that it includes NuttX support as <a class="reference external" href="http://openocd.zylin.com/#/c/4103/">contributed by Sony upstream</a>. The version included in official OS repositories will probably be too old.
-You should build from source or use one of the unofficial, more recent builds. See <a class="reference external" href="http://openocd.org/getting-openocd/">Getting OpenOCD</a> for more details.</p>
-</div>
-<p>You will need a board with a JTAG or SWD connector and an <a class="reference external" href="http://openocd.org/supported-jtag-interfaces/">OpenOCD-compatible hardware adapter</a>, ideally a fast one (USB 2.0 High Speed). For example an <a class="reference external" href="https://www.olimex.com/Products/ARM/JTAG/ARM-USB-TINY-H/">Olimex
-ARM USB TINY H</a> or a <a class="reference external" href="https://www.segger.com/products/debug-probes/j-link/">Segger J-Link</a>. Many other adapters work too, follow the OpenOCD
-instructions and the instructions that came with your adapter.</p>
+<div class="section" id="debugging-shortcuts">
+<h2>Debugging Shortcuts<a class="headerlink" href="#debugging-shortcuts" title="Permalink to this headline">¶</a></h2>
+<p>Note that you can abbreviate <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands, <code class="docutils literal notranslate"><span class="pre">info</span> <span class="pre">b</span></code> is a shortcut for
+<code class="docutils literal notranslate"><span class="pre">information</span> <span class="pre">breakpoints</span></code>; <code class="docutils literal notranslate"><span class="pre">c</span></code> works the same as <code class="docutils literal notranslate"><span class="pre">continue</span></code>, etc.</p>
 <p>See this article for more info:
 <a class="reference external" href="https://micro-ros.github.io/docs/tutorials/advanced/nuttx/debugging/">Debugging a Apache NuttX target with GDB and OpenOCD</a>.</p>
-<p>See the section <a class="reference internal" href="running.html#running"><span class="std std-ref">Running</span></a> for a brief tutorial on how to use GDB.</p>
 <hr class="docutils" />
 <p>Next up is <a class="reference internal" href="organization.html#organization"><span class="std std-ref">Directory Structure</span></a>.</p>
 </div>

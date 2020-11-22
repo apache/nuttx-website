@@ -120,6 +120,7 @@
               <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installing</a></li>
@@ -127,27 +128,19 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Running</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#flashing">Flashing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#access-nuttshell">Access NuttShell</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#debugging">Debugging</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#advanced-debugging-with-jtag">Advanced Debugging with JTAG</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#debugging-shortcuts">Debugging Shortcuts</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="configuring.html">Configuring</a></li>
 <li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
 <li class="toctree-l2"><a class="reference internal" href="organization.html">Directory Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="build_and_make.html">Build and Make Details</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boards/index.html">Supported Boards</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../releases/index.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 </ul>
@@ -247,7 +240,7 @@ latest Git version. To install it you should:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone git://git.code.sf.net/p/openocd/code openocd
 <span class="gp">$</span> <span class="nb">cd</span> openocd
 <span class="gp">$</span> ./bootstrap
-<span class="gp">$</span> ./configure --prefix install/
+<span class="gp">$</span> ./configure --prefix<span class="o">=</span>install/
 <span class="gp">$</span> make install
 </pre></div>
 </div>
@@ -289,120 +282,8 @@ of your choice where you will see the <code class="docutils literal notranslate"
 </div>
 </div>
 </div>
-</div>
-<div class="section" id="debugging">
-<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h2>
-<p>Using <code class="docutils literal notranslate"><span class="pre">openocd</span></code> you can also debug NuttX. To do so, first run:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> openocd -f interface/st-link-v2.cfg -f target/stm32f1x.cfg
-</pre></div>
-</div>
-<p>which will start a GDB server. Then, start <code class="docutils literal notranslate"><span class="pre">gdb</span></code> as:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
-<span class="gp">$</span> gdb-multiarch nuttx/nuttx
-</pre></div>
-</div>
-<p>Inside <code class="docutils literal notranslate"><span class="pre">gdb</span></code> console, connect to the <code class="docutils literal notranslate"><span class="pre">openocd</span></code> server with:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) target extended-remote :3333
-</pre></div>
-</div>
-<p>You can debug using standard <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands.</p>
-<div class="section" id="advanced-debugging-with-jtag">
-<h3>Advanced Debugging with JTAG<a class="headerlink" href="#advanced-debugging-with-jtag" title="Permalink to this headline">¶</a></h3>
-<p>If your board does not have an embedded programmer and uses
-<a class="reference external" href="https://en.wikipedia.org/wiki/JTAG">JTAG</a> connector instead,
-things are a bit different. This guide assumes you have a JTAG hardware debugger like a
-<a class="reference external" href="https://www.segger.com/products/debug-probes/j-link/">Segger J-Link</a>.
-JTAG is a set of standards that let you
-attach a hardware device to your embedded board, and then remotely control the CPU.
-You can load code, start, stop, step through the program, and examine variables and memory.</p>
-<ol class="arabic">
-<li><p>Attach the Debugger Cables</p></li>
-<li><p>Start the Debugger</p>
-<p>Refer to your JTAG debugger’s documentation for information on how to start a GDB Server process that gdb can
-communicate with to load code and start, stop, and step the embedded board’s CPU. Your command line may be
-different from this one.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> JLinkGDBServer -device ATSAMA5D27 -if JTAG -speed <span class="m">1000</span> -JTAGConf -1,-1
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Launch the GNU Debugger</p>
-<p>In another terminal window, launch the GDB. In the case of this guide, this came with the
-ARM Embedded GNU Toolchain we downloaded in the Install step.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
-<span class="gp">$</span> gdb-multiarch nuttx/nuttx
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Set gdb to talk with the J-Link</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) target extended-remote :2331
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Reset the board</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon reset
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>You may need to switch to the serial console to hit a key to stop the board from booting from its boot monitor
-(U-Boot, in the case of the SAMA5 boards from Microchip).</p></li>
-<li><p>Halt the board</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon halt
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Load nuttx</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) load nuttx
-`/home/adamf/src/nuttx-sama5d36-xplained/nuttx/nuttx&#39; has changed; re-reading symbols.
-Loading section .text, size 0x9eae4 lma 0x20008000
-Loading section .ARM.exidx, size 0x8 lma 0x200a6ae4
-Loading section .data, size 0x125c lma 0x200a6aec
-Start address 0x20008040, load size 654664
-Transfer rate: 75 KB/sec, 15587 bytes/write.
-(gdb)
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Set a breakpoint</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) breakpoint nsh_main
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Start nuttx</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) continue
-Continuing.
-
-Breakpoint 1, nsh_main (argc=1, argv=0x200ddfac) at nsh_main.c:208
-208        sched_getparam(0, &amp;param);
-(gdb) continue
-Continuing.
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-</ol>
-</div>
-<div class="section" id="debugging-shortcuts">
-<h3>Debugging Shortcuts<a class="headerlink" href="#debugging-shortcuts" title="Permalink to this headline">¶</a></h3>
-<p>Note that you can abbreviate <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands, <code class="docutils literal notranslate"><span class="pre">info</span> <span class="pre">b</span></code> is a shortcut for
-<code class="docutils literal notranslate"><span class="pre">information</span> <span class="pre">breakpoints</span></code>; <code class="docutils literal notranslate"><span class="pre">c</span></code> works the same as <code class="docutils literal notranslate"><span class="pre">continue</span></code>, etc.</p>
 <hr class="docutils" />
 <p>Next up is <a class="reference internal" href="configuring.html#configuring"><span class="std std-ref">Configuring</span></a>.</p>
-</div>
 </div>
 </div>
 
