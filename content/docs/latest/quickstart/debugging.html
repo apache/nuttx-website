@@ -127,9 +127,10 @@
 <li class="toctree-l2"><a class="reference internal" href="configuring.html">Configuring</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#debug-logging">Debug Logging</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#debugging-with-openocd-and-gdb">Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#debugging-with-an-external-jtag-adapter">Debugging with an external JTAG adapter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#debugging-shortcuts">Debugging Shortcuts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-with-openocd-and-gdb">Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nuttx-aware-debugging">NuttX aware debugging</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="organization.html">Directory Structure</a></li>
@@ -222,15 +223,15 @@ debugging for your build for the subsystem or feature by using the <code class="
 <p>The debug options are available under <span class="menuselection">Build Setup ‣ Debug Options</span>. You will most likely have to enable the
 following options:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Debug</span> <span class="pre">Features</span></code> — selecting this will turn on subsystem-level debugging options, they will become visible
+<li><p><span class="menuselection">Enable Debug Features</span> — selecting this will turn on subsystem-level debugging options, they will become visible
 on the page below. You can then select the ones you want.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Error</span> <span class="pre">Output</span></code> — this will only log errors.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Warnings</span> <span class="pre">Output</span></code> — this will log warnings and errors.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Enable</span> <span class="pre">Informational</span> <span class="pre">Debug</span> <span class="pre">Output</span></code> — this will produce informational output, warnings, and errors.</p></li>
+<li><p><span class="menuselection">Enable Error Output</span> — this will only log errors.</p></li>
+<li><p><span class="menuselection">Enable Warnings Output</span> — this will log warnings and errors.</p></li>
+<li><p><span class="menuselection">Enable Informational Debug Output</span> — this will produce informational output, warnings, and errors.</p></li>
 </ul>
 <p>You can then select from the subsystems that are available, Network, Scheduler, USB, etc. Note that you will need to
 separately enable the subsystem elsewhere in the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system. To see the <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> define that is set,
-use the arrow keys to highlight the subsystem (for instance, <code class="docutils literal notranslate"><span class="pre">Network</span> <span class="pre">Debug</span> <span class="pre">Features</span></code>) and type ‘?’. This will show
+use the arrow keys to highlight the subsystem (for instance, <span class="menuselection">Network Debug Features</span>) and type <kbd class="kbd docutils literal notranslate">?</kbd>. This will show
 you that the C macro that is set is called <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_NET</span></code>. <code class="docutils literal notranslate"><span class="pre">debug.h</span></code> defines the <code class="docutils literal notranslate"><span class="pre">netinfo()</span></code> logging
 function that will log output if this macro is set. You can search the source code for <code class="docutils literal notranslate"><span class="pre">netinfo</span></code> to see how it is
 used.</p>
@@ -263,112 +264,177 @@ start <code class="docutils literal notranslate"><span class="pre">openocd</span
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) target extended-remote :3333
 </pre></div>
 </div>
-<p>You can now use standard <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands.</p>
-</div>
-<div class="section" id="debugging-with-an-external-jtag-adapter">
-<h2>Debugging with an external JTAG adapter<a class="headerlink" href="#debugging-with-an-external-jtag-adapter" title="Permalink to this headline">¶</a></h2>
-<div class="admonition-todo admonition" id="id2">
-<p class="admonition-title">Todo</p>
-<p>Explain this with openocd. It gives the impression that JTAG requires
-a specific tool. Also, some of the example commands apply to both cases.
-This repeats some of the above.</p>
-</div>
-<p>If your board does not have an embedded programmer and uses
-<a class="reference external" href="https://en.wikipedia.org/wiki/JTAG">JTAG</a> connector instead,
-things are a bit different. This guide assumes you have a JTAG hardware debugger like a
-<a class="reference external" href="https://www.segger.com/products/debug-probes/j-link/">Segger J-Link</a>.
-JTAG is a set of standards that let you
-attach a hardware device to your embedded board, and then remotely control the CPU.
-You can load code, start, stop, step through the program, and examine variables and memory.</p>
-<ol class="arabic">
-<li><p>Attach the Debugger Cables</p></li>
-<li><p>Start the Debugger</p>
-<p>Refer to your JTAG debugger’s documentation for information on how to start a GDB Server process that gdb can
-communicate with to load code and start, stop, and step the embedded board’s CPU. Your command line may be
-different from this one.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> JLinkGDBServer -device ATSAMA5D27 -if JTAG -speed <span class="m">1000</span> -JTAGConf -1,-1
+<p>You can now use standard <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands. For example, to
+reset the board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon reset
 </pre></div>
 </div>
-</div></blockquote>
-</li>
-<li><p>Launch the GNU Debugger</p>
-<p>In another terminal window, launch the GDB. In the case of this guide, this came with the
-ARM Embedded GNU Toolchain we downloaded in the Install step.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
-<span class="gp">$</span> gdb-multiarch nuttx/nuttx
+<p>To halt the board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon halt
 </pre></div>
 </div>
-</div></blockquote>
-</li>
-<li><p>Set gdb to talk with the J-Link</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) target extended-remote :2331
+<p>To set a breakpoint:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) breakpoint nsh_main
 </pre></div>
 </div>
-</div></blockquote>
-</li>
-<li><p>Reset the board</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon reset
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>You may need to switch to the serial console to hit a key to stop the board from booting from its boot monitor
-(U-Boot, in the case of the SAMA5 boards from Microchip).</p></li>
-<li><p>Halt the board</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon halt
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Load nuttx</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) load nuttx
-`/home/adamf/src/nuttx-sama5d36-xplained/nuttx/nuttx&#39; has changed; re-reading symbols.
-Loading section .text, size 0x9eae4 lma 0x20008000
-Loading section .ARM.exidx, size 0x8 lma 0x200a6ae4
-Loading section .data, size 0x125c lma 0x200a6aec
-Start address 0x20008040, load size 654664
-Transfer rate: 75 KB/sec, 15587 bytes/write.
-(gdb)
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Set a breakpoint</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) breakpoint nsh_main
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Start nuttx</p>
-<blockquote>
-<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) continue
+<p>and to finally start nuttx:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) continue
 Continuing.
 
 Breakpoint 1, nsh_main (argc=1, argv=0x200ddfac) at nsh_main.c:208
-208        sched_getparam(0, &amp;param);
+208     sched_getparam(0, &amp;param);
 (gdb) continue
 Continuing.
 </pre></div>
 </div>
-</div></blockquote>
-</li>
-</ol>
-</div>
-<div class="section" id="debugging-shortcuts">
-<h2>Debugging Shortcuts<a class="headerlink" href="#debugging-shortcuts" title="Permalink to this headline">¶</a></h2>
-<p>Note that you can abbreviate <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands, <code class="docutils literal notranslate"><span class="pre">info</span> <span class="pre">b</span></code> is a shortcut for
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can abbreviate <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands: <code class="docutils literal notranslate"><span class="pre">info</span> <span class="pre">b</span></code> is a shortcut for
 <code class="docutils literal notranslate"><span class="pre">information</span> <span class="pre">breakpoints</span></code>; <code class="docutils literal notranslate"><span class="pre">c</span></code> works the same as <code class="docutils literal notranslate"><span class="pre">continue</span></code>, etc.</p>
-<p>See this article for more info:
-<a class="reference external" href="https://micro-ros.github.io/docs/tutorials/advanced/nuttx/debugging/">Debugging a Apache NuttX target with GDB and OpenOCD</a>.</p>
-<hr class="docutils" />
-<p>Next up is <a class="reference internal" href="organization.html#organization"><span class="std std-ref">Directory Structure</span></a>.</p>
+</div>
+<div class="section" id="nuttx-aware-debugging">
+<h3>NuttX aware debugging<a class="headerlink" href="#nuttx-aware-debugging" title="Permalink to this headline">¶</a></h3>
+<p>Since NuttX is actually an RTOS, it is useful to have <code class="docutils literal notranslate"><span class="pre">gdb</span></code> be aware of the different
+tasks/threads that are running. There are two ways to do this: via <code class="docutils literal notranslate"><span class="pre">openocd</span></code>
+itself or via <code class="docutils literal notranslate"><span class="pre">gdb</span></code>. Note that in both cases, you need to enable debug symbols
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_SYMBOLS</span></code>).</p>
+<div class="section" id="with-openocd">
+<h4>With openocd<a class="headerlink" href="#with-openocd" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">openocd</span></code> supports various RTOS directly, including NuttX. It works by reading
+into internal NuttX symbols which define the active tasks and their properties.
+As a result, the <code class="docutils literal notranslate"><span class="pre">gdb</span></code> server will directly be aware of each task as a different
+<cite>thread</cite>. The downside of this approach is that it depends on how you build NuttX
+as there are some options hardcoded into
+opencd. By default, it assumes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_MQUEUE=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING=n</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>If you need these options to be set differently, you will have to edit <code class="docutils literal notranslate"><span class="pre">./src/rtos/nuttx_header.h</span></code> from <code class="docutils literal notranslate"><span class="pre">openocd</span></code>,
+change the corresponding settings and then rebuild it.</p>
+<p>Finally, to enable NuttX integration, you need to supply an additional <code class="docutils literal notranslate"><span class="pre">openocd</span></code> argument:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> openocd -f interface/st-link-v2.cfg -f target/stm32f1x.cfg -c <span class="s1">&#39;$_TARGETNAME configure -rtos nuttx&#39;</span>
+</pre></div>
+</div>
+<p>Since <code class="docutils literal notranslate"><span class="pre">openocd</span></code> also needs to know the memory layout of certain datastructures, you need to have <code class="docutils literal notranslate"><span class="pre">gdb</span></code>
+run the following commands once the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> binary is loaded:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>eval &quot;monitor nuttx.pid_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;pid
+eval &quot;monitor nuttx.xcpreg_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;xcp.regs
+eval &quot;monitor nuttx.state_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;task_state
+eval &quot;monitor nuttx.name_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;name
+eval &quot;monitor nuttx.name_size %d&quot;, sizeof(((struct tcb_s *)(0))-&gt;name)
+</pre></div>
+</div>
+<p>One way to do this is to define a gdb <cite>hook</cite> function that will be called when running <code class="docutils literal notranslate"><span class="pre">file</span></code> command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>define hookpost-file
+  eval &quot;monitor nuttx.pid_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;pid
+  eval &quot;monitor nuttx.xcpreg_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;xcp.regs
+  eval &quot;monitor nuttx.state_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;task_state
+  eval &quot;monitor nuttx.name_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;name
+  eval &quot;monitor nuttx.name_size %d&quot;, sizeof(((struct tcb_s *)(0))-&gt;name)
+end
+</pre></div>
+</div>
+<p>You will see that <code class="docutils literal notranslate"><span class="pre">openocd</span></code> has received the memory offsets in its output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Open On-Chip Debugger 0.10.0+dev-01514-ga8edbd020-dirty (2020-11-20-14:23)
+Licensed under GNU GPL v2
+For bug reports, read
+        http://openocd.org/doc/doxygen/bugs.html
+Info : auto-selecting first available session transport &quot;swd&quot;. To override use &#39;transport select &lt;transport&gt;&#39;.
+Info : target type name = cortex_m
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
+15:41:23: Debugging starts
+Info : CMSIS-DAP: SWD  Supported
+Info : CMSIS-DAP: FW Version = 1.10
+Info : CMSIS-DAP: Interface Initialised (SWD)
+Info : SWCLK/TCK = 1 SWDIO/TMS = 1 TDI = 0 TDO = 0 nTRST = 0 nRESET = 1
+Info : CMSIS-DAP: Interface ready
+Info : clock speed 1000 kHz
+Info : SWD DPIDR 0x2ba01477
+Info : nrf52.cpu: hardware has 6 breakpoints, 4 watchpoints
+Info : starting gdb server for nrf52.cpu on 3333
+Info : Listening on port 3333 for gdb connections
+Info : accepting &#39;gdb&#39; connection on tcp/3333
+Error: No symbols for NuttX
+Info : nRF52832-QFAA(build code: B0) 512kB Flash, 64kB RAM
+undefined debug reason 8 - target needs reset
+Warn : Prefer GDB command &quot;target extended-remote 3333&quot; instead of &quot;target remote 3333&quot;
+Info : pid_offset: 12
+Info : xcpreg_offset: 132
+Info : state_offset: 26
+Info : name_offset: 208
+Info : name_size: 32
+target halted due to debug-request, current mode: Thread
+xPSR: 0x01000000 pc: 0x000000dc msp: 0x20000cf0
+target halted due to debug-request, current mode: Thread xPSR: 0x01000000 pc: 0x000000dc msp: 0x20000cf0
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You will probably see the <code class="docutils literal notranslate"><span class="pre">Error:</span> <span class="pre">No</span> <span class="pre">symbols</span> <span class="pre">for</span> <span class="pre">NuttX</span></code> error appear once at startup. This is OK
+unless you see it every time you step the debugger. In this case, it would mean you did not enable debug symbols.</p>
+</div>
+<p>Now, You can now inspect threads:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) info threads
+  Id   Target Id         Frame
+* 1    Remote target     nx_start_application () at init/nx_bringup.c:261
+(gdb) info registers
+r0             0x0                 0
+r1             0x2f                47
+r2             0x0                 0
+r3             0x0                 0
+r4             0x0                 0
+r5             0x0                 0
+r6             0x0                 0
+r7             0x20000ca0          536874144
+r8             0x0                 0
+r9             0x0                 0
+r10            0x0                 0
+r11            0x0                 0
+r12            0x9                 9
+sp             0x20000c98          0x20000c98
+lr             0x19c5              6597
+pc             0x1996              0x1996 &lt;nx_start_application+10&gt;
+xPSR           0x41000000          1090519040
+fpscr          0x0                 0
+msp            0x20000c98          0x20000c98
+psp            0x0                 0x0 &lt;_vectors&gt;
+primask        0x0                 0
+basepri        0xe0                -32
+faultmask      0x0                 0
+control        0x0                 0
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-gdb">
+<h4>With gdb<a class="headerlink" href="#with-gdb" title="Permalink to this headline">¶</a></h4>
+<p>You can also do NuttX aware debugging using <code class="docutils literal notranslate"><span class="pre">gdb</span></code> scripting support.
+The benefit is that it works also for the sim build where <code class="docutils literal notranslate"><span class="pre">openocd</span></code> is
+not applicable. For this to work, you will need to enable PROC filesystem support
+which will expose required task information (<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS=y</span></code>).</p>
+<p>To use this approach, you can load the <code class="docutils literal notranslate"><span class="pre">nuttx/tools/nuttx-gdbinit</span></code> file. An
+easy way to do this is to create a symbolic link:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$HOME</span>
+<span class="gp">$</span> ln -s nuttx/tools/nuttx-gdbinit .gdbinit
+</pre></div>
+</div>
+<p>This way whenever gdb is started it will run the appropriate commands. To inspect
+the threads you can now use the following <code class="docutils literal notranslate"><span class="pre">gdb</span></code> command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) info_nxthreads
+target examined
+_target_arch.name=armv7e-m
+$_target_has_fpu : 0
+$_target_has_smp : 0
+saved current_tcb (pid=0)
+* 0 Thread 0x20000308  (Name: Idle Task, State: Running, Priority: 0) 0xdc in __start()
+  1 Thread 0x20001480  (Name: init, State: Waiting,Semaphore, Priority: 100) 0x7e08 in arm_switchcontext()
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 </div>
 
