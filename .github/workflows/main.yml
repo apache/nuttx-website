@@ -15,33 +15,53 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Site
+      uses: actions/checkout@v2
     - run: |
         git fetch --prune --unshallow
 
-    - name: Checkout NuttX Documentation
+    - name: Checkout NuttX repo
       uses: actions/checkout@v2
       with:
         repository: apache/incubator-nuttx
-        fetch-depth: 1
+        fetch-depth: 0
         ref: master
-        path: nuttx/master
+        path: nuttx
     - uses: actions/setup-python@v2
       with:
         python-version: '3.8'
-    - name: Generate requirements.txt file
+    - name: Build docs
       run: |
-        cd nuttx/master/Documentation/
         pip3 install pipenv
-        pipenv lock -r > requirements.txt
-    - uses: ammaraskar/sphinx-action@master
-      with:
-        docs-folder: "nuttx/master/Documentation/"
+        cd nuttx/Documentation
 
-    - name: Install tools
+        DOCDIR=../../docs
+        rm -rf $DOCDIR
+
+        NUTTX_TAGS=$(git tag -l nuttx-10*)
+        export NUTTX_VERSIONS=$(echo $NUTTX_TAGS | sed -r 's|^nuttx-||g')
+        for nuttx_version in $NUTTX_TAGS master; do
+          git checkout -f $nuttx_version
+          pipenv install
+          pipenv clean
+          
+          if [ "$nuttx_version" = "master" ]; then
+            OUTDIR="$DOCDIR/latest"
+         else
+            OUTDIR="$DOCDIR/${nuttx_version#nuttx-}"
+          fi
+
+          pipenv run make html BUILDDIR="$OUTDIR"
+          mv $OUTDIR/html/* $OUTDIR
+          rm -rf $OUTDIR/{html,doctrees}
+        done
+
+        cd ../..
+
+    - name: Install Ruby tools
       run: |
         sudo apt-get -y install rubygems ruby-dev zlib1g-dev
-
+    
     - name: Build Site
       run: |
         export GEM_HOME=$HOME/.gem
