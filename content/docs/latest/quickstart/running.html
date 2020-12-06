@@ -95,7 +95,7 @@
     
     <option value="../../latest" selected="selected">latest</option>
     
-    <option value="../../10.0.0 nuttx-10.0.0-RC0" >10.0.0 nuttx-10.0.0-RC0</option>
+    <option value="../../10.0.0" >10.0.0</option>
     
     </select>
   </div>
@@ -124,7 +124,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting Started</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compiling.html">Compiling</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Running</a><ul>
@@ -226,19 +225,31 @@ For the purposes of this guide, we will use the Nucleo F103RB board.</p>
 <div class="section" id="flashing">
 <h2>Flashing<a class="headerlink" href="#flashing" title="Permalink to this headline">¶</a></h2>
 <p>There are various tools you can use to flash the NuttX binary to your Nucleo
-board. One common option is to use <cite>openocd</cite> which supports a large number
+board. One common option is to use <code class="docutils literal notranslate"><span class="pre">openocd</span></code> which supports a large number
 of programmers and target microcontrollers.</p>
-<p>To install the stable version of openocd you can do:</p>
+<p>You should note that <code class="docutils literal notranslate"><span class="pre">openocd</span></code> project has not made stable releases for long
+time and support for newer hardware will probably be only available in the
+latest Git version, so it is actually recommended to install latest development
+version.</p>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-SW5zdGFsbCBzdGFibGUgdmVyc2lvbiAoVWJ1bnR1KQ== docutils container">
+<div class="docutils container">
+<p>Install stable version (Ubuntu)</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>Install latest version from source</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-SW5zdGFsbCBzdGFibGUgdmVyc2lvbiAoVWJ1bnR1KQ== active docutils container">
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> apt install openocd
 </pre></div>
 </div>
-<div class="admonition-todo admonition" id="id2">
-<p class="admonition-title">Todo</p>
-<p>add instructions for other platforms</p>
 </div>
-<p>You should note that openocd project has not made stable releases for long
-time and support for newer hardware will probably be only available in the
-latest Git version. To install it you should:</p>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 docutils container">
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone git://git.code.sf.net/p/openocd/code openocd
 <span class="gp">$</span> <span class="nb">cd</span> openocd
 <span class="gp">$</span> ./bootstrap
@@ -248,6 +259,8 @@ latest Git version. To install it you should:</p>
 </div>
 <p>The resulting installation will be under <code class="docutils literal notranslate"><span class="pre">openocd/install</span></code>. You can add
 <code class="docutils literal notranslate"><span class="pre">openocd/install/bin</span></code> to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+</div>
+</div>
 <p>Now, to flash the binary to your board, connect the USB cable and do:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> nuttx/
 <span class="gp">$</span> openocd -f interface/st-link-v2.cfg -f target/stm32f1x.cfg -c <span class="s1">&#39;init&#39;</span> <span class="se">\</span>
@@ -259,7 +272,8 @@ latest Git version. To install it you should:</p>
 <h2>Access NuttShell<a class="headerlink" href="#access-nuttshell" title="Permalink to this headline">¶</a></h2>
 <p>Once you flash your board, it will reset and offer a prompt over the serial
 console. With the Nucleo board, you can simply open the terminal program
-of your choice where you will see the <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span></code> prompt:</p>
+of your choice where you will see the <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span></code> prompt (press <kbd class="kbd docutils literal notranslate">enter</kbd>
+if you don’t see anything):</p>
 <div class="sphinx-tabs docutils container">
 <div class="ui top attached tabular menu sphinx-menu docutils container">
 <div class="active item sphinx-data-tab-cGljb2NvbSAoQ0xJKQ== docutils container">
@@ -284,8 +298,16 @@ of your choice where you will see the <code class="docutils literal notranslate"
 </div>
 </div>
 </div>
-<hr class="docutils" />
-<p>Next up is <a class="reference internal" href="configuring.html#configuring"><span class="std std-ref">Configuring</span></a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You may have to add yourself to the <code class="docutils literal notranslate"><span class="pre">dialout</span></code> group on Linux to have permission
+to access serial ports:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> gpasswd -a &lt;user&gt; dialout
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;user&gt;</span></code> is your username. You will need to log out from your desktop
+for the change to have effect.</p>
+</div>
 </div>
 </div>
 
@@ -294,6 +316,15 @@ of your choice where you will see the <code class="docutils literal notranslate"
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="configuring.html" class="btn btn-neutral float-right" title="Configuring" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="compiling.html" class="btn btn-neutral float-left" title="Compiling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
