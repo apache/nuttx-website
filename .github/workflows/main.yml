@@ -38,8 +38,11 @@ jobs:
         DOCDIR=../../docs
         rm -rf $DOCDIR
 
-        NUTTX_TAGS=$(git tag -l 'nuttx-10*' | fgrep -v RC)
-        export NUTTX_VERSIONS=$(echo -n $NUTTX_TAGS | sed -r 's|^nuttx-||g' | tr '\n' ',')
+        NUTTX_TAGS=$(git tag -l 'nuttx-1?.*' | fgrep -v RC)
+        export NUTTX_VERSIONS=$(echo -n "$NUTTX_TAGS" | sed -r 's|^nuttx-||g' | tr '\n' ',')
+        
+        echo "Building documentation for nuttx: $NUTTX_VERSIONS (and master)"
+
         for nuttx_version in $NUTTX_TAGS master; do
           git checkout -f $nuttx_version
           pipenv install
