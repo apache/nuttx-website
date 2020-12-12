@@ -32,7 +32,7 @@ running from within the directory:
 ## Pushing to site
 
 Site is updated by a CI job that runs the `publish.sh` script. Once this
-runs it the results will be visible [https://nuttx.apache.org](here).
+runs it the results will be visible [here](https://nuttx.apache.org).
 
 ### Force Deployment
 
