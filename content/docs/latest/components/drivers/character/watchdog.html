@@ -395,9 +395,54 @@ the dog will starve and the chip will trigger an interrupt or reset.</p>
 <dl class="c macro">
 <dt id="c.WDIOC_KEEPALIVE">
 <code class="sig-name descname">WDIOC_KEEPALIVE</code><a class="headerlink" href="#c.WDIOC_KEEPALIVE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>This command resets the watchdog timer (“ping”,  “pet the dog”,  “feed the dog”).</p>
+<dd><p>This command resets the watchdog timer AKA ‘<strong>ping</strong>”, “<strong>kick</strong>”, “<strong>pet</strong>”,  “<strong>feed</strong>” the dog”.</p>
 </dd></dl>
 
+</div>
+<div class="section" id="enable-built-in-system-monitoring-to-reset-the-watchdog">
+<h2>Enable Built in System Monitoring to reset the watchdog<a class="headerlink" href="#enable-built-in-system-monitoring-to-reset-the-watchdog" title="Permalink to this headline">¶</a></h2>
+<p>The auto-monitor provides an OS-internal mechanism to automatically start and repeatedly reset the watchdog.</p>
+<p>To enable it, follow the next instructions:</p>
+<ol class="arabic simple">
+<li><p>Select a Watchdog Timer Instance</p></li>
+</ol>
+<blockquote>
+<div><p>To select the wdt browse in the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> using the following path:</p>
+<p>Go into menu <span class="menuselection">System Type ‣ &lt;Chip&gt; Peripheral Selection</span> and press <kbd class="kbd docutils literal notranslate">Enter</kbd>. Then select one watchdog timer.</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Enable the Auto-monitor option</p></li>
+</ol>
+<blockquote>
+<div><p>Go into menu <span class="menuselection">Device Drivers ‣ Timer Driver Support</span> and press <kbd class="kbd docutils literal notranslate">Enter</kbd>. Then enable:</p>
+<ul class="simple">
+<li><p>[x] Watchdog Timer Support</p></li>
+</ul>
+<p>Then press <kbd class="kbd docutils literal notranslate">Enter</kbd> again to enter into the Watchdog Timer Support menu. And finally enable the Auto-monitor option:</p>
+<ul class="simple">
+<li><p>[x] Auto-monitor</p></li>
+</ul>
+<p>After selecting the option you may want to configure some parameters:</p>
+<ul class="simple">
+<li><p><strong>Timeout</strong>: It is the watchdog timer expiration time in seconds.</p></li>
+<li><p><strong>Keep a live interval</strong>: This is the interval in which the watchdog will be fed. It is in seconds. It can’t be bigger than the timeout. If this interval is equal to timeout interval, than this interval will automatically change to half timeout.</p></li>
+<li><p><strong>Keep alive by</strong>: This is a choice to determine who is going to feed the dog. There are 4 possible choices that are described as follows.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Capture</span> <span class="pre">callback</span></code>: This choice registers a watchdog timer callback to reset the watchdog every time it expires, i.e., on timeout.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Timer</span> <span class="pre">callback</span></code>: This choice also uses a timer callback to reset the watchdog, but it will reset the watchdog every “keep a live interval”.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Worker</span> <span class="pre">callback</span></code>:  This choice uses a Work Queue to reset the watchdog every “keep a live interval”. This choice depends on having the Low or High Priority Work Queue enabled.
+If only the High Priority Work Queue is enabled, this one will be used, otherwise Low Priority Work Queue is used.</p>
+<p>So, before enabling it, go into menu <span class="menuselection">RTOS Features ‣ Work queue support</span> and press <kbd class="kbd docutils literal notranslate">Enter</kbd>.</p>
+<ul class="simple">
+<li><p>[x] Low priority (kernel) worker thread</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Idle</span> <span class="pre">callback</span></code>: This choice sets an Idle callback to feed the dog. It depends on the PM module, because this callback is triggered by the PM state change. To enable it do the following:</p>
+<p>Go into menu <span class="menuselection">Device Drivers</span> and enable:</p>
+<ul class="simple">
+<li><p>[x] Power Management Support</p></li>
+</ul>
+</div></blockquote>
+<p>After selecting one of these choices, the chip will keep itself alive by one of these options.</p>
 </div>
 </div>
 
