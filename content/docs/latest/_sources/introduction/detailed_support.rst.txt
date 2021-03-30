@@ -1808,6 +1808,11 @@ One board is supported in this family:
    `README <https://github.com/apache/incubator-nuttx/blob/master/boards/arm/stm32/nucleo-g431rb/README.txt>`__
    file for further information.
 
+-  **B-G431B-ESC1**. Initial board support for the
+   B-G431B-ESC1 was added in NuttX-10.0. Refer to the NuttX board
+   `README <https://github.com/apache/incubator-nuttx/blob/master/boards/arm/stm32/b-g431b-esc1/README.txt>`__
+   file for further information.
+
 STMicro STM32 L475
 ------------------
 
@@ -3019,25 +3024,6 @@ RISC-V
 
 RISC-V Architectural Support. Basic support for the RISC-V architecture
 was contributed by Ken Pettit in NuttX-7.19.
-
-NEXT RISC-V NR5Mxx
-------------------
-
-This support is for a custom NEXT RISC-V NR5Mxx (RV32IM). The initial release
-is *thin* but a great starting point for anyone interested in RISC-V development with
-NuttX.
-
-GreenWaves GAP8
----------------
-
-(RV32IM architecture)
-
-Basic support GreenWaves GAP8 *gapuino* board
-was added by hhuysqt in NuttX-7.27. The GAP8 is a 1+8-core DSP-like
-RISC-V MCU. The GAP8 features a RI5CY core called Fabric Controller(FC),
-and a cluster of 8 RI5CY cores that runs at a bit slower speed. The GAP8
-is an implementation of the opensource PULP platform, a
-Parallel-Ultra-Low-Power design.
 
 `Sipeed Maix bit <#k210>`__
 

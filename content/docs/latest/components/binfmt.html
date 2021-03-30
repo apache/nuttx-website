@@ -544,6 +544,10 @@ object. The binary loader will use the symbol table to look up the
 symbol by its name and to provide the address associated with the symbol
 as needed to perform the dynamic linking of the binary object to the
 base FLASH code.</p>
+<p>Some toolchains will prefix symbols with an underscore. To support these
+toolchains the <code class="docutils literal notranslate"><span class="pre">CONFIG_SYMTAB_DECORATED</span></code> setting may be defined. This
+will cause a leading underscore to be ignored on <em>undefined</em> symbols
+during dynamic linking.</p>
 <div class="section" id="symbol-table-header-files">
 <h3>Symbol Table Header Files<a class="headerlink" href="#symbol-table-header-files" title="Permalink to this headline">¶</a></h3>
 <p>The interface to the symbol table logic is described in the header file
@@ -584,21 +588,9 @@ fixed size arrays completely defined at compilation or link time.</p></li>
 <dt id="c.symtab_findbyname">
 FAR <em class="property">const</em> <em class="property">struct</em> symtab_s *<code class="sig-name descname">symtab_findbyname</code><span class="sig-paren">(</span>FAR <em class="property">const</em> <em class="property">struct</em> symtab_s *<em>symtab</em>, FAR <em class="property">const</em> char *<em>name</em>, int <em>nsyms</em><span class="sig-paren">)</span>;<a class="headerlink" href="#c.symtab_findbyname" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Find the symbol in the symbol table with the matching name.
-This version assumes that table is not ordered with respect to
-symbol name and, hence, access time will be linear with respect
-to <code class="docutils literal notranslate"><span class="pre">nsyms</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>A reference to the symbol table entry if an entry with the matching name is found; NULL is returned if the entry is not found.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="c function">
-<dt id="c.symtab_findorderedbyname">
-FAR <em class="property">const</em> <em class="property">struct</em> symtab_s *<code class="sig-name descname">symtab_findorderedbyname</code><span class="sig-paren">(</span>FAR <em class="property">const</em> <em class="property">struct</em> symtab_s *<em>symtab</em>, FAR <em class="property">const</em> char *<em>name</em>, int <em>nsyms</em><span class="sig-paren">)</span>;<a class="headerlink" href="#c.symtab_findorderedbyname" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Find the symbol in the symbol table with the matching name.
-This version assumes that table ordered with respect to symbol name.</p>
+The implementation will be linear with respect to <code class="docutils literal notranslate"><span class="pre">nsyms</span></code> if
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SYMTAB_ORDEREDBYNAME</span></code> is not selected, and logarithmic
+if it is.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A reference to the symbol table entry if an entry with
@@ -612,12 +604,12 @@ the matching name is found; NULL is returned if the entry is not found.</p>
 FAR <em class="property">const</em> <em class="property">struct</em> symtab_s *<code class="sig-name descname">symtab_findbyvalue</code><span class="sig-paren">(</span>FAR <em class="property">const</em> <em class="property">struct</em> symtab_s *<em>symtab</em>, FAR void *<em>value</em>, int <em>nsyms</em><span class="sig-paren">)</span>;<a class="headerlink" href="#c.symtab_findbyvalue" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Find the symbol in the symbol table whose value closest
 (but not greater than), the provided value. This version assumes
-that table is not ordered with respect to symbol name and, hence,
+that table is not ordered with respect to symbol value and, hence,
 access time will be linear with respect to <code class="docutils literal notranslate"><span class="pre">nsyms</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A reference to the symbol table entry if an entry with the matching
-name is found; <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is returned if the entry is not found.</p>
+value is found; <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is returned if the entry is not found.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -632,6 +624,7 @@ name is found; <code class="docutils literal notranslate"><span class="pre">NULL
 This logic may be suppressed be defining this setting.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_CONSTRUCTORS</span></code>: Build in support for C++ constructors in loaded modules.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYMTAB_ORDEREDBYNAME</span></code>: Symbol tables are order by name (rather than value).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYMTAB_DECORATED</span></code>: Symbols will have a leading underscore in object files.</p></li>
 </ul>
 </div></blockquote>
 <p>Additional configuration options may be required for the each enabled
