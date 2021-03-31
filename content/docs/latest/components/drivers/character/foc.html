@@ -26,7 +26,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Touchscreen Device Drivers &mdash; NuttX latest documentation</title>
+  <title>FOC Driver Interface &mdash; NuttX latest documentation</title>
   
 
   
@@ -62,8 +62,8 @@
     
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Analog (ADC/DAC) Drivers" href="analog.html" />
-    <link rel="prev" title="Serial Device Drivers" href="serial.html" /> 
+    <link rel="next" title="Block Device Drivers" href="../block/index.html" />
+    <link rel="prev" title="Note Driver Interface" href="note.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -132,7 +132,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Device Drivers</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="index.html">Character Device Drivers</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="serial.html">Serial Device Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Touchscreen Device Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="touchscreen.html">Touchscreen Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="analog.html">Analog (ADC/DAC) Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pwm.html">PWM Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="can.html">CAN Drivers</a></li>
@@ -142,7 +142,7 @@
 <li class="toctree-l4"><a class="reference internal" href="watchdog.html">Watchdog Timer Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="keypad.html">Keyboard/Keypad Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="note.html">Note Driver Interface</a></li>
-<li class="toctree-l4"><a class="reference internal" href="foc.html">FOC Driver Interface</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">FOC Driver Interface</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../block/index.html">Block Device Drivers</a></li>
@@ -214,13 +214,13 @@
         
           <li><a href="index.html">Character Device Drivers</a> &raquo;</li>
         
-      <li>Touchscreen Device Drivers</li>
+      <li>FOC Driver Interface</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../../_sources/components/drivers/character/touchscreen.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/components/drivers/character/foc.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -233,42 +233,51 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="touchscreen-device-drivers">
-<h1>Touchscreen Device Drivers<a class="headerlink" href="#touchscreen-device-drivers" title="Permalink to this headline">¶</a></h1>
-<p>NuttX supports a two-part touchscreen driver architecture.</p>
+  <div class="section" id="foc-driver-interface">
+<h1>FOC Driver Interface<a class="headerlink" href="#foc-driver-interface" title="Permalink to this headline">¶</a></h1>
+<p>Field Oriented Control (FOC) is a common technique to control
+either synchronous or asynchronous alternating current machines.
+The main goal of FOC is to control direct current (Id) and
+quadrature current (Iq) in powered device.</p>
+<p>The device on the kernel side is responsible for the following:</p>
 <ol class="arabic simple">
-<li><p>An “upper half”, generic driver that provides the common
-touchscreen interface to application level code, and</p></li>
-<li><p>A “lower half”, platform-specific driver that implements the
-low-level touchscreen controls to implement the touchscreen
-functionality.</p></li>
+<li><p>update PWM duty cycles</p></li>
+<li><p>return ADC current samples</p></li>
+<li><p>synchronize user-space with PWM events</p></li>
 </ol>
-<p>Files supporting the touchscreen controller (TSC) driver can be
-found in the following locations:</p>
+<p>The Nuttx FOC driver is split into two parts:</p>
+<ol class="arabic simple">
+<li><p>An “upper half”, generic driver that provides the common FOC
+interface to application level code,</p></li>
+<li><p>A “lower half”, platform-specific driver that implemets
+the low-level logic to implement the FOC functionality</p></li>
+</ol>
+<p>Files supporting FOC can be found in the following locations:</p>
 <ul class="simple">
-<li><p><strong>Interface Definition</strong>. The header files for NuttX
-touchscreen drivers reside in the
-<code class="docutils literal notranslate"><span class="pre">include/nuttx/include/input</span></code> directory. The interface
-between the touchscreen controller “upper half” and “lower
-half” drivers are <em>not</em> common, but vary from
-controller-to-controller. Because of this, each touchscreen
-driver has its own unique header file that describes the “upper
-half”/”lower half” interface in that directory. The application
-level interface to each touchscreen driver, on the other hand,
-<em>is</em> the same for each touchscreen driver and is described
-<code class="docutils literal notranslate"><span class="pre">include/nuttx/include/input/touchscreen.h</span></code>. The touchscreen
-driver uses a standard character driver framework but read
-operations return specially formatted data.</p></li>
-<li><p><strong>“Upper Half” Driver</strong>. The controller-specific, “upper half”
-touchscreen drivers reside in the directory <code class="docutils literal notranslate"><span class="pre">drivers/input</span></code>.</p></li>
-<li><p><strong>“Lower Half” Drivers</strong>. Platform-specific touchscreen drivers
-reside in either: (1) The
-<code class="docutils literal notranslate"><span class="pre">arch/</span></code><em>&lt;architecture&gt;</em><code class="docutils literal notranslate"><span class="pre">/src/</span></code><em>&lt;hardware&gt;</em> directory
-for the processor architectures that have build in touchscreen
-controllers or (2) the
-<code class="docutils literal notranslate"><span class="pre">boards/</span></code><em>&lt;arch&gt;</em><code class="docutils literal notranslate"><span class="pre">/</span></code><em>&lt;chip&gt;</em><code class="docutils literal notranslate"><span class="pre">/</span></code><em>&lt;board&gt;</em><code class="docutils literal notranslate"><span class="pre">/src/</span></code>
-directory for boards that use an external touchscreen
-controller chip.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/motor/foc/foc.h</span></code>.
+“Upper-half” FOC interface available for the user-space.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/motor/foc/foc_lower.h</span></code>.
+“Lower-half” FOC interface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/motor/foc/foc_dev.c</span></code>.
+The generic “upper half” FOC driver.</p></li>
+</ul>
+<p>The majority of the functionality available to the application
+is implemented in driver ioctl calls. Supported ioctl commands:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MTRIOC_START</span></code> - Start the FOC device, arg: none.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTRIOC_STOP</span></code> - Stop the FOC device, arg: none.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTRIOC_GET_STATE</span></code> - Get the FOC device state,
+arg: <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">foc_state_s</span></code> pointer.
+This is a blocking operation that is used to synchronize the user space
+application with ADC samples.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTRIOC_CLEAR_FAULT</span></code> - Clear the FOC device fault state,
+arg: none.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTRIOC_SET_PARAMS</span></code> - Set the FOC device operation parameters,
+arg: <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">foc_params_s</span></code> pointer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTRIOC_SET_CONFIG</span></code> - Set the FOC device configuration,
+arg: <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">foc_cfg_s</span></code> pointer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTRIOC_GET_INFO</span></code> -  Get the FOC device info,
+arg: <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">foc_info_s</span></code> pointer.</p></li>
 </ul>
 </div>
 
@@ -280,10 +289,10 @@ controller chip.</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="analog.html" class="btn btn-neutral float-right" title="Analog (ADC/DAC) Drivers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../block/index.html" class="btn btn-neutral float-right" title="Block Device Drivers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="serial.html" class="btn btn-neutral float-left" title="Serial Device Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="note.html" class="btn btn-neutral float-left" title="Note Driver Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
