@@ -281,8 +281,8 @@ stack-related information in the TCB.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">adj_stack_size</span></code>: Stack size after adjustment for hardware,
 processor, etc. This value is retained only for debug purposes.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stack_alloc_ptr</span></code>: Pointer to allocated stack</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adj_stack_ptr</span></code>: Adjusted <code class="docutils literal notranslate"><span class="pre">stack_alloc_ptr</span></code> for HW. The
-initial value of the stack pointer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stack_base_ptr</span></code>: Adjusted stack base pointer after the TLS Data
+and Arguments has been removed from the stack allocation.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -324,8 +324,8 @@ from <code class="docutils literal notranslate"><span class="pre">nxtask_init()<
 <li><p><code class="docutils literal notranslate"><span class="pre">adj_stack_size</span></code>: Stack size after adjustment for hardware,
 processor, etc. This value is retained only for debug purposes.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stack_alloc_ptr</span></code>: Pointer to allocated stack</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adj_stack_ptr</span></code>: Adjusted <code class="docutils literal notranslate"><span class="pre">stack_alloc_ptr</span></code> for HW. The
-initial value of the stack pointer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stack_base_ptr</span></code>: Adjusted stack base pointer after the TLS Data
+and Arguments has been removed from the stack allocation.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -356,10 +356,39 @@ protection domain as the thread.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">adj_stack_size</span></code>: Stack size after removal of the stack frame
 from the stack.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adj_stack_ptr</span></code>: Adjusted initial stack pointer after the
-frame has been removed from the stack. This will still be the
-initial value of the stack pointer when the task is started.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stack_base_ptr</span></code>: Adjusted stack base pointer after the TLS Data
+and Arguments has been removed from the stack allocation.</p></li>
 </ul>
+<p>Here is the diagram after some allocation(tls, arg):</p>
+<blockquote>
+<div><p>+————-+ &lt;-stack_alloc_ptr(lowest)
+|  TLS Data   |
++————-+
+|  Arguments  |</p>
+</div></blockquote>
+<dl>
+<dt>stack_base_ptr-&gt; +————-+</dt><dd><blockquote>
+<div><div class="line-block">
+<div class="line">Available  | +</div>
+<div class="line-block">
+<div class="line">Stack    | |</div>
+</div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line">|             | |</div>
+<div class="line">|             | +-&gt;adj_stack_size</div>
+</div>
+<dl>
+<dt>v  |             | |</dt><dd><div class="line-block">
+<div class="line">| |</div>
+<div class="line">| +</div>
+</div>
+<p>+————-+/</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
