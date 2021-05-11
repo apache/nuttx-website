@@ -246,11 +246,10 @@ handlers may send messages via named message queues.</p>
 <dl class="c function">
 <dt id="c.mq_open">
 <a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <code class="sig-name descname"><span class="pre">mq_open</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">char</span> <span class="pre">*</span><em><span class="pre">mqName</span></em>, <span class="pre">int</span> <em><span class="pre">oflags</span></em>, <span class="pre">...</span><span class="sig-paren">)</span><a class="headerlink" href="#c.mq_open" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Establishes a connection between a named
-message queue and the calling task. After a successful call of
-mq_open(), the task can reference the message queue using the address
-returned by the call. The message queue remains usable until it is
-closed by a successful call to mq_close().</p>
+<dd><p>Establishes a connection between a named message queue and the calling
+task. After a successful call of mq_open(), the task can reference the
+message queue using the address returned by the call. The message queue
+remains usable until it is closed by a successful call to mq_close().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -303,10 +302,10 @@ maximum message size is limited at 22 bytes.</p></li>
 <dl class="c function">
 <dt id="c.mq_close">
 <span class="pre">int</span> <code class="sig-name descname"><span class="pre">mq_close</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.mq_close" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Used to indicate that the calling task
-is finished with the specified message queued mqdes. The mq_close()
-deallocates any system resources allocated by the system for use by this
-task for its message queue.</p>
+<dd><p>Used to indicate that the calling task is finished with the specified
+message queued <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>. The <code class="docutils literal notranslate"><span class="pre">mq_close()</span></code> deallocates any system
+resources allocated by the system for use by this task for its message
+queue.</p>
 <p>If the calling task has attached a notification request to the message
 queue via this <code class="docutils literal notranslate"><span class="pre">mqdes</span></code> (see <code class="docutils literal notranslate"><span class="pre">mq_notify()</span></code>), this attachment will be
 removed and the message queue is available for another task to attach
@@ -356,10 +355,10 @@ name.</p>
 <dl class="c function">
 <dt id="c.mq_send">
 <span class="pre">int</span> <code class="sig-name descname"><span class="pre">mq_send</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">void</span> <span class="pre">*</span><em><span class="pre">msg</span></em>, <a class="reference internal" href="structures.html#c.size_t" title="size_t"><span class="pre">size_t</span></a> <em><span class="pre">msglen</span></em>, <span class="pre">int</span> <em><span class="pre">prio</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.mq_send" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Adds the specified message, <code class="docutils literal notranslate"><span class="pre">msg</span></code>, to
-the message queue, <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>. The <code class="docutils literal notranslate"><span class="pre">msglen</span></code> parameter specifies the
-length of the message in bytes pointed to by <code class="docutils literal notranslate"><span class="pre">msg</span></code>. This length must
-not exceed the maximum message length from the <code class="docutils literal notranslate"><span class="pre">mq_getattr()</span></code>.</p>
+<dd><p>Adds the specified message, <code class="docutils literal notranslate"><span class="pre">msg</span></code>, to the message queue, <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">msglen</span></code> parameter specifies the length of the message in bytes
+pointed to by <code class="docutils literal notranslate"><span class="pre">msg</span></code>. This length must not exceed the maximum message
+length from the <code class="docutils literal notranslate"><span class="pre">mq_getattr()</span></code>.</p>
 <p>If the message queue is not full, <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code> will place the <code class="docutils literal notranslate"><span class="pre">msg</span></code>
 in the message queue at the position indicated by the <code class="docutils literal notranslate"><span class="pre">prio</span></code> argument.
 Messages with higher priority will be inserted before lower priority
@@ -373,14 +372,14 @@ not queued and <code class="docutils literal notranslate"><span class="pre">ERRO
 However, it behaves differently when called from the interrupt level:</p>
 <ul class="simple">
 <li><p>It does not check the size of the queue. It will always post the
-message, even if there is already too many messages in queue. This is
+message, even if there are already too many messages in queue. This is
 because the interrupt handler does not have the option of waiting for
 the message queue to become non-full.</p></li>
 <li><p>It doesn’t allocate new memory (because you cannot allocate memory
-from an interrupt handler). Instead, there are are pool of
-pre-allocated message structures that may be used just for sending
-messages from interrupt handlers. The number of such pre-allocated
-messages is a configuration parameter.</p></li>
+from an interrupt handler). Instead, there is a pool of pre-allocated
+message structures that may be used just for sending messages from
+interrupt handlers. The number of such pre-allocated messages is set
+by the <code class="docutils literal notranslate"><span class="pre">PREALLOC_MQ_IRQ_MSGS</span></code> configuration parameter.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -415,10 +414,10 @@ name.</p>
 <dl class="c function">
 <dt id="c.mq_timedsend">
 <span class="pre">int</span> <code class="sig-name descname"><span class="pre">mq_timedsend</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">char</span> <span class="pre">*</span><em><span class="pre">msg</span></em>, <a class="reference internal" href="structures.html#c.size_t" title="size_t"><span class="pre">size_t</span></a> <em><span class="pre">msglen</span></em>, <span class="pre">int</span> <em><span class="pre">prio</span></em>, <em class="property"><span class="pre">const</span></em> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="structures.html#c.timespec" title="timespec"><span class="pre">timespec</span></a> <span class="pre">*</span><em><span class="pre">abstime</span></em><span class="sig-paren">)</span><span class="pre">;</span><a class="headerlink" href="#c.mq_timedsend" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Adds the specified message, <code class="docutils literal notranslate"><span class="pre">msg</span></code>, to
-the message queue, <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>. The <code class="docutils literal notranslate"><span class="pre">msglen</span></code> parameter specifies the
-length of the message in bytes pointed to by <code class="docutils literal notranslate"><span class="pre">msg</span></code>. This length must
-not exceed the maximum message length from the <code class="docutils literal notranslate"><span class="pre">mq_getattr()</span></code>.</p>
+<dd><p>Adds the specified message, <code class="docutils literal notranslate"><span class="pre">msg</span></code>, to the message queue, <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">msglen</span></code> parameter specifies the length of the message in bytes
+pointed to by <code class="docutils literal notranslate"><span class="pre">msg</span></code>. This length must not exceed the maximum message
+length from the <code class="docutils literal notranslate"><span class="pre">mq_getattr()</span></code>.</p>
 <p>If the message queue is not full, <code class="docutils literal notranslate"><span class="pre">mq_timedsend()</span></code> will place the
 <code class="docutils literal notranslate"><span class="pre">msg</span></code> in the message queue at the position indicated by the <code class="docutils literal notranslate"><span class="pre">prio</span></code>
 argument. Messages with higher priority will be inserted before lower
@@ -467,12 +466,11 @@ name.</p>
 <dl class="c function">
 <dt id="c.mq_receive">
 <span class="pre">ssize_t</span> <code class="sig-name descname"><span class="pre">mq_receive</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em>, <span class="pre">void</span> <span class="pre">*</span><em><span class="pre">msg</span></em>, <a class="reference internal" href="structures.html#c.size_t" title="size_t"><span class="pre">size_t</span></a> <em><span class="pre">msglen</span></em>, <span class="pre">int</span> <span class="pre">*</span><em><span class="pre">prio</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.mq_receive" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Receives the oldest of the highest
-priority messages from the message queue specified by <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>. If the
-size of the buffer in bytes, <code class="docutils literal notranslate"><span class="pre">msgLen</span></code>, is less than the <code class="docutils literal notranslate"><span class="pre">mq_msgsize</span></code>
-attribute of the message queue, <code class="docutils literal notranslate"><span class="pre">mq_receive()</span></code> will return an error.
-Otherwise, the selected message is removed from the queue and copied to
-<code class="docutils literal notranslate"><span class="pre">msg</span></code>.</p>
+<dd><p>Receives the oldest of the highest priority messages from the message
+queue specified by <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>. If the size of the buffer in bytes,
+<code class="docutils literal notranslate"><span class="pre">msgLen</span></code>, is less than the <code class="docutils literal notranslate"><span class="pre">mq_msgsize</span></code> attribute of the message
+queue, <code class="docutils literal notranslate"><span class="pre">mq_receive()</span></code> will return an error. Otherwise, the selected
+message is removed from the queue and copied to <code class="docutils literal notranslate"><span class="pre">msg</span></code>.</p>
 <p>If the message queue is empty and <code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code> was not set,
 <code class="docutils literal notranslate"><span class="pre">mq_receive()</span></code> will block until a message is added to the message
 queue. If more than one task is waiting to receive a message, only the
@@ -490,8 +488,8 @@ returned.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>One success, the length of the selected message in
-bytes is returned. On failure, -1 (<code class="docutils literal notranslate"><span class="pre">ERROR</span></code>) is returned and the
+<dd class="field-even"><p><p>On success, the length of the selected message in bytes is
+returned. On failure, -1 (<code class="docutils literal notranslate"><span class="pre">ERROR</span></code>) is returned and the
 <code class="docutils literal notranslate"><span class="pre">`errno</span></code> &lt;#ErrnoAccess&gt;`__ is set appropriately:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">EAGAIN</span></code> The queue was empty and the <code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code> flag was set
@@ -512,12 +510,11 @@ name.</p>
 <dl class="c function">
 <dt id="c.mq_timedreceive">
 <span class="pre">ssize_t</span> <code class="sig-name descname"><span class="pre">mq_timedreceive</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em>, <span class="pre">void</span> <span class="pre">*</span><em><span class="pre">msg</span></em>, <a class="reference internal" href="structures.html#c.size_t" title="size_t"><span class="pre">size_t</span></a> <em><span class="pre">msglen</span></em>, <span class="pre">int</span> <span class="pre">*</span><em><span class="pre">prio</span></em>, <em class="property"><span class="pre">const</span></em> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="structures.html#c.timespec" title="timespec"><span class="pre">timespec</span></a> <span class="pre">*</span><em><span class="pre">abstime</span></em><span class="sig-paren">)</span><span class="pre">;</span><a class="headerlink" href="#c.mq_timedreceive" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Receives the oldest of the highest
-priority messages from the message queue specified by <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>. If the
-size of the buffer in bytes, <code class="docutils literal notranslate"><span class="pre">msgLen</span></code>, is less than the <code class="docutils literal notranslate"><span class="pre">mq_msgsize</span></code>
-attribute of the message queue, <code class="docutils literal notranslate"><span class="pre">mq_timedreceive()</span></code> will return an
-error. Otherwise, the selected message is removed from the queue and
-copied to <code class="docutils literal notranslate"><span class="pre">msg</span></code>.</p>
+<dd><p>Receives the oldest of the highest priority messages from the message
+queue specified by <code class="docutils literal notranslate"><span class="pre">mqdes</span></code>. If the size of the buffer in bytes,
+<code class="docutils literal notranslate"><span class="pre">msgLen</span></code>, is less than the <code class="docutils literal notranslate"><span class="pre">mq_msgsize</span></code> attribute of the message
+queue, <code class="docutils literal notranslate"><span class="pre">mq_timedreceive()</span></code> will return an error. Otherwise, the
+selected message is removed from the queue and copied to <code class="docutils literal notranslate"><span class="pre">msg</span></code>.</p>
 <p>If the message queue is empty and <code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code> was not set,
 <code class="docutils literal notranslate"><span class="pre">mq_timedreceive()</span></code> will block until a message is added to the message
 queue (or until a timeout occurs). If more than one task is waiting to
@@ -542,8 +539,8 @@ time of the call, <code class="docutils literal notranslate"><span class="pre">m
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>One success, the length of the selected message in
-bytes is returned. On failure, -1 (<code class="docutils literal notranslate"><span class="pre">ERROR</span></code>) is returned and the
+<dd class="field-even"><p><p>On success, the length of the selected message in bytes is
+returned. On failure, -1 (<code class="docutils literal notranslate"><span class="pre">ERROR</span></code>) is returned and the
 <code class="docutils literal notranslate"><span class="pre">`errno</span></code> &lt;#ErrnoAccess&gt;`__ is set appropriately:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">EAGAIN</span></code>: The queue was empty and the <code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code> flag was set
@@ -566,11 +563,10 @@ name.</p>
 <dl class="c function">
 <dt id="c.mq_notify">
 <span class="pre">int</span> <code class="sig-name descname"><span class="pre">mq_notify</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em>, <span class="pre">FAR</span> <em class="property"><span class="pre">const</span></em> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="structures.html#c.sigevent" title="sigevent"><span class="pre">sigevent</span></a> <span class="pre">*</span><em><span class="pre">notification</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.mq_notify" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>If the <code class="docutils literal notranslate"><span class="pre">notification</span></code> input parameter is not
-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>, this function connects the task with the message queue such
-that the specified signal will be sent to the task whenever the message
-changes from empty to non-empty. One notification can be attached to a
-message queue.</p>
+<dd><p>If the <code class="docutils literal notranslate"><span class="pre">notification</span></code> input parameter is not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, this function
+connects the task with the message queue such that the specified signal
+will be sent to the task whenever the message queue changes from empty
+to non-empty. One notification can be attached to a message queue.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">notification</span></code>; is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the attached notification is detached
 (if it was held by the calling task) and the queue is available to
 attach another notification.</p>
@@ -623,9 +619,8 @@ no notification will be sent.”</p></li>
 <dl class="c function">
 <dt id="c.mq_setattr">
 <span class="pre">int</span> <code class="sig-name descname"><span class="pre">mq_setattr</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em>, <em class="property"><span class="pre">const</span></em> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="structures.html#c.mq_attr" title="mq_attr"><span class="pre">mq_attr</span></a> <span class="pre">*</span><em><span class="pre">mqStat</span></em>, <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="structures.html#c.mq_attr" title="mq_attr"><span class="pre">mq_attr</span></a> <span class="pre">*</span><em><span class="pre">oldMqStat</span></em><span class="sig-paren">)</span><span class="pre">;</span><a class="headerlink" href="#c.mq_setattr" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Sets the attributes associated with the
-specified message queue “mqdes.” Only the “O_NONBLOCK” bit of the
-“mq_flags” can be changed.</p>
+<dd><p>Sets the attributes associated with the specified message queue “mqdes.”
+Only the “O_NONBLOCK” bit of the “mq_flags” can be changed.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">oldMqStat</span></code> is non-null, mq_setattr() will store the previous message
 queue attributes at that location (just as would have been returned by
 mq_getattr()).</p>
@@ -649,8 +644,8 @@ name.</p>
 <dl class="c function">
 <dt id="c.mq_getattr">
 <span class="pre">int</span> <code class="sig-name descname"><span class="pre">mq_getattr</span></code><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.mqd_t" title="mqd_t"><span class="pre">mqd_t</span></a> <em><span class="pre">mqdes</span></em>, <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="structures.html#c.mq_attr" title="mq_attr"><span class="pre">mq_attr</span></a> <span class="pre">*</span><em><span class="pre">mqStat</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.mq_getattr" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Gets status information and attributes
-associated with the specified message queue.</p>
+<dd><p>Gets status information and attributes associated with the specified
+message queue.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
