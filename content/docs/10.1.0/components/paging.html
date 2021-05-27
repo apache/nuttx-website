@@ -1,0 +1,723 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>On-Demand Paging &mdash; NuttX latest documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Applications" href="../applications/index.html" />
+    <link rel="prev" title="NxWidgets" href="nxwidgets.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+    
+    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">OS Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="power.html">Power Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="binfmt.html">Binary Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers/index.html">Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filesystem.html">NuttX File System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nxflat.html">NXFLAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nxgraphics/index.html">NX Graphics Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nxwidgets.html">NxWidgets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">On-Demand Paging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#terminology">Terminology</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#nuttx-common-logic-design-description">NuttX Common Logic Design Description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initialization">Initialization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#page-faults">Page Faults</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fill-initiation">Fill Initiation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fill-complete">Fill Complete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#task-resumption">Task Resumption</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#architecture-specific-support-requirements">Architecture-Specific Support Requirements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#memory-organization">Memory Organization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#architecture-specific-functions">Architecture-Specific Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">OS Components</a> &raquo;</li>
+        
+      <li>On-Demand Paging</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/components/paging.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="on-demand-paging">
+<span id="ondemandpaging"></span><h1>On-Demand Paging<a class="headerlink" href="#on-demand-paging" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
+<p>This document summarizes the design of NuttX on-demand paging. This
+feature permits embedded MCUs with some limited RAM space to execute
+large programs from some non-random access media.</p>
+<p>What kind of platforms can support NuttX on-demang paging?</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>The MCU should have some large, probably low-cost non-volatile
+storage such as serial FLASH or an SD card. This storage probably
+does not support non-random access (otherwise, why not just execute
+the program directly on the storage media). SD and serial FLASH are
+inexpensive and do not require very many pins and SPI support is
+prevalent in just about all MCUs. This large serial FLASH would
+contain a big program. Perhaps a program of several megabytes in
+size.</p></li>
+<li><p>The MCU must have a (relatively) small block of fast SRAM from which
+it can execute code. A size of, say 256K (or 192K as in the NXP
+LPC3131) would be sufficient for many applications.</p></li>
+<li><p>The MCU has an MMU (again like the NXP LPC3131).</p></li>
+</ol>
+</div></blockquote>
+<p>If the platform meets these requirement, then NuttX can provide
+on-demand paging: It can copy .text from the large program in
+non-volatile media into RAM as needed to execute a huge program from the
+small RAM.</p>
+</div>
+<div class="section" id="terminology">
+<h3>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code>:</dt><dd><p>An OS list that is used to hold the TCBs of tasks that are waiting
+for a page fill.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code>:</dt><dd><p>A variable that holds a reference to the TCB of the thread that is
+currently be re-filled.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">g_pgworker</span></code>:</dt><dd><p>The <em>process</em> ID of the thread that will perform the page fills.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pg_callback()</span></code>:</dt><dd><p>The callback function that is invoked from a driver when the fill is
+complete.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code>:</dt><dd><p>The function that is called from architecture-specific code to handle
+a page fault.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">TCB</span></code>:</dt><dd><p>Task Control Block</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="nuttx-common-logic-design-description">
+<h2>NuttX Common Logic Design Description<a class="headerlink" href="#nuttx-common-logic-design-description" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="initialization">
+<h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<p>The following declarations will be added.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code>. A doubly linked list that will be used to
+implement a prioritized list of the TCBs of tasks that are waiting
+for a page fill.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g_pgworker</span></code>. The <em>process</em> ID of the thread that will perform
+the page fills</p></li>
+</ul>
+<p>During OS initialization in <code class="docutils literal notranslate"><span class="pre">sched/init/nx_start.c</span></code>, the following
+steps will be performed:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code> queue will be initialized.</p></li>
+<li><p>The special, page fill worker thread, will be started. The <code class="docutils literal notranslate"><span class="pre">pid</span></code> of
+the page will worker thread will be saved in <code class="docutils literal notranslate"><span class="pre">g_pgworker</span></code>. Note
+that we need a special worker thread to perform fills; we cannot use
+the “generic” worker thread facility because we cannot be assured
+that all actions called by that worker thread will always be resident
+in memory.</p></li>
+</ul>
+<p>Declarations for <code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code>, <code class="docutils literal notranslate"><span class="pre">g_pgworker</span></code>, and other
+internal, private definitions will be provided in
+<code class="docutils literal notranslate"><span class="pre">sched/paging/paging.h</span></code>. All public definitions that should be used by
+the architecture-specific code will be available in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/page.h</span></code>. Most architecture-specific functions are
+declared in <code class="docutils literal notranslate"><span class="pre">include/nuttx/arch.h</span></code>, but for the case of this paging
+logic, those architecture specific functions are instead declared in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/page.h</span></code>.</p>
+</div>
+<div class="section" id="page-faults">
+<h3>Page Faults<a class="headerlink" href="#page-faults" title="Permalink to this headline">¶</a></h3>
+<p><strong>Page fault exception handling</strong>. Page fault handling is performed by
+the function <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code>. This function is called from
+architecture-specific memory segmentation fault handling logic. This
+function will perform the following operations:</p>
+<ol class="arabic simple">
+<li><p><strong>Sanity checking</strong>. This function will ASSERT if the currently
+executing task is the page fill worker thread. The page fill worker
+thread is how the page fault is resolved and all logic associated
+with the page fill worker must be “<a class="reference external" href="#MemoryOrg">locked</a>” and
+always present in memory.</p></li>
+<li><p><strong>Block the currently executing task</strong>. This function will call
+<code class="docutils literal notranslate"><span class="pre">up_block_task()</span></code> to block the task at the head of the ready-to-run
+list. This should cause an interrupt level context switch to the next
+highest priority task. The blocked task will be marked with state
+<code class="docutils literal notranslate"><span class="pre">TSTATE_WAIT_PAGEFILL</span></code> and will be retained in the
+<code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code> prioritized task list.</p></li>
+<li><p><strong>Boost the page fill worker thread priority</strong>. Check the priority of
+the task at the head of the <code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code> list. If the
+priority of that task is higher than the current priority of the page
+fill worker thread, then boost the priority of the page fill worker
+thread to that priority. Thus, the page fill worker thread will
+always run at the priority of the highest priority task that is
+waiting for a fill.</p></li>
+<li><p><strong>Signal the page fill worker thread</strong>. Is there a page already being
+filled? If not then signal the page fill worker thread to start
+working on the queued page fill requests.</p></li>
+</ol>
+<p>When signaled from <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code>, the page fill worker thread will be
+awakenend and will initiate the fill operation.</p>
+<p><strong>Input Parameters.</strong> None – The head of the ready-to-run list is
+assumed to be that task that caused the exception. The current task
+context should already be saved in the TCB of that task. No additional
+inputs are required.</p>
+<p><strong>Assumptions</strong>.</p>
+<ul class="simple">
+<li><p>It is assumed that this function is called from the level of an
+exception handler and that all interrupts are disabled.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code> must be “<a class="reference external" href="#MemoryOrg">locked</a>” in memory.
+Calling <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code> cannot cause a nested page fault.</p></li>
+<li><p>It is assumed that currently executing task (the one at the head of
+the ready-to-run list) is the one that cause the fault. This will
+always be true unless the page fault occurred in an interrupt
+handler. Interrupt handling logic must always be available and
+“<a class="reference external" href="#MemoryOrg">locked</a>” into memory so that page faults never come
+from interrupt handling.</p></li>
+<li><p>The architecture-specific page fault exception handling has already
+verified that the exception did not occur from interrupt/exception
+handling logic.</p></li>
+<li><p>As mentioned above, the task causing the page fault must not be the
+page fill worker thread because that is the only way to complete the
+page fill.</p></li>
+</ul>
+</div>
+<div class="section" id="fill-initiation">
+<h3>Fill Initiation<a class="headerlink" href="#fill-initiation" title="Permalink to this headline">¶</a></h3>
+<p>The page fill worker thread will be awakened on one of three conditions:</p>
+<ul class="simple">
+<li><p>When signaled by <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code>, the page fill worker thread will be
+awakenend (see above),</p></li>
+<li><p>From <code class="docutils literal notranslate"><span class="pre">pg_callback()</span></code> after completing last fill (when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING_BLOCKINGFILL</span></code> is defined… see below), or</p></li>
+<li><p>A configurable timeout expires with no activity. This timeout can be
+used to detect failure conditions such things as fills that never
+complete.</p></li>
+</ul>
+<p>The page fill worker thread will maintain a static variable called
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tcb_s</span> <span class="pre">*g_pftcb</span></code>. If no fill is in progress, <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code> will
+be NULL. Otherwise, it will point to the TCB of the task which is
+receiving the fill that is in progress.</p>
+<p>When awakened from <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code>, no fill will be in progress and
+<code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code> will be NULL. In this case, the page fill worker thread will
+call <code class="docutils literal notranslate"><span class="pre">pg_startfill()</span></code>. That function will perform the following
+operations:</p>
+<ul class="simple">
+<li><p>Call the architecture-specific function <code class="docutils literal notranslate"><span class="pre">up_checkmapping()</span></code> to see
+if the page fill still needs to be performed. In certain conditions,
+the page fault may occur on several threads and be queued multiple
+times. In this corner case, the blocked task will simply be restarted
+(see the logic below for the case of normal completion of the fill
+operation).</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">up_allocpage(tcb,</span> <span class="pre">&amp;vpage)</span></code>. This architecture-specific
+function will set aside page in memory and map to virtual address
+(vpage). If all available pages are in-use (the typical case), this
+function will select a page in-use, un-map it, and make it available.</p></li>
+<li><p>Call the architecture-specific function <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>. Two
+versions of the up_fillpage function are supported – a blocking and
+a non-blocking version based upon the configuration setting
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING_BLOCKINGFILL</span></code>.</p>
+<ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING_BLOCKINGFILL</span></code> is defined, then up_fillpage is
+blocking call. In this case, <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code> will accept only
+(1) a reference to the TCB that requires the fill.
+Architecture-specific context information within the TCB will be
+sufficient to perform the fill. And (2) the (virtual) address of
+the allocated page to be filled. The resulting status of the fill
+will be provided by return value from <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING_BLOCKINGFILL</span></code> is defined, then up_fillpage is
+non-blocking call. In this case <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code> will accept an
+additional argument: The page fill worker thread will provide a
+callback function, <code class="docutils literal notranslate"><span class="pre">pg_callback</span></code>. This function is non-blocking,
+it will start an asynchronous page fill. After calling the
+non-blocking <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>, the page fill worker thread will
+wait to be signaled for the next event – the fill completion
+event. The callback function will be called when the page fill is
+finished (or an error occurs). The resulting status of the fill
+will be providing as an argument to the callback functions. This
+callback will probably occur from interrupt level.</p></li>
+</ul>
+</li>
+</ul>
+<p>In any case, while the fill is in progress, other tasks may execute. If
+another page fault occurs during this time, the faulting task will be
+blocked, its TCB will be added (in priority order) to
+<code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code>, and the priority of the page worker task may be
+boosted. But no action will be taken until the current page fill
+completes. NOTE: The IDLE task must also be fully
+<a class="reference external" href="#MemoryOrg">locked</a> in memory. The IDLE task cannot be blocked. It
+the case where all tasks are blocked waiting for a page fill, the IDLE
+task must still be available to run.</p>
+<p>The architecture-specific functions, <code class="docutils literal notranslate"><span class="pre">up_checkmapping()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">up_allocpage(tcb,</span> <span class="pre">&amp;vpage)</span></code> and <code class="docutils literal notranslate"><span class="pre">up_fillpage(page,</span> <span class="pre">pg_callback)</span></code>
+will be prototyped in <code class="docutils literal notranslate"><span class="pre">include/nuttx/arch.h</span></code></p>
+</div>
+<div class="section" id="fill-complete">
+<h3>Fill Complete<a class="headerlink" href="#fill-complete" title="Permalink to this headline">¶</a></h3>
+<p>For the blocking <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>, the result of the fill will be
+returned directly from the call to <code class="docutils literal notranslate"><span class="pre">up_fillpage</span></code>.</p>
+<p>For the non-blocking <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>, the architecture-specific driver
+call the <code class="docutils literal notranslate"><span class="pre">pg_callback()</span></code> that was provided to <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code> when
+the fill completes. In this case, the <code class="docutils literal notranslate"><span class="pre">pg_callback()</span></code> will probably be
+called from driver interrupt-level logic. The driver will provide the
+result of the fill as an argument to the callback function. NOTE:
+<code class="docutils literal notranslate"><span class="pre">pg_callback()</span></code> must also be <a class="reference external" href="#MemoryOrg">locked</a> in memory.</p>
+<p>In this non-blocking case, the callback <code class="docutils literal notranslate"><span class="pre">pg_callback()</span></code> will perform
+the following operations when it is notified that the fill has
+completed:</p>
+<ul class="simple">
+<li><p>Verify that <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code> is non-NULL.</p></li>
+<li><p>Find the higher priority between the task waiting for the fill to
+complete in <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code> and the task waiting at the head of the
+<code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code> list. That will be the priority of he highest
+priority task waiting for a fill.</p></li>
+<li><p>If this higher priority is higher than current page fill worker
+thread, then boost worker thread’s priority to that level. Thus, the
+page fill worker thread will always run at the priority of the
+highest priority task that is waiting for a fill.</p></li>
+<li><p>Save the result of the fill operation.</p></li>
+<li><p>Signal the page fill worker thread.</p></li>
+</ul>
+</div>
+<div class="section" id="task-resumption">
+<h3>Task Resumption<a class="headerlink" href="#task-resumption" title="Permalink to this headline">¶</a></h3>
+<p>For the non-blocking <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>, the page fill worker thread will
+detect that the page fill is complete when it is awakened with
+<code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code> non-NULL and fill completion status from <code class="docutils literal notranslate"><span class="pre">pg_callback</span></code>. In
+the non-blocking case, the page fill worker thread will know that the
+page fill is complete when <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code> returns.</p>
+<p>In this either, the page fill worker thread will:</p>
+<ul class="simple">
+<li><p>Verify consistency of state information and <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code>.</p></li>
+<li><p>Verify that the page fill completed successfully, and if so,</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">up_unblocktask(g_pftcb)</span></code> to make the task that just received
+the fill ready-to-run.</p></li>
+<li><p>Check if the <code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code> list is empty. If not:</p>
+<ul>
+<li><p>Remove the highest priority task waiting for a page fill from
+<code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code>,</p></li>
+<li><p>Save the task’s TCB in <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code>,</p></li>
+<li><p>If the priority of the thread in <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code>, is higher in
+priority than the default priority of the page fill worker thread,
+then set the priority of the page fill worker thread to that
+priority.</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">pg_startfill()</span></code> which will start the next fill (as
+described above).</p></li>
+</ul>
+</li>
+<li><p>Otherwise,</p>
+<ul>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code> to NULL.</p></li>
+<li><p>Restore the default priority of the page fill worker thread.</p></li>
+<li><p>Wait for the next fill related event (a new page fault).</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="architecture-specific-support-requirements">
+<h2>Architecture-Specific Support Requirements<a class="headerlink" href="#architecture-specific-support-requirements" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="memory-organization">
+<h3>Memory Organization<a class="headerlink" href="#memory-organization" title="Permalink to this headline">¶</a></h3>
+<p><strong>Memory Regions</strong>. Chip specific logic will map the virtual and
+physical address spaces into three general regions:</p>
+<ol class="arabic simple">
+<li><p>A .text region containing “<a class="reference external" href="#MemoryOrg">locked-in-memory</a>” code
+that is always available and will never cause a page fault. This
+locked memory is loaded at boot time and remains resident for all
+time. This memory regions must include:</p>
+<ul class="simple">
+<li><p>All logic for all interrupt paths. All interrupt logic must be
+locked in memory because the design present here will not support
+page faults from interrupt handlers. This includes the page fault
+handling logic and <code class="docutils literal notranslate"><span class="pre">`pg_miss()</span></code> &lt;#PageFaults&gt;`__ that is called
+from the page fault handler. It also includes the
+<code class="docutils literal notranslate"><span class="pre">`pg_callback()</span></code> &lt;#FillComplete&gt;`__ function that wakes up the
+page fill worker thread and whatever architecture-specific logic
+that calls <code class="docutils literal notranslate"><span class="pre">pg_callback()</span></code>.</p></li>
+<li><p>All logic for the IDLE thread. The IDLE thread must always be
+ready to run and cannot be blocked for any reason.</p></li>
+<li><p>All of the page fill worker thread must be locked in memory. This
+thread must execute in order to unblock any thread waiting for a
+fill. It this thread were to block, there would be no way to
+complete the fills!</p></li>
+</ul>
+</li>
+<li><p>A .text region containing pages that can be assigned allocated,
+mapped to various virtual addresses, and filled from some mass
+storage medium.</p></li>
+<li><p>And a fixed RAM space for .bss, .text, and .heap.</p></li>
+</ol>
+<p>This memory organization is illustrated in the following table. Notice
+that:</p>
+<ul class="simple">
+<li><p>There is a one-to-one relationship between pages in the virtual
+address space and between pages of .text in the non-volatile mass
+storage device.</p></li>
+<li><p>There are, however, far fewer physical pages available than virtual
+pages. Only a subset of physical pages will be mapped to virtual
+pages at any given time. This mapping will be performed on-demand as
+needed for program execution.</p></li>
+</ul>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 36%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>SRAM</p></th>
+<th class="head"><p>Virtual Address Space</p></th>
+<th class="head"><p>Non-Volatile Storage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>.</p></td>
+<td><p>DATA</p></td>
+<td><p>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>.</p></td>
+<td><p>Virtual Page <em>n</em> (<em>n</em> &gt; <em>m</em>)</p></td>
+<td><p>Stored Page <em>n</em></p></td>
+</tr>
+<tr class="row-even"><td><p>.</p></td>
+<td><p>Virtual Page <em>n-1</em></p></td>
+<td><p>Stored Page <em>n-1</em></p></td>
+</tr>
+<tr class="row-odd"><td><p>DATA</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-even"><td><p>Physical Page <em>m</em> (<em>m</em> &lt; <em>n</em>)</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-odd"><td><p>Physical Page <em>m-1</em></p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-even"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-odd"><td><p>Physical Page <em>1</em></p></td>
+<td><p>Virtual Page <em>1</em></p></td>
+<td><p>Stored Page <em>1</em></p></td>
+</tr>
+<tr class="row-even"><td><p>Locked Memory</p></td>
+<td><p>Locked Memory</p></td>
+<td><p>Memory Resident</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example</strong>. As an example, suppose that the size of the SRAM is 192K
+(as in the NXP LPC3131). And suppose further that:</p>
+<ul class="simple">
+<li><p>The size of the locked, memory resident .text area is 32K, and</p></li>
+<li><p>The size of the DATA area is 64K.</p></li>
+<li><p>The size of one, managed page is 1K.</p></li>
+<li><p>The size of the whole .text image on the non-volatile, mass storage
+device is 1024K.</p></li>
+</ul>
+<p>Then, the size of the locked, memory resident code is 32K (<em>m</em>=32
+pages). The size of the physical page region is 96K (96 pages), and the
+size of the data region is 64 pages. And the size of the virtual paged
+region must then be greater than or equal to (1024-32) or 992 pages
+(<em>n</em>).</p>
+<p><strong>Building the Locked, In-Memory Image</strong>. One way to accomplish this
+would be a two phase link:</p>
+<ul class="simple">
+<li><p>In the first phase, create a partially linked objected containing all
+interrupt/exception handling logic, the page fill worker thread plus
+all parts of the IDLE thread (which must always be available for
+execution).</p></li>
+<li><p>All of the <code class="docutils literal notranslate"><span class="pre">.text</span></code> and <code class="docutils literal notranslate"><span class="pre">.rodata</span></code> sections of this partial link
+should be collected into a single section.</p></li>
+<li><p>The second link would link the partially linked object along with the
+remaining object to produce the final binary. The linker script
+should position the “special” section so that it lies in a reserved,
+“non-swappable” region.</p></li>
+</ul>
+</div>
+<div class="section" id="architecture-specific-functions">
+<h3>Architecture-Specific Functions<a class="headerlink" href="#architecture-specific-functions" title="Permalink to this headline">¶</a></h3>
+<p>Most standard, architecture-specific functions are declared in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/arch.h</span></code>. However, for the case of this paging logic,
+the architecture specific functions are declared in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/page.h</span></code>. Standard, architecture-specific functions that
+should already be provided in the architecture port are <a class="reference internal" href="../reference/os/arch.html#c.up_block_task" title="up_block_task"><code class="xref c c-func docutils literal notranslate"><span class="pre">up_block_task()</span></code></a>
+and <a class="reference internal" href="../reference/os/arch.html#c.up_unblock_task" title="up_unblock_task"><code class="xref c c-func docutils literal notranslate"><span class="pre">up_unblock_task()</span></code></a>. New, additional functions that must be
+implemented just for on-demand paging support are:</p>
+<dl class="c function">
+<dt id="c.up_checkmapping">
+<span class="pre">int</span> <code class="sig-name descname"><span class="pre">up_checkmapping</span></code><span class="sig-paren">(</span><span class="pre">FAR</span> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="../reference/user/structures.html#c.tcb_s" title="tcb_s"><span class="pre">tcb_s</span></a> <span class="pre">*</span><em><span class="pre">tcb</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.up_checkmapping" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The function <code class="docutils literal notranslate"><span class="pre">up_checkmapping()</span></code> returns an indication if the page
+fill still needs to performed or not. In certain conditions, the page
+fault may occur on several threads and be queued multiple times. This
+function will prevent the same page from be filled multiple times.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.up_allocpage">
+<span class="pre">int</span> <code class="sig-name descname"><span class="pre">up_allocpage</span></code><span class="sig-paren">(</span><span class="pre">FAR</span> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="../reference/user/structures.html#c.tcb_s" title="tcb_s"><span class="pre">tcb_s</span></a> <span class="pre">*</span><em><span class="pre">tcb</span></em>, <span class="pre">FAR</span> <span class="pre">void</span> <span class="pre">*</span><em><span class="pre">vpage</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.up_allocpage" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>This architecture-specific function will set aside page in memory and
+map to its correct virtual address. Architecture-specific context
+information saved within the TCB will provide the function with the
+information needed to identify the virtual miss address. This function
+will return the allocated physical page address in <code class="docutils literal notranslate"><span class="pre">vpage</span></code>. The size
+of the underlying physical page is determined by the configuration
+setting <code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING_PAGESIZE</span></code>. NOTE: This function must <em>always</em>
+return a page allocation. If all available pages are in-use (the typical
+case), then this function will select a page in-use, un-map it, and make
+it available.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.up_fillpage">
+<span class="pre">int</span> <code class="sig-name descname"><span class="pre">up_fillpage</span></code><span class="sig-paren">(</span><span class="pre">FAR</span> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="../reference/user/structures.html#c.tcb_s" title="tcb_s"><span class="pre">tcb_s</span></a> <span class="pre">*</span><em><span class="pre">tcb</span></em>, <span class="pre">FAR</span> <em class="property"><span class="pre">const</span></em> <span class="pre">void</span> <span class="pre">*</span><em><span class="pre">vpage</span></em>, <span class="pre">void</span> <span class="pre">(</span><span class="pre">*</span><em><span class="pre">pg_callback</span></em><span class="pre">)</span><span class="sig-paren">(</span><span class="pre">FAR</span> <em class="property"><span class="pre">struct</span></em> <a class="reference internal" href="../reference/user/structures.html#c.tcb_s" title="tcb_s"><span class="pre">tcb_s</span></a> <span class="pre">*</span><span class="pre">tcb</span>, <span class="pre">int</span> <span class="pre">result</span><span class="sig-paren">)</span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_fillpage" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The actual filling of the page with data from the non-volatile, must be
+performed by a separate call to the architecture-specific function,
+<code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>. This will start asynchronous page fill. The common
+paging logic will provide a callback function, <code class="docutils literal notranslate"><span class="pre">pg_callback</span></code>, that
+will be called when the page fill is finished (or an error occurs). This
+callback is assumed to occur from an interrupt level when the device
+driver completes the fill operation.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../applications/index.html" class="btn btn-neutral float-right" title="Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="nxwidgets.html" class="btn btn-neutral float-left" title="NxWidgets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, The Apache Software Foundation.
+
+    </p>
+  </div> 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Debugging &mdash; NuttX latest documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Directory Structure" href="organization.html" />
+    <link rel="prev" title="Configuring" href="configuring.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+    
+    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install.html">Installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html">Compiling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running.html">Running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuring.html">Configuring</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#debug-logging">Debug Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-with-openocd-and-gdb">Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nuttx-aware-debugging">NuttX aware debugging</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#with-openocd">With openocd</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#with-gdb">With gdb</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="organization.html">Directory Structure</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Getting Started</a> &raquo;</li>
+        
+      <li>Debugging</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/quickstart/debugging.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="debugging">
+<span id="id1"></span><h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h1>
+<p>Finding and fixing bugs is an important part of the hardware and software development process. Sometimes you also need
+to use debugging techniques to understand how the system works. Two tools that are helpful are debug logging and
+debugging using the GNU Debugger (gdb).</p>
+<div class="section" id="debug-logging">
+<h2>Debug Logging<a class="headerlink" href="#debug-logging" title="Permalink to this headline">¶</a></h2>
+<p>NuttX has a powerful system logging facility (syslog) with <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">warn</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code> levels. You can enable
+debugging for your build for the subsystem or feature by using the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system.</p>
+<p>The debug options are available under <span class="menuselection">Build Setup ‣ Debug Options</span>. You will most likely have to enable the
+following options:</p>
+<ul class="simple">
+<li><p><span class="menuselection">Enable Debug Features</span> — selecting this will turn on subsystem-level debugging options, they will become visible
+on the page below. You can then select the ones you want.</p></li>
+<li><p><span class="menuselection">Enable Error Output</span> — this will only log errors.</p></li>
+<li><p><span class="menuselection">Enable Warnings Output</span> — this will log warnings and errors.</p></li>
+<li><p><span class="menuselection">Enable Informational Debug Output</span> — this will produce informational output, warnings, and errors.</p></li>
+</ul>
+<p>You can then select from the subsystems that are available, Network, Scheduler, USB, etc. Note that you will need to
+separately enable the subsystem elsewhere in the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system. To see the <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> define that is set,
+use the arrow keys to highlight the subsystem (for instance, <span class="menuselection">Network Debug Features</span>) and type <kbd class="kbd docutils literal notranslate">?</kbd>. This will show
+you that the C macro that is set is called <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_NET</span></code>. <code class="docutils literal notranslate"><span class="pre">debug.h</span></code> defines the <code class="docutils literal notranslate"><span class="pre">netinfo()</span></code> logging
+function that will log output if this macro is set. You can search the source code for <code class="docutils literal notranslate"><span class="pre">netinfo</span></code> to see how it is
+used.</p>
+<a class="reference internal image-reference" href="../_images/menuconfig-debug.png"><img alt="Screenshot of menuconfig system main screen" class="align-center" src="../_images/menuconfig-debug.png" style="width: 800px;" /></a>
+<p>Note that enabling all these will produce an incredible amount of logging output. Enable the level you want and
+the area you’re interested in, and leave the rest disabled, save the config, and then recompile. You can see the full
+list of debug feature logging functions in the file
+<a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>.</p>
+<p>Syslog timestamps can be enabled in the configuration in <span class="menuselection">Device Drivers ‣ System Logging ‣ Prepend
+timestamp to syslog message</span> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>).</p>
+<p>You may need to do a little bit of experimenting to find the combination of logging settings that work for the problem
+you’re trying to solve. See the file <a class="reference external" href="https://github.com/apache/incubator-nuttx/blob/master/include/debug.h">debug.h</a>
+for available debug settings that are available.</p>
+<p>There are also subsystems that enable USB trace debugging, and you can log to memory too, if you need the logging to be
+faster than what the console can output.</p>
+</div>
+<div class="section" id="debugging-with-openocd-and-gdb">
+<h2>Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code><a class="headerlink" href="#debugging-with-openocd-and-gdb" title="Permalink to this headline">¶</a></h2>
+<p>To debug our Nucleo board using its embedded SWD debug adapter,
+start <code class="docutils literal notranslate"><span class="pre">openocd</span></code> with the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>openocd -f interface/st-link-v2.cfg -f target/stm32f1x.cfg
+</pre></div>
+</div>
+<p>This will start a <code class="docutils literal notranslate"><span class="pre">gdb</span></code> server. Then, start <code class="docutils literal notranslate"><span class="pre">gdb</span></code> with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> nuttx/
+<span class="gp">$ </span>gdb-multiarch nuttx/nuttx
+</pre></div>
+</div>
+<p>Inside <code class="docutils literal notranslate"><span class="pre">gdb</span></code> console, connect to the <code class="docutils literal notranslate"><span class="pre">gdb</span></code> server with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) target extended-remote :3333
+</pre></div>
+</div>
+<p>You can now use standard <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands. For example, to
+reset the board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon reset
+</pre></div>
+</div>
+<p>To halt the board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) mon halt
+</pre></div>
+</div>
+<p>To set a breakpoint:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) breakpoint nsh_main
+</pre></div>
+</div>
+<p>and to finally start nuttx:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) continue
+Continuing.
+
+Breakpoint 1, nsh_main (argc=1, argv=0x200ddfac) at nsh_main.c:208
+208     sched_getparam(0, &amp;param);
+(gdb) continue
+Continuing.
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can abbreviate <code class="docutils literal notranslate"><span class="pre">gdb</span></code> commands: <code class="docutils literal notranslate"><span class="pre">info</span> <span class="pre">b</span></code> is a shortcut for
+<code class="docutils literal notranslate"><span class="pre">information</span> <span class="pre">breakpoints</span></code>; <code class="docutils literal notranslate"><span class="pre">c</span></code> works the same as <code class="docutils literal notranslate"><span class="pre">continue</span></code>, etc.</p>
+</div>
+<div class="section" id="nuttx-aware-debugging">
+<h3>NuttX aware debugging<a class="headerlink" href="#nuttx-aware-debugging" title="Permalink to this headline">¶</a></h3>
+<p>Since NuttX is actually an RTOS, it is useful to have <code class="docutils literal notranslate"><span class="pre">gdb</span></code> be aware of the different
+tasks/threads that are running. There are two ways to do this: via <code class="docutils literal notranslate"><span class="pre">openocd</span></code>
+itself or via <code class="docutils literal notranslate"><span class="pre">gdb</span></code>. Note that in both cases, you need to enable debug symbols
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_SYMBOLS</span></code>).</p>
+<div class="section" id="with-openocd">
+<h4>With openocd<a class="headerlink" href="#with-openocd" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">openocd</span></code> supports various RTOS directly, including NuttX. It works by reading
+into internal NuttX symbols which define the active tasks and their properties.
+As a result, the <code class="docutils literal notranslate"><span class="pre">gdb</span></code> server will directly be aware of each task as a different
+<cite>thread</cite>. The downside of this approach is that it depends on how you build NuttX
+as there are some options hardcoded into
+opencd. By default, it assumes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_MQUEUE=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING=n</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>If you need these options to be set differently, you will have to edit <code class="docutils literal notranslate"><span class="pre">./src/rtos/nuttx_header.h</span></code> from <code class="docutils literal notranslate"><span class="pre">openocd</span></code>,
+change the corresponding settings and then rebuild it.</p>
+<p>Finally, to enable NuttX integration, you need to supply an additional <code class="docutils literal notranslate"><span class="pre">openocd</span></code> argument:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>openocd -f interface/st-link-v2.cfg -f target/stm32f1x.cfg -c <span class="s1">&#39;$_TARGETNAME configure -rtos nuttx&#39;</span>
+</pre></div>
+</div>
+<p>Since <code class="docutils literal notranslate"><span class="pre">openocd</span></code> also needs to know the memory layout of certain datastructures, you need to have <code class="docutils literal notranslate"><span class="pre">gdb</span></code>
+run the following commands once the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> binary is loaded:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>eval &quot;monitor nuttx.pid_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;pid
+eval &quot;monitor nuttx.xcpreg_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;xcp.regs
+eval &quot;monitor nuttx.state_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;task_state
+eval &quot;monitor nuttx.name_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;name
+eval &quot;monitor nuttx.name_size %d&quot;, sizeof(((struct tcb_s *)(0))-&gt;name)
+</pre></div>
+</div>
+<p>One way to do this is to define a gdb <cite>hook</cite> function that will be called when running <code class="docutils literal notranslate"><span class="pre">file</span></code> command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>define hookpost-file
+  eval &quot;monitor nuttx.pid_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;pid
+  eval &quot;monitor nuttx.xcpreg_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;xcp.regs
+  eval &quot;monitor nuttx.state_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;task_state
+  eval &quot;monitor nuttx.name_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;name
+  eval &quot;monitor nuttx.name_size %d&quot;, sizeof(((struct tcb_s *)(0))-&gt;name)
+end
+</pre></div>
+</div>
+<p>You will see that <code class="docutils literal notranslate"><span class="pre">openocd</span></code> has received the memory offsets in its output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Open On-Chip Debugger 0.10.0+dev-01514-ga8edbd020-dirty (2020-11-20-14:23)
+Licensed under GNU GPL v2
+For bug reports, read
+        http://openocd.org/doc/doxygen/bugs.html
+Info : auto-selecting first available session transport &quot;swd&quot;. To override use &#39;transport select &lt;transport&gt;&#39;.
+Info : target type name = cortex_m
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
+15:41:23: Debugging starts
+Info : CMSIS-DAP: SWD  Supported
+Info : CMSIS-DAP: FW Version = 1.10
+Info : CMSIS-DAP: Interface Initialised (SWD)
+Info : SWCLK/TCK = 1 SWDIO/TMS = 1 TDI = 0 TDO = 0 nTRST = 0 nRESET = 1
+Info : CMSIS-DAP: Interface ready
+Info : clock speed 1000 kHz
+Info : SWD DPIDR 0x2ba01477
+Info : nrf52.cpu: hardware has 6 breakpoints, 4 watchpoints
+Info : starting gdb server for nrf52.cpu on 3333
+Info : Listening on port 3333 for gdb connections
+Info : accepting &#39;gdb&#39; connection on tcp/3333
+Error: No symbols for NuttX
+Info : nRF52832-QFAA(build code: B0) 512kB Flash, 64kB RAM
+undefined debug reason 8 - target needs reset
+Warn : Prefer GDB command &quot;target extended-remote 3333&quot; instead of &quot;target remote 3333&quot;
+Info : pid_offset: 12
+Info : xcpreg_offset: 132
+Info : state_offset: 26
+Info : name_offset: 208
+Info : name_size: 32
+target halted due to debug-request, current mode: Thread
+xPSR: 0x01000000 pc: 0x000000dc msp: 0x20000cf0
+target halted due to debug-request, current mode: Thread xPSR: 0x01000000 pc: 0x000000dc msp: 0x20000cf0
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You will probably see the <code class="docutils literal notranslate"><span class="pre">Error:</span> <span class="pre">No</span> <span class="pre">symbols</span> <span class="pre">for</span> <span class="pre">NuttX</span></code> error appear once at startup. This is OK
+unless you see it every time you step the debugger. In this case, it would mean you did not enable debug symbols.</p>
+</div>
+<p>Now, You can now inspect threads:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) info threads
+  Id   Target Id         Frame
+* 1    Remote target     nx_start_application () at init/nx_bringup.c:261
+(gdb) info registers
+r0             0x0                 0
+r1             0x2f                47
+r2             0x0                 0
+r3             0x0                 0
+r4             0x0                 0
+r5             0x0                 0
+r6             0x0                 0
+r7             0x20000ca0          536874144
+r8             0x0                 0
+r9             0x0                 0
+r10            0x0                 0
+r11            0x0                 0
+r12            0x9                 9
+sp             0x20000c98          0x20000c98
+lr             0x19c5              6597
+pc             0x1996              0x1996 &lt;nx_start_application+10&gt;
+xPSR           0x41000000          1090519040
+fpscr          0x0                 0
+msp            0x20000c98          0x20000c98
+psp            0x0                 0x0 &lt;_vectors&gt;
+primask        0x0                 0
+basepri        0xe0                -32
+faultmask      0x0                 0
+control        0x0                 0
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-gdb">
+<h4>With gdb<a class="headerlink" href="#with-gdb" title="Permalink to this headline">¶</a></h4>
+<p>You can also do NuttX aware debugging using <code class="docutils literal notranslate"><span class="pre">gdb</span></code> scripting support.
+The benefit is that it works also for the sim build where <code class="docutils literal notranslate"><span class="pre">openocd</span></code> is
+not applicable. For this to work, you will need to enable PROC filesystem support
+which will expose required task information (<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS=y</span></code>).</p>
+<p>To use this approach, you can load the <code class="docutils literal notranslate"><span class="pre">nuttx/tools/nuttx-gdbinit</span></code> file. An
+easy way to do this is to create a symbolic link:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> <span class="nv">$HOME</span>
+<span class="gp">$ </span>ln -s nuttx/tools/nuttx-gdbinit .gdbinit
+</pre></div>
+</div>
+<p>This way whenever gdb is started it will run the appropriate commands. To inspect
+the threads you can now use the following <code class="docutils literal notranslate"><span class="pre">gdb</span></code> command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) info_nxthreads
+target examined
+_target_arch.name=armv7e-m
+$_target_has_fpu : 0
+$_target_has_smp : 0
+saved current_tcb (pid=0)
+* 0 Thread 0x20000308  (Name: Idle Task, State: Running, Priority: 0) 0xdc in __start()
+  1 Thread 0x20001480  (Name: init, State: Waiting,Semaphore, Priority: 100) 0x7e08 in arm_switchcontext()
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="organization.html" class="btn btn-neutral float-right" title="Directory Structure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="configuring.html" class="btn btn-neutral float-left" title="Configuring" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, The Apache Software Foundation.
+
+    </p>
+  </div> 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
