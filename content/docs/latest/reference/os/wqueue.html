@@ -246,10 +246,10 @@ are useful for off-loading work to a different threading context,
 for delayed processing, or for serializing activities.</p>
 <div class="section" id="classes-of-work-queues">
 <h2>Classes of Work Queues<a class="headerlink" href="#classes-of-work-queues" title="Permalink to this headline">¶</a></h2>
-<p>There are three different classes of
-work queues, each with different properties and intended usage.
-These class of work queues along with the common work queue
-interface are described in the following paragraphs.</p>
+<p>There are three different classes of work queues, each with
+different properties and intended usage. These classes of work
+queues along with the common work queue interface are described in
+the following paragraphs.</p>
 <div class="section" id="high-priority-kernel-work-queue">
 <h3>High Priority Kernel Work queue<a class="headerlink" href="#high-priority-kernel-work-queue" title="Permalink to this headline">¶</a></h3>
 <p>The dedicated high-priority
@@ -317,9 +317,9 @@ work queue runs at a lower priority than the high priority work
 queue, of course, and so is inappropriate to serve as a driver
 <em>bottom half</em>. It is, otherwise, very similar to the high priority
 work queue and most of the discussion above for the high priority
-work queue applies equally here. The lower priority work queue
-does have one important, however, that make it better suited for
-some tasks:</p>
+work queue applies equally here. The lower priority work queue does
+have one important property, however, that makes it better suited
+for some tasks:</p>
 <p><strong>Priority Inheritance</strong>. The lower priority worker thread(s)
 support <em>priority inheritance</em> (if &lt;config&gt;
 CONFIG_PRIORITY_INHERITANCE is also selected): The priority of the
@@ -327,8 +327,8 @@ lower priority worker thread can then be adjusted to match the
 highest priority client.</p>
 <blockquote>
 <div><p><strong>NOTE:</strong> This priority inheritance feature is not automatic.
-The lower priority worker thread will always a fixed priority
-unless additional logic implements that calls
+The lower priority worker thread will always have a fixed
+priority unless additional logic calls
 <code class="docutils literal notranslate"><span class="pre">lpwork_boostpriority()</span></code> to raise the priority of the lower
 priority worker thread (typically called before scheduling the
 work) and then calls the matching <code class="docutils literal notranslate"><span class="pre">lpwork_restorepriority()</span></code>
@@ -370,18 +370,17 @@ the lower priority worker thread. Default: 2048.</p></li>
 <h3>User-Mode Work Queue<a class="headerlink" href="#user-mode-work-queue" title="Permalink to this headline">¶</a></h3>
 <p><strong>Work Queue Accessibility</strong>. The high- and low-priority worker
 threads are kernel-mode threads. In the normal, <em>flat</em> NuttX
-build, these work queues are are useful to application code and
+build, these work queues are useful to application code and
 may be shared. However, in the NuttX protected and kernel build
 modes, kernel mode code is isolated and cannot be accessed from
 user-mode code.</p>
 <p><strong>User-Mode Work Queue</strong>. if either <code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_PROTECTED</span></code> or
 <code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_KERNEL</span></code> are selected, then the option to enable a
-special user-mode work queue is enable. The interface to the
-user-mode work queue is identical to the interface to the
-kernel-mode work queues and the user-mode work queue is
-functionally equivalent to the high priority work queue. It
-differs in that its implementation does not depend on internal,
-kernel-space facilities.</p>
+special user-mode work queue is enabled. The interface to the user-
+mode work queue is identical to that of the kernel-mode work queues
+and the user-mode work queue is functionally equivalent to the high
+priority work queue. It differs in that its implementation does not
+depend on internal, kernel-space facilities.</p>
 <p><strong>Configuration Options</strong>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIB_USRWORK</span></code>. If CONFIG_LIB_USRWORK is also defined
@@ -404,10 +403,10 @@ interface function identifies the work queue:</p>
 <p><strong>Kernel-Mode Work Queue IDs:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">HPWORK</span></code>. This ID of the high priority work queue that should
-only be used for hi-priority, time-critical, driver bottom-half
+only be used for high-priority, time-critical, driver bottom-half
 functions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">LPWORK</span></code>. This is the ID of the low priority work queue that
-can be used for any purpose. if <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORK</span></code> is not
+can be used for any purpose. If <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORK</span></code> is not
 defined, then there is only one kernel work queue and
 <code class="docutils literal notranslate"><span class="pre">LPWORK</span></code> is equal to <code class="docutils literal notranslate"><span class="pre">HPWORK</span></code>.</p></li>
 </ul>
@@ -415,7 +414,7 @@ defined, then there is only one kernel work queue and
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">USRWORK</span></code>. This is the ID of the user-mode work queue that
 can be used for any purpose by applications. In a flat build,
-<code class="docutils literal notranslate"><span class="pre">LPWORK</span></code> is equal to <code class="docutils literal notranslate"><span class="pre">LPWORK</span></code> so that user applications
+<code class="docutils literal notranslate"><span class="pre">USRWORK</span></code> is equal to <code class="docutils literal notranslate"><span class="pre">LPWORK</span></code> so that user applications
 will use the lower priority work queue (if there is one).</p></li>
 </ul>
 </div>
@@ -444,7 +443,7 @@ queued work will be performed on the worker thread of execution
 zero by the caller. Otherwise, the work structure is completely
 managed by the work queue logic. The caller should never modify
 the contents of the work queue structure directly. If
-<code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> is called before the previous work as been
+<code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> is called before the previous work has been
 performed and removed from the queue, then any pending work will
 be canceled and lost.</p>
 <dl class="field-list simple">
@@ -453,7 +452,7 @@ be canceled and lost.</p>
 <li><p><strong>qid</strong> – The work queue ID.</p></li>
 <li><p><strong>work</strong> – The work structure to queue</p></li>
 <li><p><strong>worker</strong> – The worker callback to be invoked. The callback
-will invoked on the worker thread of execution.</p></li>
+will be invoked on the worker thread of execution.</p></li>
 <li><p><strong>arg</strong> – The argument that will be passed to the worker
 callback function when it is invoked.</p></li>
 <li><p><strong>delay</strong> – Delay (in system clock ticks) from the time queue
@@ -472,12 +471,12 @@ immediately.</p></li>
 <span class="pre">int</span> <code class="sig-name descname"><span class="pre">work_cancel</span></code><span class="sig-paren">(</span><span class="pre">int</span> <em><span class="pre">qid</span></em>, <span class="pre">FAR</span> <em class="property"><span class="pre">struct</span></em> <span class="pre">work_s</span> <span class="pre">*</span><em><span class="pre">work</span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.work_cancel" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Cancel previously queued work. This removes work
 from the work queue. After work has been cancelled, it may be
-re-queue by calling <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> again.</p>
+re-queued by calling <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> again.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>qid</strong> – The work queue ID.</p></li>
-<li><p><strong>work</strong> – The previously queue work structure to cancel.</p></li>
+<li><p><strong>work</strong> – The previously queued work structure to cancel.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
