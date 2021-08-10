@@ -139,7 +139,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#how-to-interrupt-an-nsh-application-using-ctrl-c">How to interrupt an NSH Application using Ctrl^C ?</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#why-isn-t-dev-ttysx-created-when-using-usb-console-even-when-uart-is-enabled">Why isn’t /dev/ttySx created when using USB Console even when UART is enabled?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#board-initialization">Board Initialization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-start-directly-my-application-instead-starting-nsh">How to start directly my application instead starting NSH?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-after-putting-my-application-on-entrypoint-it-stops-to-work">Why after putting my application on ENTRYPOINT it stops to work?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-isn-t-dev-ttysx-created-when-using-usb-console-even-when-uart-is-enabled">Why isn’t /dev/ttySx created when using USB Console even when UART is enabled?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#network">Network</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#how-to-detect-ethernet-cable-connection-disconnection">How to detect Ethernet cable connection/disconnection?</a></li>
 </ul>
@@ -336,8 +341,53 @@ then you need to use this other option:</p>
 </div></blockquote>
 </div>
 </div>
+<div class="section" id="board-initialization">
+<h2>Board Initialization<a class="headerlink" href="#board-initialization" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="how-to-start-directly-my-application-instead-starting-nsh">
+<h3>How to start directly my application instead starting NSH?<a class="headerlink" href="#how-to-start-directly-my-application-instead-starting-nsh" title="Permalink to this headline">¶</a></h3>
+<p>You can start you application directly instead of starting the default
+NSH terminal. Lets support your application is called “hello”, then you
+will modify the ENTRYPOINT to call “hello_main” instead of “nsh_main”:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>RTOS Features —&gt;</dt><dd><dl class="simple">
+<dt>Tasks and Scheduling  —&gt;</dt><dd><p>(hello_main) Application entry point</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="why-after-putting-my-application-on-entrypoint-it-stops-to-work">
+<h3>Why after putting my application on ENTRYPOINT it stops to work?<a class="headerlink" href="#why-after-putting-my-application-on-entrypoint-it-stops-to-work" title="Permalink to this headline">¶</a></h3>
+<p>When you replace the ENTRYPOINT from “nsh_main” to your application some
+initialization flow are changed, for instace the NSH_ARCHINIT is not
+executed anymore and so some drivers initialiation that are called from
+it also stops to work.</p>
+<p>You can fix it enabling the Board Late Initialization that will replace the
+NSH_ARCHINIT to call those drivers initialization. Just enable it:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>RTOS Features —&gt;</dt><dd><dl class="simple">
+<dt>RTOS hooks —&gt;</dt><dd><p>[*] Custom board late initialization</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>Also you need to disable the architecture-specific initialization:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Application Configuration —&gt;</dt><dd><dl class="simple">
+<dt>NSH Library —&gt;</dt><dd><p>[ ] Have architecture-specific initialization</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</div>
 <div class="section" id="why-isn-t-dev-ttysx-created-when-using-usb-console-even-when-uart-is-enabled">
-<h2>Why isn’t /dev/ttySx created when using USB Console even when UART is enabled?<a class="headerlink" href="#why-isn-t-dev-ttysx-created-when-using-usb-console-even-when-uart-is-enabled" title="Permalink to this headline">¶</a></h2>
+<h3>Why isn’t /dev/ttySx created when using USB Console even when UART is enabled?<a class="headerlink" href="#why-isn-t-dev-ttysx-created-when-using-usb-console-even-when-uart-is-enabled" title="Permalink to this headline">¶</a></h3>
 <p>If you don’t use serial console then /dev/ttyS0 will not be created,
 even if you enable the UART peripheral at “System Type”.</p>
 <p>You can fix it enabling the Serial Upper-Half Driver:</p>
@@ -350,6 +400,7 @@ even if you enable the UART peripheral at “System Type”.</p>
 </dd>
 </dl>
 </div></blockquote>
+</div>
 </div>
 <div class="section" id="network">
 <h2>Network<a class="headerlink" href="#network" title="Permalink to this headline">¶</a></h2>
