@@ -59,7 +59,7 @@ and another for the integrated Apps.
 Choose a source distribution in *tar.gz* format,
 and [verify](http://www.apache.org/dyn/closer.cgi#verify)
 using the corresponding *pgp* signature (using the committer file in
-[KEYS](http://www.apache.org/dist/{{ site.data.project.incubator_slash_name }}/KEYS)).
+[KEYS](https://downloads.apache.org/{{ site.data.project.incubator_slash_name }}/KEYS)).
 If you cannot do that, the *sha512* hash file may be used to check that the
 download has completed OK.
 
