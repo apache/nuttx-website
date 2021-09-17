@@ -125,10 +125,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">Supported Platforms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm/index.html">ARM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../risc-v/index.html">RISC-V</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../sim/index.html">Simulators</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../../../index.html">Xtensa</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">Espressif ESP32</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#toolchain">Toolchain</a></li>
@@ -139,6 +141,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#watchdog-timers">Watchdog Timers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#smp">SMP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#wifi">WiFi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#wifi-softap">WiFi SoftAP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#bluetooth">Bluetooth</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#using-qemu">Using QEMU</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#things-to-do">Things to Do</a></li>
@@ -158,7 +161,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../reference/index.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../faq/index.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../guides/index.html">Guides</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../glossary.html">Glossary</a></li>
 </ul>
 
@@ -362,21 +364,57 @@ USB connection by means of CP2102 converter, at 115200 bps).</p>
 </div>
 <div class="section" id="wapi">
 <h3>wapi<a class="headerlink" href="#wapi" title="Permalink to this headline">¶</a></h3>
-<p>Enables WiFi support</p>
+<p>Enables WiFi support. You can define your credentials this way:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>Or if you don’t want to keep it saved in the firmware you can do it
+at runtime:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 1
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
+</pre></div>
+</div>
+</div>
+<div class="section" id="wifinsh">
+<h3>wifinsh<a class="headerlink" href="#wifinsh" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">wifinsh</span></code> is similar to the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> board example, but it will connect
+automatically to your Access Point (Wi-Fi Router) and will run telnet daemon
+in the board. Then you can connect to your board from your computer using the
+telnet program.</p>
+<p>After configuring the <code class="docutils literal notranslate"><span class="pre">esp32-devkit:wifinsh</span></code> you need to define your creden-
+tials in the menuconfig. You can define your credentials this way:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>Find your board IP using <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">ifconfig</span></code> and then from your computer:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ telnet 192.168.x.y
+</pre></div>
+</div>
+<p>Where x and y are the last two numbers of the IP that your router gave to
+your board.</p>
 </div>
 <div class="section" id="mqttc">
 <h3>mqttc<a class="headerlink" href="#mqttc" title="Permalink to this headline">¶</a></h3>
 <p>This configuration tests the MQTT-C publisher example.</p>
 <p>From the host, start the broker and subscribe to the <code class="code docutils literal notranslate"><span class="pre">test</span></code> topic.  Using
 <cite>mosquitto</cite> this should be:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mosquitto&amp;
-mosquitto_sub -t test
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ mosquitto&amp;
+$ mosquitto_sub -t test
 </pre></div>
 </div>
 <p>From the NSH, connect to an access point:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>wapi psk wlan0 mypasswd 1
-wapi essid wlan0 myssid 1
-renew wlan0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 1
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
 </pre></div>
 </div>
 <p>Publish to the broker:</p>
@@ -448,7 +486,7 @@ MISO --&gt; 12
 </pre></div>
 </div>
 <p>Once booted the following command is used to mount a FAT file system:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mount -t vfat /dev/mmcsd0 /mnt
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
 </pre></div>
 </div>
 </div>
@@ -466,8 +504,8 @@ MISO --&gt; 12
 through SPI1.</p>
 <p>By default a SmartFS file system is selected.
 Once booted you can use the following commands to mount the file system:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mksmartfs /dev/smart0
-mount -t smartfs /dev/smart0 /mnt
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mksmartfs /dev/smart0
+nsh&gt; mount -t smartfs /dev/smart0 /mnt
 </pre></div>
 </div>
 <p>Note that mksmartfs is only needed the first time.</p>

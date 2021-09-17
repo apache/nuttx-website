@@ -125,10 +125,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Supported Platforms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../arm/index.html">ARM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../risc-v/index.html">RISC-V</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sim/index.html">Simulators</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Xtensa</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Espressif ESP32</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#toolchain">Toolchain</a><ul>
@@ -156,6 +158,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#wifi">WiFi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wifi-softap">WiFi SoftAP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#bluetooth">Bluetooth</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#using-qemu">Using QEMU</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#things-to-do">Things to Do</a></li>
@@ -175,7 +178,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../faq/index.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guides/index.html">Guides</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../glossary.html">Glossary</a></li>
 </ul>
 
@@ -267,7 +269,7 @@ two CPUs are interchangeable.</p>
 for Xtensa architecture and <a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-tools.html#openocd-esp32">OpenOCD</a>
 for ESP32 by Espressif.</p>
 <p>For flashing firmware, you will need to install <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> by running:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pip install esptool
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pip install esptool
 </pre></div>
 </div>
 <div class="section" id="building-from-source">
@@ -299,7 +301,7 @@ build the toolchain with crosstool-NG on Linux are as follows</p>
 It’s a two step process where the first converts the ELF file into a ESP32-compatible binary
 and the second flashes it to the board.  These steps are included into the build system and you can
 flash your NuttX firmware simply by running:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make download ESPTOOL_PORT=&lt;port&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make download ESPTOOL_PORT=&lt;port&gt;
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;port&gt;</span></code> is typically <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> or similar. You can change the baudrate by passing <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BAUD</span></code>.</p>
@@ -875,10 +877,10 @@ failure to wait.</p></li>
 <div class="section" id="wifi">
 <h2>WiFi<a class="headerlink" href="#wifi" title="Permalink to this headline">¶</a></h2>
 <p>A standard network interface will be configured and can be initialized such as:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ifup wlan0
-wapi psk wlan0 mypasswd 1
-wapi essid wlan0 myssid 1
-renew wlan0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifup wlan0
+nsh&gt; wapi psk wlan0 mypasswd 3
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
 </pre></div>
 </div>
 <p>In this case a connection to AP with SSID <code class="docutils literal notranslate"><span class="pre">myssid</span></code> is done, using <code class="docutils literal notranslate"><span class="pre">mypasswd</span></code> as
@@ -888,6 +890,22 @@ the result by running <code class="docutils literal notranslate"><span class="pr
 <p class="admonition-title">Tip</p>
 <p>Boards usually expose a <code class="docutils literal notranslate"><span class="pre">wapi</span></code> defconfig which enables WiFi</p>
 </div>
+</div>
+<div class="section" id="wifi-softap">
+<h2>WiFi SoftAP<a class="headerlink" href="#wifi-softap" title="Permalink to this headline">¶</a></h2>
+<p>It is possible to use ESP32 as an Access Point (SoftAP). Actually there are some
+boards with a <code class="docutils literal notranslate"><span class="pre">sta_softap</span></code> which enables this support.</p>
+<p>If you are using this board config profile you can run these commands to be able
+to connect your smartphone or laptop to your board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifup wlan1
+nsh&gt; dhcpd_start wlan1
+nsh&gt; wapi psk wlan0 mypasswd 1
+nsh&gt; wapi essid wlan1 nuttxap 1
+</pre></div>
+</div>
+<p>In this case, you are creating the access point <code class="docutils literal notranslate"><span class="pre">nuttxapp</span></code> in your board and to
+connect to it on your smartphone you will be required to type the password <code class="docutils literal notranslate"><span class="pre">mypasswd</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">dhcpd_start</span></code> is necessary to let your board to associate an IP to your smartphone.</p>
 </div>
 <div class="section" id="bluetooth">
 <h2>Bluetooth<a class="headerlink" href="#bluetooth" title="Permalink to this headline">¶</a></h2>
