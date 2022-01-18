@@ -240,15 +240,29 @@ Like: <a class="reference external" href="https://xpack.github.io/riscv-none-emb
 </div>
 <div class="section" id="booting">
 <h2>Booting<a class="headerlink" href="#booting" title="Permalink to this headline">¶</a></h2>
-<p>The NuttX port for now relies on HSS bootloader to carry on some hardware initializations.</p>
+<p>The NuttX works as a standalone operating system that may initialize all the required clocks and
+peripherals including DDR memory. Alternatively, the vendor’s HSS bootloader may be used instead to
+perform all the initialization steps.</p>
 </div>
 <div class="section" id="building-and-flashing">
 <h2>Building and flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this headline">¶</a></h2>
-<p>First make sure that <code class="docutils literal notranslate"><span class="pre">hss-payload-generator</span></code> is installed.
-Available from: <a class="reference external" href="https://github.com/polarfire-soc/hart-software-services">https://github.com/polarfire-soc/hart-software-services</a></p>
-<p>This tool is used to convert the ELF/bin to a compatible HSS payload image</p>
 <p>Configure the NuttX project: <code class="docutils literal notranslate"><span class="pre">./tools/configure.sh</span> <span class="pre">icicle:nsh</span></code>
 Run <code class="docutils literal notranslate"><span class="pre">make</span></code> to build the project.</p>
+<p>If NuttX is built as a standalone OS with the config option CONFIG_MPFS_BOOTLOADER set, it’s important
+to note that the image size is very limited: only (128K - 256) bytes. 256 bytes are reserved for the
+header that must be prepended into the NuttX binary. This binary is called hss-envm-wrapper-bm1-dummySbic.bin
+and may be found from the vendor’s HSS implementation. Moreover, after prepending the 256-byte header,
+the LMA section needs to be adjusted, for example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>riscv64-unknown-elf-objcopy -I binary -O ihex --change-section-lma *+0x20220000 nuttx.bin nuttx.hex
+</pre></div>
+</div>
+<p>The output binary nuttx.hex may be flashed with the LiberoSoc tool.
+The tool is available from: <a class="reference external" href="https://www.microchip.com/en-us/products/fpgas-and-plds/fpga-and-soc-design-tools/fpga/libero-software-later-versions#Documents%20and%20Downloads">https://www.microchip.com/en-us/products/fpgas-and-plds/fpga-and-soc-design-tools/fpga/libero-software-later-versions#Documents%20and%20Downloads</a></p>
+<p>There’s an alternative way to use NuttX, without the CONFIG_MPFS_BOOTLOADER option set. This expects the
+HSS bootloader sets up the system (memories, caches, initializes clocks etc.).
+First make sure that <code class="docutils literal notranslate"><span class="pre">hss-payload-generator</span></code> is installed.
+Available from: <a class="reference external" href="https://github.com/polarfire-soc/hart-software-services">https://github.com/polarfire-soc/hart-software-services</a></p>
+<p>This tool is used to convert the ELF/bin to a compatible HSS payload image</p>
 <p>Create HSS payload bin:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>hss-payload-generator -v -c hss-nuttx.yml payload.bin
 </pre></div>
@@ -268,9 +282,9 @@ Run <code class="docutils literal notranslate"><span class="pre">make</span></co
 <p>The following list indicates the state of peripherals’ support in NuttX:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 30%" />
-<col style="width: 18%" />
-<col style="width: 53%" />
+<col style="width: 35%" />
+<col style="width: 21%" />
+<col style="width: 44%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Peripheral</p></th>
@@ -297,7 +311,7 @@ Run <code class="docutils literal notranslate"><span class="pre">make</span></co
 </tr>
 <tr class="row-even"><td><p>eMMC SD/SDIO</p></td>
 <td><p>Yes</p></td>
-<td><p>eMMC not fully tested</p></td>
+<td><p>No PHY training</p></td>
 </tr>
 <tr class="row-odd"><td><p>Timers</p></td>
 <td><p>No</p></td>
