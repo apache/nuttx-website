@@ -140,6 +140,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Simulator</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#compiling">Compiling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#accessing-the-network">Accessing the Network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testing-capturing-tcp-network-traffic">Testing / capturing TCP network traffic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stopping">Stopping</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#debugging">Debugging</a></li>
 </ul>
@@ -394,14 +395,68 @@ Internet:</p>
 </li>
 </ol>
 </div>
+<div class="section" id="testing-capturing-tcp-network-traffic">
+<h2>Testing / capturing TCP network traffic<a class="headerlink" href="#testing-capturing-tcp-network-traffic" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p>Start Wireshark (or tcpdump) on Linux and capture the appeared tap0 interface.</p></li>
+<li><p>Optionally activate emulating packet loss on Linux:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo iptables -A INPUT -p tcp --dport <span class="m">31337</span> -m statistic --mode random --probability <span class="m">0</span>.01 -j DROP
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Run netcat server on Linux:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>netcat -l -p <span class="m">31337</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Run netcat client on Apache NuttX:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; dd if=/dev/zero of=/tmp/test.bin count=1000</span>
+<span class="go">nsh&gt; netcat LINUX_HOST_IP_ADDRESS 31337 /tmp/test.bin</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Observe TCP network traffic in Wireshark / tcpdump on Linux.</p></li>
+</ol>
+</div>
 <div class="section" id="stopping">
 <h2>Stopping<a class="headerlink" href="#stopping" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p>The normal way to stop:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; poweroff</span>
+<span class="gp">$</span>
+<span class="gp">$ </span><span class="c1"># we&#39;re back at the Linux prompt.</span>
+</pre></div>
+</div>
+</div></blockquote>
 <p>If you don’t have an nsh prompt, the only effective way to stop the simulator is kill it from another terminal:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pkill nuttx
 </pre></div>
 </div>
 </div></blockquote>
+</li>
+<li><p>Optionally deactivate emulating packet loss on Linux:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo iptables -D INPUT -p tcp --dport <span class="m">31337</span> -m statistic --mode random --probability <span class="m">0</span>.01 -j DROP
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>If you do not need tap0 interface anymore, it can be disabled on Linux as follows:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo ./tools/simhostroute.sh wlan0 off
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
 </div>
 <div class="section" id="debugging">
 <h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h2>
