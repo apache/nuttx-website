@@ -272,18 +272,18 @@ finished the entire NSH initialization sequence.</p></li>
 <div class="section" id="nsh-initialize">
 <h3><code class="docutils literal notranslate"><span class="pre">nsh_initialize()</span></code><a class="headerlink" href="#nsh-initialize" title="Permalink to this headline">¶</a></h3>
 <p>The NSH initialization function, <code class="docutils literal notranslate"><span class="pre">nsh_initialize()</span></code>, be found in
-<code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_init.c</span></code>. It does only three things:</p>
+<code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_init.c</span></code>. It does only four things:</p>
 <blockquote>
 <div><ol class="arabic">
-<li><p><code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code>: If so configured, it executes an NSH start-up
-script that can be found at <code class="docutils literal notranslate"><span class="pre">/etc/init.d/rcS</span></code> in the target file
-system. The <code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code> function can be found in
-<code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_romfsetc.c</span></code>. This function will (1) register a
-ROMFS file system, then (2) mount the ROMFS file system. <code class="docutils literal notranslate"><span class="pre">/etc</span></code> is
-the default location where a read-only, ROMFS file system is mounted
-by <code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code>.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code>: If so configured, it executes NSH system init and
+start-up script that can be found at <code class="docutils literal notranslate"><span class="pre">/etc/init.d/rc.sysinit</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/etc/init.d/rcS</span></code> in the target file system. The <code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code>
+function can be found in <code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_romfsetc.c</span></code>.
+This function will (1) register a ROMFS file system, then (2) mount
+the ROMFS file system. <code class="docutils literal notranslate"><span class="pre">/etc</span></code> is the default location where a
+read-only, ROMFS file system is mounted by <code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code>.</p>
 <p>The ROMFS image is, itself, just built into the firmware. By default,
-this <code class="docutils literal notranslate"><span class="pre">rcS</span></code> start-up script contains the following logic:</p>
+this <code class="docutils literal notranslate"><span class="pre">rc.sysinit</span></code> system init script contains the following logic:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Create a RAMDISK and mount it at XXXRDMOUNTPOINTXXX
 
 mkrd -m XXXMKRDMINORXXX -s XXMKRDSECTORSIZEXXX XXMKRDBLOCKSXXX
@@ -302,7 +302,7 @@ device.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">XXXRDMOUNTPOINTXXX</span></code> will become the configured mount point.
 Default: <code class="docutils literal notranslate"><span class="pre">/etc</span></code></p></li>
 </ul>
-<p>By default, the substituted values would yield an <code class="docutils literal notranslate"><span class="pre">rcS</span></code> file like:</p>
+<p>By default, the substituted values would yield an <code class="docutils literal notranslate"><span class="pre">rc.sysinit</span></code> file like:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Create a RAMDISK and mount it at /tmp
 
 mkrd -m 1 -s 512 1024
@@ -317,8 +317,8 @@ mount -t vfat /dev/ram1 /tmp
 then</p></li>
 <li><p>Mount the FAT file system at a configured mountpoint, <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>.</p></li>
 </ul>
-<p>This <code class="docutils literal notranslate"><span class="pre">rcS</span></code> template file can be found at
-<code class="docutils literal notranslate"><span class="pre">apps/nshlib/rcS.template</span></code>. The resulting ROMFS file system can be
+<p>This <code class="docutils literal notranslate"><span class="pre">rc.sysinit.template</span></code> template file can be found at
+<code class="docutils literal notranslate"><span class="pre">apps/nshlib/rc.sysinit.template</span></code>. The resulting ROMFS file system can be
 found in <code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_romfsimg.h</span></code>.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">board_app_initialize()</span></code>: Next any architecture-specific NSH
@@ -329,6 +329,12 @@ things like: (1) Initialize SPI devices, (2) Initialize SDIO, and (3)
 mount any SD cards that may be inserted.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nsh_netinit()</span></code>: The <code class="docutils literal notranslate"><span class="pre">nsh_netinit()</span></code> function can be found in
 <code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_netinit.c</span></code>.</p></li>
+<li><p>The start-up script <code class="docutils literal notranslate"><span class="pre">rcS</span></code> is executed after the system-init script
+to startup some application and other system service.</p>
+<p>This <code class="docutils literal notranslate"><span class="pre">rcS</span></code> template file can be found at
+<code class="docutils literal notranslate"><span class="pre">apps/nshlib/rcS.template</span></code>. The resulting ROMFS file system can be
+found in <code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_romfsimg.h</span></code>.</p>
+</li>
 </ol>
 </div></blockquote>
 </div>
