@@ -558,31 +558,37 @@ It can run both of wasm bytecode and AoT compiled modules.</p>
 <ol class="arabic">
 <li><p>Create a littlefs image which contains wasm modules.</p>
 <p><a class="reference external" href="https://github.com/jrast/littlefs-python/blob/master/examples/mkfsimg.py">https://github.com/jrast/littlefs-python/blob/master/examples/mkfsimg.py</a>
-is used in the following example.</p>
+is used in the following example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>% python3 mkfsimg.py \
+  --img-filename ..../littlefs.bin \
+  --img-size 3080192 \
+  --block-size 4096 \
+  --prog-size 256 \
+  --read-size 256 \
+  ..../wasm_binary_directory
+</pre></div>
+</div>
+</li>
+<li><p>Write the NuttX image and the filesystem to ESP32:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>% esptool.py \
+  --chip esp32 \
+  --port /dev/tty.SLAB_USBtoUART \
+  --baud 921600 \
+  write_flash \
+  0x1000 ..../bootloader-esp32.bin \
+  0x8000 ..../partition-table-esp32.bin \
+  0x10000 nuttx.bin \
+  0x180000 ..../littlefs.bin
+</pre></div>
+</div>
+</li>
+<li><p>Mount the filesystem and run a wasm module on it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t littlefs /dev/esp32flash /mnt
+nsh&gt; iwasm /mnt/....
+</pre></div>
+</div>
 </li>
 </ol>
-<blockquote>
-<div><dl class="simple">
-<dt>% python3 mkfsimg.py </dt><dd><p>–img-filename …./littlefs.bin –img-size 3080192 –block-size 4096 –prog-size 256 –read-size 256 …./wasm_binary_directory</p>
-</dd>
-</dl>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Write the NuttX image and the filesystem to ESP32.</p></li>
-</ol>
-<blockquote>
-<div><dl class="simple">
-<dt>% esptool.py </dt><dd><p>–chip esp32 –port /dev/tty.SLAB_USBtoUART –baud 921600 write_flash 0x1000 …./bootloader-esp32.bin 0x8000 …./partition-table-esp32.bin 0x10000 nuttx.bin 0x180000 …./littlefs.bin</p>
-</dd>
-</dl>
-</div></blockquote>
-<ol class="arabic simple" start="3">
-<li><p>Mount the filesystem and run a wasm module on it.</p></li>
-</ol>
-<blockquote>
-<div><p>nsh&gt; mount -t littlefs /dev/esp32flash /mnt
-nsh&gt; iwasm /mnt/….</p>
-</div></blockquote>
 </div>
 <div class="section" id="efuse">
 <h3>efuse<a class="headerlink" href="#efuse" title="Permalink to this headline">¶</a></h3>
