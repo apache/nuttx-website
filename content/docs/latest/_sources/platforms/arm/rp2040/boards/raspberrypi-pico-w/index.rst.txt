@@ -3,9 +3,9 @@ Raspberry Pi Pico
 ===============================
 
 The `Raspberry Pi Pico <https://www.raspberrypi.com/products/raspberry-pi-pico/>`_ is a general purpose board supplied by
-the Raspberry Pi Foundation.
+the Raspberry Pi Foundation.  The W variant adds built in WiFi communications.
 
-.. figure:: RaspberryPiPico.png
+.. figure:: RaspberryPiPicoW.png
    :align: center
 
 Features
@@ -24,6 +24,7 @@ Features
 * Temperature sensor
 * Accelerated floating point libraries on-chip
 * 8 × Programmable IO (PIO) state machines for custom peripheral support
+* Built in WiFi radio (Infineon CYW43439)
 
 Serial Console
 ==============
@@ -36,20 +37,25 @@ The board can be configured to use the USB connection as the serial console.
 Buttons and LEDs
 ================
 
-User LED controlled by GPIO25.
+LED controlled by GPIO0 of the wireless chip (not the RP2040 processor).
 
 A BOOTSEL button, which if held down when power is first
 applied to the board, will cause the RP2040 to boot into programming
-mode and appear as a storage device to a computer connected via USB .
+mode and appear  as a storage device to a computer connected via USB.
 Saving a .UF2 file to this device will replace the Flash ROM contents
 on the RP2040.
 
+Wireless Communication
+======================
+
+The on board Infineon CYW43439 supports 2.4 GHz WiFi 4 communications
+(802.11n), WPS3 and SoftAP with up to four clients.
+
 Pin Mapping
 ===========
-Pads numbered anticlockwise from USB connector.
 
 ===== ========== ==========
-Pad   Signal     Notes
+Pin   Signal     Notes
 ===== ========== ==========
 1     GPIO0      Default TX for UART0 serial console
 2     GPIO1      Default RX for UART1 serial console
@@ -96,12 +102,27 @@ Pad   Signal     Notes
 Other RP2040 Pins
 =================
 
-GPIO23 Output - Power supply control.
-GPIO24 Input  - High if USB port or Pad 40 supplying power.
-GPIO25 Output - On board LED.
+GPIO23 Output - WiFi controller enable.
+GPIO24 I/O    - WiFi controller data line.
+GPIO25 Output - WiFi controller chip select line.
+GPIO29 Output - WiFi controller clock line.
 ADC3   Input  - Analog voltage equal to one third of VSys voltage.
 
+Note: ADC3 and GPIO29 share the same pin on the RP2040. If the
+GPIO25 line is held high (Wifi controller NOT selected) then a voltage
+equal to one third of the VSys voltage with appear on this line and
+can be read with ADC3.  When the WiFi chip is selected this voltage
+will be removed so the line can be used as a clock for data exchange
+with the WiFi controller.
+
 Separate pins for the Serial Debug Port (SDB) are available
+
+WiFi Controller GPIO
+====================
+
+GPIO0 - Output - On board LED.
+GPIO1 - Output - Power supply control.
+GPIO2 - Input  - High if USB port or Pad 40 supplying power.
 
 Power Supply
 ============
@@ -118,7 +139,7 @@ by pulling pin 37 to ground.
 The regulator can run in two modes.  By default the regulator runs
 in PFM mode which provides the best efficiency, but may be
 switched to PWM mode for improved ripple by outputting a one
-on GPIO23.
+on the wireless chip's GPIO1 (not the RP2040's GPIO1).
 
 Configurations
 ==============
