@@ -147,6 +147,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#wi-fi">Wi-Fi</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#wi-fi-softap">Wi-Fi SoftAP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#bluetooth">Bluetooth</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#i2s">I2S</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#using-qemu">Using QEMU</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#secure-boot-and-flash-encryption">Secure Boot and Flash Encryption</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#things-to-do">Things to Do</a></li>
@@ -308,33 +309,119 @@ Due to the limited number of GPIOs in ESP32, it’s recommended to use RMII to
 connect to an external PHY chip. Current driver also only supports RMII option.</p>
 <p>The RMII GPIO pins are fixed, but the SMI and functional GPIO pins are optional.</p>
 <p>RMII GPIO pins are as following:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ESP32 GPIO          PHY Chip GPIO
-  IO25       &lt;--&gt;       RXD[0]
-  IO26       &lt;--&gt;       RXD[1]
-  IO27       &lt;--&gt;       CRS_DV
-  IO0        &lt;--&gt;       REF_CLK
-  IO19       &lt;--&gt;       TXD[0]
-  IO21       &lt;--&gt;       TX_EN
-  IO22       &lt;--&gt;       TXD[1]
-</pre></div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32 GPIO</p></th>
+<th class="head"><p>PHY Chip GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IO25</p></td>
+<td><p>RXD[0]</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO26</p></td>
+<td><p>RXD[1]</p></td>
+</tr>
+<tr class="row-even"><td><p>IO27</p></td>
+<td><p>CRS_DV</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO0</p></td>
+<td><p>REF_CLK</p></td>
+</tr>
+<tr class="row-even"><td><p>IO19</p></td>
+<td><p>TXD[0]</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO21</p></td>
+<td><p>TX_EN</p></td>
+</tr>
+<tr class="row-even"><td><p>IO22</p></td>
+<td><p>TXD[1]</p></td>
+</tr>
+</tbody>
+</table>
 <p>SMI GPIO pins (default option) are as following:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ESP32 GPIO          PHY Chip GPIO
-  IO18       &lt;--&gt;       MDIO
-  IO23       &lt;--&gt;       MDC
-</pre></div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32 GPIO</p></th>
+<th class="head"><p>PHY Chip GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IO18</p></td>
+<td><p>MDIO</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO23</p></td>
+<td><p>MDC</p></td>
+</tr>
+</tbody>
+</table>
 <p>Functional GPIO pins(default option) are as following:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ESP32 GPIO          PHY Chip GPIO
-  IO5        &lt;--&gt;      Reset_N
-</pre></div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32 GPIO</p></th>
+<th class="head"><p>PHY Chip GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IO5</p></td>
+<td><p>Reset_N</p></td>
+</tr>
+</tbody>
+</table>
 <p>Espressif has an <a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-ethernet-kit.html">official Ethernet development
 board</a>.</p>
 <p>This driver has been tested according to this board and ESP32 core
 board + LAN8720 module. If users have some issue about using this driver,
 please refer the upper official document, specially the issue that GPIO0
 causes failing to bring the ESP32 chip up.</p>
+</div>
+<div class="section" id="i2s">
+<h2>I2S<a class="headerlink" href="#i2s" title="Permalink to this headline">¶</a></h2>
+<p>ESP32 has two I2S peripherals accessible using either the generic I2S audio
+driver or a specific audio codec driver
+(<a class="reference external" href="https://www.cirrus.com/products/cs4344-45-48/">CS4344</a> bindings are
+available at the moment). Also, it’s possible to use the I2S character device
+driver to bypass audio systems and write directly to the I2S peripheral.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The I2S peripheral is able to work on two functional modes
+internally: 16 and 32-bit width.
+That limits using the I2S peripheral to play audio files other than 16/32
+bit-widths as the internal buffer allocated for the audio content does not
+consider the operation modes of the peripheral. This limitation is planned
+to be removed soon by copying the buffers internally and making the
+necessary adjustments.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above statement is not valid when using the I2S character
+device driver.
+It’s possible to use 8, 16, 24, and 32-bit-widths writing directly to the
+I2S character device. Just make sure to set the bit-width:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; System Type
+    -&gt; ESP32 Peripheral Selection
+        -&gt; I2S
+            -&gt; I2S0/1
+                -&gt; Bit Witdh
+</pre></div>
+</div>
+<p>And make sure the data stream buffer being written to the I2S peripheral is
+aligned to the next boundary i.e. 16 bits for the 8 and 16-bit-widths and
+32 bits for 24 and 32-bit-widths.</p>
+</div>
 </div>
 <div class="section" id="pin-mapping">
 <h2>Pin Mapping<a class="headerlink" href="#pin-mapping" title="Permalink to this headline">¶</a></h2>
@@ -364,10 +451,87 @@ causes failing to bring the ESP32 chip up.</p>
 </div>
 <div class="section" id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="nsh">
-<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline">¶</a></h3>
-<p>Basic NuttShell configuration (console enabled in UART0, exposed via
-USB connection by means of CP2102 converter, at 115200 bps).</p>
+<div class="section" id="audio">
+<h3>audio<a class="headerlink" href="#audio" title="Permalink to this headline">¶</a></h3>
+<p>This configuration uses the I2S0 peripheral and an externally connected audio
+codec to play an audio file streamed over an HTTP connection while connected
+to a Wi-Fi network.</p>
+<p><strong>Audio Codec Setup</strong></p>
+<p>The CS4344 audio codec is connected on the following pins:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32 Pin</p></th>
+<th class="head"><p>CS4344 Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>MCLK</p></td>
+<td><p>Master Clock</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>SCLK</p></td>
+<td><p>Serial Clock</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>LRCK</p></td>
+<td><p>Left Right Clock (Word Select)</p></td>
+</tr>
+<tr class="row-odd"><td><p>18</p></td>
+<td><p>SDIN</p></td>
+<td><p>Serial Data In on CS4344. (DOUT on ESP32)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Simple HTTP server</strong></p>
+<p>Prepare a PCM-encoded (<cite>.wav</cite>) audio file with 16 bits/sample (sampled at
+8~48kHz). This file must be placed into a folder in a computer that could
+be accessed on the same Wi-Fi network the ESP32 will be connecting to.</p>
+<p>Python provides a simple HTTP server. <cite>cd</cite> to the audio file folder on the
+PC and run:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ python3 -m http.server
+
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/)
+</pre></div>
+</div>
+<p>Look for your PC IP address and test playing the prepared audio on your
+browser:</p>
+<div class="figure align-center">
+<img alt="../../../../../_images/esp32-audio-config-file.png" src="../../../../../_images/esp32-audio-config-file.png" />
+</div>
+<p>After successfully built and flashed, connect the board to the Wi-Fi network:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ nsh&gt; wapi psk wlan0 mypasswd 1
+$ nsh&gt; wapi essid wlan0 myssid 1
+$ nsh&gt; renew wlan0
+</pre></div>
+</div>
+<p>Once connected, open NuttX’s player and play the file according to its file
+name and the IP address of the HTTP server:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ nsh&gt; nxplayer
+$ nxplayer&gt; play http://192.168.1.239:8000/tones.wav
+</pre></div>
+</div>
+</div>
+<div class="section" id="efuse">
+<h3>efuse<a class="headerlink" href="#efuse" title="Permalink to this headline">¶</a></h3>
+<p>A config with EFUSE enabled.</p>
+</div>
+<div class="section" id="i2schar">
+<h3>i2schar<a class="headerlink" href="#i2schar" title="Permalink to this headline">¶</a></h3>
+<p>This configuration enables the I2S character device and the i2schar example
+app, which provides an easy-to-use way of testing the I2S peripheral (I2S0
+on this example).</p>
+<p>After successfully built and flashed, run on the boards’s terminal:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ i2schar
+</pre></div>
+</div>
+<p>The corresponding output should show related debug informations.</p>
 </div>
 <div class="section" id="knsh">
 <h3>knsh<a class="headerlink" href="#knsh" title="Permalink to this headline">¶</a></h3>
@@ -391,45 +555,75 @@ CPU System Registers.</p></li>
 </ul>
 </div>
 </div>
-<div class="section" id="wapi">
-<h3>wapi<a class="headerlink" href="#wapi" title="Permalink to this headline">¶</a></h3>
-<p>Enables Wi-Fi support. You can define your credentials this way:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
--&gt; Application Configuration
-    -&gt; Network Utilities
-        -&gt; Network initialization (NETUTILS_NETINIT [=y])
-            -&gt; WAPI Configuration
+<div class="section" id="mcp2515">
+<h3>mcp2515<a class="headerlink" href="#mcp2515" title="Permalink to this headline">¶</a></h3>
+<p>This config is used to communicate with MCP2515 CAN over SPI chip.
+SPI3 is used and kept with the default IOMUX pins, i.e.:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Signal</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>CS</p></td>
+</tr>
+<tr class="row-odd"><td><p>18</p></td>
+<td><p>SCK</p></td>
+</tr>
+<tr class="row-even"><td><p>23</p></td>
+<td><p>MOSI</p></td>
+</tr>
+<tr class="row-odd"><td><p>19</p></td>
+<td><p>MISO</p></td>
+</tr>
+</tbody>
+</table>
+<p>The MCP2515 interrupt (INT) pin is connected to the pin 22 of the
+ESP32-Devkit.</p>
+</div>
+<div class="section" id="mmcsdspi">
+<h3>mmcsdspi<a class="headerlink" href="#mmcsdspi" title="Permalink to this headline">¶</a></h3>
+<p>This config tests the SPI driver by connecting an SD Card reader over SPI.
+SPI2 is used and kept with the default IOMUX pins, i.e.:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Signal</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>CS</p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p>SCK</p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p>MOSI</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>MISO</p></td>
+</tr>
+</tbody>
+</table>
+<p>Once booted the following command is used to mount a FAT file system:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
 </pre></div>
 </div>
-<p>Or if you don’t want to keep it saved in the firmware you can do it
-at runtime:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 1
-nsh&gt; wapi essid wlan0 myssid 1
-nsh&gt; renew wlan0
-</pre></div>
 </div>
-</div>
-<div class="section" id="wifinsh">
-<h3>wifinsh<a class="headerlink" href="#wifinsh" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">wifinsh</span></code> is similar to the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> board example, but it will connect
-automatically to your Access Point (Wi-Fi Router) and will run telnet daemon
-in the board. Then you can connect to your board from your computer using the
-telnet program.</p>
-<p>After configuring the <code class="docutils literal notranslate"><span class="pre">esp32-devkit:wifinsh</span></code> you need to define your creden-
-tials in the menuconfig. You can define your credentials this way:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
--&gt; Application Configuration
-    -&gt; Network Utilities
-        -&gt; Network initialization (NETUTILS_NETINIT [=y])
-            -&gt; WAPI Configuration
-</pre></div>
-</div>
-<p>Find your board IP using <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">ifconfig</span></code> and then from your computer:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ telnet 192.168.x.y
-</pre></div>
-</div>
-<p>Where x and y are the last two numbers of the IP that your router gave to
-your board.</p>
+<div class="section" id="module">
+<h3>module<a class="headerlink" href="#module" title="Permalink to this headline">¶</a></h3>
+<p>This config is to run apps/examples/module.</p>
 </div>
 <div class="section" id="mqttc">
 <h3>mqttc<a class="headerlink" href="#mqttc" title="Permalink to this headline">¶</a></h3>
@@ -461,6 +655,38 @@ outputted:</p>
 </div>
 <p>From the host the message <code class="code docutils literal notranslate"><span class="pre">test</span></code> should be outputted.</p>
 </div>
+<div class="section" id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline">¶</a></h3>
+<p>Basic NuttShell configuration (console enabled in UART0, exposed via
+USB connection by means of CP2102 converter, at 115200 bps).</p>
+</div>
+<div class="section" id="ostest">
+<h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this headline">¶</a></h3>
+<p>This is the NuttX test at apps/testing/ostest that is run against all new
+architecture ports to assure a correct implementation of the OS.  The default
+version is for a single CPU but can be modified for an SMP test by adding:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SMP=y
+CONFIG_SMP_NCPUS=2
+CONFIG_SPINLOCK=y
+</pre></div>
+</div>
+</div>
+<div class="section" id="psram">
+<h3>psram<a class="headerlink" href="#psram" title="Permalink to this headline">¶</a></h3>
+<p>This config tests the PSRAM driver over SPIRAM interface.
+You can use the ramtest command to test the PSRAM memory. We are testing
+only 64KB on this example (64 * 1024), but you can change this number to
+2MB or 4MB depending on PSRAM chip used on your board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ramtest -w 0x3F800000 65536
+RAMTest: Marching ones: 3f800000 65536
+RAMTest: Marching zeroes: 3f800000 65536
+RAMTest: Pattern test: 3f800000 65536 55555555 aaaaaaaa
+RAMTest: Pattern test: 3f800000 65536 66666666 99999999
+RAMTest: Pattern test: 3f800000 65536 33333333 cccccccc
+RAMTest: Address-in-address test: 3f800000 65536
+</pre></div>
+</div>
+</div>
 <div class="section" id="smp">
 <h3>smp<a class="headerlink" href="#smp" title="Permalink to this headline">¶</a></h3>
 <p>Another NSH configuration, similar to nsh, but also enables
@@ -480,49 +706,6 @@ CONFIG_TESTING_SMP_STACKSIZE=2048
 </pre></div>
 </div>
 </div>
-<div class="section" id="ostest">
-<h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this headline">¶</a></h3>
-<p>This is the NuttX test at apps/testing/ostest that is run against all new
-architecture ports to assure a correct implementation of the OS.  The default
-version is for a single CPU but can be modified for an SMP test by adding:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SMP=y
-CONFIG_SMP_NCPUS=2
-CONFIG_SPINLOCK=y
-</pre></div>
-</div>
-</div>
-<div class="section" id="mcp2515">
-<h3>mcp2515<a class="headerlink" href="#mcp2515" title="Permalink to this headline">¶</a></h3>
-<p>This config is used to communicate with MCP2515 CAN over SPI chip.
-SPI3 is used and kept with the default IOMUX pins, i.e.:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CS   --&gt; 5
-SCK  --&gt; 18
-MOSI --&gt; 23
-MISO --&gt; 19
-</pre></div>
-</div>
-<p>The MCP2515 interrupt (INT) pin is connected to the pin 22 of the
-ESP32-Devkit.</p>
-</div>
-<div class="section" id="mmcsdspi">
-<h3>mmcsdspi<a class="headerlink" href="#mmcsdspi" title="Permalink to this headline">¶</a></h3>
-<p>This config tests the SPI driver by connecting an SD Card reader over SPI.
-SPI2 is used and kept with the default IOMUX pins, i.e.:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CS   --&gt; 15
-SCK  --&gt; 14
-MOSI --&gt; 13
-MISO --&gt; 12
-</pre></div>
-</div>
-<p>Once booted the following command is used to mount a FAT file system:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
-</pre></div>
-</div>
-</div>
-<div class="section" id="module">
-<h3>module<a class="headerlink" href="#module" title="Permalink to this headline">¶</a></h3>
-<p>This config is to run apps/examples/module.</p>
-</div>
 <div class="section" id="sotest">
 <h3>sotest<a class="headerlink" href="#sotest" title="Permalink to this headline">¶</a></h3>
 <p>This config is to run apps/examples/sotest.</p>
@@ -539,22 +722,6 @@ nsh&gt; mount -t smartfs /dev/smart0 /mnt
 </div>
 <p>Note that mksmartfs is only needed the first time.</p>
 </div>
-<div class="section" id="psram">
-<h3>psram<a class="headerlink" href="#psram" title="Permalink to this headline">¶</a></h3>
-<p>This config tests the PSRAM driver over SPIRAM interface.
-You can use the ramtest command to test the PSRAM memory. We are testing
-only 64KB on this example (64 * 1024), but you can change this number to
-2MB or 4MB depending on PSRAM chip used on your board:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ramtest -w 0x3F800000 65536
-RAMTest: Marching ones: 3f800000 65536
-RAMTest: Marching zeroes: 3f800000 65536
-RAMTest: Pattern test: 3f800000 65536 55555555 aaaaaaaa
-RAMTest: Pattern test: 3f800000 65536 66666666 99999999
-RAMTest: Pattern test: 3f800000 65536 33333333 cccccccc
-RAMTest: Address-in-address test: 3f800000 65536
-</pre></div>
-</div>
-</div>
 <div class="section" id="timer">
 <h3>timer<a class="headerlink" href="#timer" title="Permalink to this headline">¶</a></h3>
 <p>This config test the general use purpose timers. It includes the 4 timers,
@@ -565,17 +732,6 @@ example.</p>
 </pre></div>
 </div>
 <p>Where x in the timer instance.</p>
-</div>
-<div class="section" id="watchdog">
-<h3>watchdog<a class="headerlink" href="#watchdog" title="Permalink to this headline">¶</a></h3>
-<p>This config test the watchdog timers. It includes the 2 MWDTS,
-adds driver support, registers the WDTs as devices and includes the watchdog
-example.</p>
-<p>To test it, just run the following:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wdog -d /dev/watchdogx
-</pre></div>
-</div>
-<p>Where x in the watchdog instance.</p>
 </div>
 <div class="section" id="wamr-wasi-debug">
 <h3>wamr_wasi_debug<a class="headerlink" href="#wamr-wasi-debug" title="Permalink to this headline">¶</a></h3>
@@ -617,9 +773,56 @@ nsh&gt; iwasm /mnt/....
 </li>
 </ol>
 </div>
-<div class="section" id="efuse">
-<h3>efuse<a class="headerlink" href="#efuse" title="Permalink to this headline">¶</a></h3>
-<p>A config with EFUSE enabled.</p>
+<div class="section" id="wapi">
+<h3>wapi<a class="headerlink" href="#wapi" title="Permalink to this headline">¶</a></h3>
+<p>Enables Wi-Fi support. You can define your credentials this way:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>Or if you don’t want to keep it saved in the firmware you can do it
+at runtime:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 1
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
+</pre></div>
+</div>
+</div>
+<div class="section" id="watchdog">
+<h3>watchdog<a class="headerlink" href="#watchdog" title="Permalink to this headline">¶</a></h3>
+<p>This config test the watchdog timers. It includes the 2 MWDTS,
+adds driver support, registers the WDTs as devices and includes the watchdog
+example.</p>
+<p>To test it, just run the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wdog -d /dev/watchdogx
+</pre></div>
+</div>
+<p>Where x in the watchdog instance.</p>
+</div>
+<div class="section" id="wifinsh">
+<h3>wifinsh<a class="headerlink" href="#wifinsh" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">wifinsh</span></code> is similar to the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> board example, but it will connect
+automatically to your Access Point (Wi-Fi Router) and will run telnet daemon
+in the board. Then you can connect to your board from your computer using the
+telnet program.</p>
+<p>After configuring the <code class="docutils literal notranslate"><span class="pre">esp32-devkit:wifinsh</span></code> you need to define your creden-
+tials in the menuconfig. You can define your credentials this way:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>Find your board IP using <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">ifconfig</span></code> and then from your computer:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ telnet 192.168.x.y
+</pre></div>
+</div>
+<p>Where x and y are the last two numbers of the IP that your router gave to
+your board.</p>
 </div>
 </div>
 </div>
