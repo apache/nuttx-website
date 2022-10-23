@@ -1,0 +1,363 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mutual Exclusion lock &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Work Queues" href="wqueue.html" />
+    <link rel="prev" title="System Time and Clock" href="time_clock.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../../index.html" class="icon icon-home"> NuttX
+  
+
+  
+    
+    <img src="../../_static/NuttX.png" class="logo" alt="Logo"/>
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../../latest" selected="selected">latest</option>
+    
+    <option value="../../../10.0.0" >10.0.0</option>
+    
+    <option value="../../../10.0.1" >10.0.1</option>
+    
+    <option value="../../../10.1.0" >10.1.0</option>
+    
+    <option value="../../../10.2.0" >10.2.0</option>
+    
+    <option value="../../../10.3.0" >10.3.0</option>
+    
+    <option value="../../../11.0.0" >11.0.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../user/index.html">Userspace API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Architecture APIs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="conventions.html">Naming and Header File Conventions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arch.html">APIs Exported by Architecture-Specific Logic to NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="board.html">APIs Exported by Board-Specific Logic to NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="time_clock.html">System Time and Clock</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Mutual Exclusion lock</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nxmutex">nxmutex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#api-description">Api description</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="wqueue.html">Work Queues</a></li>
+<li class="toctree-l3"><a class="reference internal" href="addrenv.html">Address Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nuttx.html">APIs Exported by NuttX to Architecture-Specific Logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_vs_os.html">Application OS vs. Internal OS Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="smp.html">Symmetric Multiprocessing (SMP) Application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="shm.html">Shared Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paging.html">On-Demand Paging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="led.html">LED Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="iob.html">I/O Buffer Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">API Reference</a> &raquo;</li>
+          <li><a href="index.html">Architecture APIs</a> &raquo;</li>
+      <li>Mutual Exclusion lock</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/os/mutex.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mutual-exclusion-lock">
+<h1>Mutual Exclusion lock<a class="headerlink" href="#mutual-exclusion-lock" title="Permalink to this headline"></a></h1>
+<section id="nxmutex">
+<h2>nxmutex<a class="headerlink" href="#nxmutex" title="Permalink to this headline"></a></h2>
+<p>Use <cite>nxmutex</cite> prefixed api to protect resources. In fact, nxmutex is implemented
+based on nxsem. The difference between nxmutex and nxsem is that nxmutex supports
+priority inheritance by default, nxsem do not support priority inheritance by default</p>
+<p>usually usage:</p>
+<p>call nxmutex_init() for driver, when two tasks will use driver, their timing will be:
+===============   ================
+taskA             taskB
+================  ================
+nxmutex_lock()    nxmutex_lock()
+================  ================
+get lock running  wait for lock
+================= ================
+nxmutex_unlock()  wait for lock
+================= ================</p>
+<blockquote>
+<div><p>get lock running</p>
+</div></blockquote>
+<p>If <cite>CONFIG_PRIORITY_INHERITANCE</cite> is chosen, the priority of the task holding the mutex
+may be changed.
+This is an example:</p>
+<blockquote>
+<div><p>There are three tasks. Their priorities are high, medium, and low.
+We refer to them as <cite>Htask</cite> <cite>Mtask</cite> <cite>Ltask</cite></p>
+<p><cite>Htask</cite> and <cite>Ltask</cite> will hold the same mutex. <cite>Mtask</cite> does not hold mutex</p>
+</div></blockquote>
+<dl class="simple">
+<dt>if <cite>CONFIG_PRIORITY_INHERITANCE</cite> is not chosen, task running order</dt><dd><ol class="arabic simple">
+<li><p><cite>Ltask</cite> hold a mutex first</p></li>
+<li><p>Then <cite>Htask</cite> running, <cite>Htask</cite> can’t hold the mutex,so wait</p></li>
+<li><p>Then <cite>Mtask</cite> running, because <cite>Mtask</cite> priority higher than <cite>Ltask</cite>.</p></li>
+<li><p>When <cite>Mtask</cite> finish, <cite>Ltask</cite> will start running.</p></li>
+<li><p>When <cite>Ltask</cite> finish, <cite>Htask</cite> will start running.</p></li>
+</ol>
+</dd>
+</dl>
+<p>From the above process, we can see that the medium-priority tasks run ahead of
+the high-priority tasks, which is unacceptable.</p>
+<dl class="simple">
+<dt>if <cite>CONFIG_PRIORITY_INHERITANCE</cite> is chosen, task running order</dt><dd><ol class="arabic simple">
+<li><p><cite>Ltask</cite> hold a mutex first.</p></li>
+<li><p>Then <cite>Htask</cite> running, <cite>Htask</cite> can’t hold the mutex, then boost the priority of <cite>Ltask</cite></p></li>
+</ol>
+</dd>
+<dt>to be the same as <cite>Htask</cite>.</dt><dd><ol class="arabic simple">
+<li><p>Because <cite>Ltask</cite> priority is higher than <cite>Mtask</cite>,so <cite>Mtask</cite> not running.</p></li>
+<li><p>When ‘Ltask’ finish, <cite>Htask</cite> will start running.</p></li>
+<li><p>When <cite>Htask</cite> finish, <cite>Mtask</cite> will start running.</p></li>
+</ol>
+</dd>
+</dl>
+<p>Priority inheritance prevents medium-priority tasks from running ahead of
+high-priority tasks</p>
+</section>
+<section id="api-description">
+<h2>Api description<a class="headerlink" href="#api-description" title="Permalink to this headline"></a></h2>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.nxmutex_init">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nxmutex_init</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">mutex_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mutex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nxmutex_init" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function initialize the UNNAMED mutex
+:param mutex: mutex to be initialized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Zero(OK) is returned on success.A negated errno value is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.nxmutex_destroy">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nxmutex_destroy</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">mutex_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mutex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nxmutex_destroy" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function destroy the UNNAMED mutex
+:param mutex: mutex to be destroyed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Zero(OK) is returned on success.A negated errno value is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.nxmutex_lock">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nxmutex_lock</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">mutex_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mutex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nxmutex_lock" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function attempts to lock the mutex referenced by ‘mutex’.  The
+mutex is implemented with a semaphore, so if the semaphore value is
+(&lt;=) zero, then the calling task will not return until it successfully
+acquires the lock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mutex</strong> – mutex descriptor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero(OK) is returned on success.A negated errno value is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.nxmutex_trylock">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nxmutex_trylock</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">mutex_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mutex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nxmutex_trylock" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function locks the mutex only if the mutex is currently not locked.
+If the mutex has been locked already, the call returns without blocking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mutex</strong> – mutex descriptor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Zero(OK) is returned on success.A negated errno value is returned on failure.
+Possible returned errors:</p>
+<p>EINVAL - Invalid attempt to lock the mutex
+EAGAIN - The mutex is not available.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.nxmutex_is_locked">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nxmutex_is_locked</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">mutex_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mutex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nxmutex_is_locked" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function get the lock state the mutex referenced by ‘mutex’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mutex</strong> – mutex descriptor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if mutex is locked will return <cite>ture</cite>. if not will reutrn <cite>false</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.nxmutex_unlock">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nxmutex_unlock</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">mutex_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mutex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nxmutex_unlock" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function attempts to unlock the mutex referenced by ‘mutex’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mutex</strong> – mutex descriptor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero(OK) is returned on success.A negated errno value is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.nxmutex_reset">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nxmutex_reset</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">mutex_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mutex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nxmutex_reset" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function resets mutex states by ‘mutex’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mutex</strong> – mutex descriptor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero(OK) is returned on success.A negated errno value is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="time_clock.html" class="btn btn-neutral float-left" title="System Time and Clock" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="wqueue.html" class="btn btn-neutral float-right" title="Work Queues" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
