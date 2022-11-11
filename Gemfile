@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 source 'https://rubygems.org'
-gem 'github-pages', '~> 203'
+gem 'github-pages'
 gem 'rouge'
+gem 'jekyll'
+gem 'jekyll-feed'
+gem 'webrick'
 # End Gemfile
