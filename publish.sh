@@ -27,6 +27,8 @@ bundle install
 bundle exec jekyll clean --source .
 bundle exec jekyll build --source .
 
+# Gemfile.lock is sometimes updated, ignore that in CI.
+git checkout -- Gemfile.lock
 rm -rf target/docs
 mv docs target/
 
