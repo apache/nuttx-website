@@ -63,6 +63,7 @@
                 <li><a href="http://www.apache.org/foundation/how-it-works.html">Apache Software Foundation</a></li>
                 <li><a href="http://www.apache.org/licenses/">License</a></li>
                 <li><a href="http://www.apache.org/security/">Security</a></li>
+                <li><a href="https://privacy.apache.org/policies/privacy-policy-public.html">Privacy</a></li>
                 <li><a href="http://www.apache.org/events/current-event">Events</a></li>
                 <li><a href="http://www.apache.org/foundation/sponsorship.html">Sponsorship</a></li>
                 <li><a href="http://www.apache.org/foundation/thanks.html">Thanks</a></li>
@@ -1167,7 +1168,7 @@
   </tbody>
 </table>
 
-<p>When they appear in code, these identifiers begin with a <code class="highlighter-rouge">CONFIG_*</code> prefix (e.g., <code class="highlighter-rouge">CONFIG_LIB_BOARDCTL</code> is renamed to <code class="highlighter-rouge">CONFIG_BOARDCTL</code>).</p>
+<p>When they appear in code, these identifiers begin with a <code class="language-plaintext highlighter-rouge">CONFIG_*</code> prefix (e.g., <code class="language-plaintext highlighter-rouge">CONFIG_LIB_BOARDCTL</code> is renamed to <code class="language-plaintext highlighter-rouge">CONFIG_BOARDCTL</code>).</p>
 
 <p>All in-tree boards have been updated, but users who maintain their own out-of-tree boards will have to update all instances of these identifiers.</p>
 
@@ -1190,7 +1191,7 @@
 
 <h3 id="ld-now-called-through-gcc">LD Now Called Through GCC</h3>
 
-<p>When building NuttX with GCC toolchains, the linker is now called through $(CROSSDEV)gcc rather than $(CROSSDEV)ld. This requires all linker options to be prefixed with <code class="highlighter-rouge">-Wl,</code> (dash, capital W, lower-case L, comma). All boards in the NuttX tree have been updated, but any custom out-of-tree boards will need to apply this change in the relevant parts of their build scripts.</p>
+<p>When building NuttX with GCC toolchains, the linker is now called through $(CROSSDEV)gcc rather than $(CROSSDEV)ld. This requires all linker options to be prefixed with <code class="language-plaintext highlighter-rouge">-Wl,</code> (dash, capital W, lower-case L, comma). All boards in the NuttX tree have been updated, but any custom out-of-tree boards will need to apply this change in the relevant parts of their build scripts.</p>
 
 <p>The reason for this change is that GNU Binutils 2.36.x has added new error checking on command line arguments. This has had the effect that the NuttX build suddenly broke on host OS distributions that updated to the 2.36.x release line. Reports included Arch, Manjaro, and Ubuntu. Other host OSes are likely to be affected as well.</p>
 
@@ -1198,12 +1199,12 @@
 
 <p>Your toolchain and board are affected if you see errors from LD like:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>arm-none-eabi-ld: Error: unable to disambiguate: -nostartfiles (did you mean --nostartfiles ?)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>arm-none-eabi-ld: Error: unable to disambiguate: -nostartfiles (did you mean --nostartfiles ?)
 </code></pre></div></div>
 
 <p>or (following this change in NuttX) errors from GCC like:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>arm-none-eabi-gcc: error: unrecognized command line option '--gc-sections'; did you mean '--data-sections'?
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>arm-none-eabi-gcc: error: unrecognized command line option '--gc-sections'; did you mean '--data-sections'?
 </code></pre></div></div>
 
 <h4 id="what-to-change">What to change</h4>
@@ -1212,115 +1213,115 @@
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -d -warn-common
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -d -warn-common
 NXFLATLDFLAGS2 = $(NXFLATLDFLAGS1) -T$(TOPDIR)/binfmt/libnxflat/gnu-nxflat-pcrel.ld -no-check-sections
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -Wl,-d -Wl,-warn-common
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -Wl,-d -Wl,-warn-common
 NXFLATLDFLAGS2 = $(NXFLATLDFLAGS1) -T$(TOPDIR)/binfmt/libnxflat/gnu-nxflat-pcrel.ld -Wl,-no-check-sections
 </code></pre></div></div>
 
-<p>If doing a kernel build, you may need changes in your board’s <code class="highlighter-rouge">kernel/Makefile</code> like:</p>
+<p>If doing a kernel build, you may need changes in your board’s <code class="language-plaintext highlighter-rouge">kernel/Makefile</code> like:</p>
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>USER_LDFLAGS = --undefined=$(ENTRYPT) --entry=$(ENTRYPT) $(USER_LDSCRIPT)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>USER_LDFLAGS = --undefined=$(ENTRYPT) --entry=$(ENTRYPT) $(USER_LDSCRIPT)
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>USER_LDFLAGS = -Wl,--undefined=$(ENTRYPT) -Wl,--entry=$(ENTRYPT) $(USER_LDSCRIPT) -nostartfiles -nodefaultlibs
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>USER_LDFLAGS = -Wl,--undefined=$(ENTRYPT) -Wl,--entry=$(ENTRYPT) $(USER_LDSCRIPT) -nostartfiles -nodefaultlibs
 </code></pre></div></div>
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(Q) $(LD) -o $@ $(USER_LDFLAGS) $(USER_LIBPATHS) $(OBJS) --start-group $(USER_LDLIBS) --end-group $(USER_LIBGCC)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(Q) $(LD) -o $@ $(USER_LDFLAGS) $(USER_LIBPATHS) $(OBJS) --start-group $(USER_LDLIBS) --end-group $(USER_LIBGCC)
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(Q) $(LD) -o $@ $(USER_LDFLAGS) $(USER_LIBPATHS) $(OBJS) -Wl,--start-group $(USER_LDLIBS) -Wl,--end-group $(USER_LIBGCC)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(Q) $(LD) -o $@ $(USER_LDFLAGS) $(USER_LIBPATHS) $(OBJS) -Wl,--start-group $(USER_LDLIBS) -Wl,--end-group $(USER_LIBGCC)
 </code></pre></div></div>
 
-<p>Depending on your board’s customized build scripts, you may need to look out for other <code class="highlighter-rouge">make</code> variables in your board’s <code class="highlighter-rouge">Makefile</code> or <code class="highlighter-rouge">Make.defs</code>.</p>
+<p>Depending on your board’s customized build scripts, you may need to look out for other <code class="language-plaintext highlighter-rouge">make</code> variables in your board’s <code class="language-plaintext highlighter-rouge">Makefile</code> or <code class="language-plaintext highlighter-rouge">Make.defs</code>.</p>
 
 <p>Some variables to look for:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">ARCHSCRIPT</code></li>
-  <li><code class="highlighter-rouge">ARCH_LIBS</code></li>
-  <li><code class="highlighter-rouge">CCLINKFLAGS</code></li>
-  <li><code class="highlighter-rouge">EXTRALINKCMDS</code></li>
-  <li><code class="highlighter-rouge">LDELFFLAGS</code></li>
-  <li><code class="highlighter-rouge">LDENDGROUP</code></li>
-  <li><code class="highlighter-rouge">LDFLAGS</code></li>
-  <li><code class="highlighter-rouge">LDLINKFLAGS</code></li>
-  <li><code class="highlighter-rouge">LDMODULEFLAGS</code></li>
-  <li><code class="highlighter-rouge">LDSTARTGROUP</code></li>
-  <li><code class="highlighter-rouge">NXFLATLDFLAGS1</code></li>
-  <li><code class="highlighter-rouge">NXFLATLDFLAGS2</code></li>
-  <li><code class="highlighter-rouge">USER_LDFLAGS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">ARCHSCRIPT</code></li>
+  <li><code class="language-plaintext highlighter-rouge">ARCH_LIBS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">CCLINKFLAGS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">EXTRALINKCMDS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">LDELFFLAGS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">LDENDGROUP</code></li>
+  <li><code class="language-plaintext highlighter-rouge">LDFLAGS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">LDLINKFLAGS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">LDMODULEFLAGS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">LDSTARTGROUP</code></li>
+  <li><code class="language-plaintext highlighter-rouge">NXFLATLDFLAGS1</code></li>
+  <li><code class="language-plaintext highlighter-rouge">NXFLATLDFLAGS2</code></li>
+  <li><code class="language-plaintext highlighter-rouge">USER_LDFLAGS</code></li>
 </ul>
 
 <p>Anything that executes LD, such as:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(Q) $(LD) --entry=__start $(LDFLAGS) $(LIBPATHS) $(EXTRA_LIBPATHS) \
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(Q) $(LD) --entry=__start $(LDFLAGS) $(LIBPATHS) $(EXTRA_LIBPATHS) \
 </code></pre></div></div>
 
 <p>Anything that processes LD flags, such as:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(LIBPATHS) "-(" $(LDLIBS) "-)" $(LDFLAGS) -Map="$(TOPDIR)$(DELIM)nuttx.map"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(LIBPATHS) "-(" $(LDLIBS) "-)" $(LDFLAGS) -Map="$(TOPDIR)$(DELIM)nuttx.map"
 </code></pre></div></div>
 
-<p>In general, any command line options destined for LD must be prefixed with <code class="highlighter-rouge">-Wl,</code> (dash, capital W, lower-case L, comma) since they are now being passed through GCC.</p>
+<p>In general, any command line options destined for LD must be prefixed with <code class="language-plaintext highlighter-rouge">-Wl,</code> (dash, capital W, lower-case L, comma) since they are now being passed through GCC.</p>
 
 <h4 id="examples">Examples</h4>
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>EXTRALINKCMDS += @$(TOPDIR)/syscall/syscall_wraps.ldcmd
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>EXTRALINKCMDS += @$(TOPDIR)/syscall/syscall_wraps.ldcmd
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>EXTRALINKCMDS += -Wl,@$(TOPDIR)/syscall/syscall_wraps.ldcmd
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>EXTRALINKCMDS += -Wl,@$(TOPDIR)/syscall/syscall_wraps.ldcmd
 </code></pre></div></div>
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LDFLAGS += -gc-sections
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LDFLAGS += -gc-sections
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LDFLAGS += -Wl,-gc-sections
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LDFLAGS += -Wl,-gc-sections
 </code></pre></div></div>
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(LIBPATHS) "-(" $(LDLIBS) "-)" $(LDFLAGS) -Map="$(TOPDIR)$(DELIM)nuttx.map"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(LIBPATHS) "-(" $(LDLIBS) "-)" $(LDFLAGS) -Map="$(TOPDIR)$(DELIM)nuttx.map"
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(LIBPATHS) "-(" $(LDLIBS) "-)" $(LDFLAGS) -Wl,-Map="$(TOPDIR)$(DELIM)nuttx.map"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(LIBPATHS) "-(" $(LDLIBS) "-)" $(LDFLAGS) -Wl,-Map="$(TOPDIR)$(DELIM)nuttx.map"
 </code></pre></div></div>
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -d -warn-common
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -d -warn-common
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -Wl,-d -Wl,-warn-common
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NXFLATLDFLAGS1 = -r -Wl,-d -Wl,-warn-common
 </code></pre></div></div>
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
 LDFLAGS += -Map="${shell cygpath -w $(TOPDIR)/nuttx.map}" --cref
 else
 LDFLAGS += -Map=$(TOPDIR)/nuttx.map --cref
@@ -1329,7 +1330,7 @@ endif
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
 LDFLAGS += -Wl,-Map="${shell cygpath -w $(TOPDIR)/nuttx.map}" -Wl,--cref
 else
 LDFLAGS += -Wl,-Map=$(TOPDIR)/nuttx.map -Wl,--cref
@@ -1340,12 +1341,12 @@ endif
 
 <p>Change:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LD = $(CROSSDEV)ld
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LD = $(CROSSDEV)ld
 </code></pre></div></div>
 
 <p>to:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LD = $(CROSSDEV)gcc
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LD = $(CROSSDEV)gcc
 </code></pre></div></div>
 
 <h4 id="references">References</h4>

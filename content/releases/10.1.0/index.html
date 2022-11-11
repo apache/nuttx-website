@@ -63,6 +63,7 @@
                 <li><a href="http://www.apache.org/foundation/how-it-works.html">Apache Software Foundation</a></li>
                 <li><a href="http://www.apache.org/licenses/">License</a></li>
                 <li><a href="http://www.apache.org/security/">Security</a></li>
+                <li><a href="https://privacy.apache.org/policies/privacy-policy-public.html">Privacy</a></li>
                 <li><a href="http://www.apache.org/events/current-event">Events</a></li>
                 <li><a href="http://www.apache.org/foundation/sponsorship.html">Sponsorship</a></li>
                 <li><a href="http://www.apache.org/foundation/thanks.html">Thanks</a></li>
@@ -196,7 +197,7 @@
   <li><a href="#compatibility-concerns" id="markdown-toc-compatibility-concerns">Compatibility Concerns</a>    <ul>
       <li><a href="#changes-to-build-system" id="markdown-toc-changes-to-build-system">Changes to Build System</a>        <ul>
           <li><a href="#change-cflags-cppflags-cxxflags-and-aflags-from-recursive-to-simple-assignment" id="markdown-toc-change-cflags-cppflags-cxxflags-and-aflags-from-recursive-to-simple-assignment">Change CFLAGS, CPPFLAGS, CXXFLAGS, and AFLAGS from Recursive to Simple Assignment</a></li>
-          <li><a href="#not-necessary-to-define-__nuttx__-in-makedefs" id="markdown-toc-not-necessary-to-define-__nuttx__-in-makedefs">Not Necessary to Define <code class="highlighter-rouge">__NuttX__</code> in Make.defs</a></li>
+          <li><a href="#not-necessary-to-define-__nuttx__-in-makedefs" id="markdown-toc-not-necessary-to-define-__nuttx__-in-makedefs">Not Necessary to Define <code class="language-plaintext highlighter-rouge">__NuttX__</code> in Make.defs</a></li>
         </ul>
       </li>
     </ul>
@@ -1236,15 +1237,15 @@
 <p><a href="https://github.com/apache/incubator-nuttx/pull/1890">PR-1890</a>
 (commit <a href="https://github.com/apache/incubator-nuttx/pull/1890/commits/2caf3a69e3d60ec550980f7ba897c732e7a39df7">2caf3a69e3d60ec550980f7ba897c732e7a39df7</a>)
 attempts to speed up compilation time for concurrent builds by changing
-assignment to makefile variables <code class="highlighter-rouge">*CFLAGS*</code>, <code class="highlighter-rouge">*CPPFLAGS*</code>, <code class="highlighter-rouge">*CXXFLAGS*</code>, and
-<code class="highlighter-rouge">*AFLAGS*</code> from recursive <code class="highlighter-rouge">=</code> to simple <code class="highlighter-rouge">:=</code>. This causes these compile
+assignment to makefile variables <code class="language-plaintext highlighter-rouge">*CFLAGS*</code>, <code class="language-plaintext highlighter-rouge">*CPPFLAGS*</code>, <code class="language-plaintext highlighter-rouge">*CXXFLAGS*</code>, and
+<code class="language-plaintext highlighter-rouge">*AFLAGS*</code> from recursive <code class="language-plaintext highlighter-rouge">=</code> to simple <code class="language-plaintext highlighter-rouge">:=</code>. This causes these compile
 options to be expanded only once during the build.</p>
 
 <p>If you are using NuttX on a custom board not in the NuttX repository, you may
-want to make a similar change to your <code class="highlighter-rouge">Make.defs</code> files. Change these
+want to make a similar change to your <code class="language-plaintext highlighter-rouge">Make.defs</code> files. Change these
 recursive assignments:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CFLAGS = $(ARCHCFLAGS) $(ARCHWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CFLAGS = $(ARCHCFLAGS) $(ARCHWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
 CXXFLAGS = $(ARCHCXXFLAGS) $(ARCHWARNINGSXX) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHXXINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
 CPPFLAGS = $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS)
 AFLAGS = $(CFLAGS) -D__ASSEMBLY__
@@ -1252,31 +1253,31 @@ AFLAGS = $(CFLAGS) -D__ASSEMBLY__
 
 <p>to simple assignments:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CFLAGS := $(ARCHCFLAGS) $(ARCHWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CFLAGS := $(ARCHCFLAGS) $(ARCHWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
 CXXFLAGS := $(ARCHCXXFLAGS) $(ARCHWARNINGSXX) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHXXINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
 CPPFLAGS := $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS)
 AFLAGS := $(CFLAGS) -D__ASSEMBLY__
 </code></pre></div></div>
 
-<h3 id="not-necessary-to-define-__nuttx__-in-makedefs">Not Necessary to Define <code class="highlighter-rouge">__NuttX__</code> in Make.defs</h3>
+<h3 id="not-necessary-to-define-__nuttx__-in-makedefs">Not Necessary to Define <code class="language-plaintext highlighter-rouge">__NuttX__</code> in Make.defs</h3>
 
 <p><a href="https://github.com/apache/incubator-nuttx/pull/2192">PR-2192</a>
 (commit <a href="https://github.com/apache/incubator-nuttx/commit/9208176f600d0d04446531909bf05710716a5ee4">9208176f600d0d04446531909bf05710716a5ee4</a>)
-refactors definition of the <code class="highlighter-rouge">__NuttX__</code> preprocessor symbol to
-<code class="highlighter-rouge">tools/Config.mk</code>, so it is no longer necessary to define it in each board’s
-<code class="highlighter-rouge">Make.defs</code> file.</p>
+refactors definition of the <code class="language-plaintext highlighter-rouge">__NuttX__</code> preprocessor symbol to
+<code class="language-plaintext highlighter-rouge">tools/Config.mk</code>, so it is no longer necessary to define it in each board’s
+<code class="language-plaintext highlighter-rouge">Make.defs</code> file.</p>
 
 <p>If you are using NuttX on a custom board not in the NuttX repository, you may
 want to make a similar change to your Make.defs files.</p>
 
 <p>Remove lines like this:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ARCHDEFINES = -D__NuttX__
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ARCHDEFINES = -D__NuttX__
 </code></pre></div></div>
 
 <p>Or remove -D__NuttX__ from lines like this:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CXXFLAGS += $(ARCHDEFINES) $(EXTRAFLAGS) -pipe -std=c++11 -D__NuttX__
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CXXFLAGS += $(ARCHDEFINES) $(EXTRAFLAGS) -pipe -std=c++11 -D__NuttX__
 </code></pre></div></div>
 
   </div>

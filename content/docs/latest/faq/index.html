@@ -120,6 +120,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#network">Network</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#how-to-detect-ethernet-cable-connection-disconnection">How to detect Ethernet cable connection/disconnection?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-define-the-mtu-and-mss-for-the-network-packets">How to define the MTU and MSS for the network packets?</a></li>
 </ul>
 </li>
 </ul>
@@ -291,6 +292,24 @@ is unplugged and bringing it back up when the cable is restored.
 It is important to note that your Ethernet controller driver of your
 MCU needs to support CONFIG_ARCH_PHY_INTERRUPT (and implement
 <code class="docutils literal notranslate"><span class="pre">arch_phy_irq()</span></code>).</p>
+</section>
+<section id="how-to-define-the-mtu-and-mss-for-the-network-packets">
+<h3>How to define the MTU and MSS for the network packets?<a class="headerlink" href="#how-to-define-the-mtu-and-mss-for-the-network-packets" title="Permalink to this headline"></a></h3>
+<p>As you probably know the “MSS = MTU - 40”, so you just need to setup the MTU.
+If you search for MTU in the menuconfig you will not find it, but you can
+setup the MTU using the <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_ETH_PKTSIZE</span></code> here:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Networking Support  ---&gt;
+    Driver buffer configuration  ---&gt;
+        (590) Ethernet packet buffer size
+</pre></div>
+</div>
+<p>Then just figure it out using this formula:</p>
+<blockquote>
+<div><p>MTU = NET_ETH_PKTSIZE - 14</p>
+<p>MSS = MTU - 40</p>
+</div></blockquote>
+<p>In this case you have MTU = 590 - 14 =&gt; MTU = 576!</p>
+<p>And the MSS = 576 - 40 =&gt; MSS = 536.</p>
 </section>
 </section>
 </section>

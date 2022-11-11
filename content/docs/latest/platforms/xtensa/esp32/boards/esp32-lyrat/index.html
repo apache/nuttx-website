@@ -284,6 +284,11 @@ signal to enable or disable the amplifier ICs. In other words selection
 between speakers and headphones is under software control instead of using
 mechanical contacts that would disconnect speakers once a headphone jack is
 inserted.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The codec implementation on the LyraT board was validated using 16-bit,
+44.1kHz WAV files. Other configurations might not work as expected.</p>
+</div>
 </section>
 <section id="sd-card">
 <h2>SD card<a class="headerlink" href="#sd-card" title="Permalink to this headline"></a></h2>
@@ -716,6 +721,46 @@ signals are shared.</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline"></a></h2>
+<section id="audio">
+<h3>audio<a class="headerlink" href="#audio" title="Permalink to this headline"></a></h3>
+<p>This configuration uses the I2S0 peripheral and the ES8388 audio codec
+present on the LyraT board to play an audio file streamed over HTTP
+while connected to a Wi-Fi network.</p>
+<p><strong>Simple HTTP server</strong></p>
+<p>Prepare a PCM-encoded (<cite>.wav</cite>) audio file with 16 bits/sample (sampled at
+44.1kHz). This file must be placed into a folder in a computer that could
+be accessed on the same Wi-Fi network the ESP32 will be connecting to.</p>
+<p>Python provides a simple HTTP server. <cite>cd</cite> to the audio file folder on the
+PC and run:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ python3 -m http.server
+
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/)
+</pre></div>
+</div>
+<p>Look for your PC IP address and test playing the prepared audio on your
+browser:</p>
+<figure class="align-center">
+<img alt="../../../../../_images/esp32-lyrat-v4.3-audio-config-file.png" src="../../../../../_images/esp32-lyrat-v4.3-audio-config-file.png" />
+</figure>
+<p>After successfully built and flashed, connect the board to the Wi-Fi network:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ nsh&gt; wapi psk wlan0 mypasswd 1
+$ nsh&gt; wapi essid wlan0 myssid 1
+$ nsh&gt; renew wlan0
+</pre></div>
+</div>
+<p>Once connected, open NuttX’s player and play the file according to its file
+name and the IP address of the HTTP server (For example <cite>tones.wav</cite> and
+<cite>192.168.1.239:8000</cite>, respectively):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ nsh&gt; nxplayer
+$ nxplayer&gt; play http://192.168.1.239:8000/tones.wav
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The codec implementation on the LyraT board was validated using 16-bit,
+44.1kHz WAV files. Other configurations might not work as expected.</p>
+</div>
+</section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
 <p>Basic NuttShell configuration (console enabled in UART0, exposed via
