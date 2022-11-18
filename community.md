@@ -33,8 +33,8 @@ Every volunteer project obtains its strength from the people involved in it. We 
 
 You can:
 
-* Use our project and provide a feedback.
-* Provide us with the use-cases.
+* Use our project and provide feedback.
+* Provide us with use-cases.
 * Report bugs and submit patches.
 * Contribute code or documentation.
 
@@ -57,7 +57,7 @@ Get help using {{ site.data.project.short_name }} or contribute to the project o
 
 #### Bug Reports
 
-Found bug? Send an email to the dev list {{ site.data.project.dev_list }}.
+Found a bug? Send an email to the dev list {{ site.data.project.dev_list }}.
 
 Before submitting an issue, please:
 
@@ -69,7 +69,7 @@ Before submitting an issue, please:
 
 #### Feature Requests
 
-Enhancement requests for new features are also welcome. The more concrete and rationale the request is, the greater the chance it will incorporated into future releases.
+Enhancement requests for new features are also welcome. The more concrete and rational the request is, the greater the chance it will be incorporated into future releases.
 
 
 ### Source Code
