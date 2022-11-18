@@ -26,7 +26,7 @@ limitations under the License.
 
 ## {{ site.data.project.name }} Downloads
 
-{{ site.data.project.name }} is released as two source artifacts one for the OS
+{{ site.data.project.name }} is released as two source artifacts, one for the OS
 and another for the integrated Apps.
 
 ### Release Artifacts
