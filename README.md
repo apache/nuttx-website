@@ -38,7 +38,7 @@ runs it the results will be visible [here](https://nuttx.apache.org).
 
 If a dependency has changed such as the external documentation you may
 need to force the deployment CI to run. This can be done from the [CI
-Actions](https://github.com/apache/incubator-nuttx-website/actions?query=workflow%3ACI)
+Actions](https://github.com/apache/nuttx-website/actions?query=workflow%3ACI)
 tab and selecting **Run workflow** -> **Branch: master** --> **Run workflow**
 
 ![Trigger Workflow](ci-workflow.png)
