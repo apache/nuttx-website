@@ -222,8 +222,10 @@ LED and is driven by GPIO18.</p>
 <p>ESP32-S2 has an I2S peripheral accessible using either the generic I2S audio
 driver or a specific audio codec driver
 (<a class="reference external" href="https://www.cirrus.com/products/cs4344-45-48/">CS4344</a> bindings are
-available at the moment). Also, it’s possible to use the I2S character device
-driver to bypass audio systems and write directly to the I2S peripheral.</p>
+available at the moment). The generic I2S audio driver enables using both
+the receiver module (RX) and the transmitter module (TX) without using any
+specific codec. Also, it’s possible to use the I2S character device driver
+to bypass the audio subsystem and write directly to the I2S peripheral.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When using the audio system, sample rate and data width are
@@ -239,17 +241,24 @@ I2S character device. Just make sure to set the bit-width:</p>
 -&gt; System Type
     -&gt; ESP32-S2 Peripheral Selection
         -&gt; I2S
-            -&gt; I2S0/1
-                -&gt; Bit Witdh
+            -&gt; Bit Witdh
 </pre></div>
 </div>
 </div>
+<dl class="simple">
+<dt>The following configurations use the I2S peripheral::</dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="#audio"><span class="std std-ref">audio</span></a></p></li>
+<li><p><a class="reference internal" href="#i2schar"><span class="std std-ref">i2schar</span></a></p></li>
+<li><p><a class="reference internal" href="#nxlooper"><span class="std std-ref">nxlooper</span></a></p></li>
+</ul>
+</dd>
+</dl>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline"></a></h2>
 <section id="audio">
 <h3>audio<a class="headerlink" href="#audio" title="Permalink to this headline"></a></h3>
-<p>This configuration uses the I2S0 peripheral and an externally connected audio
+<p>This configuration uses the I2S peripheral and an externally connected audio
 codec to play an audio file. The easiest way of playing an uncompressed file
 is embedding into the firmware. This configuration selects
 <a class="reference external" href="https://github.com/apache/incubator-nuttx-apps/tree/master/examples/romfs">romfs example</a>
@@ -311,9 +320,46 @@ $ nxplayer&gt; play /usr/share/local/tone.wav
 <section id="i2schar">
 <h3>i2schar<a class="headerlink" href="#i2schar" title="Permalink to this headline"></a></h3>
 <p>This configuration enables the I2S character device and the i2schar example
-app, which provides an easy-to-use way of testing the I2S peripheral.</p>
-<p>After successfully built and flashed, run on the board’s terminal:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ i2schar
+app, which provides an easy-to-use way of testing the I2S peripheral,
+enabling both the TX and the RX for those peripherals.</p>
+<p><strong>I2S pinout</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 16%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32-S2 Pin</p></th>
+<th class="head"><p>Signal Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>33</p></td>
+<td><p>MCLK</p></td>
+<td><p>Master Clock</p></td>
+</tr>
+<tr class="row-odd"><td><p>35</p></td>
+<td><p>SCLK</p></td>
+<td><p>Bit Clock (SCLK)</p></td>
+</tr>
+<tr class="row-even"><td><p>34</p></td>
+<td><p>LRCK</p></td>
+<td><p>Word Select (LRCLK)</p></td>
+</tr>
+<tr class="row-odd"><td><p>36</p></td>
+<td><p>DOUT</p></td>
+<td><p>Data Out</p></td>
+</tr>
+<tr class="row-even"><td><p>37</p></td>
+<td><p>DIN</p></td>
+<td><p>Data In</p></td>
+</tr>
+</tbody>
+</table>
+<p>After successfully built and flashed, run on the boards’s terminal:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2schar
 </pre></div>
 </div>
 <p>The corresponding output should show related debug information.</p>
@@ -322,6 +368,76 @@ app, which provides an easy-to-use way of testing the I2S peripheral.</p>
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
 <p>Basic NuttShell configuration (console enabled in UART0, exposed via
 USB connection by means of CP2102 converter, at 115200 bps).</p>
+</section>
+<section id="nxlooper">
+<h3>nxlooper<a class="headerlink" href="#nxlooper" title="Permalink to this headline"></a></h3>
+<p>This configuration uses the I2S peripheral as an I2S receiver and
+transmitter at the same time. The idea is to capture an I2S data frame
+using the RX module and reproduce the captured data on the TX module.</p>
+<p><strong>Receiving and transmitting data on I2S</strong></p>
+<p>The I2S will act as a receiver (master mode), capturing data from DIN, which
+needs to be connected to an external source as follows:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 16%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32-S2 Pin</p></th>
+<th class="head"><p>Signal Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>33</p></td>
+<td><p>MCLK</p></td>
+<td><p>Master Clock</p></td>
+</tr>
+<tr class="row-odd"><td><p>35</p></td>
+<td><p>SCLK</p></td>
+<td><p>Bit Clock (SCLK) Output</p></td>
+</tr>
+<tr class="row-even"><td><p>34</p></td>
+<td><p>LRCK</p></td>
+<td><p>Word Select (LRCLK) Output</p></td>
+</tr>
+<tr class="row-odd"><td><p>36</p></td>
+<td><p>DOUT</p></td>
+<td><p>Data Out</p></td>
+</tr>
+<tr class="row-even"><td><p>37</p></td>
+<td><p>DIN</p></td>
+<td><p>Data In</p></td>
+</tr>
+</tbody>
+</table>
+<p>The DOUT pin will output the captured data frame.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The ESP32-S2 contains a single I2S peripheral, so the peripheral
+works on “full-duplex” mode. The <cite>SCLK</cite> and <cite>LRCK</cite> signals are connected
+internally and the TX module is set-up as slave and the RX as master.</p>
+</div>
+<p><strong>nxlooper</strong></p>
+<p>The <cite>nxlooper</cite> application captures data from the audio device with receiving
+capabilities and forwards the audio data frame to the audio device with
+transmitting capabilities.</p>
+<p>After successfully built and flashed, run on the boards’s terminal:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; nxlooper
+nxlooper&gt; loopback
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><cite>loopback</cite> command default arguments for the channel configuration,
+the data width and the sample rate are, respectively, 2 channels,
+16 bits/sample and 48KHz. These arguments can be supplied to select
+different audio formats, for instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nxlooper&gt; loopback 2 8 44100
+</pre></div>
+</div>
+</div>
 </section>
 <section id="timer">
 <h3>timer<a class="headerlink" href="#timer" title="Permalink to this headline"></a></h3>
