@@ -174,35 +174,17 @@ APIs Exported by Architecture-Specific Logic to NuttX
      and threads must have come from memory that is accessible to
      user
 
-.. c:function:: void up_unblock_task(FAR struct tcb_s *tcb)
+.. c:function:: void up_switch_context(FAR struct tcb_s *tcb, FAR struct tcb_s *rtcb)
 
-  A task is currently in an inactive task list but
-  has been prepped to execute. Move the TCB to the ready-to-run
-  list, restore its context, and start execution.
+  A task is currently in the ready-to-run list but has been preppe
+  to execute. Restore its context, and start execution.
 
   This function is called only from the NuttX scheduling logic.
   Interrupts will always be disabled when this function is called.
 
-  :param tcb: Refers to the tcb to be unblocked. This tcb is in one
-    of the waiting tasks lists. It must be moved to the
-    ready-to-run list and, if it is the highest priority ready to
-    run tasks, executed.
-
-.. c:function:: void up_block_task(FAR struct tcb_s *tcb, tstate_t task_state)
-
-  The currently executing task at the head of the
-  ready to run list must be stopped. Save its context and move it to
-  the inactive list specified by task_state. This function is called
-  only from the NuttX scheduling logic. Interrupts will always be
-  disabled when this function is called.
-
-  :param tcb: Refers to a task in the ready-to-run list (normally
-     the task at the head of the list). It must be stopped, its
-     context saved and moved into one of the waiting task lists. If
-     it was the task at the head of the ready-to-run list, then a
-     context switch to the new ready to run task must be performed.
-  :param task_state: Specifies which waiting task list should be
-     hold the blocked task TCB.
+  :param tcb: Refers to the head task of the ready-to-run list
+     which will be executed.
+  :param rtcb: Refers to the running task which will be blocked.
 
 .. c:function:: void up_release_pending(void)
 
@@ -216,24 +198,6 @@ APIs Exported by Architecture-Specific Logic to NuttX
   This function is called only from the NuttX scheduling logic when
   pre-emption is re-enabled. Interrupts will always be disabled when
   this function is called.
-
-.. c:function:: void up_reprioritize_rtr(FAR struct tcb_s *tcb, uint8_t priority)
-
-  Called when the priority of a running or
-  ready-to-run task changes and the reprioritization will cause a
-  context switch. Two cases:
-
-  #. The priority of the currently running task drops and the next
-     task in the ready to run list has priority.
-  #. An idle, ready to run task's priority has been raised above the
-     the priority of the current, running task and it now has the
-     priority.
-
-  This function is called only from the NuttX scheduling logic.
-  Interrupts will always be disabled when this function is called.
-
-  :param tcb: The TCB of the task that has been reprioritized
-  :param priority: The new task priority
 
 .. c:macro:: noreturn_function
 
