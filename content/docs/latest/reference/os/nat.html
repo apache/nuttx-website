@@ -176,6 +176,8 @@ with <code class="docutils literal notranslate"><span class="pre">local</span> <
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code></dt><dd><p>Enable or disable Network Address Translation (NAT) function.
 Depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_IPFORWARD</span></code>.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_HASH_BITS</span></code></dt><dd><p>The bits of the hashtable of NAT entries, hashtable has (1 &lt;&lt; bits) buckets.</p>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_TCP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle TCP entry in NAT.
 The default value 86400 is suggested by RFC2663, Section 2.6,
 Page 5. But we may set it to shorter time like 240s for better
@@ -184,6 +186,14 @@ performance.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_UDP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle UDP entry in NAT.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ICMP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle ICMP entry in NAT.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ENTRY_RECLAIM_SEC</span></code></dt><dd><p>The time to auto reclaim all expired NAT entries. A value of zero will
+disable auto reclaiming.
+Expired entries will be automatically reclaimed when matching
+inbound/outbound entries, so this config does not have significant
+impact when NAT is normally used, but very useful when the hashtable
+is big and there are only a few connections using NAT (which will
+only trigger reclaiming on a few chains in hashtable).</p>
 </dd>
 </dl>
 </section>
@@ -200,10 +210,6 @@ performance.</p>
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ipv4_nat_enable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">net_driver_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.ipv4_nat_enable" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Enable NAT function on a network device, on which the outbound packets
 will be masqueraded.</p>
-<p>Note that NAT is currently designed to be enabled on single device, it
-may work when enabled on multiple devices, but external ports will not
-be isolated between devices, so an external port used on one NAT device
-will also be used by same local ip:port on another NAT device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Zero is returned if NAT function is successfully enabled on
