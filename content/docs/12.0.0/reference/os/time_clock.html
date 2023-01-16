@@ -1,0 +1,824 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Time and Clock &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Mutual Exclusion lock" href="mutex.html" />
+    <link rel="prev" title="APIs Exported by Board-Specific Logic to NuttX" href="board.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../../index.html" class="icon icon-home"> NuttX
+  
+
+  
+    
+    <img src="../../_static/NuttX.png" class="logo" alt="Logo"/>
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../../latest" selected="selected">latest</option>
+    
+    <option value="../../../10.0.0" >10.0.0</option>
+    
+    <option value="../../../10.0.1" >10.0.1</option>
+    
+    <option value="../../../10.1.0" >10.1.0</option>
+    
+    <option value="../../../10.2.0" >10.2.0</option>
+    
+    <option value="../../../10.3.0" >10.3.0</option>
+    
+    <option value="../../../11.0.0" >11.0.0</option>
+    
+    <option value="../../../12.0.0" >12.0.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../user/index.html">Userspace API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Architecture APIs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="conventions.html">Naming and Header File Conventions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arch.html">APIs Exported by Architecture-Specific Logic to NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="board.html">APIs Exported by Board-Specific Logic to NuttX</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">System Time and Clock</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#basic-system-timer">Basic System Timer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hardware">Hardware</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#system-tick-and-time">System Tick and Time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tickless-os">Tickless OS</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#tickless-platform-support">Tickless Platform Support</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tickless-configuration-options">Tickless Configuration Options</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tickless-imported-interfaces">Tickless Imported Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#watchdog-timer-interfaces">Watchdog Timer Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mutex.html">Mutual Exclusion lock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wqueue.html">Work Queues</a></li>
+<li class="toctree-l3"><a class="reference internal" href="addrenv.html">Address Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nuttx.html">APIs Exported by NuttX to Architecture-Specific Logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_vs_os.html">Application OS vs. Internal OS Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="smp.html">Symmetric Multiprocessing (SMP) Application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="shm.html">Shared Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paging.html">On-Demand Paging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="led.html">LED Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="iob.html">I/O Buffer Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">API Reference</a> &raquo;</li>
+          <li><a href="index.html">Architecture APIs</a> &raquo;</li>
+      <li>System Time and Clock</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/os/time_clock.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="system-time-and-clock">
+<h1>System Time and Clock<a class="headerlink" href="#system-time-and-clock" title="Permalink to this headline"></a></h1>
+<section id="basic-system-timer">
+<h2>Basic System Timer<a class="headerlink" href="#basic-system-timer" title="Permalink to this headline"></a></h2>
+<p><strong>System Timer</strong> In most implementations, system time is provided
+by a timer interrupt. That timer interrupt runs at rate determined
+by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> (default 10000 microseconds or 100Hz.
+If <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS</span></code> is selected, the default is 100
+microseconds). The timer generates an interrupt each
+<code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> microseconds and increments a counter
+called <code class="docutils literal notranslate"><span class="pre">g_system_ticks</span></code>. <code class="docutils literal notranslate"><span class="pre">g_system_ticks</span></code> then provides a
+time-base for calculating <em>up-time</em> and elapsed time intervals in
+units of <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>. The range of <code class="docutils literal notranslate"><span class="pre">g_system_ticks</span></code>
+is, by default, 32-bits. However, if the MCU supports type
+<code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">long</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_TIME16</span></code> is selected, a 64-bit
+system timer will be supported instead.</p>
+<p><strong>System Timer Accuracy</strong> On many system, the exact timer interval
+specified by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> cannot be achieved due to
+limitations in frequencies or in dividers. As a result, the time
+interval specified by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> may only be
+approximate and there may be small errors in the apparent
+<em>up-time</em> time. These small errors, however, will accumulate over
+time and after a long period of time may have an unacceptably
+large error in the apparent <em>up-time</em> of the MCU.</p>
+<p>If the timer tick period generated by the hardware is not exactly
+<code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> <em>and</em> if there you require accurate
+up-time for the MCU, then there are measures that you can take:</p>
+<ul class="simple">
+<li><p>Perhaps you can adjust <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> to a different
+value so that an exactly <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> can be
+realized.</p></li>
+<li><p>Or you can use a technique known as <em>Delta-Sigma Modulation</em>.
+(Suggested by Uros Platise). Consider the example below.</p></li>
+</ul>
+<p><strong>Delta-Sigma Modulation Example</strong>. Consider this case: The system
+timer is a count-up timer driven at 32.768KHz. There are dividers
+that can be used, but a divider of one yields the highest
+accuracy. This counter counts up until the count equals a match
+value, then a timer interrupt is generated. The desire frequency
+is 100Hz (<code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> is 10000).</p>
+<p>This exact frequency of 100Hz cannot be obtained in this case. In
+order to obtain that exact frequency a match value of 327.68 would
+have to be provided. The closest integer value is 328 but the
+ideal match value is between 327 and 328. The closest value, 328,
+would yield an actual timer frequency of 99.9Hz! That will may
+cause significant timing errors in certain usages.</p>
+<p>Use of Delta-Sigma Modulation can eliminate this error in the long
+run. Consider this example implementation:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p>Initially an accumulator is zero an the match value is
+programmed to 328:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">accumulator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">328</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+<li><p>On each timer interrupt, accumulator is updated with difference
+that, in this reflects, 100* the error in interval that just
+passed. So on the first timer interrupt, the accumulator would
+be updated like:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">match</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">328</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">accumulator</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// 100*(328 - 327.68)</span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="k">else</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">accumulator</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="mi">68</span><span class="p">;</span><span class="w"> </span><span class="c1">// (100*(327 - 327.68)</span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+<li><p>And on that same timer interrupt a new match value would be
+programmed:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">accumulator</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">328</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="k">else</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">327</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
+<p>In this way, the timer interval is controlled from
+interrupt-to-interrupt to produce an average frequency of exactly
+100Hz.</p>
+</section>
+<section id="hardware">
+<h2>Hardware<a class="headerlink" href="#hardware" title="Permalink to this headline"></a></h2>
+<p>To enable hardware module use the following configuration options:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_RTC</span></code></dt><dd><p>Enables general support for a hardware RTC. Specific
+architectures may require other specific settings.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_EXTERNAL</span></code></dt><dd><p>Most MCUs include RTC hardware built into the chip. Other RTCs,
+<em>external</em> MCUs, may be provided as separate chips typically
+interfacing with the MCU via a serial interface such as SPI or
+I2C. These external RTCs differ from the built-in RTCs in that
+they cannot be initialized until the operating system is fully
+booted and can support the required serial communications.
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_EXTERNAL</span></code> will configure the operating system so
+that it defers initialization of its time facilities.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_DATETIME</span></code></dt><dd><p>There are two general types of RTC: (1) A simple battery backed
+counter that keeps the time when power is down, and (2) A full
+date / time RTC the provides the date and time information,
+often in BCD format. If <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_DATETIME</span></code> is selected, it
+specifies this second kind of RTC. In this case, the RTC is
+used to “seed”” the normal NuttX timer and the NuttX system
+timer provides for higher resolution time.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_DATETIME</span></code> not selected, then the simple,
+battery backed counter is used. There are two different
+implementations of such simple counters based on the time
+resolution of the counter: The typical RTC keeps time to
+resolution of 1 second, usually supporting a 32-bit <code class="docutils literal notranslate"><span class="pre">time_t</span></code>
+value. In this case, the RTC is used to “seed” the normal NuttX
+timer and the NuttX timer provides for higher resolution time.
+If <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code> is enabled in the NuttX configuration,
+then the RTC provides higher resolution time and completely
+replaces the system timer for purpose of date and time.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_FREQUENCY</span></code></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code> is defined, then the frequency of the
+high resolution RTC must be provided. If <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code>
+is not defined, <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_FREQUENCY</span></code> is assumed to be one.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_ALARM</span></code></dt><dd><p>Enable if the RTC hardware supports setting of an alarm. A
+callback function will be executed when the alarm goes off</p>
+</dd>
+</dl>
+<p>which requires the following base functions to read and set time:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">up_rtc_initialize()</span></code>. Initialize the built-in, MCU hardware
+RTC per the selected configuration. This function is called
+once very early in the OS initialization sequence. NOTE that
+initialization of external RTC hardware that depends on the
+availability of OS resources (such as SPI or I2C) must be
+deferred until the system has fully booted. Other, RTC-specific
+initialization functions are used in that case.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_rtc_time()</span></code>. Get the current time in seconds. This is
+similar to the standard <code class="docutils literal notranslate"><span class="pre">time()</span></code> function. This interface is
+only required if the low-resolution RTC/counter hardware
+implementation selected. It is only used by the RTOS during
+initialization to set up the system time when <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC</span></code> is
+set but neither <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code> nor
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_DATETIME</span></code> are set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_rtc_gettime()</span></code>. Get the current time from the high
+resolution RTC clock/counter. This interface is only supported
+by the high-resolution RTC/counter hardware implementation. It
+is used to replace the system timer (<code class="docutils literal notranslate"><span class="pre">g_system_ticks</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_rtc_settime()</span></code>. Set the RTC to the provided time. All RTC
+implementations must be able to set their time based on a
+standard timespec.</p></li>
+</ul>
+</section>
+<section id="system-tick-and-time">
+<h2>System Tick and Time<a class="headerlink" href="#system-tick-and-time" title="Permalink to this headline"></a></h2>
+<p>The system tick is represented by <code class="docutils literal notranslate"><span class="pre">g_system_ticks</span></code>.</p>
+<p>Running at rate of system base timer, used for time-slicing, and
+so forth.</p>
+<p>If hardware RTC is present (<code class="docutils literal notranslate"><span class="pre">CONFIG_RTC</span></code>) and and
+high-resolution timing is enabled (<code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code>), then
+after successful initialization variables are overridden by calls
+to <code class="docutils literal notranslate"><span class="pre">up_rtc_gettime()</span></code> which is running continuously even in
+power-down modes.</p>
+<p>In the case of <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code> is set the <code class="docutils literal notranslate"><span class="pre">g_system_ticks</span></code>
+keeps counting at rate of a system timer, which however, is
+disabled in power-down mode. By comparing this time and RTC
+(actual time) one may determine the actual system active time. To
+retrieve that variable use:</p>
+</section>
+<section id="tickless-os">
+<h2>Tickless OS<a class="headerlink" href="#tickless-os" title="Permalink to this headline"></a></h2>
+<p><strong>Default System Timer</strong>. By default, a NuttX configuration uses a
+periodic timer interrupt that drives all system timing. The timer
+is provided by architecture-specific code that calls into NuttX at
+a rate controlled by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>. The default value
+of <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> is 10000 microseconds which
+corresponds to a timer interrupt rate of 100 Hz.</p>
+<p>On each timer interrupt, NuttX does these things:</p>
+<ul class="simple">
+<li><p>Increments a counter. This counter is the system time and has a
+resolution of <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> microseconds.</p></li>
+<li><p>Checks if it is time to perform time-slice operations on tasks
+that have select round-robin scheduling.</p></li>
+<li><p>Checks for expiration of timed events.</p></li>
+</ul>
+<p>What is wrong with this default system timer? Nothing really. It
+is reliable and uses only a small fraction of the CPU band width.
+But we can do better. Some limitations of default system timer
+are, in increasing order of importance:</p>
+<ul class="simple">
+<li><p><strong>Overhead</strong>: Although the CPU usage of the system timer
+interrupt at 100Hz is really very low, it is still mostly
+wasted processing time. One most timer interrupts, there is
+really nothing that needs be done other than incrementing the
+counter.</p></li>
+<li><p><strong>Resolution</strong>: Resolution of all system timing is also
+determined by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>. So nothing that be time
+with resolution finer than 10 milliseconds be default. To
+increase this resolution, <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> an be
+reduced. However, then the system timer interrupts use more of
+the CPU bandwidth processing useless interrupts.</p></li>
+<li><p><strong>Power Usage</strong>: But the biggest issue is power usage. When the
+system is IDLE, it enters a light, low-power mode (for ARMs,
+this mode is entered with the <code class="docutils literal notranslate"><span class="pre">wfi</span></code> or <code class="docutils literal notranslate"><span class="pre">wfe</span></code> instructions
+for example). But each interrupt awakens the system from this
+low power mode. Therefore, higher rates of interrupts cause
+greater power consumption.</p></li>
+</ul>
+<p><strong>Tickless OS</strong>. The so-called <em>Tickless OS</em> provides one solution
+to issue. The basic concept here is that the periodic, timer
+interrupt is eliminated and replaced with a one-shot, interval
+timer. It becomes event driven instead of polled: The default
+system timer is a polled design. On each interrupt, the NuttX
+logic checks if it needs to do anything and, if so, it does it.</p>
+<p>Using an interval timer, one can anticipate when the next
+interesting OS event will occur, program the interval time and
+wait for it to fire. When the interval time fires, then the
+scheduled activity is performed.</p>
+<section id="tickless-platform-support">
+<h3>Tickless Platform Support<a class="headerlink" href="#tickless-platform-support" title="Permalink to this headline"></a></h3>
+<p>In order to use the Tickless OS, one must provide special support
+from the platform-specific code. Just as with the default system
+timer, the platform-specific code must provide the timer resources
+to support the OS behavior. Currently these timer resources are
+only provided on a few platforms. An example implementation is for
+the simulation is at <code class="docutils literal notranslate"><span class="pre">nuttx/arch/sim/src/up_tickless.c</span></code>. There
+is another example for the Atmel SAMA5 at
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/sama5/sam_tickless.c</span></code>. These paragraphs will
+explain how to provide the Tickless OS support to any platform.</p>
+</section>
+<section id="tickless-configuration-options">
+<h3>Tickless Configuration Options<a class="headerlink" href="#tickless-configuration-options" title="Permalink to this headline"></a></h3>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_TICKLESS</span></code>: If the platform provides
+support for the <em>Tickless OS</em>, then this setting should be
+selected in the <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code> file for the board. Here is what
+the selection looks in the <code class="docutils literal notranslate"><span class="pre">arch/Kconfig</span></code> file for the
+simulated platform:</p>
+<p>When the simulation platform is selected,
+<code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_TICKLESS</span></code> is automatically selected, informing the
+configuration system that <em>Tickless OS</em> options can be
+selected.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS</span></code>: If <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_TICKLESS</span></code>
+is selected, then it will enable the Tickless OS features in
+NuttX.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS_ALARM</span></code>: The tickless option can be
+supported either via a simple interval timer (plus elapsed
+time) or via an alarm. The interval timer allows programming
+events to occur after an interval. With the alarm, you can set
+a time in the future and get an event when that alarm goes off.
+This option selects the use of an alarm.</p>
+<p>The advantage of an alarm is that it avoids some small timing
+errors; the advantage of the use of the interval timer is that
+the hardware requirement may be less.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>: This option is not unique to
+<em>Tickless OS</em> operation, but changes its relevance when the
+<em>Tickless OS</em> is selected. In the default configuration where
+system time is provided by a periodic timer interrupt, the
+default system timer is configure the timer for 100Hz or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK=10000</span></code>. If <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS</span></code> is
+selected, then there are no system timer interrupt. In this
+case, <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> does not control any timer
+rates. Rather, it only determines the resolution of time
+reported by <code class="docutils literal notranslate"><span class="pre">clock_systime_ticks()</span></code> and the resolution of
+times that can be set for certain delays including watchdog
+timers and delayed work.</p>
+<p>In this case there is still a trade-off: It is better to have
+the <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> as low as possible for higher
+timing resolution. However, the time is currently held in
+<code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>. On some systems, this may be 16-bits in width
+but on most contemporary systems it will be 32-bits. In either
+case, smaller values of <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> will reduce
+the range of values that delays that can be represented. So the
+trade-off is between range and resolution (you could also
+modify the code to use a 64-bit value if you really want both).</p>
+<p>The default, 100 microseconds, will provide for a range of
+delays up to 120 hours.</p>
+<p>This value should never be less than the underlying resolution
+of the timer. Errors may ensue.</p>
+</li>
+</ul>
+</section>
+<section id="tickless-imported-interfaces">
+<h3>Tickless Imported Interfaces<a class="headerlink" href="#tickless-imported-interfaces" title="Permalink to this headline"></a></h3>
+<p>The interfaces that must be provided by the platform specified
+code are defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/arch.h</span></code>, listed below, and
+summarized in the following paragraphs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;arch&gt;_timer_initialize()</span></code> Initializes
+the timer facilities. Called early in the initialization
+sequence (by <code class="docutils literal notranslate"><span class="pre">up_initialize()</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_timer_gettime()</span></code>: Returns the
+current time from the platform specific time source.</p></li>
+</ul>
+</div></blockquote>
+<p>The tickless option can be supported either via a simple interval
+timer (plus elapsed time) or via an alarm. The interval timer
+allows programming events to occur after an interval. With the
+alarm, you can set a time in* the future and get an event when
+that alarm goes off.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS_ALARM</span></code> is defined, then the platform
+code must provide the following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">up_alarm_cancel()</span></code>: Cancels the alarm.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_alarm_start()</span></code>: Enables (or
+re-enables) the alarm.</p></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS_ALARM</span></code> is <em>not</em>defined, then the
+platform code must provide the following verify similar functions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code>: Cancels the
+interval timer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code>: Starts (or re-starts)
+the interval timer.</p></li>
+</ul>
+<p>Note that a platform-specific implementation would probably
+require two hardware timers: (1) A interval timer to satisfy the
+requirements of <code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code>, and a (2) a counter to
+handle the requirement of
+<code class="docutils literal notranslate"><span class="pre">up_timer_gettime()</span></code>. Ideally, both timers
+would run at the rate determined by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> (and
+certainly never slower than that rate).</p>
+<p>Since timers are a limited resource, the use of two timers could
+be an issue on some systems. The job could be done with a single
+timer if, for example, the single timer were kept in a
+free-running at all times. Some timer/counters have the capability
+to generate a compare interrupt when the timer matches a
+comparison value but also to continue counting without stopping.
+If your hardware supports such counters, one might used the
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS_ALARM</span></code> option and be able to simply set
+the comparison count at the value of the free running timer <em>PLUS</em>
+the desired delay. Then you could have both with a single timer:
+An alarm and a free-running counter with the same timer!</p>
+<p>In addition to these imported interfaces, the RTOS will export the
+following interfaces for use by the platform-specific interval
+timer implementation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nxsched_alarm_expiration()</span></code>: called by the platform-specific logic when the alarm expires.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code>: called by the platform-specific logic when the interval time expires.</p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.archname_timer_initialize">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">archname_timer_initialize</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.archname_timer_initialize" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes all platform-specific timer facilities. This function is
+called early in the initialization sequence by up_initialize().
+On return, the current up-time should be available from up_timer_gettime()
+and the interval timer is ready for use (but not actively timing).
+The naming will depend on the architecture so for STM32 <code class="docutils literal notranslate"><span class="pre">archname</span></code> will
+be <code class="docutils literal notranslate"><span class="pre">stm32</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Zero (OK) on success; a negated errno value on failure.</p>
+</dd>
+</dl>
+<p><strong>Assumptions</strong>: Called early in the initialization sequence before
+any special concurrency protections are required.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.up_timer_gettime">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_timer_gettime</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_timer_gettime" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return the elapsed time since power-up (or, more correctly, since
+<em>&lt;arch&gt;</em><code class="docutils literal notranslate"><span class="pre">_timer_initialize()</span></code> was called). This function is
+functionally equivalent to <code class="docutils literal notranslate"><span class="pre">clock_gettime()</span></code> for the clock ID
+<code class="docutils literal notranslate"><span class="pre">CLOCK_MONOTONIC</span></code>. This function provides the basis for
+reporting the current time and also is used to eliminate error
+build-up from small errors in interval time calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ts</strong> – Provides the location in which to return the up-time..</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
+</dd>
+</dl>
+<p><strong>Assumptions</strong>: Called from the normal tasking context. The
+implementation must provide whatever mutual exclusion is necessary
+for correct operation. This can include disabling interrupts in
+order to assure atomic register operations.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.up_alarm_cancel">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_alarm_cancel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_alarm_cancel" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cancel the alarm and return the time of cancellation of the alarm.
+These two steps need to be as nearly atomic as possible.
+<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will not be called unless the alarm
+is restarted with <code class="docutils literal notranslate"><span class="pre">up_alarm_start()</span></code>. If, as a race condition,
+the alarm has already expired when this function is called, then
+time returned is the current time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ts</strong> – Location to return the expiration time. The current
+time should be returned if the timer is not active. <code class="docutils literal notranslate"><span class="pre">ts</span></code> may
+be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in which case the time is not returned</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
+</dd>
+</dl>
+<p><strong>Assumptions</strong>: May be called from interrupt level handling or
+from the normal tasking level. interrupts may need to be disabled
+internally to assure non-reentrancy.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.up_alarm_start">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_alarm_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_alarm_start" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Start the alarm. <code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will be called
+when the alarm occurs (unless <code class="docutils literal notranslate"><span class="pre">up_alarm_cancel</span></code> is called to
+stop it).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ts</strong> – The time in the future at the alarm is expected to
+occur. When the alarm occurs the timer logic will call
+<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
+</dd>
+</dl>
+<p><strong>Assumptions</strong>: May be called from interrupt level handling or
+from the normal tasking level. Interrupts may need to be
+disabled internally to assure non-reentrancy.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.up_timer_cancel">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_timer_cancel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_timer_cancel" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Cancel the interval timer and return the time remaining on the
+timer. These two steps need to be as nearly atomic as possible.
+<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will not be called unless the timer
+is restarted with <code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code>. If, as a race condition,
+the timer has already expired when this function is called, then
+that pending interrupt must be cleared so that
+<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> is not called spuriously and the
+remaining time of zero should be returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param ts</dt>
+<dd class="field-odd"><p>Location to return the remaining time. Zero should be
+returned if the timer is not active.</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
+</dd>
+</dl>
+<p><strong>Assumptions</strong>: May be called from interrupt level handling or
+from the normal tasking level. interrupts may need to be
+disabled internally to assure non-reentrancy.</p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.up_timer_start">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_timer_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_timer_start" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Start the interval timer. <code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will be
+called at the completion of the timeout (unless
+<code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code> is called to stop the timing).</p>
+<dl class="field-list simple">
+<dt class="field-odd">param ts</dt>
+<dd class="field-odd"><p>Provides the time interval until
+<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> is called.</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
+</dd>
+</dl>
+<p><strong>Assumptions</strong>: May be called from interrupt level handling
+or from the normal tasking level. Interrupts may need to be
+disabled internally to assure non-reentrancy.</p>
+</section>
+</section>
+<section id="watchdog-timer-interfaces">
+<h2>Watchdog Timer Interfaces<a class="headerlink" href="#watchdog-timer-interfaces" title="Permalink to this headline"></a></h2>
+<p>NuttX provides a general watchdog timer facility. This facility
+allows the NuttX user to specify a watchdog timer function that
+will run after a specified delay. The watchdog timer function will
+run in the context of the timer interrupt handler. Because of
+this, a limited number of NuttX interfaces are available to he
+watchdog timer function. However, the watchdog timer function may
+use <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code>, <code class="docutils literal notranslate"><span class="pre">sigqueue()</span></code>, or <code class="docutils literal notranslate"><span class="pre">kill()</span></code> to communicate
+with NuttX tasks.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#c.wd_start" title="wd_start"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_start()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.wd_cancel" title="wd_cancel"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_cancel()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.wd_gettime" title="wd_gettime"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_gettime()</span></code></a></p></li>
+<li><p>Watchdog Timer Callback</p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.wd_start">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wd_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">wdog_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wdog</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span>, <a class="reference internal" href="#c.wdentry_t" title="wdentry_t"><span class="n"><span class="pre">wdentry_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">wdentry</span></span>, <span class="n"><span class="pre">wdparm_t</span></span><span class="w"> </span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.wd_start" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function adds a watchdog to the timer queue.
+The specified watchdog function will be called from the interrupt
+level after the specified number of ticks has elapsed. Watchdog
+timers may be started from the interrupt level.</p>
+<p>Watchdog times execute in the context of the timer interrupt
+handler.</p>
+<p>Watchdog timers execute only once.</p>
+<p>To replace either the timeout delay or the function to be
+executed, call wd_start again with the same wdog; only the most
+recent wd_start() on a given watchdog ID has any effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wdog</strong> – Watchdog ID</p></li>
+<li><p><strong>delay</strong> – Delay count in clock ticks</p></li>
+<li><p><strong>wdentry</strong> – Function to call on timeout</p></li>
+<li><p><strong>arg</strong> – The parameter to pass to wdentry.</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>NOTE</strong>: The parameter must be of type <code class="docutils literal notranslate"><span class="pre">wdparm_t</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Zero (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> value
+is return to indicate the nature of any failure.</p>
+</dd>
+</dl>
+<p><strong>Assumptions/Limitations:</strong> The watchdog routine runs in the
+context of the timer interrupt handler and is subject to all ISR
+restrictions.</p>
+<p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface. VxWorks
+provides the following comparable interface:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">STATUS</span><span class="w"> </span><span class="nf">wdStart</span><span class="w"> </span><span class="p">(</span><span class="n">WDOG_ID</span><span class="w"> </span><span class="n">wdog</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">delay</span><span class="p">,</span><span class="w"> </span><span class="n">FUNCPTR</span><span class="w"> </span><span class="n">wdentry</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">parameter</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Differences from the VxWorks interface include:</p>
+<ul class="simple">
+<li><p>The present implementation supports multiple parameters passed
+to wdentry; VxWorks supports only a single parameter. The
+maximum number of parameters is determined by</p></li>
+</ul>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.wd_cancel">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wd_cancel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">wdog_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wdog</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.wd_cancel" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function cancels a currently running
+watchdog timer. Watchdog timers may be canceled from the interrupt
+level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wdog</strong> – ID of the watchdog to cancel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">OK</span></code> or <code class="docutils literal notranslate"><span class="pre">ERROR</span></code></p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface. VxWorks
+provides the following comparable interface:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">STATUS</span><span class="w"> </span><span class="nf">wdCancel</span><span class="w"> </span><span class="p">(</span><span class="n">WDOG_ID</span><span class="w"> </span><span class="n">wdog</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.wd_gettime">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wd_gettime</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">wdog_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wdog</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.wd_gettime" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the time remaining before
+the specified watchdog expires.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wdog</strong> – Identifies the watchdog that the request is for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The time in system ticks remaining until the
+watchdog time expires. Zero means either that wdog is not valid or
+that the wdog has already expired.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c type">
+<dt class="sig sig-object c" id="c.wdentry_t">
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">wdentry_t</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">wdparm_t</span></span><span class="w"> </span><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.wdentry_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p><strong>Watchdog Timer Callback</strong>: when a watchdog expires,
+the callback function with this type is
+called.</p>
+<p>The argument is passed as scalar <code class="docutils literal notranslate"><span class="pre">wdparm_t</span></code> values. For
+systems where the <code class="docutils literal notranslate"><span class="pre">sizeof(pointer)</span> <span class="pre">&lt;</span> <span class="pre">sizeof(uint32_t)</span></code>, the
+following union defines the alignment of the pointer within the
+<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code>. For example, the SDCC MCS51 general pointer is
+24-bits, but <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> is 32-bits (of course).</p>
+<p>We always have <code class="docutils literal notranslate"><span class="pre">sizeof(pointer)</span> <span class="pre">&lt;=</span> <span class="pre">sizeof(uintptr_t)</span></code> by
+definition.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">wdparm_u</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w">     </span><span class="o">*</span><span class="n">pvarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* The size one generic point */</span><span class="w"></span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w">      </span><span class="n">dwarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Big enough for a 32-bit value in any case */</span><span class="w"></span>
+<span class="w">  </span><span class="kt">uintptr_t</span><span class="w">     </span><span class="n">uiarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* sizeof(uintptr_t) &gt;= sizeof(pointer) */</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+
+<span class="cp">#if UINTPTR_MAX &gt;= UINT32_MAX</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uintptr_t</span><span class="w"> </span><span class="n">wdparm_t</span><span class="p">;</span><span class="w"></span>
+<span class="cp">#else</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w">  </span><span class="n">wdparm_t</span><span class="p">;</span><span class="w"></span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="board.html" class="btn btn-neutral float-left" title="APIs Exported by Board-Specific Logic to NuttX" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mutex.html" class="btn btn-neutral float-right" title="Mutual Exclusion lock" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

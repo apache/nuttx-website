@@ -1,0 +1,544 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Queues &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Address Environments" href="addrenv.html" />
+    <link rel="prev" title="Mutual Exclusion lock" href="mutex.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../../index.html" class="icon icon-home"> NuttX
+  
+
+  
+    
+    <img src="../../_static/NuttX.png" class="logo" alt="Logo"/>
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../../latest" selected="selected">latest</option>
+    
+    <option value="../../../10.0.0" >10.0.0</option>
+    
+    <option value="../../../10.0.1" >10.0.1</option>
+    
+    <option value="../../../10.1.0" >10.1.0</option>
+    
+    <option value="../../../10.2.0" >10.2.0</option>
+    
+    <option value="../../../10.3.0" >10.3.0</option>
+    
+    <option value="../../../11.0.0" >11.0.0</option>
+    
+    <option value="../../../12.0.0" >12.0.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../user/index.html">Userspace API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Architecture APIs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="conventions.html">Naming and Header File Conventions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arch.html">APIs Exported by Architecture-Specific Logic to NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="board.html">APIs Exported by Board-Specific Logic to NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="time_clock.html">System Time and Clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mutex.html">Mutual Exclusion lock</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Work Queues</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes-of-work-queues">Classes of Work Queues</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#high-priority-kernel-work-queue">High Priority Kernel Work queue</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#low-priority-kernel-work-queue">Low Priority Kernel Work Queue</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#user-mode-work-queue">User-Mode Work Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#common-work-queue-interfaces">Common Work Queue Interfaces</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#work-queue-ids">Work Queue IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#work-queue-interface-types">Work Queue Interface Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#work-queue-interfaces">Work Queue Interfaces</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="addrenv.html">Address Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nuttx.html">APIs Exported by NuttX to Architecture-Specific Logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_vs_os.html">Application OS vs. Internal OS Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="smp.html">Symmetric Multiprocessing (SMP) Application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="shm.html">Shared Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paging.html">On-Demand Paging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="led.html">LED Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="iob.html">I/O Buffer Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">API Reference</a> &raquo;</li>
+          <li><a href="index.html">Architecture APIs</a> &raquo;</li>
+      <li>Work Queues</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/os/wqueue.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="work-queues">
+<h1>Work Queues<a class="headerlink" href="#work-queues" title="Permalink to this headline"></a></h1>
+<p><strong>Work Queues</strong>. NuttX provides <em>work queues</em>. Work queues are
+threads that service a queue of work items to be performed. They
+are useful for off-loading work to a different threading context,
+for delayed processing, or for serializing activities.</p>
+<section id="classes-of-work-queues">
+<h2>Classes of Work Queues<a class="headerlink" href="#classes-of-work-queues" title="Permalink to this headline"></a></h2>
+<p>There are three different classes of work queues, each with
+different properties and intended usage. These classes of work
+queues along with the common work queue interface are described in
+the following paragraphs.</p>
+<section id="high-priority-kernel-work-queue">
+<h3>High Priority Kernel Work queue<a class="headerlink" href="#high-priority-kernel-work-queue" title="Permalink to this headline"></a></h3>
+<p>The dedicated high-priority
+work queue is intended to handle delayed processing from interrupt
+handlers. This work queue is required for some drivers but, if
+there are no complaints, can be safely disabled. The high priority
+worker thread also performs garbage collection – completing any
+delayed memory deallocations from interrupt handlers. If the
+high-priority worker thread is disabled, then that clean up will
+be performed either by (1) the low-priority worker thread, if
+enabled, and if not (2) the IDLE thread instead (which runs at the
+lowest of priority and may not be appropriate if memory
+reclamation is of high priority)</p>
+<p><strong>Device Driver Bottom Half</strong>. The high-priority worker thread is
+intended to serve as the <em>bottom half</em> for device drivers. As a
+consequence it must run at a very high, fixed priority rivalling
+the priority of the interrupt handler itself. Typically, the high
+priority work queue should be the highest priority thread in your
+system (the default priority is 224).</p>
+<p><strong>Thread Pool</strong>. The work queues can be configured to support
+multiple, low-priority threads. This is essentially a <em>thread
+pool</em> that provides multi-threaded servicing of the queue work.
+This breaks the strict serialization of the “queue” (and hence,
+the work queue is no longer a queue at all).</p>
+<p>Multiple worker threads are required to support, for example, I/O
+operations that stall waiting for input. If there is only a single
+thread, then the entire work queue processing would stall in such
+cases. Such behavior is necessary to support asynchronous I/O,
+AIO, for example.</p>
+<p><strong>Compared to the Low Priority Kernel Work Queue</strong>. For less
+critical, lower priority, application oriented worker thread
+support, consider enabling the lower priority work queue. The
+lower priority work queue runs at a lower priority, of course, but
+has the added advantage that it supports <em>priority inheritance</em>
+(if <code class="docutils literal notranslate"><span class="pre">CONFIG_PRIORITY_INHERITANCE=y</span></code> is also selected): The
+priority of the lower priority worker thread can then be adjusted
+to match the highest priority client.</p>
+<p><strong>Configuration Options</strong>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HPWORK</span></code>. Enables the high priority work queue.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HPNTHREADS</span></code>. The number of threads in the
+high-priority queue’s thread pool. Default: 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HPWORKPRIORITY</span></code>. The execution priority of the
+high-priority worker thread. Default: 224</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HPWORKSTACKSIZE</span></code>. The stack size allocated for
+the worker thread in bytes. Default: 2048.</p></li>
+</ul>
+<p><strong>Common Configuration Options</strong>. These options apply to all work
+queues:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_SIGWORK</span></code> The signal number that will be used to
+wake-up the worker thread. This same signal is used with various
+internal worker threads.
+Default: 17</p></li>
+</ul>
+</section>
+<section id="low-priority-kernel-work-queue">
+<h3>Low Priority Kernel Work Queue<a class="headerlink" href="#low-priority-kernel-work-queue" title="Permalink to this headline"></a></h3>
+<p>This lower priority work queue
+is better suited for more extended, application oriented
+processing such as file system clean-up, memory garbage collection
+and asynchronous I/O operations.</p>
+<p><strong>Compared to the High Priority Work Queue</strong>. The lower priority
+work queue runs at a lower priority than the high priority work
+queue, of course, and so is inappropriate to serve as a driver
+<em>bottom half</em>. It is, otherwise, very similar to the high priority
+work queue and most of the discussion above for the high priority
+work queue applies equally here. The lower priority work queue does
+have one important property, however, that makes it better suited
+for some tasks:</p>
+<p><strong>Priority Inheritance</strong>. The lower priority worker thread(s)
+support <em>priority inheritance</em> (if &lt;config&gt;
+CONFIG_PRIORITY_INHERITANCE is also selected): The priority of the
+lower priority worker thread can then be adjusted to match the
+highest priority client.</p>
+<blockquote>
+<div><p><strong>NOTE:</strong> This priority inheritance feature is not automatic.
+The lower priority worker thread will always have a fixed
+priority unless additional logic calls
+<code class="docutils literal notranslate"><span class="pre">lpwork_boostpriority()</span></code> to raise the priority of the lower
+priority worker thread (typically called before scheduling the
+work) and then calls the matching <code class="docutils literal notranslate"><span class="pre">lpwork_restorepriority()</span></code>
+when the work is completed (typically called within the work
+handler at the completion of the work). Currently, only the
+NuttX asynchronous I/O logic uses this dynamic prioritization
+feature.</p>
+</div></blockquote>
+<p>The higher priority worker thread, on the other hand, is intended
+to serve as the <em>bottom half</em> for device drivers. As a consequence
+must run at a very high, fixed priority. Typically, it should be
+the highest priority thread in your system.</p>
+<p><strong>Configuration Options</strong>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORK</span></code>. If CONFIG_SCHED_LPWORK is selected
+then a lower-priority work queue will be enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPNTHREADS</span></code>. The number of threads in the
+low-priority queue’s thread pool. Default: 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORKPRIORITY</span></code>. The minimum execution priority
+of the lower priority worker thread. The priority of the all
+worker threads start at this priority. If priority inheritance
+is in effect, the priority may be boosted from this level.
+Default: 50.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORKPRIOMAX</span></code>. The maximum execution priority
+of the lower priority worker thread. Lower priority worker
+threads will be started at <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORKPRIORITY</span></code> but
+their priority may be boosted due to priority inheritance. The
+boosted priority of the low priority worker thread will not,
+however, ever exceed <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORKPRIOMAX</span></code>. This limit
+would be necessary, for example, if the higher priority worker
+thread were to defer work to the lower priority thread.
+Clearly, in such a case, you would want to limit the maximum
+priority of the lower priority work thread. Default: 176.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORKSTACKSIZE</span></code>. The stack size allocated for
+the lower priority worker thread. Default: 2048.</p></li>
+</ul>
+</section>
+<section id="user-mode-work-queue">
+<h3>User-Mode Work Queue<a class="headerlink" href="#user-mode-work-queue" title="Permalink to this headline"></a></h3>
+<p><strong>Work Queue Accessibility</strong>. The high- and low-priority worker
+threads are kernel-mode threads. In the normal, <em>flat</em> NuttX
+build, these work queues are useful to application code and
+may be shared. However, in the NuttX protected and kernel build
+modes, kernel mode code is isolated and cannot be accessed from
+user-mode code.</p>
+<p><strong>User-Mode Work Queue</strong>. if either <code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_PROTECTED</span></code> or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_KERNEL</span></code> are selected, then the option to enable a
+special user-mode work queue is enabled. The interface to the user-
+mode work queue is identical to that of the kernel-mode work queues
+and the user-mode work queue is functionally equivalent to the high
+priority work queue. It differs in that its implementation does not
+depend on internal, kernel-space facilities.</p>
+<p><strong>Configuration Options</strong>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_USRWORK</span></code>. If CONFIG_LIBC_USRWORK is also defined
+then the user-mode work queue will be enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_USRWORKPRIORITY</span></code>. The execution priority of the
+user-mode priority worker thread. Default: 100</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_USRWORKSTACKSIZE</span></code>. The stack size allocated for
+the lower priority worker thread. Default: 2048.</p></li>
+</ul>
+</section>
+</section>
+<section id="common-work-queue-interfaces">
+<h2>Common Work Queue Interfaces<a class="headerlink" href="#common-work-queue-interfaces" title="Permalink to this headline"></a></h2>
+<section id="work-queue-ids">
+<h3>Work Queue IDs<a class="headerlink" href="#work-queue-ids" title="Permalink to this headline"></a></h3>
+<p><strong>Work queue IDs</strong>. All work queues use the identical interface
+functions (at least identical in terms of the function
+<em>signature</em>). The first parameter passed to the work queue
+interface function identifies the work queue:</p>
+<p><strong>Kernel-Mode Work Queue IDs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">HPWORK</span></code>. This ID of the high priority work queue that should
+only be used for high-priority, time-critical, driver bottom-half
+functions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LPWORK</span></code>. This is the ID of the low priority work queue that
+can be used for any purpose. If <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORK</span></code> is not
+defined, then there is only one kernel work queue and
+<code class="docutils literal notranslate"><span class="pre">LPWORK</span></code> is equal to <code class="docutils literal notranslate"><span class="pre">HPWORK</span></code>.</p></li>
+</ul>
+<p><strong>User-Mode Work Queue IDs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">USRWORK</span></code>. This is the ID of the user-mode work queue that
+can be used for any purpose by applications. In a flat build,
+<code class="docutils literal notranslate"><span class="pre">USRWORK</span></code> is equal to <code class="docutils literal notranslate"><span class="pre">LPWORK</span></code> so that user applications
+will use the lower priority work queue (if there is one).</p></li>
+</ul>
+</section>
+<section id="work-queue-interface-types">
+<h3>Work Queue Interface Types<a class="headerlink" href="#work-queue-interface-types" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">typedef</span> <span class="pre">void</span> <span class="pre">(*worker_t)(FAR</span> <span class="pre">void</span> <span class="pre">*arg);</span></code> Defines the type
+of the work callback.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">work_s</span></code>. Defines one entry in the work queue. This is
+a client-allocated structure. Work queue clients should not
+reference any field in this structure since they are subject to
+change. The user only needs this structure in order to declare
+instances of the work structure. Handling of all fields is
+performed by the work queue interfaces described below.</p></li>
+</ul>
+</section>
+<section id="work-queue-interfaces">
+<h3>Work Queue Interfaces<a class="headerlink" href="#work-queue-interfaces" title="Permalink to this headline"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_queue">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_queue</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">qid</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span>, <span class="n"><span class="pre">worker_t</span></span><span class="w"> </span><span class="n"><span class="pre">worker</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Queue work to be performed at a later time. All
+queued work will be performed on the worker thread of execution
+(not the caller’s).</p>
+<p>The work structure is allocated and must be initialized to all
+zero by the caller. Otherwise, the work structure is completely
+managed by the work queue logic. The caller should never modify
+the contents of the work queue structure directly. If
+<code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> is called before the previous work has been
+performed and removed from the queue, then any pending work will
+be canceled and lost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qid</strong> – The work queue ID.</p></li>
+<li><p><strong>work</strong> – The work structure to queue</p></li>
+<li><p><strong>worker</strong> – The worker callback to be invoked. The callback
+will be invoked on the worker thread of execution.</p></li>
+<li><p><strong>arg</strong> – The argument that will be passed to the worker
+callback function when it is invoked.</p></li>
+<li><p><strong>delay</strong> – Delay (in system clock ticks) from the time queue
+until the worker is invoked. Zero means to perform the work
+immediately.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero is returned on success; a negated errno is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_cancel">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_cancel</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">qid</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_cancel" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cancel previously queued work. This removes work
+from the work queue. After work has been cancelled, it may be
+re-queued by calling <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> again.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qid</strong> – The work queue ID.</p></li>
+<li><p><strong>work</strong> – The previously queued work structure to cancel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Zero is returned on success; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> is returned on
+failure.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ENOENT</span></code>: There is no such work queued.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>: An invalid work queue was specified.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_signal">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_signal</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">qid</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_signal" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Signal the worker thread to process the work
+queue now. This function is used internally by the work logic but
+could also be used by the user to force an immediate re-assessment
+of pending work.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qid</strong> – The work queue ID.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zero is returned on success; a negated errno is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_available">
+<span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_available</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_available" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if the work structure is available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work</strong> – The work queue structure to check.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if available; <code class="docutils literal notranslate"><span class="pre">false</span></code> if busy (i.e., there is still pending work).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_usrstart">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_usrstart</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_usrstart" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The function is only available as a user
+interface in the kernel-mode build. In the flat build, there is no
+user-mode work queue; in the protected mode, the user-mode work
+queue will automatically be started by the OS start-up code. But
+in the kernel mode, each user process will be required to start is
+own, private instance of the user-mode work thread using this
+interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The task ID of the worker thread is returned on success.
+A negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> value is returned on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.lpwork_boostpriority">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lpwork_boostpriority</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n"><span class="pre">reqprio</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.lpwork_boostpriority" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Called by the work queue client to assure that
+the priority of the low-priority worker thread is at least at the
+requested level, <code class="docutils literal notranslate"><span class="pre">reqprio</span></code>. This function would normally be
+called just before calling <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reqprio</strong> – Requested minimum worker thread priority.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.lpwork_restorepriority">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lpwork_restorepriority</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n"><span class="pre">reqprio</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.lpwork_restorepriority" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function is called to restore the priority
+after it was previously boosted. This is often done by client
+logic on the worker thread when the scheduled work completes. It
+will check if we need to drop the priority of the worker thread.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reqprio</strong> – Previously requested minimum worker thread
+priority to be “unboosted”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mutex.html" class="btn btn-neutral float-left" title="Mutual Exclusion lock" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="addrenv.html" class="btn btn-neutral float-right" title="Address Environments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

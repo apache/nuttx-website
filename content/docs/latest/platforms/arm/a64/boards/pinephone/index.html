@@ -79,6 +79,8 @@
     
     <option value="../../../../../../11.0.0" >11.0.0</option>
     
+    <option value="../../../../../../12.0.0" >12.0.0</option>
+    
     </select>
   </div>
 
@@ -172,7 +174,8 @@
 </dd>
 </dl>
 </li>
-<li><p><strong>Display:</strong> Xingbangda XBD599 HD IPS Capacitive Touchscreen (5.95 inches, 1440x720 resolution, 16M colors, PWM Backlight)</p></li>
+<li><p><strong>Display:</strong> Xingbangda XBD599 HD IPS Display (5.95 inches, 1440x720 resolution, 16M colors, PWM Backlight)</p></li>
+<li><p><strong>Touch Panel:</strong> Goodix GT917S Capacitive Touch Panel (I2C)</p></li>
 <li><p><strong>LCD Controller:</strong> Sitronix ST7703 (MIPI DSI)</p></li>
 <li><p><strong>RAM:</strong> 2GB or 3GB LPDDR3 SDRAM</p></li>
 <li><p><strong>Internal Storage:</strong> 16GB or 32GB eMMC, extendable up to 2TB via microSD</p></li>
@@ -195,7 +198,9 @@
 </dd>
 </dl>
 </li>
-<li><p><strong>Sensors:</strong> Accelerometer, Gyroscope, Proximity, Ambient Light, Compass</p></li>
+<li><p><strong>Magnetometer:</strong>     STMicroelectronics LIS3MDL</p></li>
+<li><p><strong>Ambient Light / Proximity:</strong> SensorTek STK3335</p></li>
+<li><p><strong>Accelerometer / Gyroscope:</strong> InvenSense MPU-6050 (I2C)</p></li>
 <li><p><strong>Privacy Switches:</strong> Modem, WiFi &amp; Bluetooth, Microphone, Cameras, Headphone</p></li>
 <li><p><strong>Battery:</strong> Lithium-ion, rated capacity 2800mAh (10.64Wh), typical capacity 3000mAh (11.40Wh)</p></li>
 <li><p><strong>I/O:</strong> USB Type-C, USB Host, DisplayPort Alternate Mode output, 15W 5V 3A Quick Charge, follows USB PD specification</p></li>
@@ -232,7 +237,7 @@ to the <code class="docutils literal notranslate"><span class="pre">PATH</span><
 <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">clone the git repositories</span></a> for <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> and <code class="docutils literal notranslate"><span class="pre">apps</span></code>.</p>
 <p>Configure the NuttX project and build the project:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> nuttx
-<span class="gp">$ </span>tools/configure.sh pinephone:lcd
+<span class="gp">$ </span>tools/configure.sh pinephone:lvgl
 <span class="gp">$ </span>make
 <span class="gp">$ </span>cp nuttx.bin Image
 <span class="gp">$ </span>rm -f Image.gz
@@ -262,6 +267,10 @@ should be set to <strong>Off</strong>.</p>
 NuttX boots on PinePhone and NuttShell (nsh) appears in the Serial Console.</p>
 <p>To see the available commands in NuttShell:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">help</span>
+</pre></div>
+</div>
+<p>To run the LVGL Touchscreen Demo:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>lvgldemo widgets
 </pre></div>
 </div>
 </section>
@@ -305,11 +314,24 @@ Display Engine 2.0, MIPI Display Serial Interface (DSI),
 Power Management Integrated Circuit (AXP803) and
 Reduced Serial Bus (RSB).
 Serial Console is enabled on UART0 at 115.2 kbps.</p>
+</section>
+<section id="lvgl">
+<h3>lvgl<a class="headerlink" href="#lvgl" title="Permalink to this headline"></a></h3>
+<p>Supports all the features in <code class="docutils literal notranslate"><span class="pre">lcd</span></code>,
+plus LVGL Graphics Library and Touch Panel (GT917S).
+Serial Console is enabled on UART0 at 115.2 kbps.</p>
 <section id="nsh">
 <h4>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h4>
 <p>Basic configuration that runs NuttShell (nsh).
 This configuration is focused on low level, command-line driver testing.
 Built-in applications are supported, but none are enabled.
+Serial Console is enabled on UART0 at 115.2 kbps.</p>
+</section>
+<section id="sensor">
+<h4>sensor<a class="headerlink" href="#sensor" title="Permalink to this headline"></a></h4>
+<p>Supports Accelerometer / Gyroscope (MPU-6050),
+Power Management Integrated Circuit (AXP803) and
+Reduced Serial Bus (RSB).
 Serial Console is enabled on UART0 at 115.2 kbps.</p>
 </section>
 </section>
@@ -319,7 +341,7 @@ Serial Console is enabled on UART0 at 115.2 kbps.</p>
 <p>NuttX for PinePhone supports these peripherals:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 43%" />
+<col style="width: 44%" />
 <col style="width: 13%" />
 <col style="width: 43%" />
 </colgroup>
@@ -330,51 +352,59 @@ Serial Console is enabled on UART0 at 115.2 kbps.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Backlight</p></td>
+<tr class="row-even"><td><p>Accelerometer (MPU-6050)</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Display Engine</p></td>
+<tr class="row-odd"><td><p>Backlight</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>Frame Buffer</p></td>
+<tr class="row-even"><td><p>Display Engine</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>LCD Controller (ST7703)</p></td>
+<tr class="row-odd"><td><p>Frame Buffer</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>LCD Panel (XBD599)</p></td>
+<tr class="row-even"><td><p>LCD Controller (ST7703)</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>MIPI D-PHY</p></td>
+<tr class="row-odd"><td><p>LCD Panel (XBD599)</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>MIPI DSI</p></td>
+<tr class="row-even"><td><p>MIPI D-PHY</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>PIO</p></td>
+<tr class="row-odd"><td><p>MIPI DSI</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>PMIC (AXP803)</p></td>
+<tr class="row-even"><td><p>PIO</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>RSB</p></td>
+<tr class="row-odd"><td><p>PMIC (AXP803)</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>TCON0</p></td>
+<tr class="row-even"><td><p>RSB</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>TWI</p></td>
+<tr class="row-odd"><td><p>TCON0</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>TWI / I2C</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Touch Panel (GT917S)</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
