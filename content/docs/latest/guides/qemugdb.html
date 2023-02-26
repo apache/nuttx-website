@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Task Trace &mdash; NuttX latest documentation</title>
+  <title>How to debug NuttX using QEMU and GDB &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -40,8 +40,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Task Trace User Guide" href="tasktraceuser.html" />
-    <link rel="prev" title="Drivers" href="drivers.html" /> 
+    <link rel="next" title="How to use RNDIS" href="rndis.html" />
+    <link rel="prev" title="Simulator" href="simulator.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -110,14 +110,15 @@
 <li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qemugdb.html">How to debug NuttX using QEMU and GDB</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Task Trace</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tasktraceuser.html">Task Trace User Guide</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tasktraceinternal.html">Task Trace Internals</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">How to debug NuttX using QEMU and GDB</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#compiling">Compiling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start-qemu">Start QEMU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start-gdb-to-connect-to-qemu">Start GDB to connect to QEMU</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasktrace.html">Task Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
@@ -142,9 +143,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="index.html">Guides</a> &raquo;</li>
-      <li>Task Trace</li>
+      <li>How to debug NuttX using QEMU and GDB</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/tasktrace.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/qemugdb.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -152,33 +153,111 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="task-trace">
-<h1>Task Trace<a class="headerlink" href="#task-trace" title="Permalink to this headline"></a></h1>
-<p>Task Trace is the tool to collect the various events in the NuttX kernel and display the result graphically.</p>
-<p>It can collect the following events.</p>
+  <section id="how-to-debug-nuttx-using-qemu-and-gdb">
+<span id="qemugdb"></span><h1>How to debug NuttX using QEMU and GDB<a class="headerlink" href="#how-to-debug-nuttx-using-qemu-and-gdb" title="Permalink to this headline"></a></h1>
+<p>This guide explains the steps needed to use QEMU and GDB to debug
+an ARM board (lm3s6965-ek), but it could be modified to work with other
+board or architecture supported by QEMU.</p>
+<p>Start configuring and compiling the lm3s6965-ek board with qemu-flat profile.</p>
+<section id="compiling">
+<h2>Compiling<a class="headerlink" href="#compiling" title="Permalink to this headline"></a></h2>
+<ol class="arabic">
+<li><p>Configure the lm3s6965-ek</p>
+<p>There is a sample configuration to use lm3s6965-ek on QEMU.</p>
+<p>Just use <code class="docutils literal notranslate"><span class="pre">lm3s6965-ek:qemu-flat</span></code> board profile for this purpose.</p>
 <blockquote>
-<div><ul class="simple">
-<li><p>Task execution, termination, switching</p></li>
-<li><p>System call enter/leave</p></li>
-<li><p>Interrupt handler enter/leave</p></li>
-</ul>
-</div></blockquote>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tasktraceuser.html">Task Trace User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tasktraceinternal.html">Task Trace Internals</a></li>
-</ul>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> nuttx
+<span class="gp">$ </span>./tools/configure.sh lm3s6965-ek:qemu-flat
+</pre></div>
 </div>
-<img alt="../_images/task-trace-overview.png" src="../_images/task-trace-overview.png" />
+</div></blockquote>
+</li>
+<li><p>Compile</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make -j
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="start-qemu">
+<h2>Start QEMU<a class="headerlink" href="#start-qemu" title="Permalink to this headline"></a></h2>
+<ol class="arabic">
+<li><p>You need to start QEMU using the nuttx ELF file just create above:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-arm -M lm3s6965evb -device loader,file<span class="o">=</span>nuttx -serial mon:stdio -nographic -s
+<span class="go">Timer with period zero, disabling</span>
+<span class="go">ABCDF</span>
+<span class="go">telnetd [4:100]</span>
+
+<span class="go">NuttShell (NSH) NuttX-12.0.0</span>
+<span class="go">nsh&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="start-gdb-to-connect-to-qemu">
+<h2>Start GDB to connect to QEMU<a class="headerlink" href="#start-gdb-to-connect-to-qemu" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>These steps show how to connect GDB to QEMU running NuttX:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb-multiarch -ix tools/nuttx-gdbinit nuttx
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">target extended-remote localhost:1234</span>
+<span class="go">Remote debugging using localhost:1234</span>
+<span class="go">0x000012ee in up_mdelay (milliseconds=milliseconds@entry=250)</span>
+<span class="go">    at common/arm_mdelay.c:51</span>
+<span class="go">51             for (j = 0; j &lt; CONFIG_BOARD_LOOPSPERMSEC; j++)</span>
+<span class="gp gp-VirtualEnv">(gdb)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+<ol class="arabic">
+<li><p>From (gdb) prompt you can run commands to inpect NuttX:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">info_nxthreads</span>
+<span class="go">target examined</span>
+<span class="go">_target_arch.name=armv7</span>
+<span class="gp">$</span>_target_has_fpu : <span class="m">1</span>
+<span class="gp">$</span>_target_has_smp : <span class="m">0</span>
+<span class="go">saved current_tcb (pid=0)</span>
+<span class="go">*</span>
+<span class="go">0 Thread 0x20001538  (Name: Idle Task, State: Running, Priority: 0, Stack: 464/1000) PC: 0x12fc in up_mdelay()</span>
+<span class="go">saved current_tcb (pid=0)</span>
+
+<span class="go">1 Thread 0x20005060  (Name: hpwork, State: Waiting,Semaphore, Priority: 224, Stack: 320/1992) PC: 0x47dd in work_thread()</span>
+<span class="go">saved current_tcb (pid=0)</span>
+
+<span class="go">2 Thread 0x20005c30  (Name: nsh_main, State: Waiting,Semaphore, Priority: 100, Stack: 1016/2000) PC: 0x1 in _vectors()</span>
+<span class="go">saved current_tcb (pid=0)</span>
+
+<span class="go">3 Thread 0x20006b40  (Name: NTP daemon, State: Waiting,Signal, Priority: 100, Stack: 864/1952) PC: 0x0 in _vectors()</span>
+<span class="go">saved current_tcb (pid=0)</span>
+
+<span class="go">4 Thread 0x20008540  (Name: telnetd, State: Waiting,Semaphore, Priority: 100, Stack: 616/2008) PC: 0x20008fd4 in No()</span>
+<span class="go">saved current_tcb (pid=0)</span>
+<span class="go">saved current_tcb (pid=0)</span>
+<span class="go">saved current_tcb (pid=0)</span>
+<span class="go">saved current_tcb (pid=0)</span>
+<span class="gp gp-VirtualEnv">(gdb)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+<p>As you can see QEMU and GDB are powerful tools to debug NuttX without using external board or expensive debugging hardware.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="drivers.html" class="btn btn-neutral float-left" title="Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="tasktraceuser.html" class="btn btn-neutral float-right" title="Task Trace User Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="simulator.html" class="btn btn-neutral float-left" title="Simulator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rndis.html" class="btn btn-neutral float-right" title="How to use RNDIS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
