@@ -195,8 +195,8 @@ CP2102 converter and is available on the USB connector USB CON8 (J1).</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this headline"></a></h2>
-<section id="buttons">
-<h3>Buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<section id="board-buttons">
+<h3>Board Buttons<a class="headerlink" href="#board-buttons" title="Permalink to this headline"></a></h3>
 <p>There are two buttons labeled Boot and EN.  The EN button is not available
 to software.  It pulls the chip enable line that doubles as a reset line.</p>
 <p>The BOOT button is connected to IO0.  On reset it is used as a strapping
@@ -204,28 +204,235 @@ pin to determine whether the chip boots normally or into the serial
 bootloader.  After reset, however, the BOOT button can be used for software
 input.</p>
 </section>
-<section id="leds">
-<h3>LEDs<a class="headerlink" href="#leds" title="Permalink to this headline"></a></h3>
+<section id="board-leds">
+<h3>Board LEDs<a class="headerlink" href="#board-leds" title="Permalink to this headline"></a></h3>
 <p>There are several on-board LEDs for that indicate the presence of power
 and USB activity.  None of these are available for use by software.</p>
 </section>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline"></a></h2>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>Please check commonly used configurations for
-<a class="reference internal" href="../../index.html#esp32s3-peripheral-support"><span class="std std-ref">ESP32-S3 Peripherals</span></a></p>
+<p>All of the configurations presented below can be tested by running the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh esp32s3-devkit:&lt;config_name&gt;
+$ make flash ESPTOOL_PORT=/dev/ttyUSB0 -j
+</pre></div>
 </div>
+<p>Where &lt;config_name&gt; is the name of board configuration you want to use, i.e.: nsh, buttons, wifi…
+Then use a serial console terminal like <code class="docutils literal notranslate"><span class="pre">picocom</span></code> configured to 115200 8N1.</p>
+<section id="buttons">
+<h3>buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<p>This configuration shows the use of the buttons subsystem. It can be used by executing
+the <code class="docutils literal notranslate"><span class="pre">buttons</span></code> application and pressing on any of the available board buttons:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; buttons
+buttons_main: Starting the button_daemon
+buttons_main: button_daemon started
+button_daemon: Running
+button_daemon: Opening /dev/buttons
+button_daemon: Supported BUTTONs 0x01
+nsh&gt; Sample = 1
+Sample = 0
+</pre></div>
+</div>
+</section>
+<section id="coremark">
+<h3>coremark<a class="headerlink" href="#coremark" title="Permalink to this headline"></a></h3>
+<p>This configuration sets the CoreMark benchmark up for running on the maximum
+number of cores for this system. It also enables some optimization flags and
+disables the NuttShell to get the best possible score.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As the NSH is disabled, the application will start as soon as the
+system is turned on.</p>
+</div>
+</section>
+<section id="cxx">
+<h3>cxx<a class="headerlink" href="#cxx" title="Permalink to this headline"></a></h3>
+<p>Development enviroment ready for C++ applications. You can check if the setup
+was successfull by running <code class="docutils literal notranslate"><span class="pre">cxxtest</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; cxxtest
+Test ofstream ================================
+printf: Starting test_ostream
+printf: Successfully opened /dev/console
+cout: Successfully opened /dev/console
+Writing this to /dev/console
+Test iostream ================================
+Hello, this is only a test
+Print an int: 190
+Print a char: d
+Test std::vector =============================
+v1=1 2 3
+Hello World Good Luck
+Test std::map ================================
+Test C++17 features ==========================
+File /proc/meminfo exists!
+Invalid file! /invalid
+File /proc/version exists!
+</pre></div>
+</div>
+</section>
+<section id="i2c">
+<h3>i2c<a class="headerlink" href="#i2c" title="Permalink to this headline"></a></h3>
+<p>This configuration can be used to scan and manipulate I2C devices.
+You can scan for all I2C devices using the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev 0x00 0x7f
+</pre></div>
+</div>
+</section>
+<section id="knsh">
+<h3>knsh<a class="headerlink" href="#knsh" title="Permalink to this headline"></a></h3>
+<p>This is identical to the nsh configuration except that (1) NuttX
+is built as PROTECTED mode, monolithic module and the user applications
+are built separately and, as a consequence, (2) some features that are
+only available in the FLAT build are disabled.</p>
+<p>Protected Mode support for ESP32-S3 relies on the World Controller (WC)
+and Permission Control (PMS) peripherals for implementing isolation
+between Kernel and Userspace.</p>
+<p>By working together with the MMU and Static MPUs of the ESP32-S3, the WC/PMS
+is able to restrict the application access to peripherals, on-chip
+memories (Internal ROM and Internal SRAM) and off-chip memories (External
+Flash and PSRAM).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The World Controller and Permission Control <strong>do not</strong> prevent
+the application from accessing CPU System Registers.</p>
+</div>
+</section>
+<section id="mcuboot-nsh">
+<h3>mcuboot_nsh<a class="headerlink" href="#mcuboot-nsh" title="Permalink to this headline"></a></h3>
+<p>Similar configuration as nsh, except that it enables booting from
+MCUboot and the experimental features configuration.
+You can find more information on the <a class="reference external" href="https://github.com/apache/nuttx-apps/blob/master/examples/mcuboot/swap_test/README.md">example’s documentation</a>.</p>
+</section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
 <p>Basic NuttShell configuration (console enabled in UART0, exposed via
 USB connection by means of CP2102 converter, at 115200 bps).</p>
 </section>
-<section id="mcuboot-nsh">
-<h3>mcuboot_nsh<a class="headerlink" href="#mcuboot-nsh" title="Permalink to this headline"></a></h3>
-<p>Similar configuration as nsh, except that it enables booting from
-MCUboot and the experimental features configuration.</p>
+<section id="oneshot">
+<h3>oneshot<a class="headerlink" href="#oneshot" title="Permalink to this headline"></a></h3>
+<p>This config demonstrate the use of oneshot timers present on the ESP32-S3.
+To test it, just run the <code class="docutils literal notranslate"><span class="pre">oneshot</span></code> example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; oneshot
+Opening /dev/oneshot
+Maximum delay is 4294967295999999
+Starting oneshot timer with delay 2000000 microseconds
+Waiting...
+Finished
+</pre></div>
+</div>
+</section>
+<section id="pwm">
+<h3>pwm<a class="headerlink" href="#pwm" title="Permalink to this headline"></a></h3>
+<p>This configuration demonstrates the use of PWM through a LED connected to GPIO2.
+To test it, just execute the <code class="docutils literal notranslate"><span class="pre">pwm</span></code> application:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; pwm
+pwm_main: starting output with frequency: 10000 duty: 00008000
+pwm_main: stopping output
+</pre></div>
+</div>
+</section>
+<section id="random">
+<h3>random<a class="headerlink" href="#random" title="Permalink to this headline"></a></h3>
+<p>This configuration shows the use of the ESP32-S3’s True Random Number Generator with
+entropy sourced from Wi-Fi and Bluetooth noise.
+To test it, just run <code class="docutils literal notranslate"><span class="pre">rand</span></code> to get 32 randomly generated bytes:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; rand
+Reading 8 random numbers
+Random values (0x3ffe0b00):
+0000  98 b9 66 a2 a2 c0 a2 ae 09 70 93 d1 b5 91 86 c8  ..f......p......
+0010  8f 0e 0b 04 29 64 21 72 01 92 7c a2 27 60 6f 90  ....)d!r..|.&#39;`o.
+</pre></div>
+</div>
+</section>
+<section id="smp">
+<h3>smp<a class="headerlink" href="#smp" title="Permalink to this headline"></a></h3>
+<p>Another NSH configuration, similar to nsh, but also enables
+SMP operation.  It differs from the nsh configuration only in these
+additional settings:</p>
+<p>SMP is enabled:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SMP=y
+CONFIG_SMP_NCPUS=2
+CONFIG_SPINLOCK=y
+</pre></div>
+</div>
+<p>The apps/testing/smp test is included:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_TESTING_SMP=y
+CONFIG_TESTING_SMP_NBARRIER_THREADS=8
+CONFIG_TESTING_SMP_PRIORITY=100
+CONFIG_TESTING_SMP_STACKSIZE=2048
+</pre></div>
+</div>
+</section>
+<section id="spiflash">
+<h3>spiflash<a class="headerlink" href="#spiflash" title="Permalink to this headline"></a></h3>
+<p>This config tests the external SPI that comes with the ESP32-S3 module connected
+through SPI1.</p>
+<p>By default a SmartFS file system is selected.
+Once booted you can use the following commands to mount the file system:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mksmartfs /dev/smart0
+nsh&gt; mount -t smartfs /dev/smart0 /mnt
+</pre></div>
+</div>
+<p>Note that mksmartfs is only needed the first time.</p>
+</section>
+<section id="sta-softap">
+<h3>sta_softap<a class="headerlink" href="#sta-softap" title="Permalink to this headline"></a></h3>
+<p>With this configuration you can run these commands to be able
+to connect your smartphone or laptop to your board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifup wlan1
+nsh&gt; dhcpd_start wlan1
+nsh&gt; wapi psk wlan1 mypasswd 3
+nsh&gt; wapi essid wlan1 nuttxap 1
+</pre></div>
+</div>
+<p>In this case, you are creating the access point <code class="docutils literal notranslate"><span class="pre">nuttxapp</span></code> in your board and to
+connect to it on your smartphone you will be required to type the password <code class="docutils literal notranslate"><span class="pre">mypasswd</span></code>
+using WPA2.
+The <code class="docutils literal notranslate"><span class="pre">dhcpd_start</span></code> is necessary to let your board to associate an IP to your smartphone.</p>
+</section>
+<section id="tickless">
+<h3>tickless<a class="headerlink" href="#tickless" title="Permalink to this headline"></a></h3>
+<p>This configuration enables the support for tickless scheduler mode.</p>
+</section>
+<section id="timer">
+<h3>timer<a class="headerlink" href="#timer" title="Permalink to this headline"></a></h3>
+<p>This config test the general use purpose timers. It includes the 4 timers,
+adds driver support, registers the timers as devices and includes the timer
+example.</p>
+<p>To test it, just run the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; timer -d /dev/timerx
+</pre></div>
+</div>
+<p>Where x in the timer instance.</p>
+</section>
+<section id="wifi">
+<h3>wifi<a class="headerlink" href="#wifi" title="Permalink to this headline"></a></h3>
+<p>Enables Wi-Fi support. You can define your credentials this way:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>Or if you don’t want to keep it saved in the firmware you can do it
+at runtime:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 3
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
+</pre></div>
+</div>
+</section>
+<section id="watchdog">
+<h3>watchdog<a class="headerlink" href="#watchdog" title="Permalink to this headline"></a></h3>
+<p>This config test the watchdog timers. It includes the 2 MWDTS,
+adds driver support, registers the WDTs as devices and includes the watchdog
+example.</p>
+<p>To test it, just run the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wdog -i /dev/watchdogx
+</pre></div>
+</div>
+<p>Where x is the watchdog instance.</p>
 </section>
 </section>
 </section>

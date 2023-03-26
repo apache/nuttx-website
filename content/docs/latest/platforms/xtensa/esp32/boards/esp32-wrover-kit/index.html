@@ -124,6 +124,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#things-to-do">Things to Do</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="../esp32-devkitc/index.html">ESP32 DevKitC</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../esp32-ethernet-kit/index.html">ESP32-Ethernet-Kit V1.2</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../esp32-lyrat/index.html">ESP32-LyraT V4.3</a></li>
 <li class="toctree-l5 current"><a class="current reference internal" href="#">ESP-WROVER-KIT</a></li>
 </ul>
@@ -222,8 +223,8 @@ the first interface ([n] == 0) is dedicated to the USB-to-JTAG interface.</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this headline"></a></h2>
-<section id="buttons">
-<h3>Buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<section id="board-buttons">
+<h3>Board Buttons<a class="headerlink" href="#board-buttons" title="Permalink to this headline"></a></h3>
 <p>There are two buttons labeled Boot and EN. The EN button is not available
 to software. It pulls the chip enable line that doubles as a reset line.</p>
 <p>The BOOT button is connected to IO0. On reset it is used as a strapping
@@ -231,8 +232,8 @@ pin to determine whether the chip boots normally or into the serial
 bootloader. After reset, however, the BOOT button can be used for software
 input.</p>
 </section>
-<section id="leds">
-<h3>LEDs<a class="headerlink" href="#leds" title="Permalink to this headline"></a></h3>
+<section id="board-leds">
+<h3>Board LEDs<a class="headerlink" href="#board-leds" title="Permalink to this headline"></a></h3>
 <p>There are several on-board LEDs for that indicate the presence of power
 and USB activity.</p>
 <p>There is an RGB LED available for software.</p>
@@ -298,19 +299,51 @@ and USB activity.</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline"></a></h2>
-<section id="nsh">
-<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
-<p>Basic NuttShell configuration (console enabled in UART0, exposed via
-USB connection by means of FT2232HL converter, at 115200 bps).</p>
+<p>All of the configurations presented below can be tested by running the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh esp32-wrover-kit:&lt;config_name&gt;
+$ make flash ESPTOOL_PORT=/dev/ttyUSB1 -j
+</pre></div>
+</div>
+<p>Where &lt;config_name&gt; is the name of board configuration you want to use, i.e.: nsh, buttons, wifi…
+Then use a serial console terminal like <code class="docutils literal notranslate"><span class="pre">picocom</span></code> configured to 115200 8N1.</p>
+<section id="autopm">
+<h3>autopm<a class="headerlink" href="#autopm" title="Permalink to this headline"></a></h3>
+<p>This configuration makes the device automatically enter the low power consumption mode
+when in the idle state, powering off the cpu and other peripherals.</p>
+<p>In minimum power save mode, the station wakes up every DTIM to receive a beacon. The broadcast
+data will not be lost because it is transmitted after DTIM. However, it can not save much more
+power if DTIM is short as the DTIM is determined by the access point.</p>
 </section>
-<section id="wapi">
-<h3>wapi<a class="headerlink" href="#wapi" title="Permalink to this headline"></a></h3>
-<p>Enables Wi-Fi support.</p>
+<section id="bmp180">
+<h3>bmp180<a class="headerlink" href="#bmp180" title="Permalink to this headline"></a></h3>
+<p>This configuration enables the use of the BMP180 pressure sensor over I2C.
+You can check that the sensor is working by using the <code class="docutils literal notranslate"><span class="pre">bmp180</span></code> application:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; bmp180
+Pressure value = 91531
+Pressure value = 91526
+Pressure value = 91525
+</pre></div>
+</div>
+</section>
+<section id="buttons">
+<h3>buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<p>This configuration shows the use of the buttons subsystem. It can be used by executing
+the <code class="docutils literal notranslate"><span class="pre">buttons</span></code> application and pressing on any of the available board buttons:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; buttons
+buttons_main: Starting the button_daemon
+buttons_main: button_daemon started
+button_daemon: Running
+button_daemon: Opening /dev/buttons
+button_daemon: Supported BUTTONs 0x01
+nsh&gt; Sample = 1
+Sample = 0
+</pre></div>
+</div>
 </section>
 <section id="gpio">
 <h3>gpio<a class="headerlink" href="#gpio" title="Permalink to this headline"></a></h3>
 <p>This is a test for the GPIO driver. It includes the 3 LEDs and one, arbitrary, GPIO.
-For this example, GPIO22 was used.
+For this example, GPIO22 was used (defined by the board implementation).
 At the nsh, we can turn LEDs on and off with the following:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gpio -o 1 /dev/gpio0
 nsh&gt; gpio -o 0 /dev/gpio0
@@ -323,23 +356,48 @@ nsh&gt; gpio -o 0 /dev/gpio0
 <p>The pin is configured to as a rising edge interrupt, so after issuing the
 above command, connect it to 3.3V.</p>
 </section>
-<section id="spiflash">
-<h3>spiflash<a class="headerlink" href="#spiflash" title="Permalink to this headline"></a></h3>
-<p>This config tests the external SPI that comes with an ESP32 module connected
-through SPI1.</p>
-<p>By default a SmartFS file system is selected.
-Once booted you can use the following commands to mount the file system:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mksmartfs /dev/smart0
-mount -t smartfs /dev/smart0 /mnt
+<section id="lcd1602">
+<h3>lcd1602<a class="headerlink" href="#lcd1602" title="Permalink to this headline"></a></h3>
+<p>This configuration is used to demonstrate the use of an LCD1602 display with
+the ESP32-WROVER-KIT. You can run an example by executing the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; slcd
+Opening /dev/slcd0 for read/write access
+Attributes:
+rows: 2 columns: 16 nbars: 0
+max contrast: 0 max brightness: 1
+Clear screen
+WRITING:
+0000: 1b5b46                                                            .[F
+Set brightness to 1
+Print [Hello]
+WRITING:
+0000: 1b5b471b5b30304c1b5b4548656c6c6f                                  .[G.[00L.[EHello
 </pre></div>
 </div>
-<p>Note that <cite>mksmartfs</cite> is only needed the first time.</p>
 </section>
-<section id="nx">
-<h3>nx<a class="headerlink" href="#nx" title="Permalink to this headline"></a></h3>
-<p>This config adds a set of tests using the graphic examples at <cite>apps/example/nx</cite>.</p>
-<p>This configuration illustrates the use of the LCD with the lower performance
-SPI interface.</p>
+<section id="leds">
+<h3>leds<a class="headerlink" href="#leds" title="Permalink to this headline"></a></h3>
+<p>This configuration demonstrates the use of the on-board RGB LED with the
+<cite>userleds</cite> subsystem. To check the included example, you can execute the
+following application:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; leds
+leds_main: Starting the led_daemon
+leds_main: led_daemon started
+led_daemon (pid# 3): Running
+led_daemon: Opening /dev/userleds
+led_daemon: Supported LEDs 0x07
+led_daemon: LED set 0x01
+nsh&gt; led_daemon: LED set 0x02
+led_daemon: LED set 0x03
+led_daemon: LED set 0x04
+led_daemon: LED set 0x05
+</pre></div>
+</div>
+</section>
+<section id="lua">
+<h3>lua<a class="headerlink" href="#lua" title="Permalink to this headline"></a></h3>
+<p>This configuration demonstrates the use of the of the Lua interpreter on NuttX.
+To execute it, just run the <code class="docutils literal notranslate"><span class="pre">lua</span></code> application.</p>
 </section>
 <section id="lvgl">
 <h3>lvgl<a class="headerlink" href="#lvgl" title="Permalink to this headline"></a></h3>
@@ -351,12 +409,81 @@ https://github.com/lvgl/lvgl
 </div>
 <p>This configuration uses the LVGL demonstration at <cite>apps/examples/lvgldemo</cite>.</p>
 </section>
+<section id="mmcsdspi">
+<h3>mmcsdspi<a class="headerlink" href="#mmcsdspi" title="Permalink to this headline"></a></h3>
+<p>This configuration is used to mount a FAT/FAT32 SD Card into the OS’ filesystem.
+To access the card’s files, execute the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+nsh&gt; ls /mnt/
+/mnt:
+song_16_88200_2ch.wav
+song_16_96000_2ch.wav
+song_24_44100_2ch.wav
+song_32_44100_2ch.wav
+</pre></div>
+</div>
 </section>
-<section id="external-devices">
-<h2>External devices<a class="headerlink" href="#external-devices" title="Permalink to this headline"></a></h2>
-<section id="bmp180">
-<h3>BMP180<a class="headerlink" href="#bmp180" title="Permalink to this headline"></a></h3>
-<p>When using BMP180 (enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_BMP180</span></code>), it’s expected this device is wired to I2C0 bus.</p>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
+<p>Basic NuttShell configuration (console enabled in UART0, exposed via
+USB connection by means of FT2232HL converter, at 115200 bps).</p>
+</section>
+<section id="nx">
+<h3>nx<a class="headerlink" href="#nx" title="Permalink to this headline"></a></h3>
+<p>This config adds a set of tests using the graphic examples at <code class="docutils literal notranslate"><span class="pre">apps/example/nx</span></code>.</p>
+<p>This configuration illustrates the use of the LCD with the lower performance
+SPI interface.</p>
+</section>
+<section id="oneshot">
+<h3>oneshot<a class="headerlink" href="#oneshot" title="Permalink to this headline"></a></h3>
+<p>This config demonstrate the use of oneshot timers present on the ESP32.
+To test it, just run the <code class="docutils literal notranslate"><span class="pre">oneshot</span></code> example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; oneshot
+Opening /dev/oneshot
+Maximum delay is 4294967295999999
+Starting oneshot timer with delay 2000000 microseconds
+Waiting...
+Finished
+</pre></div>
+</div>
+</section>
+<section id="rtc">
+<h3>rtc<a class="headerlink" href="#rtc" title="Permalink to this headline"></a></h3>
+<p>This configuration demonstrates the use of the RTC driver through alarms.
+You can set an alarm, check its progress and receive a notification after it expires:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; alarm 10
+alarm_daemon started
+alarm_daemon: Running
+Opening /dev/rtc0
+Alarm 0 set in 10 seconds
+nsh&gt; alarm -r
+Opening /dev/rtc0
+Alarm 0 is active with 10 seconds to expiration
+nsh&gt; alarm_daemon: alarm 0 received
+</pre></div>
+</div>
+</section>
+<section id="tickless">
+<h3>tickless<a class="headerlink" href="#tickless" title="Permalink to this headline"></a></h3>
+<p>This configuration enables the support for tickless scheduler mode.</p>
+</section>
+<section id="wifi">
+<h3>wifi<a class="headerlink" href="#wifi" title="Permalink to this headline"></a></h3>
+<p>Enables Wi-Fi support. You can define your credentials this way:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>Or if you don’t want to keep it saved in the firmware you can do it
+at runtime:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 3
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
+</pre></div>
+</div>
 </section>
 </section>
 </section>

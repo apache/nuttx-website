@@ -41,7 +41,7 @@
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
     <link rel="next" title="ESP-WROVER-KIT" href="../esp32-wrover-kit/index.html" />
-    <link rel="prev" title="ESP32 DevKitC" href="../esp32-devkitc/index.html" /> 
+    <link rel="prev" title="ESP32-Ethernet-Kit V1.2" href="../esp32-ethernet-kit/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -124,6 +124,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#things-to-do">Things to Do</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="../esp32-devkitc/index.html">ESP32 DevKitC</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../esp32-ethernet-kit/index.html">ESP32-Ethernet-Kit V1.2</a></li>
 <li class="toctree-l5 current"><a class="current reference internal" href="#">ESP32-LyraT V4.3</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../esp32-wrover-kit/index.html">ESP-WROVER-KIT</a></li>
 </ul>
@@ -211,8 +212,8 @@ CP2102N bridge and is available on the USB connector.</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this headline"></a></h2>
-<section id="buttons">
-<h3>Buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<section id="board-buttons">
+<h3>Board Buttons<a class="headerlink" href="#board-buttons" title="Permalink to this headline"></a></h3>
 <p>Two key labeled <em>Rec</em> and <em>Mode</em>. They are routed to <strong>ESP32-WROVER-E Module</strong>
 and intended for developing and testing a UI for audio applications using
 dedicated API.</p>
@@ -235,8 +236,8 @@ by installing jumpers in three headers <strong>JP23</strong>, <strong>JP24</stro
 Remove all jumpers after upload is complete.</p></li>
 </ul>
 </section>
-<section id="leds">
-<h3>LEDs<a class="headerlink" href="#leds" title="Permalink to this headline"></a></h3>
+<section id="board-leds">
+<h3>Board LEDs<a class="headerlink" href="#board-leds" title="Permalink to this headline"></a></h3>
 <p>A general purpose green LED controlled by the <strong>ESP32-WROVER-E Module</strong> to
 indicate certain operation states of the audio application using dedicated
 API. It can also be used by the user for other purposes.</p>
@@ -724,6 +725,13 @@ signals are shared.</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline"></a></h2>
+<p>All of the configurations presented below can be tested by running the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh esp32-lyrat:&lt;config_name&gt;
+$ make flash ESPTOOL_PORT=/dev/ttyUSB0 -j
+</pre></div>
+</div>
+<p>Where &lt;config_name&gt; is the name of board configuration you want to use, i.e.: nsh, buttons, wifi…
+Then use a serial console terminal like <code class="docutils literal notranslate"><span class="pre">picocom</span></code> configured to 115200 8N1.</p>
 <section id="audio">
 <h3>audio<a class="headerlink" href="#audio" title="Permalink to this headline"></a></h3>
 <p>This configuration uses the I2S0 peripheral and the ES8388 audio codec
@@ -764,14 +772,80 @@ $ nxplayer&gt; play http://192.168.1.239:8000/tones.wav
 44.1kHz WAV files. Other configurations might not work as expected.</p>
 </div>
 </section>
+<section id="buttons">
+<h3>buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<p>This configuration shows the use of the buttons subsystem. It can be used by executing
+the <code class="docutils literal notranslate"><span class="pre">buttons</span></code> application and pressing on any of the available board buttons:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; buttons
+buttons_main: Starting the button_daemon
+buttons_main: button_daemon started
+button_daemon: Running
+button_daemon: Opening /dev/buttons
+button_daemon: Supported BUTTONs 0x01
+nsh&gt; Sample = 1
+Sample = 0
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">BOOT</span></code> is connected to GPIO0 that is shared among some peripherals.
+To avoid any conflicts, it’s not registered in the buttons subsystem and, thus,
+is unable to be used.</p>
+</div>
+</section>
+<section id="mmcsdspi">
+<h3>mmcsdspi<a class="headerlink" href="#mmcsdspi" title="Permalink to this headline"></a></h3>
+<p>This configuration is used to mount a FAT/FAT32 SD Card into the OS’ filesystem.
+For the ESP32-LyraT, make sure the DIP switches 1 and 2 are turned to the ON position.
+To access the card’s files, execute the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+nsh&gt; ls /mnt/
+/mnt:
+song_16_88200_2ch.wav
+song_16_96000_2ch.wav
+song_24_44100_2ch.wav
+song_32_44100_2ch.wav
+</pre></div>
+</div>
+</section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
 <p>Basic NuttShell configuration (console enabled in UART0, exposed via
 USB connection by means of the CP2102N bridge, at 115200 bps).</p>
 </section>
-<section id="wapi">
-<h3>wapi<a class="headerlink" href="#wapi" title="Permalink to this headline"></a></h3>
-<p>Enables Wi-Fi support.</p>
+<section id="nxrecorder">
+<h3>nxrecorder<a class="headerlink" href="#nxrecorder" title="Permalink to this headline"></a></h3>
+<p>This configuration is used to record raw audio from the the ES8388 audio codec
+through the I2S0 peripheral to a FAT32 SD Card. By default the audio is recorded from
+the on-board microphones.
+For the ESP32-LyraT, make sure the DIP switches 1 and 2 are turned to the ON position.
+To record audio, execute the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+nsh&gt; nxrecorder
+nxrecorder&gt; recordraw /mnt/record.raw
+nxrecorder&gt; stop
+</pre></div>
+</div>
+<p>To play the recorded audio, import the raw data into Audacity and set the encoding to signed
+16-bit PCM, the sample rate to 44.1kHz and the number of channels to 2.</p>
+</section>
+<section id="wifi">
+<h3>wifi<a class="headerlink" href="#wifi" title="Permalink to this headline"></a></h3>
+<p>Enables Wi-Fi support. You can define your credentials this way:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>Or if you don’t want to keep it saved in the firmware you can do it
+at runtime:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 3
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
+</pre></div>
+</div>
 </section>
 </section>
 </section>
@@ -780,7 +854,7 @@ USB connection by means of the CP2102N bridge, at 115200 bps).</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../esp32-devkitc/index.html" class="btn btn-neutral float-left" title="ESP32 DevKitC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../esp32-ethernet-kit/index.html" class="btn btn-neutral float-left" title="ESP32-Ethernet-Kit V1.2" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../esp32-wrover-kit/index.html" class="btn btn-neutral float-right" title="ESP-WROVER-KIT" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

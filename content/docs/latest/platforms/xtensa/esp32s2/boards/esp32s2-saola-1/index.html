@@ -204,8 +204,8 @@ CP2102 converter and is available on the micro-USB connector (J1).</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this headline"></a></h2>
-<section id="buttons">
-<h3>Buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<section id="board-buttons">
+<h3>Board Buttons<a class="headerlink" href="#board-buttons" title="Permalink to this headline"></a></h3>
 <p>There are two buttons labeled Boot and EN.  The EN button is not available
 to the software.  It pulls the chip enable line that doubles as a reset line.</p>
 <p>The BOOT button is connected to IO0.  On reset, it is used as a strapping
@@ -213,8 +213,8 @@ pin to determine whether the chip boots normally or into the serial
 bootloader.  After resetting, however, the BOOT button can be used for
 software input.</p>
 </section>
-<section id="leds">
-<h3>LEDs<a class="headerlink" href="#leds" title="Permalink to this headline"></a></h3>
+<section id="board-leds">
+<h3>Board LEDs<a class="headerlink" href="#board-leds" title="Permalink to this headline"></a></h3>
 <p>There are two on-board LEDs. RED_LED (D5) indicates the presence of 3.3V
 power and is not controlled by software. RGB LED (U6) is a WS2812 addressable
 LED and is driven by GPIO18.</p>
@@ -259,6 +259,13 @@ I2S character device. Just make sure to set the bit-width:</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline"></a></h2>
+<p>All of the configurations presented below can be tested by running the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh esp32s2-saola-1:&lt;config_name&gt;
+$ make flash ESPTOOL_PORT=/dev/ttyUSB0 -j
+</pre></div>
+</div>
+<p>Where &lt;config_name&gt; is the name of board configuration you want to use, i.e.: nsh, buttons, wifi…
+Then use a serial console terminal like <code class="docutils literal notranslate"><span class="pre">picocom</span></code> configured to 115200 8N1.</p>
 <section id="audio">
 <h3>audio<a class="headerlink" href="#audio" title="Permalink to this headline"></a></h3>
 <p>This configuration uses the I2S peripheral and an externally connected audio
@@ -300,23 +307,92 @@ to allow that.</p>
 </tbody>
 </table>
 <p><strong>ROMFS example</strong></p>
-<p>Prepare and build the <cite>audio</cite> defconfig:</p>
+<p>Prepare and build the <code class="docutils literal notranslate"><span class="pre">audio</span></code> defconfig:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make -j distclean &amp;&amp; ./tools/configure.sh esp32s2-saola-1:audio &amp;&amp; make
 </pre></div>
 </div>
-<p>This will create a temporary folder in <cite>apps/examples/romfs/testdir</cite>. Move
-a PCM-encoded (<cite>.wav</cite>) audio file with 16 or 24 bits/sample (sampled at 16~48kHz)
+<p>This will create a temporary folder in <code class="docutils literal notranslate"><span class="pre">apps/examples/romfs/testdir</span></code>. Move
+a PCM-encoded (<code class="docutils literal notranslate"><span class="pre">.wav</span></code>) audio file with 16 or 24 bits/sample (sampled at 16~48kHz)
 to this folder.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You can use <a class="reference download internal" download="" href="../../../../../_downloads/23e89ab38b78035176f15362834bea98/tone.wav"><code class="xref download docutils literal notranslate"><span class="pre">this</span> <span class="pre">440</span> <span class="pre">Hz</span> <span class="pre">sinusoidal</span> <span class="pre">tone</span></code></a>.
-The audio file should be located at <cite>apps/examples/romfs/testdir/tone.wav</cite></p>
+The audio file should be located at <code class="docutils literal notranslate"><span class="pre">apps/examples/romfs/testdir/tone.wav</span></code></p>
 </div>
 <p>Build the project again and flash it (make sure not to clean it, just build)</p>
 <p>After successfully built and flashed, load the romfs and play it:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ nsh&gt; romfs
-$ nsh&gt; nxplayer
-$ nxplayer&gt; play /usr/share/local/tone.wav
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; romfs
+nsh&gt; nxplayer
+nxplayer&gt; play /usr/share/local/tone.wav
+</pre></div>
+</div>
+</section>
+<section id="buttons">
+<h3>buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
+<p>This configuration shows the use of the buttons subsystem. It can be used by executing
+the <code class="docutils literal notranslate"><span class="pre">buttons</span></code> application and pressing on any of the available board buttons:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; buttons
+buttons_main: Starting the button_daemon
+buttons_main: button_daemon started
+button_daemon: Running
+button_daemon: Opening /dev/buttons
+button_daemon: Supported BUTTONs 0x01
+nsh&gt; Sample = 1
+Sample = 0
+</pre></div>
+</div>
+</section>
+<section id="coremark">
+<h3>coremark<a class="headerlink" href="#coremark" title="Permalink to this headline"></a></h3>
+<p>This configuration sets the CoreMark benchmark up for running on the maximum
+number of cores for this system. It also enables some optimization flags and
+disables the NuttShell to get the best possible score.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As the NSH is disabled, the application will start as soon as the
+system is turned on.</p>
+</div>
+</section>
+<section id="cxx">
+<h3>cxx<a class="headerlink" href="#cxx" title="Permalink to this headline"></a></h3>
+<p>Development enviroment ready for C++ applications. You can check if the setup
+was successfull by running <code class="docutils literal notranslate"><span class="pre">cxxtest</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; cxxtest
+Test ofstream ================================
+printf: Starting test_ostream
+printf: Successfully opened /dev/console
+cout: Successfully opened /dev/console
+Writing this to /dev/console
+Test iostream ================================
+Hello, this is only a test
+Print an int: 190
+Print a char: d
+Test std::vector =============================
+v1=1 2 3
+Hello World Good Luck
+Test std::map ================================
+Test C++17 features ==========================
+File /proc/meminfo exists!
+Invalid file! /invalid
+File /proc/version exists!
+</pre></div>
+</div>
+</section>
+<section id="gpio">
+<h3>gpio<a class="headerlink" href="#gpio" title="Permalink to this headline"></a></h3>
+<p>This is a test for the GPIO driver. It includes one arbitrary GPIO.
+For this example, GPIO1 was used (defined by the board implementation).
+At the nsh, we can turn the GPIO output on and off with the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gpio -o 1 /dev/gpio0
+nsh&gt; gpio -o 0 /dev/gpio0
+</pre></div>
+</div>
+</section>
+<section id="i2c">
+<h3>i2c<a class="headerlink" href="#i2c" title="Permalink to this headline"></a></h3>
+<p>This configuration can be used to scan and manipulate I2C devices.
+You can scan for all I2C devices using the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev 0x00 0x7f
 </pre></div>
 </div>
 </section>
@@ -366,6 +442,12 @@ enabling both the TX and the RX for those peripherals.</p>
 </pre></div>
 </div>
 <p>The corresponding output should show related debug information.</p>
+</section>
+<section id="mcuboot-nsh">
+<h3>mcuboot_nsh<a class="headerlink" href="#mcuboot-nsh" title="Permalink to this headline"></a></h3>
+<p>Similar configuration as nsh, except that it enables booting from
+MCUboot and the experimental features configuration.
+You can find more information on the <a class="reference external" href="https://github.com/apache/nuttx-apps/blob/master/examples/mcuboot/swap_test/README.md">example’s documentation</a>.</p>
 </section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
@@ -423,7 +505,7 @@ works on “full-duplex” mode. The <cite>SCLK</cite> and <cite>LRCK</cite> sig
 internally and the TX module is set-up as slave and the RX as master.</p>
 </div>
 <p><strong>nxlooper</strong></p>
-<p>The <cite>nxlooper</cite> application captures data from the audio device with receiving
+<p>The <code class="docutils literal notranslate"><span class="pre">nxlooper</span></code> application captures data from the audio device with receiving
 capabilities and forwards the audio data frame to the audio device with
 transmitting capabilities.</p>
 <p>After successfully built and flashed, run on the boards’s terminal:</p>
@@ -433,13 +515,54 @@ nxlooper&gt; loopback
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><cite>loopback</cite> command default arguments for the channel configuration,
+<p><code class="docutils literal notranslate"><span class="pre">loopback</span></code> command default arguments for the channel configuration,
 the data width and the sample rate are, respectively, 2 channels,
 16 bits/sample and 48KHz. These arguments can be supplied to select
 different audio formats, for instance:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nxlooper&gt; loopback 2 8 44100
 </pre></div>
 </div>
+</div>
+</section>
+<section id="oneshot">
+<h3>oneshot<a class="headerlink" href="#oneshot" title="Permalink to this headline"></a></h3>
+<p>This config demonstrate the use of oneshot timers present on the ESP32-S2.
+To test it, just run the <code class="docutils literal notranslate"><span class="pre">oneshot</span></code> example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; oneshot
+Opening /dev/oneshot
+Maximum delay is 4294967295999999
+Starting oneshot timer with delay 2000000 microseconds
+Waiting...
+Finished
+</pre></div>
+</div>
+</section>
+<section id="ostest">
+<h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this headline"></a></h3>
+<p>This is the NuttX test at apps/testing/ostest that is run against all new
+architecture ports to assure a correct implementation of the OS.</p>
+</section>
+<section id="pwm">
+<h3>pwm<a class="headerlink" href="#pwm" title="Permalink to this headline"></a></h3>
+<p>This configuration demonstrates the use of PWM through a LED connected to GPIO2.
+To test it, just execute the <code class="docutils literal notranslate"><span class="pre">pwm</span></code> application:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; pwm
+pwm_main: starting output with frequency: 10000 duty: 00008000
+pwm_main: stopping output
+</pre></div>
+</div>
+</section>
+<section id="random">
+<h3>random<a class="headerlink" href="#random" title="Permalink to this headline"></a></h3>
+<p>This configuration shows the use of the ESP32-S2’s True Random Number Generator with
+entropy sourced from Wi-Fi and Bluetooth noise.
+To test it, just run <code class="docutils literal notranslate"><span class="pre">rand</span></code> to get 32 randomly generated bytes:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; rand
+Reading 8 random numbers
+Random values (0x3ffe0b00):
+0000  98 b9 66 a2 a2 c0 a2 ae 09 70 93 d1 b5 91 86 c8  ..f......p......
+0010  8f 0e 0b 04 29 64 21 72 01 92 7c a2 27 60 6f 90  ....)d!r..|.&#39;`o.
+</pre></div>
 </div>
 </section>
 <section id="timer">
