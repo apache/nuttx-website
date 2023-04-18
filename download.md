@@ -66,7 +66,7 @@ download has completed OK.
 For fast downloads, current source distributions are hosted on mirror servers.
 
 For security, hash and signature files are always hosted at
-[Apache](https://downloads.apache.org/incubator/nuttx/).
+[Apache](https://downloads.apache.org/nuttx/).
 {% else %}
 <div class="alert alert-warning">
 No official Apache releases have been made yet!
