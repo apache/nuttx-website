@@ -355,11 +355,39 @@ is a WS2812 RGB LED (U21) addressable LED and is driven by GPIO45.</p>
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this headline"></a></h2>
 <p>All of the configurations presented below can be tested by running the following commands:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh esp32s2-kaluga-1:&lt;config_name&gt;
-$ make flash ESPTOOL_PORT=/dev/ttyUSB0 -j
+$ make flash ESPTOOL_PORT=/dev/ttyUSB1 -j
 </pre></div>
 </div>
 <p>Where &lt;config_name&gt; is the name of board configuration you want to use, i.e.: nsh, buttons, wifi…
 Then use a serial console terminal like <code class="docutils literal notranslate"><span class="pre">picocom</span></code> configured to 115200 8N1.</p>
+<section id="audio">
+<h3>audio<a class="headerlink" href="#audio" title="Permalink to this headline"></a></h3>
+<p>This configuration uses the I2S peripheral and the ES8311 audio
+codec to play an audio file. The easiest way of playing an uncompressed file
+is embedding into the firmware. This configuration selects
+<a class="reference external" href="https://github.com/apache/nuttx-apps/tree/master/examples/romfs">romfs example</a>
+to allow that.</p>
+<p><strong>ROMFS example</strong></p>
+<p>Prepare and build the <code class="docutils literal notranslate"><span class="pre">audio</span></code> defconfig:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make -j distclean &amp;&amp; ./tools/configure.sh esp32s2-kaluga-1:audio &amp;&amp; make
+</pre></div>
+</div>
+<p>This will create a temporary folder in <code class="docutils literal notranslate"><span class="pre">apps/examples/romfs/testdir</span></code>. Move
+a PCM-encoded (<code class="docutils literal notranslate"><span class="pre">.wav</span></code>) audio file with 16 or 24 bits/sample (sampled at 16~48kHz)
+to this folder.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can use <code class="xref download docutils literal notranslate"><span class="pre">this</span> <span class="pre">440</span> <span class="pre">Hz</span> <span class="pre">sinusoidal</span> <span class="pre">tone</span></code>.
+The audio file should be located at <code class="docutils literal notranslate"><span class="pre">apps/examples/romfs/testdir/tone.wav</span></code></p>
+</div>
+<p>Build the project again and flash it (make sure not to clean it, just build)</p>
+<p>After successfully built and flashed, load the romfs and play it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; romfs
+nsh&gt; nxplayer
+nxplayer&gt; play /usr/share/local/tone.wav
+</pre></div>
+</div>
+</section>
 <section id="buttons">
 <h3>buttons<a class="headerlink" href="#buttons" title="Permalink to this headline"></a></h3>
 <p>This configuration shows the use of the buttons subsystem. It can be used by executing
@@ -385,6 +413,14 @@ Sample = 0
 </pre></div>
 </div>
 </section>
+<section id="i2c">
+<h3>i2c<a class="headerlink" href="#i2c" title="Permalink to this headline"></a></h3>
+<p>This configuration can be used to scan and manipulate I2C devices.
+You can scan for all I2C devices using the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev 0x00 0x7f
+</pre></div>
+</div>
+</section>
 <section id="lvgl-ili9341">
 <h3>lvgl_ili9341<a class="headerlink" href="#lvgl-ili9341" title="Permalink to this headline"></a></h3>
 <p>This is a demonstration of the LVGL graphics library running on the NuttX LCD
@@ -393,8 +429,8 @@ driver with the ILI9341 display. You can find LVGL here:</p>
 https://github.com/lvgl/lvgl
 </pre></div>
 </div>
-<p>This configuration uses the LVGL demonstration at <cite>apps/examples/lvgldemo</cite> and
-can be executed by running the <cite>lvgldemo</cite> application.</p>
+<p>This configuration uses the LVGL demonstration at <code class="docutils literal notranslate"><span class="pre">apps/examples/lvgldemo</span></code> and
+can be executed by running the <code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code> application.</p>
 </section>
 <section id="lvgl-st7789">
 <h3>lvgl_st7789<a class="headerlink" href="#lvgl-st7789" title="Permalink to this headline"></a></h3>
@@ -404,13 +440,34 @@ driver with the ST7799 display. You can find LVGL here:</p>
 https://github.com/lvgl/lvgl
 </pre></div>
 </div>
-<p>This configuration uses the LVGL demonstration at <cite>apps/examples/lvgldemo</cite> and
-can be executed by running the <cite>lvgldemo</cite> application.</p>
+<p>This configuration uses the LVGL demonstration at <code class="docutils literal notranslate"><span class="pre">apps/examples/lvgldemo</span></code> and
+can be executed by running the <code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code> application.</p>
 </section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this headline"></a></h3>
 <p>Basic NuttShell configuration (console enabled in UART0, exposed via
 USB connection by means of CP2102 converter, at 115200 bps).</p>
+</section>
+<section id="nxlooper">
+<h3>nxlooper<a class="headerlink" href="#nxlooper" title="Permalink to this headline"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">nxlooper</span></code> application captures data from the audio device with receiving
+capabilities and forwards the audio data frame to the audio device with transmitting
+capabilities.</p>
+<p>After successfully built and flashed, run on the boards’ terminal:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; nxlooper
+nxlooper&gt; loopback
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">loopback</span></code> command default arguments for the channel configuration,
+the data width and the sample rate are, respectively, 2 channels,
+16 bits/sample and 48KHz. These arguments can be supplied to select
+different audio formats, for instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nxlooper&gt; loopback 2 8 44100
+</pre></div>
+</div>
+</div>
 </section>
 </section>
 </section>
