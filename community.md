@@ -40,9 +40,10 @@ You can:
 
 Visit the [Contributing] page for more information.
 
+
 ### Mailing list
 
-Get help using {{ site.data.project.short_name }} or contribute to the project on our mailing lists:
+Get help using {{ site.data.project.short_name }} or contribute to the project on our mailing lists. This is our preferred communication channel and all important discussions take place here.
 
 {% if site.data.project.user_list %}
 * [site.data.project.user_list](mailto:{{ site.data.project.user_list }}) is for usage questions, help, and announcements. [subscribe](mailto:{{ site.data.project.user_list_subscribe }}?subject=send this email to subscribe),     [unsubscribe](mailto:{{ site.data.project.dev_list_unsubscribe }}?subject=send this email to unsubscribe), [archives]({{ site.data.project.user_list_archive_mailarchive }})
@@ -51,9 +52,16 @@ Get help using {{ site.data.project.short_name }} or contribute to the project o
 * [{{ site.data.project.commits_list }}](mailto:{{ site.data.project.commits_list }}) is for commit messages and patches to {{ site.data.project.short_name }}. [subscribe](mailto:{{ site.data.project.commits_list_subscribe }}?subject=send this email to subscribe), [unsubscribe](mailto:{{ site.data.project.commits_list_unsubscribe }}?subject=send this email to unsubscribe), [archives]({{ site.data.project.commits_list_archive_mailarchive }})
 
 
+### Social Media
+
+The mailing list and project website is our central hub of information, but there are several social media channels where you can find interesting videos, updates, DIY projects that may help you work with NuttX RTOS.
+
+* YouTube: https://www.youtube.com/@nuttxchannel.
+* Hackster: https://www.hackster.io/nuttx.
+* LinkedIn: https://www.linkedin.com/company/nuttx , https://www.linkedin.com/groups/12002792.
+
+
 ### Issue tracker
-
-
 
 #### Bug Reports
 
@@ -65,11 +73,11 @@ Before submitting an issue, please:
 * Search the mailing list [archives]({{ site.data.project.dev_list_archive_mailarchive }}) to verify there is no existing issue reporting the bug you've found.
 * Consider tracking down the bug yourself in the NuttX's source and submitting a patch along with your bug report. This is a great time saver for the NuttX developers and helps ensure the bug will be fixed quickly.
 
-
-
 #### Feature Requests
 
 Enhancement requests for new features are also welcome. The more concrete and rational the request is, the greater the chance it will be incorporated into future releases.
+
+Please note that all important changes must be first discussed on our mailing list!
 
 
 ### Source Code
