@@ -56,9 +56,9 @@ Get help using {{ site.data.project.short_name }} or contribute to the project o
 
 The mailing list and project website is our central hub of information, but there are several social media channels where you can find interesting videos, updates, DIY projects that may help you work with NuttX RTOS.
 
-* YouTube: https://www.youtube.com/@nuttxchannel.
-* Hackster: https://www.hackster.io/nuttx.
-* LinkedIn: https://www.linkedin.com/company/nuttx , https://www.linkedin.com/groups/12002792.
+* YouTube: [https://www.youtube.com/@nuttxchannel]({{ site.data.project.socialmedia_youtube }}).
+* Hackster: [https://www.hackster.io/nuttx]({{ site.data.project.socialmedia_hackster }}).
+* LinkedIn: [https://www.linkedin.com/company/nuttx]({{ site.data.project.socialmedia_linkedin_company }}) , [https://www.linkedin.com/groups/12002792]({{ site.data.project.socialmedia_linkedin_group }}).
 
 
 ### Issue tracker
