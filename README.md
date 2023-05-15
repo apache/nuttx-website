@@ -25,9 +25,18 @@ Before opening a pull request, you can preview your contributions by
 running from within the directory:
 
 ```
-1. bundle exec jekyll serve
-2. Open [http://localhost:4000](http://localhost:4000)
+export GEM_HOME=$HOME/.gem # Adjust this path as you want
+export PATH=$PATH:$GEM_HOME/bin
+bundle exec jekyll serve
+Open [http://localhost:4000](http://localhost:4000)
 ```
+
+Note: The Gemfile.lock may contain some platform specific pins
+you may want to regenerate this by deleting `Gemfile.lock`
+and running `bundle update`.  This is currently locked
+for x86_64-linux, darwin, and freebsd by using the
+`bundle lock --add-platform foo` command.
+
 
 ## Pushing to site
 
