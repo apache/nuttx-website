@@ -133,6 +133,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#standard-string-operations">Standard String Operations</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#pipes-and-fifos">Pipes and FIFOs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#mmap-and-execute-in-place-xip"><code class="docutils literal notranslate"><span class="pre">mmap()</span></code> and eXecute In Place (XIP)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#fdsan">Fdsan</a></li>
 </ul>
 </li>
 </ul>
@@ -847,6 +848,85 @@ are attempted.</p></li>
 not support memory mapping.</p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fdsan">
+<h3>Fdsan<a class="headerlink" href="#fdsan" title="Permalink to this headline"></a></h3>
+<p>FD (file descriptor) is widely used in system software development,
+and almost all implementations of posix os (including nuttx) use FD as an index.
+the value of fd needs to be allocated starting from the minimum available value of 3, and each process has a copy,
+so the same fd value is very easy to reuse in the program.</p>
+<p>In multi threaded or multi process environments without address isolation,
+If the ownership, global variables, and competition relationships of fd are not properly handled,
+there may be issues with fd duplication or accidental closure.
+Further leading to the following issues, which are difficult to troubleshoot.</p>
+<ol class="arabic simple">
+<li><p>Security vulnerability: the fd we wrote is not the expected fd and will be accessed by hackers to obtain data</p></li>
+<li><p>Program exceptions or crashes: write or read fd failures, and program logic errors</p></li>
+<li><p>The structured file XML or database is damaged: the data format written to the database is not the expected format.</p></li>
+</ol>
+<p>The implementation principle of fdsan is based on the implementation of Android
+<a class="reference external" href="https://android.googlesource.com/platform/bionic/+/master/docs/fdsan.md">https://android.googlesource.com/platform/bionic/+/master/docs/fdsan.md</a></p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.android_fdsan_create_owner_tag">
+<span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">android_fdsan_create_owner_tag</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">android_fdsan_owner_type</span></span><span class="w"> </span><span class="n"><span class="pre">type</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">tag</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.android_fdsan_create_owner_tag" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Create an owner tag with the specified type and least significant 56 bits of tag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> – <p>See the ANDROID_* definitions in include/android/fdsan.h.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_FILE</span></code> - FILE</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_DIR</span></code> - DIR</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_UNIQUE_FD</span></code> - android::base::unique_fd</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_SQLITE</span></code> - sqlite-owned file descriptors</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_FILEINPUTSTREAM</span></code> - java.io.FileInputStream</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_FILEOUTPUTSTREAM</span></code> - java.io.FileOutputStream</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_RANDOMACCESSFILE</span></code> - java.io.RandomAccessFile</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_PARCELFILEDESCRIPTOR</span></code> - android.os.ParcelFileDescriptor</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_ART_FDFILE</span></code> - ART FdFile</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_DATAGRAMSOCKETIMPL</span></code> - java.net.DatagramSocketImpl</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_SOCKETIMPL</span></code> - java.net.SocketImpl</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ANDROID_FDSAN_OWNER_TYPE_ZIPARCHIVE</span></code> - libziparchive’s ZipArchive</p></li>
+</ul>
+</p></li>
+<li><p><strong>tag</strong> – least significant 56 bits of tag. Typically, it is a pointer to the object/structure where fd is located</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.android_fdsan_exchange_owner_tag">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">android_fdsan_exchange_owner_tag</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">fd</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">expected_tag</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">new_tag</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.android_fdsan_exchange_owner_tag" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Exchange a file descriptor’s tag. Logs and aborts if the fd’s tag does not match expected_tag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fd</strong> – The fd we want to protect</p></li>
+<li><p><strong>expected_tag</strong> – The tag corresponding to the current fd</p></li>
+<li><p><strong>new_tag</strong> – A new tag for fd binding</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.android_fdsan_close_with_tag">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">android_fdsan_close_with_tag</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">fd</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">tag</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.android_fdsan_close_with_tag" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Close a file descriptor with a tag, and resets the tag to 0. Logs and aborts if the tag is incorrect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fd</strong> – The fd we want to protect.</p></li>
+<li><p><strong>tag</strong> – The tag corresponding to the current fd.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Consistent with the return value of close.</p>
 </dd>
 </dl>
 </dd></dl>
