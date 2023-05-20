@@ -39,7 +39,9 @@
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Nested Interrupts" href="nestedinterrupts.html" />
+    <link rel="prev" title="Custom Apps How-to" href="customapps.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -95,7 +97,7 @@
 
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
@@ -106,7 +108,36 @@
 <li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qemugdb.html">How to debug NuttX using QEMU and GDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasktrace.html">Task Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">High Performance, Zero Latency Interrupts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#generic-interrupt-handling">Generic Interrupt Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bypassing-the-generic-interrupt-handling">Bypassing the Generic Interrupt Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-back-into-the-game">Getting Back into the Game</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nested-interrupt-handling">Nested Interrupt Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cortex-m3-4-implementation">Cortex-M3/4 Implementation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#disabling-the-high-priority-interrupt">Disabling the High Priority Interrupt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-high-priority-interrupts">Configuring High Priority Interrupts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-code">Example Code</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 </ul>
 
@@ -124,6 +155,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Guides</a> &raquo;</li>
       <li>High Performance, Zero Latency Interrupts</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/zerolatencyinterrupts.rst.txt" rel="nofollow"> View page source</a>
@@ -141,17 +173,24 @@
 <p>NuttX includes a generic interrupt handling subsystem that makes it
 convenient to deal with interrupts using only IRQ numbers. In order to
 integrate with this generic interrupt handling system, the platform
-specific code is expected to collect all thread state into an container,
+specific code is expected to collect all thread state into a container,
 <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">xcptcontext</span></code>. This container represents the full state of the
 thread and can be saved, restored, and exchanged as a <em>unit of thread</em>.</p>
 <p>While this state saving has many useful benefits, it does require
 processing time. It was reported to me that this state saving required
 about two microseconds on an STM32F4Discovery board. That added
-interrupt latency might be an issue in some circumstance.</p>
-<p><strong>Terminology:</strong> The concepts discussed in this Wiki are not unique to
-NuttX. Other RTOS have similar concepts but will use different
+interrupt latency might be an issue in some circumstances.</p>
+<p>In addition, critical sections that are required in various places
+throughout the RTOS can pause interrupt handling momentarily. This
+increases the latency for those interrupts which become pending during a
+critical section. As this is likely to occur for some instances of an
+interrupt and not others, the interrupt latency varies from time to time
+(experiences <em>jitter</em>). Like the added latency discussed above, that
+jitter might be an issue in some circumstances.</p>
+<p><strong>Terminology:</strong> The concepts discussed in this guide are not unique to
+NuttX. Other RTOSes have similar concepts but will use different
 terminology. The <a class="reference external" href="https://www.embedded.com/design/operating-systems/4461604/Interrupts-in-the-Nucleus-SE-RTOS">Nucleus</a>
-RTOS, for example use the terms <em>Native</em> and <em>Managed</em> interrupts.</p>
+RTOS, for example, uses the terms <em>Native</em> and <em>Managed</em> interrupts.</p>
 </section>
 <section id="bypassing-the-generic-interrupt-handling">
 <h2>Bypassing the Generic Interrupt Handling<a class="headerlink" href="#bypassing-the-generic-interrupt-handling" title="Permalink to this headline"></a></h2>
@@ -178,43 +217,37 @@ and detach custom vector handlers by writing directly to the vector
 table. The ARM Cortex-M port provides interfaces to support this mode
 when the <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_RAMVECTORS</span></code> option is enabled.</p>
 <p>So what is the downside? There are two:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Your custom interrupt handler will not have collected its state
-into the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">xcptcontext</span></code> container. Therefore, it cannot
-communicate with operating system. Your custom interrupt handler
-has been taken “out of the game” and can no longer work with the
-system.</p></li>
-<li><p>If your custom interrupt is truly going to be <em>high performance</em>
-then you will also have to support nested interrupts! The custom
-interrupt must have a high priority and must be able interrupt the
-generic interrupt handling logic. Otherwise, it will be
-occasionally delayed when there is a collision between your custom
-interrupt and other, lower priority interrupts.</p></li>
+<ul class="simple">
+<li><p>Your custom interrupt handler will not have collected its state into
+the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">xcptcontext</span></code> container. Therefore, it cannot communicate
+with operating system. Your custom interrupt handler has been taken
+“out of the game” and can no longer work with the system.</p></li>
+<li><p>If your custom interrupt is truly going to be <em>high performance</em> then
+you will also have to support nested interrupts! The custom interrupt
+must have a high priority and must be able interrupt the generic
+interrupt handling logic. Otherwise, it will be occasionally delayed
+when there is a collision between your custom interrupt and other,
+lower priority interrupts.</p></li>
 </ul>
-</div></blockquote>
 </section>
 <section id="getting-back-into-the-game">
 <h2>Getting Back into the Game<a class="headerlink" href="#getting-back-into-the-game" title="Permalink to this headline"></a></h2>
-<p>As mentioned, the custom interrupt handler can not use most of the
-service of the OS since it has not created a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">xcptcontext</span></code>
+<p>As mentioned, the custom interrupt handler cannot use most of the
+services of the OS since it has not created a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">xcptcontext</span></code>
 container. So it needs a mechanism to “get back into the game” when it
 needs to interact with the operating system to, for example, post a
 semaphore, signal a thread, or send a message.</p>
 <p>The ARM Cortex-M family supports a special way to do this using the
 <em>PendSV</em> interrupt:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>The custom logic would connect with the <em>PendSV</em> interrupt using
-the standard <code class="docutils literal notranslate"><span class="pre">irq_attach()</span></code> interface.</p></li>
+<ul class="simple">
+<li><p>The custom logic would connect with the <em>PendSV</em> interrupt using the
+standard <code class="docutils literal notranslate"><span class="pre">irq_attach()</span></code> interface.</p></li>
 <li><p>In the custom interrupt handler, it would schedule the <em>PendSV</em>
 interrupt when it needs to communicate with the OS.</p></li>
-<li><p>The <em>PendSV</em> interrupt is dispatched through generic interrupt
-system so when the attached <em>PendSV</em> interrupt is handled, it
-will be in a context where it can perform any necessary OS
-interactions.</p></li>
+<li><p>The <em>PendSV</em> interrupt is dispatched through the generic interrupt
+system so when the attached <em>PendSV</em> interrupt is handled, it will be
+in a context where it can perform any necessary OS interactions.</p></li>
 </ul>
-</div></blockquote>
 <p>With the ARMv7_M architecture, the <em>PendSV</em> interrupt can be generated
 with:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">up_trigger_irq</span><span class="p">(</span><span class="n">NVIC_IRQ_PENDSV</span><span class="p">);</span><span class="w"></span>
@@ -231,35 +264,31 @@ scope of this Wiki page.</p>
 <section id="nested-interrupt-handling">
 <h2>Nested Interrupt Handling<a class="headerlink" href="#nested-interrupt-handling" title="Permalink to this headline"></a></h2>
 <p>Some general notes about nested interrupt handling are provided in
-another <a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Nested+Interrupts">Wiki page</a>.
-In this case, handling the nested custom interrupt is simpler because
-the generic interrupt handler is not re-entered. Rather, the generic
-interrupt handler must simply be made to co-exist with the custom
-interrupt interrupt handler.</p>
+<span class="xref std std-doc">&lt;nestedinterrupts.rst&gt;</span>. In this case, handling the nested custom
+interrupt is simpler because the generic interrupt handler is not
+re-entered. Rather, the generic interrupt handler must simply be made to
+co-exist with the custom interrupt interrupt handler.</p>
 <p>Modifications may be required to the generic interrupt handling logic
 to accomplish. A few points need to be made here:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li><p>The MCU should support interrupt prioritization so that the custom
 interrupt can be scheduled with a higher priority.</p></li>
 <li><p>The generic interrupt handlers currently disable interrupts during
-interrupts. Instead, they must be able to keep the custom
-interrupt enabled throughout interrupt process but still prevent
-re-entrancy by other standard interrupts (This can be done by
-setting an interrupt base priority level in the Cortex-M family).</p></li>
-<li><p>The custom interrupt handler can now interrupt the generic
-interrupt handler at any place. Is the logic safe in all cases to
-be interrupted? Sometimes interrupt handlers place the MCU in
-momentarily perverse states while registers are being
-manipulated. Make sure that it is safe to take interrupts at any
-time (or else keep the interrupts disabled in the critical
-times).</p></li>
-<li><p>Will the custom interrupt handler have all of the resources it
-needs in place when it occurs? Will it have a valid stack
-pointer? (In the Cortex-M implementation, for example, the MSP
-may not be valid when the custom interrupt handler is entered).</p></li>
+interrupts. Instead, they must be able to keep the custom interrupt
+enabled throughout interrupt process but still prevent re-entrancy by
+other standard interrupts (This can be done by setting an interrupt
+base priority level in the Cortex-M family).</p></li>
+<li><p>The custom interrupt handler can now interrupt the generic interrupt
+handler at any place. Is the logic safe in all cases to be
+interrupted? Sometimes interrupt handlers place the MCU in momentarily
+perverse states while registers are being manipulated. Make sure that
+it is safe to take interrupts at any time (or else keep the interrupts
+disabled in the critical times).</p></li>
+<li><p>Will the custom interrupt handler have all of the resources it needs
+in place when it occurs? Will it have a valid stack pointer? (In the
+Cortex-M implementation, for example, the MSP may not be valid when
+the custom interrupt handler is entered).</p></li>
 </ul>
-</div></blockquote>
 <p>Some of these issues are complex and so you should expect some
 complexity in getting the nested interrupt handler to work.</p>
 </section>
@@ -310,17 +339,14 @@ priority interrupts.</p>
 </section>
 <section id="dependencies">
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline"></a></h3>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_IRQPRIO</span></code>. Support for prioritized interrupt
 support must be enabled.</p></li>
 <li><p>Floating Point Registers. If used with a Cortex-M4 that supports
-hardware floating point, you cannot use hardware floating point
-in the high priority interrupt handler UNLESS you use the common
-vector logic that supports saving of floating point registers on
-all interrupts.</p></li>
+hardware floating point, you cannot use hardware floating point in the
+high priority interrupt handler UNLESS you use the common vector logic
+that supports saving of floating point registers on all interrupts.</p></li>
 </ul>
-</div></blockquote>
 </section>
 <section id="configuring-high-priority-interrupts">
 <h3>Configuring High Priority Interrupts<a class="headerlink" href="#configuring-high-priority-interrupts" title="Permalink to this headline"></a></h3>
@@ -329,17 +355,14 @@ things:</p>
 <p>First, You need to change the address in the vector table so that the
 high priority interrupt vectors to your special C interrupt handler.
 There are two ways to do this:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>If you select <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_RAMVECTORS</span></code>, then vectors will be
-kept in RAM and the system will support the interface: <code class="docutils literal notranslate"><span class="pre">int</span>
-<span class="pre">up_ramvec_attach(int</span> <span class="pre">irq,</span> <span class="pre">up_vector_t</span> <span class="pre">vector)</span></code>. That interface
-can be used to attach your C interrupt handler to the vector at
-run time.</p></li>
-<li><p>Alternatively, you could keep your vectors in FLASH but in order
-to this, you would have to develop your own custom vector table.</p></li>
+<ul class="simple">
+<li><p>If you select <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_RAMVECTORS</span></code>, then vectors will be kept in
+RAM and the system will support the interface: <code class="docutils literal notranslate"><span class="pre">int</span>
+<span class="pre">up_ramvec_attach(int</span> <span class="pre">irq,</span> <span class="pre">up_vector_t</span> <span class="pre">vector)</span></code>. That interface can be
+used to attach your C interrupt handler to the vector at run time.</p></li>
+<li><p>Alternatively, you could keep your vectors in FLASH but in order to
+this, you would have to develop your own custom vector table.</p></li>
 </ul>
-</div></blockquote>
 <p>Second, you need to set the priority of your interrupt to <em>NVIC</em> to
 <code class="docutils literal notranslate"><span class="pre">NVIC_SYSH_HIGH_PRIORITY</span></code> using the standard interface:
 <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">up_prioritize_irq(int</span> <span class="pre">irq,</span> <span class="pre">int</span> <span class="pre">priority);</span></code></p>
@@ -347,16 +370,13 @@ to this, you would have to develop your own custom vector table.</p></li>
 <section id="example-code">
 <h3>Example Code<a class="headerlink" href="#example-code" title="Permalink to this headline"></a></h3>
 <p>You can find an example that tests the high priority, nested interrupts in the NuttX source:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>nuttx/boards/arm/stm32/viewtool-stm32f107/README.txt. Description
-of the configuration</p></li>
-<li><p>nuttx/boards/arm/stm32/viewtool-stm32f107/highpri. Test
-configuration</p></li>
+<ul class="simple">
+<li><p>nuttx/boards/arm/stm32/viewtool-stm32f107/README.txt. Description of
+the configuration</p></li>
+<li><p>nuttx/boards/arm/stm32/viewtool-stm32f107/highpri. Test configuration</p></li>
 <li><p>nuttx/boards/arm/stm32/viewtool-stm32f107/src/stm32_highpri. Test
 driver.</p></li>
 </ul>
-</div></blockquote>
 </section>
 </section>
 </section>
@@ -364,7 +384,10 @@ driver.</p></li>
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="customapps.html" class="btn btn-neutral float-left" title="Custom Apps How-to" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nestedinterrupts.html" class="btn btn-neutral float-right" title="Nested Interrupts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
