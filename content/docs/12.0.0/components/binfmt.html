@@ -20,7 +20,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Binary Loader &mdash; NuttX latest documentation</title>
@@ -33,10 +33,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,9 +54,6 @@
     <a href="../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +87,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -155,9 +153,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">OS Components</a> &raquo;</li>
-      <li>Binary Loader</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">OS Components</a></li>
+      <li class="breadcrumb-item active">Binary Loader</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/components/binfmt.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -168,7 +166,7 @@
            <div itemprop="articleBody">
              
   <section id="binary-loader">
-<span id="binfmt"></span><h1>Binary Loader<a class="headerlink" href="#binary-loader" title="Permalink to this headline"></a></h1>
+<span id="binfmt"></span><h1>Binary Loader<a class="headerlink" href="#binary-loader" title="Permalink to this heading"></a></h1>
 <p>The purpose of a <em>binary loader</em> is to load and
 execute modules in various <em>binary formats</em> that reside in a file
 system. Loading refers instantiating the binary module in some fashion,
@@ -211,26 +209,26 @@ However, the NuttX binary loader is an independent development and
 shares nothing with the Linux binary loader other the same name and the
 same basic functionality.</p>
 <section id="binary-loader-interface">
-<h2>Binary Loader Interface<a class="headerlink" href="#binary-loader-interface" title="Permalink to this headline"></a></h2>
+<h2>Binary Loader Interface<a class="headerlink" href="#binary-loader-interface" title="Permalink to this heading"></a></h2>
 <section id="header-files">
-<h3>Header Files<a class="headerlink" href="#header-files" title="Permalink to this headline"></a></h3>
+<h3>Header Files<a class="headerlink" href="#header-files" title="Permalink to this heading"></a></h3>
 <p>The interface to the binary loader is described in the header file
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/binfmt/binfmt.h</span></code>.
 A brief summary of the data structurs and interfaces prototyped in that
 header file are listed below.</p>
 </section>
 <section id="data-structures">
-<h3>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this headline"></a></h3>
+<h3>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading"></a></h3>
 <p>When a binary format registers with the binary loader, it provides a
 pointer to a write-able instance of <a class="reference internal" href="#c.binfmt_s" title="binfmt_s"><code class="xref c c-struct docutils literal notranslate"><span class="pre">binfmt_s</span></code></a>.</p>
 <dl class="c struct">
 <dt class="sig sig-object c" id="c.binfmt_s">
 <span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">binfmt_s</span></span></span><a class="headerlink" href="#c.binfmt_s" title="Permalink to this definition"></a><br /></dt>
-<dd><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">binfmt_s</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">binfmt_s</span><span class="w"> </span><span class="o">*</span><span class="n">next</span><span class="p">;</span><span class="w">             </span><span class="cm">/* Supports a singly-linked list */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">load</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">binary_s</span><span class="w"> </span><span class="o">*</span><span class="n">bin</span><span class="p">);</span><span class="w"> </span><span class="cm">/* Verify and load binary into memory */</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<dd><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">binfmt_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">binfmt_s</span><span class="w"> </span><span class="o">*</span><span class="n">next</span><span class="p">;</span><span class="w">             </span><span class="cm">/* Supports a singly-linked list */</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">load</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">binary_s</span><span class="w"> </span><span class="o">*</span><span class="n">bin</span><span class="p">);</span><span class="w"> </span><span class="cm">/* Verify and load binary into memory */</span>
+<span class="p">};</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">load</span></code> method is used to load the binary format into memory. It
@@ -246,76 +244,76 @@ loaded.</p>
 object to be loaded, and if successfully loaded, (2) to provide
 information about where and how the binary object was loaded. That
 structure is shown below:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span><span class="p">;</span><span class="w"></span>
-<span class="k">struct</span><span class="w"> </span><span class="nc">binary_s</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="cm">/* Information provided to the loader to load and bind a module */</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span><span class="p">;</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">binary_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="cm">/* Information provided to the loader to load and bind a module */</span>
 
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">;</span><span class="w">            </span><span class="cm">/* Full path to the binary to be loaded */</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">;</span><span class="w">               </span><span class="cm">/* Argument list */</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span><span class="w"> </span><span class="o">*</span><span class="n">exports</span><span class="p">;</span><span class="w">  </span><span class="cm">/* Table of exported symbols */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">nexports</span><span class="p">;</span><span class="w">                        </span><span class="cm">/* The number of symbols in exports[] */</span><span class="w"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">;</span><span class="w">            </span><span class="cm">/* Full path to the binary to be loaded */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">;</span><span class="w">               </span><span class="cm">/* Argument list */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span><span class="w"> </span><span class="o">*</span><span class="n">exports</span><span class="p">;</span><span class="w">  </span><span class="cm">/* Table of exported symbols */</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">nexports</span><span class="p">;</span><span class="w">                        </span><span class="cm">/* The number of symbols in exports[] */</span>
 
 <span class="w">  </span><span class="cm">/* Information provided from the loader (if successful) describing the</span>
 <span class="cm">   * resources used by the loaded module.</span>
-<span class="cm">   */</span><span class="w"></span>
+<span class="cm">   */</span>
 
-<span class="w">  </span><span class="n">main_t</span><span class="w"> </span><span class="n">entrypt</span><span class="p">;</span><span class="w">                      </span><span class="cm">/* Entry point into a program module */</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">mapped</span><span class="p">;</span><span class="w">                    </span><span class="cm">/* Memory-mapped, address space */</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">alloc</span><span class="p">[</span><span class="n">BINFMT_NALLOC</span><span class="p">];</span><span class="w">      </span><span class="cm">/* Allocated address spaces */</span><span class="w"></span>
+<span class="w">  </span><span class="n">main_t</span><span class="w"> </span><span class="n">entrypt</span><span class="p">;</span><span class="w">                      </span><span class="cm">/* Entry point into a program module */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">mapped</span><span class="p">;</span><span class="w">                    </span><span class="cm">/* Memory-mapped, address space */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">alloc</span><span class="p">[</span><span class="n">BINFMT_NALLOC</span><span class="p">];</span><span class="w">      </span><span class="cm">/* Allocated address spaces */</span>
 
-<span class="w">  </span><span class="cm">/* Constructors/destructors */</span><span class="w"></span>
+<span class="w">  </span><span class="cm">/* Constructors/destructors */</span>
 
 <span class="cp">#ifdef CONFIG_BINFMT_CONSTRUCTORS</span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="n">binfmt_ctor_t</span><span class="w"> </span><span class="o">*</span><span class="n">ctors</span><span class="p">;</span><span class="w">            </span><span class="cm">/* Pointer to a list of constructors */</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="n">binfmt_dtor_t</span><span class="w"> </span><span class="o">*</span><span class="n">dtors</span><span class="p">;</span><span class="w">            </span><span class="cm">/* Pointer to a list of destructors */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">nctors</span><span class="p">;</span><span class="w">                     </span><span class="cm">/* Number of constructors in the list */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">ndtors</span><span class="p">;</span><span class="w">                     </span><span class="cm">/* Number of destructors in the list */</span><span class="w"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="n">binfmt_ctor_t</span><span class="w"> </span><span class="o">*</span><span class="n">ctors</span><span class="p">;</span><span class="w">            </span><span class="cm">/* Pointer to a list of constructors */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="n">binfmt_dtor_t</span><span class="w"> </span><span class="o">*</span><span class="n">dtors</span><span class="p">;</span><span class="w">            </span><span class="cm">/* Pointer to a list of destructors */</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">nctors</span><span class="p">;</span><span class="w">                     </span><span class="cm">/* Number of constructors in the list */</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">ndtors</span><span class="p">;</span><span class="w">                     </span><span class="cm">/* Number of destructors in the list */</span>
 <span class="cp">#endif</span>
 
 <span class="w">  </span><span class="cm">/* Address environment.</span>
 <span class="cm">   *</span>
 <span class="cm">   * addrenv - This is the handle created by up_addrenv_create() that can be</span>
 <span class="cm">   *   used to manage the tasks address space.</span>
-<span class="cm">   */</span><span class="w"></span>
+<span class="cm">   */</span>
 
 <span class="cp">#ifdef CONFIG_ARCH_ADDRENV</span>
-<span class="w">  </span><span class="n">group_addrenv_t</span><span class="w"> </span><span class="n">addrenv</span><span class="p">;</span><span class="w">             </span><span class="cm">/* Task group address environment */</span><span class="w"></span>
+<span class="w">  </span><span class="n">group_addrenv_t</span><span class="w"> </span><span class="n">addrenv</span><span class="p">;</span><span class="w">             </span><span class="cm">/* Task group address environment */</span>
 <span class="cp">#endif</span>
 
-<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">mapsize</span><span class="p">;</span><span class="w">                      </span><span class="cm">/* Size of the mapped address region (needed for munmap) */</span><span class="w"></span>
+<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">mapsize</span><span class="p">;</span><span class="w">                      </span><span class="cm">/* Size of the mapped address region (needed for munmap) */</span>
 
 <span class="w">  </span><span class="cm">/* Start-up information that is provided by the loader, but may be modified</span>
 <span class="cm">   * by the caller between load_module() and exec_module() calls.</span>
-<span class="cm">   */</span><span class="w"></span>
+<span class="cm">   */</span>
 
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">priority</span><span class="p">;</span><span class="w">                    </span><span class="cm">/* Task execution priority */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stacksize</span><span class="p">;</span><span class="w">                    </span><span class="cm">/* Size of the stack in bytes (unallocated) */</span><span class="w"></span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">priority</span><span class="p">;</span><span class="w">                    </span><span class="cm">/* Task execution priority */</span>
+<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stacksize</span><span class="p">;</span><span class="w">                    </span><span class="cm">/* Size of the stack in bytes (unallocated) */</span>
 <span class="cp">#ifndef CONFIG_BUILD_KERNEL</span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">stackaddr</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Task stack address */</span><span class="w"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">stackaddr</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Task stack address */</span>
 <span class="cp">#endif</span>
-<span class="p">};</span><span class="w"></span>
+<span class="p">};</span>
 </pre></div>
 </div>
 <p>Where the types <code class="docutils literal notranslate"><span class="pre">binfmt_ctor_t</span></code> and <code class="docutils literal notranslate"><span class="pre">binfmt_dtor_t</span></code> define the type
 of one C++ constructor or destructor:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="nf">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">binfmt_ctor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span><span class="w"></span>
-<span class="k">typedef</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="nf">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">binfmt_dtor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="nf">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">binfmt_ctor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="nf">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">binfmt_dtor_t</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd></dl>
 
 </section>
 <section id="function-interfaces">
-<h3>Function Interfaces<a class="headerlink" href="#function-interfaces" title="Permalink to this headline"></a></h3>
+<h3>Function Interfaces<a class="headerlink" href="#function-interfaces" title="Permalink to this heading"></a></h3>
 <section id="binary-format-management">
-<h4>Binary format management<a class="headerlink" href="#binary-format-management" title="Permalink to this headline"></a></h4>
+<h4>Binary format management<a class="headerlink" href="#binary-format-management" title="Permalink to this heading"></a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.register_binfmt">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">register_binfmt</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.binfmt_s" title="binfmt_s"><span class="n"><span class="pre">binfmt_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">binfmt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.register_binfmt" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Register a loader for a binary format.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>This is a NuttX internal function so it follows the convention
 that 0 (OK) is returned on success and a negated errno is returned on
 failure.</p>
@@ -328,7 +326,7 @@ failure.</p>
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">unregister_binfmt</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.binfmt_s" title="binfmt_s"><span class="n"><span class="pre">binfmt_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">binfmt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.unregister_binfmt" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Register a loader for a binary format.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>This is a NuttX internal function so it follows the convention
 that 0 (OK) is returned on success and a negated errno is returned on
 failure.</p>
@@ -338,14 +336,14 @@ failure.</p>
 
 </section>
 <section id="basic-module-management">
-<h4>Basic module management<a class="headerlink" href="#basic-module-management" title="Permalink to this headline"></a></h4>
+<h4>Basic module management<a class="headerlink" href="#basic-module-management" title="Permalink to this heading"></a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.load_module">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_module</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.binary_s" title="binary_s"><span class="n"><span class="pre">binary_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bin</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.load_module" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Load a module into memory, bind it to an exported symbol take,
 and prep the module for execution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bin</strong> – The <code class="docutils literal notranslate"><span class="pre">filename</span></code> field will be used
 in order to locate the module to be loaded from the file system.
@@ -356,7 +354,7 @@ the <code class="docutils literal notranslate"><span class="pre">PATH</span></co
 file that is found at those absolute paths.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>This is a NuttX internal function so it follows the convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>)
 is returned on success and a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> is returned on failure.</p>
 </dd>
@@ -371,7 +369,7 @@ is returned on success and a negated <code class="docutils literal notranslate">
 <p>However, this function must be called after the module exist. How this is
 done is up to your logic. Perhaps you register it to be called by <a class="reference internal" href="../reference/user/03_task_control.html#c.on_exit" title="on_exit"><code class="xref c c-func docutils literal notranslate"><span class="pre">on_exit()</span></code></a>?</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>This is a NuttX internal function so it follows the convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>)
 is returned on success and a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> is returned on failure.</p>
 </dd>
@@ -383,7 +381,7 @@ is returned on success and a negated <code class="docutils literal notranslate">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">exec_module</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.binary_s" title="binary_s"><span class="n"><span class="pre">binary_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bin</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.exec_module" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Execute a module that has been loaded into memory by <a class="reference internal" href="#c.load_module" title="load_module"><code class="xref c c-func docutils literal notranslate"><span class="pre">load_module()</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>This is a NuttX internal function so it follows the convention that 0 (<code class="docutils literal notranslate"><span class="pre">OK</span></code>)
 is returned on success and a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> is returned on failure.</p>
 </dd>
@@ -397,7 +395,7 @@ is returned on success and a negated <code class="docutils literal notranslate">
 </div>
 </section>
 <section id="path-traversal-logic">
-<h4><code class="docutils literal notranslate"><span class="pre">PATH</span></code> traversal logic<a class="headerlink" href="#path-traversal-logic" title="Permalink to this headline"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">PATH</span></code> traversal logic<a class="headerlink" href="#path-traversal-logic" title="Permalink to this heading"></a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.envpath_init">
 <span class="n"><span class="pre">ENVPATH_HANDLE</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">envpath_init</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.envpath_init" title="Permalink to this definition"></a><br /></dt>
@@ -413,7 +411,7 @@ the directories of the <code class="docutils literal notranslate"><span class="p
 <a class="reference internal" href="#c.envpath_init" title="envpath_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">envpath_init()</span></code></a>.</p></li>
 </ol>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>On success, <a class="reference internal" href="#c.envpath_init" title="envpath_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">envpath_init()</span></code></a> return a non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>, opaque handle
 that may subsequently be used in calls to <a class="reference internal" href="#c.envpath_next" title="envpath_next"><code class="xref c c-func docutils literal notranslate"><span class="pre">envpath_next()</span></code></a> and
 <a class="reference internal" href="#c.envpath_release" title="envpath_release"><code class="xref c c-func docutils literal notranslate"><span class="pre">envpath_release()</span></code></a>. On error, a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> handle value will be returned.
@@ -429,13 +427,13 @@ associated with the <code class="docutils literal notranslate"><span class="pre"
 <dd><p>Traverse all possible values in the PATH variable in attempt to find the
 full path to an executable file when only a relative path is provided.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>handle</strong> – The handle value returned by <a class="reference internal" href="#c.envpath_init" title="envpath_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">envpath_init()</span></code></a>.</p></li>
 <li><p><strong>relpath</strong> – The relative path to the file to be found.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>On success, a non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> pointer to a null-terminated string is provided.
 This is the full path to a file that exists in the file system.
 This function will verify that the file exists (but will not verify that it is marked executable).</p>
@@ -464,7 +462,7 @@ or <a class="reference internal" href="#c.envpath_release" title="envpath_releas
 in undefined (i.e., not good) behavior.</p>
 <blockquote>
 <div><dl class="field-list simple">
-<dt class="field-odd">param handle</dt>
+<dt class="field-odd">param handle<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The handle value returned by <a class="reference internal" href="#c.envpath_init" title="envpath_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">envpath_init()</span></code></a>.</p>
 </dd>
 </dl>
@@ -473,7 +471,7 @@ in undefined (i.e., not good) behavior.</p>
 </section>
 </section>
 <section id="symbol-tables">
-<h2>Symbol Tables<a class="headerlink" href="#symbol-tables" title="Permalink to this headline"></a></h2>
+<h2>Symbol Tables<a class="headerlink" href="#symbol-tables" title="Permalink to this heading"></a></h2>
 <p><strong>Symbol Tables</strong>. Symbol tables are lists of name value mappings: The
 name is a string that identifies a symbol, and the value is an address
 in memory where the symbol of that name has been positioned. In most
@@ -490,23 +488,23 @@ toolchains the <code class="docutils literal notranslate"><span class="pre">CONF
 will cause a leading underscore to be ignored on <em>undefined</em> symbols
 during dynamic linking.</p>
 <section id="symbol-table-header-files">
-<h3>Symbol Table Header Files<a class="headerlink" href="#symbol-table-header-files" title="Permalink to this headline"></a></h3>
+<h3>Symbol Table Header Files<a class="headerlink" href="#symbol-table-header-files" title="Permalink to this heading"></a></h3>
 <p>The interface to the symbol table logic is described in the header file
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/binfmt/symtab.h</span></code>.
 A brief summary of the data structurs and interfaces prototyped in that
 header file are listed below.</p>
 </section>
 <section id="symbol-table-data-structures">
-<h3>Symbol Table Data Structures<a class="headerlink" href="#symbol-table-data-structures" title="Permalink to this headline"></a></h3>
+<h3>Symbol Table Data Structures<a class="headerlink" href="#symbol-table-data-structures" title="Permalink to this heading"></a></h3>
 <dl class="c struct">
 <dt class="sig sig-object c" id="c.symbtab_s">
 <span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">symbtab_s</span></span></span><a class="headerlink" href="#c.symbtab_s" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Describes one entry in the symbol table.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">sym_name</span><span class="p">;</span><span class="w">          </span><span class="cm">/* A pointer to the symbol name string */</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">sym_value</span><span class="p">;</span><span class="w">         </span><span class="cm">/* The value associated with the string */</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">sym_name</span><span class="p">;</span><span class="w">          </span><span class="cm">/* A pointer to the symbol name string */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">sym_value</span><span class="p">;</span><span class="w">         </span><span class="cm">/* The value associated with the string */</span>
+<span class="p">};</span>
 </pre></div>
 </div>
 <p>A symbol table is a fixed size array of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">symtab_s</span></code>. The
@@ -524,7 +522,7 @@ fixed size arrays completely defined at compilation or link time.</p></li>
 
 </section>
 <section id="symbol-table-function-interfaces">
-<h3>Symbol Table Function Interfaces<a class="headerlink" href="#symbol-table-function-interfaces" title="Permalink to this headline"></a></h3>
+<h3>Symbol Table Function Interfaces<a class="headerlink" href="#symbol-table-function-interfaces" title="Permalink to this heading"></a></h3>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.symtab_findbyname">
 <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">symtab_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">symtab_findbyname</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">symtab_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">symtab</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">name</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">nsyms</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.symtab_findbyname" title="Permalink to this definition"></a><br /></dt>
@@ -533,7 +531,7 @@ The implementation will be linear with respect to <code class="docutils literal 
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SYMTAB_ORDEREDBYNAME</span></code> is not selected, and logarithmic
 if it is.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A reference to the symbol table entry if an entry with
 the matching name is found; NULL is returned if the entry is not found.</p>
 </dd>
@@ -548,7 +546,7 @@ the matching name is found; NULL is returned if the entry is not found.</p>
 that table is not ordered with respect to symbol value and, hence,
 access time will be linear with respect to <code class="docutils literal notranslate"><span class="pre">nsyms</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A reference to the symbol table entry if an entry with the matching
 value is found; <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is returned if the entry is not found.</p>
 </dd>
@@ -558,7 +556,7 @@ value is found; <code class="docutils literal notranslate"><span class="pre">NUL
 </section>
 </section>
 <section id="configuration-variables">
-<h2>Configuration Variables<a class="headerlink" href="#configuration-variables" title="Permalink to this headline"></a></h2>
+<h2>Configuration Variables<a class="headerlink" href="#configuration-variables" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_DISABLE</span></code>: By default, support for loadable binary formats is built.

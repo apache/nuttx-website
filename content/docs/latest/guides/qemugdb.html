@@ -20,12 +20,13 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>How to debug NuttX using QEMU and GDB &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -33,10 +34,13 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,9 +57,6 @@
     <a href="../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +90,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -145,9 +146,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Guides</a> &raquo;</li>
-      <li>How to debug NuttX using QEMU and GDB</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">How to debug NuttX using QEMU and GDB</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/qemugdb.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -158,27 +159,27 @@
            <div itemprop="articleBody">
              
   <section id="how-to-debug-nuttx-using-qemu-and-gdb">
-<span id="qemugdb"></span><h1>How to debug NuttX using QEMU and GDB<a class="headerlink" href="#how-to-debug-nuttx-using-qemu-and-gdb" title="Permalink to this headline"></a></h1>
+<span id="qemugdb"></span><h1>How to debug NuttX using QEMU and GDB<a class="headerlink" href="#how-to-debug-nuttx-using-qemu-and-gdb" title="Permalink to this heading"></a></h1>
 <p>This guide explains the steps needed to use QEMU and GDB to debug
 an ARM board (lm3s6965-ek), but it could be modified to work with other
 board or architecture supported by QEMU.</p>
 <p>Start configuring and compiling the lm3s6965-ek board with qemu-flat profile.</p>
 <section id="compiling">
-<h2>Compiling<a class="headerlink" href="#compiling" title="Permalink to this headline"></a></h2>
+<h2>Compiling<a class="headerlink" href="#compiling" title="Permalink to this heading"></a></h2>
 <ol class="arabic">
 <li><p>Configure the lm3s6965-ek</p>
 <p>There is a sample configuration to use lm3s6965-ek on QEMU.</p>
 <p>Just use <code class="docutils literal notranslate"><span class="pre">lm3s6965-ek:qemu-flat</span></code> board profile for this purpose.</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> nuttx
-<span class="gp">$ </span>./tools/configure.sh lm3s6965-ek:qemu-flat
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>lm3s6965-ek:qemu-flat
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p>Compile</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make -j
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>-j
 </pre></div>
 </div>
 </div></blockquote>
@@ -186,11 +187,11 @@ board or architecture supported by QEMU.</p>
 </ol>
 </section>
 <section id="start-qemu">
-<h2>Start QEMU<a class="headerlink" href="#start-qemu" title="Permalink to this headline"></a></h2>
+<h2>Start QEMU<a class="headerlink" href="#start-qemu" title="Permalink to this heading"></a></h2>
 <ol class="arabic">
 <li><p>You need to start QEMU using the nuttx ELF file just create above:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-arm -M lm3s6965evb -device loader,file<span class="o">=</span>nuttx -serial mon:stdio -nographic -s
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-arm<span class="w"> </span>-M<span class="w"> </span>lm3s6965evb<span class="w"> </span>-device<span class="w"> </span>loader,file<span class="o">=</span>nuttx<span class="w"> </span>-serial<span class="w"> </span>mon:stdio<span class="w"> </span>-nographic<span class="w"> </span>-s
 <span class="go">Timer with period zero, disabling</span>
 <span class="go">ABCDF</span>
 <span class="go">telnetd [4:100]</span>
@@ -204,11 +205,11 @@ board or architecture supported by QEMU.</p>
 </ol>
 </section>
 <section id="start-gdb-to-connect-to-qemu">
-<h2>Start GDB to connect to QEMU<a class="headerlink" href="#start-gdb-to-connect-to-qemu" title="Permalink to this headline"></a></h2>
+<h2>Start GDB to connect to QEMU<a class="headerlink" href="#start-gdb-to-connect-to-qemu" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><p>These steps show how to connect GDB to QEMU running NuttX:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb-multiarch -ix tools/nuttx-gdbinit nuttx
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb-multiarch<span class="w"> </span>-ix<span class="w"> </span>tools/nuttx-gdbinit<span class="w"> </span>nuttx
 <span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">target extended-remote localhost:1234</span>
 <span class="go">Remote debugging using localhost:1234</span>
 <span class="go">0x000012ee in up_mdelay (milliseconds=milliseconds@entry=250)</span>
@@ -225,8 +226,8 @@ board or architecture supported by QEMU.</p>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">info_nxthreads</span>
 <span class="go">target examined</span>
 <span class="go">_target_arch.name=armv7</span>
-<span class="gp">$</span>_target_has_fpu : <span class="m">1</span>
-<span class="gp">$</span>_target_has_smp : <span class="m">0</span>
+<span class="gp">$</span>_target_has_fpu<span class="w"> </span>:<span class="w"> </span><span class="m">1</span>
+<span class="gp">$</span>_target_has_smp<span class="w"> </span>:<span class="w"> </span><span class="m">0</span>
 <span class="go">saved current_tcb (pid=0)</span>
 <span class="go">*</span>
 <span class="go">0 Thread 0x20001538  (Name: Idle Task, State: Running, Priority: 0, Stack: 464/1000) PC: 0x12fc in up_mdelay()</span>

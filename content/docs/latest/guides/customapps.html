@@ -20,12 +20,13 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Custom Apps How-to &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -33,10 +34,13 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,9 +57,6 @@
     <a href="../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +90,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -164,9 +165,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Guides</a> &raquo;</li>
-      <li>Custom Apps How-to</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">Custom Apps How-to</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/customapps.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -177,7 +178,7 @@
            <div itemprop="articleBody">
              
   <section id="custom-apps-how-to">
-<h1>Custom Apps How-to<a class="headerlink" href="#custom-apps-how-to" title="Permalink to this headline"></a></h1>
+<h1>Custom Apps How-to<a class="headerlink" href="#custom-apps-how-to" title="Permalink to this heading"></a></h1>
 <p>NuttX comes with a large number of Apps but, most likely, you will want to add your own.</p>
 <p>There are various different options for this depending on your requirements.</p>
 <blockquote>
@@ -196,7 +197,7 @@ need to run <code class="docutils literal notranslate"><span class="pre">make</s
 ensure it works correctly.</p>
 </div>
 <section id="replace-the-apps-directory-completely">
-<h2>1. Replace The Apps/ Directory Completely<a class="headerlink" href="#replace-the-apps-directory-completely" title="Permalink to this headline"></a></h2>
+<h2>1. Replace The Apps/ Directory Completely<a class="headerlink" href="#replace-the-apps-directory-completely" title="Permalink to this heading"></a></h2>
 <p>The CustomApps directory need only to contain the minimum three files:</p>
 <blockquote>
 <div><ul class="simple">
@@ -206,7 +207,7 @@ ensure it works correctly.</p>
 </ul>
 </div></blockquote>
 <section id="makefile">
-<h3>1.1 Makefile<a class="headerlink" href="#makefile" title="Permalink to this headline"></a></h3>
+<h3>1.1 Makefile<a class="headerlink" href="#makefile" title="Permalink to this heading"></a></h3>
 <p>The custom application directory must include a Makefile to make all of the targets
 expected by the NuttX build and must generate an archive called libapps.a in the
 top-level of the custom directory structure.</p>
@@ -223,54 +224,54 @@ top-level of the custom directory structure.</p>
 
 <span class="go">ROOTDEPPATH = --dep-path .</span>
 
-<span class="gp"># </span>Build targets
+<span class="gp"># </span>Build<span class="w"> </span>targets
 
 <span class="go">all: libapps.a</span>
 <span class="go">.PHONY: dirlinks context preconfig depend clean clean_context distclean</span>
 <span class="go">.PRECIOUS: libapps$(LIBEXT)</span>
 
-<span class="gp"># </span>Compile C Files
+<span class="gp"># </span>Compile<span class="w"> </span>C<span class="w"> </span>Files
 
-<span class="gp">$</span><span class="o">(</span>COBJS<span class="o">)</span>: %<span class="k">$(</span>OBJEXT<span class="k">)</span>: %.c
-<span class="gp">$</span><span class="o">(</span>call COMPILE, $&lt;, <span class="nv">$@</span><span class="o">)</span>
+<span class="gp">$</span><span class="o">(</span>COBJS<span class="o">)</span>:<span class="w"> </span>%<span class="k">$(</span>OBJEXT<span class="k">)</span>:<span class="w"> </span>%.c
+<span class="gp">$</span><span class="o">(</span>call<span class="w"> </span>COMPILE,<span class="w"> </span>$&lt;,<span class="w"> </span><span class="nv">$@</span><span class="o">)</span>
 
-<span class="gp"># </span>Add object files to the apps archive
+<span class="gp"># </span>Add<span class="w"> </span>object<span class="w"> </span>files<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>apps<span class="w"> </span>archive
 
 <span class="go">libapps.a: $(COBJS)</span>
-<span class="gp">  $</span><span class="o">(</span>call ARCHIVE, libapps.a, <span class="k">$(</span>COBJS<span class="k">)</span><span class="o">)</span>
+<span class="gp">  $</span><span class="o">(</span>call<span class="w"> </span>ARCHIVE,<span class="w"> </span>libapps.a,<span class="w"> </span><span class="k">$(</span>COBJS<span class="k">)</span><span class="o">)</span>
 
-<span class="gp"># </span>Create directory links
+<span class="gp"># </span>Create<span class="w"> </span>directory<span class="w"> </span>links
 
 <span class="go">dirlinks:</span>
 
-<span class="gp"># </span>Setup any special pre-build context
+<span class="gp"># </span>Setup<span class="w"> </span>any<span class="w"> </span>special<span class="w"> </span>pre-build<span class="w"> </span>context
 
 <span class="go">context:</span>
 
-<span class="gp"># </span>Setup any special pre-configuration context
+<span class="gp"># </span>Setup<span class="w"> </span>any<span class="w"> </span>special<span class="w"> </span>pre-configuration<span class="w"> </span>context
 
 <span class="go">preconfig:</span>
 
-<span class="gp"># </span>Make the dependency file, Make.deps
+<span class="gp"># </span>Make<span class="w"> </span>the<span class="w"> </span>dependency<span class="w"> </span>file,<span class="w"> </span>Make.deps
 
 <span class="go">depend: Makefile $(CSRCS)</span>
-<span class="gp">  $</span><span class="o">(</span>Q<span class="o">)</span> <span class="k">$(</span>MKDEP<span class="k">)</span> <span class="k">$(</span>ROOTDEPPATH<span class="k">)</span> <span class="s2">&quot;</span><span class="k">$(</span>CC<span class="k">)</span><span class="s2">&quot;</span> -- <span class="k">$(</span>CFLAGS<span class="k">)</span> -- <span class="k">$(</span>SRCS<span class="k">)</span> &gt; Make.dep
+<span class="gp">  $</span><span class="o">(</span>Q<span class="o">)</span><span class="w"> </span><span class="k">$(</span>MKDEP<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ROOTDEPPATH<span class="k">)</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>CC<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>--<span class="w"> </span><span class="k">$(</span>CFLAGS<span class="k">)</span><span class="w"> </span>--<span class="w"> </span><span class="k">$(</span>SRCS<span class="k">)</span><span class="w"> </span>&gt;<span class="w"> </span>Make.dep
 
-<span class="gp"># </span>Clean the results of the last build
+<span class="gp"># </span>Clean<span class="w"> </span>the<span class="w"> </span>results<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>last<span class="w"> </span>build
 
 <span class="go">clean:</span>
-<span class="gp">  $</span><span class="o">(</span>call CLEAN<span class="o">)</span>
+<span class="gp">  $</span><span class="o">(</span>call<span class="w"> </span>CLEAN<span class="o">)</span>
 
-<span class="gp"># </span>Remove the build context and directory links
+<span class="gp"># </span>Remove<span class="w"> </span>the<span class="w"> </span>build<span class="w"> </span>context<span class="w"> </span>and<span class="w"> </span>directory<span class="w"> </span>links
 
 <span class="go">clean_context:</span>
 
-<span class="gp"># </span>Restore the directory to its original state
+<span class="gp"># </span>Restore<span class="w"> </span>the<span class="w"> </span>directory<span class="w"> </span>to<span class="w"> </span>its<span class="w"> </span>original<span class="w"> </span>state
 
 <span class="go">distclean: clean clean_context</span>
-<span class="gp">  $</span><span class="o">(</span>call DELFILE, Make.dep<span class="o">)</span>
+<span class="gp">  $</span><span class="o">(</span>call<span class="w"> </span>DELFILE,<span class="w"> </span>Make.dep<span class="o">)</span>
 
-<span class="gp"># </span>Include dependencies
+<span class="gp"># </span>Include<span class="w"> </span>dependencies
 
 <span class="go">-include Make.dep</span>
 </pre></div>
@@ -278,29 +279,29 @@ top-level of the custom directory structure.</p>
 </div></blockquote>
 </section>
 <section id="kconfig">
-<h3>1.2 Kconfig<a class="headerlink" href="#kconfig" title="Permalink to this headline"></a></h3>
+<h3>1.2 Kconfig<a class="headerlink" href="#kconfig" title="Permalink to this heading"></a></h3>
 <p>A Kconfig file must be included but need not be populated with any meaningful options.
 This is a place where you can add settings to generate customized builds of your custom
 application and/or choose which of your apps to include.</p>
 <p>In the minimum case, Kconfig is only:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For a description of the syntax of this configuration file,
-<span class="gp"># </span>see the file kconfig-language.txt <span class="k">in</span> the NuttX tools repository.
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
+<span class="gp"># </span>see<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>kconfig-language.txt<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>NuttX<span class="w"> </span>tools<span class="w"> </span>repository.
 <span class="gp">#</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>or</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For a description of the syntax of this configuration file,
-<span class="gp"># </span>see the file kconfig-language.txt <span class="k">in</span> the NuttX tools repository.
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
+<span class="gp"># </span>see<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>kconfig-language.txt<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>NuttX<span class="w"> </span>tools<span class="w"> </span>repository.
 <span class="gp">#</span>
 </pre></div>
 </div>
 </div></blockquote>
 </section>
 <section id="customhello-c">
-<h3>1.3 CustomHello.c<a class="headerlink" href="#customhello-c" title="Permalink to this headline"></a></h3>
+<h3>1.3 CustomHello.c<a class="headerlink" href="#customhello-c" title="Permalink to this heading"></a></h3>
 <p>The custom application must actually compile some source files in order to generate the required
 libapps.a archive. One of these source files must include the <code class="docutils literal notranslate"><span class="pre">main()</span></code> entry point to the
 application.</p>
@@ -311,7 +312,7 @@ application, and where the rest of you application code is located is of no conc
 <p>Only this one entry point is needed.</p>
 <p>For this “Hello, Custom World!” application <code class="docutils literal notranslate"><span class="pre">custom_hello()</span></code> is the application entry point:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>include &lt;stdio.h&gt;
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>include<span class="w"> </span>&lt;stdio.h&gt;
 
 <span class="go">int custom_hello(int argc, char *argv[])</span>
 <span class="go">{</span>
@@ -323,7 +324,7 @@ application, and where the rest of you application code is located is of no conc
 </div></blockquote>
 </section>
 <section id="building-with-the-customapps-directory">
-<h3>1.4 Building with the CustomApps Directory<a class="headerlink" href="#building-with-the-customapps-directory" title="Permalink to this headline"></a></h3>
+<h3>1.4 Building with the CustomApps Directory<a class="headerlink" href="#building-with-the-customapps-directory" title="Permalink to this heading"></a></h3>
 <p>In order to build with the new custom configuration, you will need the following in your configuration:</p>
 <p><span class="menuselection">CONFIG_APPS_DIR=”../CustomApps”</span></p>
 <p><span class="menuselection">CONFIG_USER_ENTRYPOINT=”custom_hello”</span></p>
@@ -356,7 +357,7 @@ to <code class="docutils literal notranslate"><span class="pre">../CustomApps</s
 </section>
 </section>
 <section id="extend-the-apps-directory-to-include-a-new-custom-directory">
-<h2>2. Extend the apps/ directory to include a new custom directory<a class="headerlink" href="#extend-the-apps-directory-to-include-a-new-custom-directory" title="Permalink to this headline"></a></h2>
+<h2>2. Extend the apps/ directory to include a new custom directory<a class="headerlink" href="#extend-the-apps-directory-to-include-a-new-custom-directory" title="Permalink to this heading"></a></h2>
 <p>The collection of apps provided in nuttx-apps can be useful, and this method simply
 extends the directory structure to include your own directory structure.</p>
 <p>The existing /apps makefile automatically checks for the existence of sub-directories
@@ -365,12 +366,12 @@ to be more than one custom app, and includes a <code class="docutils literal not
 of a <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code> allows custom App options to be included in the NuttX configuration
 system, but is optional.</p>
 <section id="custom-apps-directory">
-<h3>2.1 Custom Apps Directory<a class="headerlink" href="#custom-apps-directory" title="Permalink to this headline"></a></h3>
+<h3>2.1 Custom Apps Directory<a class="headerlink" href="#custom-apps-directory" title="Permalink to this heading"></a></h3>
 <p>Simply create a new directory under the existing apps directory with a name of your choice.
 This example uses the directory name <code class="docutils literal notranslate"><span class="pre">CustomApps</span></code>.</p>
 </section>
 <section id="make-defs">
-<h3>2.2 Make.defs<a class="headerlink" href="#make-defs" title="Permalink to this headline"></a></h3>
+<h3>2.2 Make.defs<a class="headerlink" href="#make-defs" title="Permalink to this heading"></a></h3>
 <p>Create this file in the <code class="docutils literal notranslate"><span class="pre">CustomApps</span></code> directory, with the following line added:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">include $(wildcard $(APPDIR)/CustomApps/*/Make.defs)</span>
@@ -379,7 +380,7 @@ This example uses the directory name <code class="docutils literal notranslate">
 </div></blockquote>
 </section>
 <section id="id1">
-<h3>2.3 Makefile<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h3>
+<h3>2.3 Makefile<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
 <p>Create a Makefile in the <code class="docutils literal notranslate"><span class="pre">CustomApps</span></code> directory, with the following lines added:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">MENUDESC = &quot;Custom Apps&quot;</span>
@@ -390,24 +391,24 @@ This example uses the directory name <code class="docutils literal notranslate">
 </div></blockquote>
 </section>
 <section id="customhello-app">
-<h3>2.4 CustomHello App<a class="headerlink" href="#customhello-app" title="Permalink to this headline"></a></h3>
+<h3>2.4 CustomHello App<a class="headerlink" href="#customhello-app" title="Permalink to this heading"></a></h3>
 <p>Create a sub-directory under the <code class="docutils literal notranslate"><span class="pre">CustomApps</span></code> directory called <code class="docutils literal notranslate"><span class="pre">CustomHello</span></code>.</p>
 <p>The same <code class="docutils literal notranslate"><span class="pre">CustomHello.c</span></code> file as described above should be created here.</p>
 </section>
 <section id="customhello-makefile">
-<h3>2.5 CustomHello Makefile<a class="headerlink" href="#customhello-makefile" title="Permalink to this headline"></a></h3>
+<h3>2.5 CustomHello Makefile<a class="headerlink" href="#customhello-makefile" title="Permalink to this heading"></a></h3>
 <p>Create a Makefile in the <code class="docutils literal notranslate"><span class="pre">CustomApps/CustomHello</span></code> directory with the following lines:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">include $(APPDIR)/Make.defs</span>
 
-<span class="gp"># </span>Custom Hello built-in application info
+<span class="gp"># </span>Custom<span class="w"> </span>Hello<span class="w"> </span>built-in<span class="w"> </span>application<span class="w"> </span>info
 
 <span class="go">PROGNAME = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO_PROGNAME)</span>
 <span class="go">PRIORITY = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO_PRIORITY)</span>
 <span class="go">STACKSIZE = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO_STACKSIZE)</span>
 <span class="go">MODULE = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO)</span>
 
-<span class="gp"># </span>Custom Hello
+<span class="gp"># </span>Custom<span class="w"> </span>Hello
 
 <span class="go">MAINSRC = CustomHello.c</span>
 
@@ -417,13 +418,13 @@ This example uses the directory name <code class="docutils literal notranslate">
 </div></blockquote>
 </section>
 <section id="customhello-kconfig">
-<h3>2.6 CustomHello Kconfig<a class="headerlink" href="#customhello-kconfig" title="Permalink to this headline"></a></h3>
+<h3>2.6 CustomHello Kconfig<a class="headerlink" href="#customhello-kconfig" title="Permalink to this heading"></a></h3>
 <p>Create a Kconfig file in the <code class="docutils literal notranslate"><span class="pre">CustomApps/CustomHello</span></code> directory, with the following lines. For
 the purposes of this example, the Kconfig will only cover our single application):</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>
-<span class="gp"># </span>For a description of the syntax of this configuration file,
-<span class="gp"># </span>see the file kconfig-language.txt <span class="k">in</span> the NuttX tools repository.
+<span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
+<span class="gp"># </span>see<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>kconfig-language.txt<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>NuttX<span class="w"> </span>tools<span class="w"> </span>repository.
 <span class="gp">#</span>
 
 <span class="go">config CUSTOM_APPS_CUSTOM_HELLO</span>
@@ -455,7 +456,7 @@ the purposes of this example, the Kconfig will only cover our single application
 </div></blockquote>
 </section>
 <section id="build-and-run">
-<h3>2.7 Build and Run<a class="headerlink" href="#build-and-run" title="Permalink to this headline"></a></h3>
+<h3>2.7 Build and Run<a class="headerlink" href="#build-and-run" title="Permalink to this heading"></a></h3>
 <p>Once these files have been created, run a <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clean</span></code> (you may need to run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">distclean</span></code>
 followed by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>. If successful there will be new Kconfig entries.</p>
 <p><span class="menuselection">Application Configuraration ‣ Custom Apps ‣ Custom Hello App</span></p>
@@ -464,11 +465,11 @@ you can run the newly included <code class="docutils literal notranslate"><span 
 </section>
 </section>
 <section id="include-an-additional-custom-cirectory-outside-of-the-main-source-trees">
-<h2>3. Include an Additional Custom Cirectory Outside of the Main Source Trees<a class="headerlink" href="#include-an-additional-custom-cirectory-outside-of-the-main-source-trees" title="Permalink to this headline"></a></h2>
+<h2>3. Include an Additional Custom Cirectory Outside of the Main Source Trees<a class="headerlink" href="#include-an-additional-custom-cirectory-outside-of-the-main-source-trees" title="Permalink to this heading"></a></h2>
 <p>Thia is similar to the previous approach, but places the <code class="docutils literal notranslate"><span class="pre">CustomApps</span></code> directory
 outside of the default trees.</p>
 <section id="create-custom-apps-directory-and-a-symbolic-link">
-<h3>3.1 Create Custom Apps directory and a Symbolic Link<a class="headerlink" href="#create-custom-apps-directory-and-a-symbolic-link" title="Permalink to this headline"></a></h3>
+<h3>3.1 Create Custom Apps directory and a Symbolic Link<a class="headerlink" href="#create-custom-apps-directory-and-a-symbolic-link" title="Permalink to this heading"></a></h3>
 <p>Create a directory for the custom apps in a location of your choosing. Then create A
 symbolic link in the main nuttx/apps directory.</p>
 <p>This example assumes this has been placed below the top NuttX folder, alongside the
@@ -476,24 +477,24 @@ default <code class="docutils literal notranslate"><span class="pre">apps</span>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">pwd</span>
 <span class="go">/home/nuttx</span>
-<span class="gp">$ </span>ls -1
+<span class="gp">$ </span>ls<span class="w"> </span>-1
 <span class="go">apps</span>
 <span class="go">CustomBoards</span>
 <span class="go">nuttx</span>
-<span class="gp">$ </span>mkdir CustomApps
-<span class="gp">$ </span>ls -1
+<span class="gp">$ </span>mkdir<span class="w"> </span>CustomApps
+<span class="gp">$ </span>ls<span class="w"> </span>-1
 <span class="go">apps</span>
 <span class="go">CustomApps</span>
 <span class="go">CustomBoards</span>
 <span class="go">nuttx</span>
-<span class="gp">$ </span><span class="nb">cd</span> apps
-<span class="gp">$ </span>ln -s ../CustomApps CustomApps
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>apps
+<span class="gp">$ </span>ln<span class="w"> </span>-s<span class="w"> </span>../CustomApps<span class="w"> </span>CustomApps
 </pre></div>
 </div>
 </div></blockquote>
 </section>
 <section id="make-defs-etc">
-<h3>3.2 Make.defs etc.<a class="headerlink" href="#make-defs-etc" title="Permalink to this headline"></a></h3>
+<h3>3.2 Make.defs etc.<a class="headerlink" href="#make-defs-etc" title="Permalink to this heading"></a></h3>
 <p>Follow all the steps as in sections 2.2 to 2.7 above, creating the exact same files but
 placing then in the new <code class="docutils literal notranslate"><span class="pre">CustomApps</span></code> directory location created as described here.</p>
 </section>

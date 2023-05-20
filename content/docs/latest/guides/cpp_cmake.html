@@ -20,12 +20,13 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C++ Example using CMake &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -33,10 +34,13 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,9 +57,6 @@
     <a href="../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +90,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -145,9 +146,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Guides</a> &raquo;</li>
-      <li>C++ Example using CMake</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">C++ Example using CMake</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/cpp_cmake.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -158,7 +159,7 @@
            <div itemprop="articleBody">
              
   <section id="c-example-using-cmake">
-<span id="cpp-cmake"></span><h1>C++ Example using CMake<a class="headerlink" href="#c-example-using-cmake" title="Permalink to this headline"></a></h1>
+<span id="cpp-cmake"></span><h1>C++ Example using CMake<a class="headerlink" href="#c-example-using-cmake" title="Permalink to this heading"></a></h1>
 <p>In some situations, developers intend to implement software using the NuttX platform in
 a previously set hardware and configuration where it is not possible or allowed to make
 changes. In such situations, less contact with the operating source tree is better, where
@@ -175,13 +176,13 @@ support C++ based projects.</p>
 applications using C++ language and also the cmake build tool.</p>
 <p>This document will show how to reimplement the hellocpp project using this cmake.</p>
 <section id="preparation">
-<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this headline"></a></h2>
+<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this heading"></a></h2>
 <ol class="arabic">
 <li><p>Base NuttX compilation changes</p>
 <blockquote>
 <div><p>For this example, load the configuration ‘stm32f4discovery:testlibcxx’ for building</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> nuttx
-<span class="gp">$ </span>./tools/configure.sh stm32f4discovery:testlibcxx
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>stm32f4discovery:testlibcxx
 </pre></div>
 </div>
 <p>In menuconfig, the main points to be changed on a typical NuttX configuration are the following:</p>
@@ -189,7 +190,7 @@ applications using C++ language and also the cmake build tool.</p>
 <li><p>Set RTOS Features -&gt; Tasks and Scheduling -&gt; Application entry point to ‘hellocpp_main’</p></li>
 <li><p>Build NuttX and generate the export</p></li>
 </ul>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make <span class="nb">export</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span><span class="nb">export</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -197,7 +198,7 @@ applications using C++ language and also the cmake build tool.</p>
 </ol>
 </section>
 <section id="creating-the-project">
-<h2>Creating the project<a class="headerlink" href="#creating-the-project" title="Permalink to this headline"></a></h2>
+<h2>Creating the project<a class="headerlink" href="#creating-the-project" title="Permalink to this heading"></a></h2>
 <ol class="arabic">
 <li><p>Create your project file structure</p>
 <blockquote>
@@ -254,7 +255,7 @@ make export procedure done before.</p>
 <span class="nb">set</span><span class="p">(</span><span class="s">EXE_NAME</span><span class="w"> </span><span class="s">hellocpp</span><span class="p">)</span>
 <span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_C_FLAGS</span><span class="w"> </span><span class="s2">&quot;${CMAKE_C_FLAGS} ${AC_HW_FLAGS} ${AC_DEFINES}&quot;</span><span class="p">)</span>
 <span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_FLAGS</span><span class="w">     </span><span class="s2">&quot;${AC_HW_FLAGS} ${AC_DEFINES} ${AC_COMMON_FLAGS} ${AC_CXX_EXTRA_FLAGS}&quot;</span><span class="p">)</span>
-<span class="nb">if</span> <span class="p">(</span><span class="s">PARAM_DEBUG</span><span class="p">)</span>
+<span class="nb">if</span><span class="w"> </span><span class="p">(</span><span class="s">PARAM_DEBUG</span><span class="p">)</span>
 <span class="w">    </span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_FLAGS</span><span class="w">     </span><span class="s2">&quot;${CMAKE_CXX_FLAGS} -g&quot;</span><span class="p">)</span>
 <span class="nb">endif</span><span class="p">()</span>
 
@@ -342,24 +343,24 @@ make export procedure done before.</p>
 <ul class="simple">
 <li><p>hellocpp/src/main.cpp</p></li>
 </ul>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;HelloWorld.h&quot;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span><span class="cp"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;HelloWorld.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
 
-<span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">hellocpp_main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span>
+<span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">hellocpp_main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
 
-<span class="w">                </span><span class="n">CHelloWorld</span><span class="w"> </span><span class="o">*</span><span class="n">pHelloWorld</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CHelloWorld</span><span class="p">();</span><span class="w"></span>
-<span class="w">                </span><span class="n">pHelloWorld</span><span class="o">-&gt;</span><span class="n">HelloWorld</span><span class="p">();</span><span class="w"></span>
+<span class="w">                </span><span class="n">CHelloWorld</span><span class="w"> </span><span class="o">*</span><span class="n">pHelloWorld</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CHelloWorld</span><span class="p">();</span>
+<span class="w">                </span><span class="n">pHelloWorld</span><span class="o">-&gt;</span><span class="n">HelloWorld</span><span class="p">();</span>
 
-<span class="w">                </span><span class="n">CHelloWorld</span><span class="w"> </span><span class="n">helloWorld</span><span class="p">;</span><span class="w"></span>
-<span class="w">                </span><span class="n">helloWorld</span><span class="p">.</span><span class="n">HelloWorld</span><span class="p">();</span><span class="w"></span>
+<span class="w">                </span><span class="n">CHelloWorld</span><span class="w"> </span><span class="n">helloWorld</span><span class="p">;</span>
+<span class="w">                </span><span class="n">helloWorld</span><span class="p">.</span><span class="n">HelloWorld</span><span class="p">();</span>
 
-<span class="w">                </span><span class="k">delete</span><span class="w"> </span><span class="n">pHelloWorld</span><span class="p">;</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">                </span><span class="k">delete</span><span class="w"> </span><span class="n">pHelloWorld</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -368,17 +369,17 @@ make export procedure done before.</p>
 <div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifndef HELLOWORLD_H_</span>
 <span class="cp">#define HELLOWORLD_H_</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;nuttx/config.h&quot;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;nuttx/config.h&quot;</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">CHelloWorld</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">                </span><span class="n">CHelloWorld</span><span class="p">();</span><span class="w"></span>
-<span class="w">                </span><span class="o">~</span><span class="n">CHelloWorld</span><span class="p">();</span><span class="w"></span>
-<span class="w">                </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HelloWorld</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">mSecret</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CHelloWorld</span>
+<span class="p">{</span>
+<span class="w">        </span><span class="k">public</span><span class="o">:</span>
+<span class="w">                </span><span class="n">CHelloWorld</span><span class="p">();</span>
+<span class="w">                </span><span class="o">~</span><span class="n">CHelloWorld</span><span class="p">();</span>
+<span class="w">                </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HelloWorld</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+<span class="w">        </span><span class="k">private</span><span class="o">:</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">mSecret</span><span class="p">;</span>
+<span class="p">};</span>
 
 <span class="cp">#endif</span>
 </pre></div>
@@ -386,44 +387,44 @@ make export procedure done before.</p>
 <ul class="simple">
 <li><p>hellocpp/src/HelloWorld.cpp</p></li>
 </ul>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstdio&gt;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="cp"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstdio&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;HelloWorld.h&quot;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;HelloWorld.h&quot;</span>
 
-<span class="n">CHelloWorld</span><span class="o">::</span><span class="n">CHelloWorld</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">mSecret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Constructor: mSecret=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">mSecret</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="n">CHelloWorld</span><span class="o">::</span><span class="n">CHelloWorld</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">mSecret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Constructor: mSecret=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">mSecret</span><span class="p">);</span>
+<span class="p">}</span>
 
-<span class="n">CHelloWorld</span><span class="o">::~</span><span class="n">CHelloWorld</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="n">CHelloWorld</span><span class="o">::~</span><span class="n">CHelloWorld</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 
-<span class="p">}</span><span class="w"></span>
+<span class="p">}</span>
 
-<span class="kt">bool</span><span class="w"> </span><span class="n">CHelloWorld</span><span class="o">::</span><span class="n">HelloWorld</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;HelloWorld: mSecret=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">mSecret</span><span class="p">);</span><span class="w"></span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">CHelloWorld</span><span class="o">::</span><span class="n">HelloWorld</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;HelloWorld: mSecret=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">mSecret</span><span class="p">);</span>
 
-<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">sentence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;TEST=%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">sentence</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span><span class="w"></span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">sentence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;TEST=%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">sentence</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
 
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mSecret</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">42</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;CHelloWorld: HelloWorld: Hello, world!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;CHelloWorld: HelloWorld: CONSTRUCTION FAILED!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mSecret</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">42</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;CHelloWorld: HelloWorld: Hello, world!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;CHelloWorld: HelloWorld: CONSTRUCTION FAILED!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="building">
-<h2>Building<a class="headerlink" href="#building" title="Permalink to this headline"></a></h2>
+<h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
 <p>To launch build, you use the cmake procedure:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir build
-<span class="gp">$ </span><span class="nb">cd</span> build
-<span class="gp">$ </span>cmake ..
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir<span class="w"> </span>build
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>build
+<span class="gp">$ </span>cmake<span class="w"> </span>..
 <span class="gp">$ </span>make
 </pre></div>
 </div>

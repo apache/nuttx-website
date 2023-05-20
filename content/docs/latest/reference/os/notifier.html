@@ -20,12 +20,13 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Notifier Chain &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
@@ -33,15 +34,18 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="APIs Exported by NuttX to Architecture-Specific Logic" href="nuttx.html" />
-    <link rel="prev" title="Network Address Translation (NAT)" href="nat.html" /> 
+    <link rel="prev" title="Congestion Control NewReno" href="newreno.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,9 +57,6 @@
     <a href="../../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +90,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -118,6 +119,7 @@
 <li class="toctree-l3"><a class="reference internal" href="led.html">LED Support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mutex.html">Mutual Exclusion lock</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="newreno.html">Congestion Control NewReno</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Notifier Chain</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#classes-of-notifier-chain">Classes of Notifier Chain</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#atomic-notifier-chains">Atomic notifier chains</a></li>
@@ -159,10 +161,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">API Reference</a> &raquo;</li>
-          <li><a href="index.html">Architecture APIs</a> &raquo;</li>
-      <li>Notifier Chain</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Architecture APIs</a></li>
+      <li class="breadcrumb-item active">Notifier Chain</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/os/notifier.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -173,39 +175,39 @@
            <div itemprop="articleBody">
              
   <section id="notifier-chain">
-<h1>Notifier Chain<a class="headerlink" href="#notifier-chain" title="Permalink to this headline"></a></h1>
+<h1>Notifier Chain<a class="headerlink" href="#notifier-chain" title="Permalink to this heading"></a></h1>
 <p>NuttX provides a callback list mechanism called <em>Notifier Chain</em>.
 Notifier chain is essentially a list of callbacks used at certain times,
 such as system asserting, powering off and restarting.</p>
 <p><strong>Notifier chain</strong> is very much like the Linux notifier chains, except
 for some implementation differences.</p>
 <section id="classes-of-notifier-chain">
-<h2>Classes of Notifier Chain<a class="headerlink" href="#classes-of-notifier-chain" title="Permalink to this headline"></a></h2>
+<h2>Classes of Notifier Chain<a class="headerlink" href="#classes-of-notifier-chain" title="Permalink to this heading"></a></h2>
 <p>There are currently two different classes of notifier.</p>
 <section id="atomic-notifier-chains">
-<h3>Atomic notifier chains<a class="headerlink" href="#atomic-notifier-chains" title="Permalink to this headline"></a></h3>
+<h3>Atomic notifier chains<a class="headerlink" href="#atomic-notifier-chains" title="Permalink to this heading"></a></h3>
 <p>Atomic notifier chains: Chain callbacks run in interrupt/atomic context.
 In Nuttx, callouts are allowed to block(In Linux, callouts in atomic
 notifier chain are not allowed to block). One example of an Atomic notifier
 chain is turning off FPU when asserting.</p>
 </section>
 <section id="blocking-notifier-chains">
-<h3>Blocking notifier chains<a class="headerlink" href="#blocking-notifier-chains" title="Permalink to this headline"></a></h3>
+<h3>Blocking notifier chains<a class="headerlink" href="#blocking-notifier-chains" title="Permalink to this heading"></a></h3>
 <p>Blocking notifier chains: Chain callbacks run in process context.
 Callouts are allowed to block. One example of a blocking notifier chain
 is when an orderly powering off is needed.</p>
 </section>
 </section>
 <section id="common-notifier-chain-interfaces">
-<h2>Common Notifier Chain Interfaces<a class="headerlink" href="#common-notifier-chain-interfaces" title="Permalink to this headline"></a></h2>
+<h2>Common Notifier Chain Interfaces<a class="headerlink" href="#common-notifier-chain-interfaces" title="Permalink to this heading"></a></h2>
 <section id="notifier-block-types">
-<h3>Notifier Block Types<a class="headerlink" href="#notifier-block-types" title="Permalink to this headline"></a></h3>
+<h3>Notifier Block Types<a class="headerlink" href="#notifier-block-types" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">notifier_block</span></code>. Defines one notifier callback entry.</p></li>
 </ul>
 </section>
 <section id="notifier-chain-interfaces">
-<h3>Notifier Chain Interfaces<a class="headerlink" href="#notifier-chain-interfaces" title="Permalink to this headline"></a></h3>
+<h3>Notifier Chain Interfaces<a class="headerlink" href="#notifier-chain-interfaces" title="Permalink to this heading"></a></h3>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.panic_notifier_chain_register">
 <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">panic_notifier_chain_register</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">notifier_block</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">nb</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.panic_notifier_chain_register" title="Permalink to this definition"></a><br /></dt>
@@ -213,7 +215,7 @@ is when an orderly powering off is needed.</p>
 <p>The panic notifier chain is an atomic notifier chain. It will be called
 when asserting.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nb</strong> – New entry in notifier chain.</p></li>
 </ul>
@@ -228,7 +230,7 @@ when asserting.</p>
 <p>The panic notifier chain is an atomic notifier chain. It will be called
 when asserting.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nh</strong> – Entry to remove from notifier chain.</p></li>
 </ul>
@@ -243,7 +245,7 @@ when asserting.</p>
 <p>The panic notifier chain is an atomic notifier chain. It will be called
 when asserting.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>action</strong> – Value passed unmodified to notifier function.</p></li>
 <li><p><strong>data</strong> – Pointer passed unmodified to notifier function.</p></li>
@@ -258,7 +260,7 @@ when asserting.</p>
 <dd><p>Add notifier to the reboot notifier chain.</p>
 <p>The reboot notifier chain is an atomic notifier chain.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nb</strong> – New entry in notifier chain.</p></li>
 </ul>
@@ -272,7 +274,7 @@ when asserting.</p>
 <dd><p>Remove notifier from the reboot notifier chain.</p>
 <p>The reboot notifier chain is an atomic notifier chain.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nh</strong> – Entry to remove from notifier chain.</p></li>
 </ul>
@@ -286,7 +288,7 @@ when asserting.</p>
 <dd><p>Call functions in the reboot notifier chain.</p>
 <p>The reboot notifier chain is an atomic notifier chain.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>action</strong> – Value passed unmodified to notifier function.</p></li>
 <li><p><strong>data</strong> – Pointer passed unmodified to notifier function.</p></li>
@@ -303,7 +305,7 @@ when asserting.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="nat.html" class="btn btn-neutral float-left" title="Network Address Translation (NAT)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="newreno.html" class="btn btn-neutral float-left" title="Congestion Control NewReno" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="nuttx.html" class="btn btn-neutral float-right" title="APIs Exported by NuttX to Architecture-Specific Logic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

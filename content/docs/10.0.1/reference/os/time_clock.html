@@ -20,7 +20,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>System Time and Clock &mdash; NuttX latest documentation</title>
@@ -33,10 +33,11 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,9 +54,6 @@
     <a href="../../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
   
@@ -89,7 +87,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -152,10 +150,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">API Reference</a> &raquo;</li>
-          <li><a href="index.html">Architecture APIs</a> &raquo;</li>
-      <li>System Time and Clock</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Architecture APIs</a></li>
+      <li class="breadcrumb-item active">System Time and Clock</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/os/time_clock.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -166,9 +164,9 @@
            <div itemprop="articleBody">
              
   <section id="system-time-and-clock">
-<h1>System Time and Clock<a class="headerlink" href="#system-time-and-clock" title="Permalink to this headline"></a></h1>
+<h1>System Time and Clock<a class="headerlink" href="#system-time-and-clock" title="Permalink to this heading"></a></h1>
 <section id="basic-system-timer">
-<h2>Basic System Timer<a class="headerlink" href="#basic-system-timer" title="Permalink to this headline"></a></h2>
+<h2>Basic System Timer<a class="headerlink" href="#basic-system-timer" title="Permalink to this heading"></a></h2>
 <p><strong>System Timer</strong> In most implementations, system time is provided
 by a timer interrupt. That timer interrupt runs at rate determined
 by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> (default 10000 microseconds or 100Hz.
@@ -217,8 +215,8 @@ run. Consider this example implementation:</p>
 <div><ol class="arabic">
 <li><p>Initially an accumulator is zero an the match value is
 programmed to 328:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">accumulator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">328</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">accumulator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">328</span><span class="p">;</span>
 </pre></div>
 </div>
 </li>
@@ -226,27 +224,27 @@ programmed to 328:</p>
 that, in this reflects, 100* the error in interval that just
 passed. So on the first timer interrupt, the accumulator would
 be updated like:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">match</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">328</span><span class="p">)</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">match</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">328</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
 <span class="w">    </span><span class="n">accumulator</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// 100*(328 - 327.68)</span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="k">else</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span>
+<span class="k">else</span>
+<span class="w">  </span><span class="p">{</span>
 <span class="w">    </span><span class="n">accumulator</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="mi">68</span><span class="p">;</span><span class="w"> </span><span class="c1">// (100*(327 - 327.68)</span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span>
 </pre></div>
 </div>
 </li>
 <li><p>And on that same timer interrupt a new match value would be
 programmed:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">accumulator</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">328</span><span class="p">;</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="k">else</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">327</span><span class="p">;</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">accumulator</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">328</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="k">else</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">match</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">327</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
 </pre></div>
 </div>
 </li>
@@ -257,7 +255,7 @@ interrupt-to-interrupt to produce an average frequency of exactly
 100Hz.</p>
 </section>
 <section id="hardware">
-<h2>Hardware<a class="headerlink" href="#hardware" title="Permalink to this headline"></a></h2>
+<h2>Hardware<a class="headerlink" href="#hardware" title="Permalink to this heading"></a></h2>
 <p>To enable hardware module use the following configuration options:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_RTC</span></code></dt><dd><p>Enables general support for a hardware RTC. Specific
@@ -325,7 +323,7 @@ standard timespec.</p></li>
 </ul>
 </section>
 <section id="system-tick-and-time">
-<h2>System Tick and Time<a class="headerlink" href="#system-tick-and-time" title="Permalink to this headline"></a></h2>
+<h2>System Tick and Time<a class="headerlink" href="#system-tick-and-time" title="Permalink to this heading"></a></h2>
 <p>The system tick is represented by <code class="docutils literal notranslate"><span class="pre">g_system_timer</span></code>.</p>
 <p>Running at rate of system base timer, used for time-slicing, and
 so forth.</p>
@@ -341,7 +339,7 @@ disabled in power-down mode. By comparing this time and RTC
 retrieve that variable use:</p>
 </section>
 <section id="tickless-os">
-<h2>Tickless OS<a class="headerlink" href="#tickless-os" title="Permalink to this headline"></a></h2>
+<h2>Tickless OS<a class="headerlink" href="#tickless-os" title="Permalink to this heading"></a></h2>
 <p><strong>Default System Timer</strong>. By default, a NuttX configuration uses a
 periodic timer interrupt that drives all system timing. The timer
 is provided by architecture-specific code that calls into NuttX at
@@ -390,7 +388,7 @@ interesting OS event will occur, program the interval time and
 wait for it to fire. When the interval time fires, then the
 scheduled activity is performed.</p>
 <section id="tickless-platform-support">
-<h3>Tickless Platform Support<a class="headerlink" href="#tickless-platform-support" title="Permalink to this headline"></a></h3>
+<h3>Tickless Platform Support<a class="headerlink" href="#tickless-platform-support" title="Permalink to this heading"></a></h3>
 <p>In order to use the Tickless OS, one must provide special support
 from the platform-specific code. Just as with the default system
 timer, the platform-specific code must provide the timer resources
@@ -402,7 +400,7 @@ is another example for the Atmel SAMA5 at
 explain how to provide the Tickless OS support to any platform.</p>
 </section>
 <section id="tickless-configuration-options">
-<h3>Tickless Configuration Options<a class="headerlink" href="#tickless-configuration-options" title="Permalink to this headline"></a></h3>
+<h3>Tickless Configuration Options<a class="headerlink" href="#tickless-configuration-options" title="Permalink to this heading"></a></h3>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_TICKLESS</span></code>: If the platform provides
 support for the <em>Tickless OS</em>, then this setting should be
@@ -456,7 +454,7 @@ of the timer. Errors may ensue.</p>
 </ul>
 </section>
 <section id="tickless-imported-interfaces">
-<h3>Tickless Imported Interfaces<a class="headerlink" href="#tickless-imported-interfaces" title="Permalink to this headline"></a></h3>
+<h3>Tickless Imported Interfaces<a class="headerlink" href="#tickless-imported-interfaces" title="Permalink to this heading"></a></h3>
 <p>The interfaces that must be provided by the platform specified
 code are defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/arch.h</span></code>, listed below, and
 summarized in the following paragraphs:</p>
@@ -525,7 +523,7 @@ and the interval timer is ready for use (but not actively timing).
 The naming will depend on the architecture so for STM32 <code class="docutils literal notranslate"><span class="pre">archname</span></code> will
 be <code class="docutils literal notranslate"><span class="pre">stm32</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Zero (OK) on success; a negated errno value on failure.</p>
 </dd>
 </dl>
@@ -543,12 +541,12 @@ functionally equivalent to <code class="docutils literal notranslate"><span clas
 reporting the current time and also is used to eliminate error
 build-up from small errors in interval time calculations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ts</strong> – Provides the location in which to return the up-time..</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
 </dd>
 </dl>
@@ -568,14 +566,14 @@ is restarted with <code class="docutils literal notranslate"><span class="pre">u
 the alarm has already expired when this function is called, then
 time returned is the current time.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ts</strong> – Location to return the expiration time. The current
 time should be returned if the timer is not active. <code class="docutils literal notranslate"><span class="pre">ts</span></code> may
 be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in which case the time is not returned</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
 </dd>
 </dl>
@@ -591,14 +589,14 @@ internally to assure non-reentrancy.</p>
 when the alarm occurs (unless <code class="docutils literal notranslate"><span class="pre">up_alarm_cancel</span></code> is called to
 stop it).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ts</strong> – The time in the future at the alarm is expected to
 occur. When the alarm occurs the timer logic will call
 <code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
 </dd>
 </dl>
@@ -621,11 +619,11 @@ that pending interrupt must be cleared so that
 <code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> is not called spuriously and the
 remaining time of zero should be returned.</p>
 <dl class="field-list simple">
-<dt class="field-odd">param ts</dt>
+<dt class="field-odd">param ts<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Location to return the remaining time. Zero should be
 returned if the timer is not active.</p>
 </dd>
-<dt class="field-even">return</dt>
+<dt class="field-even">return<span class="colon">:</span></dt>
 <dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
 </dd>
 </dl>
@@ -641,11 +639,11 @@ disabled internally to assure non-reentrancy.</p>
 called at the completion of the timeout (unless
 <code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code> is called to stop the timing).</p>
 <dl class="field-list simple">
-<dt class="field-odd">param ts</dt>
+<dt class="field-odd">param ts<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Provides the time interval until
 <code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> is called.</p>
 </dd>
-<dt class="field-even">return</dt>
+<dt class="field-even">return<span class="colon">:</span></dt>
 <dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
 </dd>
 </dl>
@@ -655,7 +653,7 @@ disabled internally to assure non-reentrancy.</p>
 </section>
 </section>
 <section id="watchdog-timer-interfaces">
-<h2>Watchdog Timer Interfaces<a class="headerlink" href="#watchdog-timer-interfaces" title="Permalink to this headline"></a></h2>
+<h2>Watchdog Timer Interfaces<a class="headerlink" href="#watchdog-timer-interfaces" title="Permalink to this heading"></a></h2>
 <p>NuttX provides a general watchdog timer facility. This facility
 allows the NuttX user to specify a watchdog timer function that
 will run after a specified delay. The watchdog timer function will
@@ -684,7 +682,7 @@ handler.</p>
 executed, call wd_start again with the same wdog; only the most
 recent wd_start() on a given watchdog ID has any effect.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>wdog</strong> – Watchdog ID</p></li>
 <li><p><strong>delay</strong> – Delay count in clock ticks</p></li>
@@ -695,7 +693,7 @@ recent wd_start() on a given watchdog ID has any effect.</p>
 </dl>
 <p><strong>NOTE</strong>: The parameter must be of type <code class="docutils literal notranslate"><span class="pre">wdparm_t</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Zero (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> value
 is return to indicate the nature of any failure.</p>
 </dd>
@@ -705,7 +703,7 @@ context of the timer interrupt handler and is subject to all ISR
 restrictions.</p>
 <p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface. VxWorks
 provides the following comparable interface:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">STATUS</span><span class="w"> </span><span class="nf">wdStart</span><span class="w"> </span><span class="p">(</span><span class="n">WDOG_ID</span><span class="w"> </span><span class="n">wdog</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">delay</span><span class="p">,</span><span class="w"> </span><span class="n">FUNCPTR</span><span class="w"> </span><span class="n">wdentry</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">parameter</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">STATUS</span><span class="w"> </span><span class="nf">wdStart</span><span class="w"> </span><span class="p">(</span><span class="n">WDOG_ID</span><span class="w"> </span><span class="n">wdog</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">delay</span><span class="p">,</span><span class="w"> </span><span class="n">FUNCPTR</span><span class="w"> </span><span class="n">wdentry</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">parameter</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Differences from the VxWorks interface include:</p>
@@ -723,18 +721,18 @@ maximum number of parameters is determined by</p></li>
 watchdog timer. Watchdog timers may be canceled from the interrupt
 level.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>wdog</strong> – ID of the watchdog to cancel.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">OK</span></code> or <code class="docutils literal notranslate"><span class="pre">ERROR</span></code></p>
 </dd>
 </dl>
 <p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface. VxWorks
 provides the following comparable interface:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">STATUS</span><span class="w"> </span><span class="nf">wdCancel</span><span class="w"> </span><span class="p">(</span><span class="n">WDOG_ID</span><span class="w"> </span><span class="n">wdog</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">STATUS</span><span class="w"> </span><span class="nf">wdCancel</span><span class="w"> </span><span class="p">(</span><span class="n">WDOG_ID</span><span class="w"> </span><span class="n">wdog</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -745,12 +743,12 @@ provides the following comparable interface:</p>
 <dd><p>Returns the time remaining before
 the specified watchdog expires.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>wdog</strong> – Identifies the watchdog that the request is for.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The time in system ticks remaining until the
 watchdog time expires. Zero means either that wdog is not valid or
 that the wdog has already expired.</p>
@@ -771,17 +769,17 @@ following union defines the alignment of the pointer within the
 24-bits, but <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> is 32-bits (of course).</p>
 <p>We always have <code class="docutils literal notranslate"><span class="pre">sizeof(pointer)</span> <span class="pre">&lt;=</span> <span class="pre">sizeof(uintptr_t)</span></code> by
 definition.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">wdparm_u</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w">     </span><span class="o">*</span><span class="n">pvarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* The size one generic point */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint32_t</span><span class="w">      </span><span class="n">dwarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Big enough for a 32-bit value in any case */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uintptr_t</span><span class="w">     </span><span class="n">uiarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* sizeof(uintptr_t) &gt;= sizeof(pointer) */</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">wdparm_u</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w">     </span><span class="o">*</span><span class="n">pvarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* The size one generic point */</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w">      </span><span class="n">dwarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Big enough for a 32-bit value in any case */</span>
+<span class="w">  </span><span class="kt">uintptr_t</span><span class="w">     </span><span class="n">uiarg</span><span class="p">;</span><span class="w"> </span><span class="cm">/* sizeof(uintptr_t) &gt;= sizeof(pointer) */</span>
+<span class="p">};</span>
 
 <span class="cp">#if UINTPTR_MAX &gt;= UINT32_MAX</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">uintptr_t</span><span class="w"> </span><span class="n">wdparm_t</span><span class="p">;</span><span class="w"></span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uintptr_t</span><span class="w"> </span><span class="n">wdparm_t</span><span class="p">;</span>
 <span class="cp">#else</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w">  </span><span class="n">wdparm_t</span><span class="p">;</span><span class="w"></span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w">  </span><span class="n">wdparm_t</span><span class="p">;</span>
 <span class="cp">#endif</span>
 </pre></div>
 </div>

@@ -20,12 +20,13 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>I/O Buffer Management &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
@@ -33,10 +34,13 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,9 +57,6 @@
     <a href="../../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +90,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -124,6 +125,7 @@
 <li class="toctree-l3"><a class="reference internal" href="led.html">LED Support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mutex.html">Mutual Exclusion lock</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="newreno.html">Congestion Control NewReno</a></li>
 <li class="toctree-l3"><a class="reference internal" href="notifier.html">Notifier Chain</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nuttx.html">APIs Exported by NuttX to Architecture-Specific Logic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="paging.html">On-Demand Paging</a></li>
@@ -153,10 +155,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">API Reference</a> &raquo;</li>
-          <li><a href="index.html">Architecture APIs</a> &raquo;</li>
-      <li>I/O Buffer Management</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Architecture APIs</a></li>
+      <li class="breadcrumb-item active">I/O Buffer Management</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/os/iob.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -167,7 +169,7 @@
            <div itemprop="articleBody">
              
   <section id="i-o-buffer-management">
-<h1>I/O Buffer Management<a class="headerlink" href="#i-o-buffer-management" title="Permalink to this headline"></a></h1>
+<h1>I/O Buffer Management<a class="headerlink" href="#i-o-buffer-management" title="Permalink to this heading"></a></h1>
 <p>NuttX supports generic I/O buffer management (IOB) logic. This
 logic was originally added to support network I/O buffering, but
 has been generalized to meet buffering requirements by all device
@@ -195,7 +197,7 @@ hogging all available I/O buffering.</p></li>
 </ol>
 </div></blockquote>
 <section id="configuration-options">
-<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this headline"></a></h2>
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_MM_IOB</span></code></dt><dd><p>Enables generic I/O buffer support. This setting will build the
 common I/O buffer (IOB) support library.</p>
@@ -248,7 +250,7 @@ buffering logic (<code class="docutils literal notranslate"><span class="pre">CO
 </dl>
 </section>
 <section id="throttling">
-<h2>Throttling<a class="headerlink" href="#throttling" title="Permalink to this headline"></a></h2>
+<h2>Throttling<a class="headerlink" href="#throttling" title="Permalink to this heading"></a></h2>
 <p>An allocation throttle was added. I/O buffer allocation logic
 supports a throttle value originally for read-ahead buffering to
 prevent the read-ahead logic from consuming all available I/O
@@ -258,63 +260,63 @@ and read-ahead buffering are used. Of use of I/O buffering might
 have other motivations for throttling.</p>
 </section>
 <section id="public-types">
-<h2>Public Types<a class="headerlink" href="#public-types" title="Permalink to this headline"></a></h2>
+<h2>Public Types<a class="headerlink" href="#public-types" title="Permalink to this heading"></a></h2>
 <p>This structure represents one I/O buffer. A packet is contained by
 one or more I/O buffers in a chain. The <code class="docutils literal notranslate"><span class="pre">io_pktlen</span></code> is only
 valid for the I/O buffer at the head of the chain.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_s</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="cm">/* Singly-link list support */</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="cm">/* Singly-link list support */</span>
 
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_s</span><span class="w"> </span><span class="o">*</span><span class="n">io_flink</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_s</span><span class="w"> </span><span class="o">*</span><span class="n">io_flink</span><span class="p">;</span>
 
-<span class="w">  </span><span class="cm">/* Payload */</span><span class="w"></span>
+<span class="w">  </span><span class="cm">/* Payload */</span>
 
 <span class="cp">#if CONFIG_IOB_BUFSIZE &lt; 256</span>
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">io_len</span><span class="p">;</span><span class="w">      </span><span class="cm">/* Length of the data in the entry */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">io_offset</span><span class="p">;</span><span class="w">   </span><span class="cm">/* Data begins at this offset */</span><span class="w"></span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">io_len</span><span class="p">;</span><span class="w">      </span><span class="cm">/* Length of the data in the entry */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">io_offset</span><span class="p">;</span><span class="w">   </span><span class="cm">/* Data begins at this offset */</span>
 <span class="cp">#else</span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">io_len</span><span class="p">;</span><span class="w">      </span><span class="cm">/* Length of the data in the entry */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">io_offset</span><span class="p">;</span><span class="w">   </span><span class="cm">/* Data begins at this offset */</span><span class="w"></span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">io_len</span><span class="p">;</span><span class="w">      </span><span class="cm">/* Length of the data in the entry */</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">io_offset</span><span class="p">;</span><span class="w">   </span><span class="cm">/* Data begins at this offset */</span>
 <span class="cp">#endif</span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">io_pktlen</span><span class="p">;</span><span class="w">   </span><span class="cm">/* Total length of the packet */</span><span class="w"></span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">io_pktlen</span><span class="p">;</span><span class="w">   </span><span class="cm">/* Total length of the packet */</span>
 
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">io_data</span><span class="p">[</span><span class="n">CONFIG_IOB_BUFSIZE</span><span class="p">];</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">io_data</span><span class="p">[</span><span class="n">CONFIG_IOB_BUFSIZE</span><span class="p">];</span>
+<span class="p">};</span>
 </pre></div>
 </div>
 <p>This container structure supports queuing of I/O buffer chains.
 This structure is intended only for internal use by the IOB
 module.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if CONFIG_IOB_NCHAINS &gt; 0</span>
-<span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="cm">/* Singly-link list support */</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="cm">/* Singly-link list support */</span>
 
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span><span class="w"> </span><span class="o">*</span><span class="n">qe_flink</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span><span class="w"> </span><span class="o">*</span><span class="n">qe_flink</span><span class="p">;</span>
 
-<span class="w">  </span><span class="cm">/* Payload -- Head of the I/O buffer chain */</span><span class="w"></span>
+<span class="w">  </span><span class="cm">/* Payload -- Head of the I/O buffer chain */</span>
 
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_s</span><span class="w"> </span><span class="o">*</span><span class="n">qe_head</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
-<span class="cp">#endif </span><span class="cm">/* CONFIG_IOB_NCHAINS &gt; 0 */</span><span class="cp"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_s</span><span class="w"> </span><span class="o">*</span><span class="n">qe_head</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="cp">#endif </span><span class="cm">/* CONFIG_IOB_NCHAINS &gt; 0 */</span>
 </pre></div>
 </div>
 <p>The I/O buffer queue head structure.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if CONFIG_IOB_NCHAINS &gt; 0</span>
-<span class="k">struct</span><span class="w"> </span><span class="nc">iob_queue_s</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="cm">/* Head of the I/O buffer chain list */</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">iob_queue_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="cm">/* Head of the I/O buffer chain list */</span>
 
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span><span class="w"> </span><span class="o">*</span><span class="n">qh_head</span><span class="p">;</span><span class="w"></span>
-<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span><span class="w"> </span><span class="o">*</span><span class="n">qh_tail</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
-<span class="cp">#endif </span><span class="cm">/* CONFIG_IOB_NCHAINS &gt; 0 */</span><span class="cp"></span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span><span class="w"> </span><span class="o">*</span><span class="n">qh_head</span><span class="p">;</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iob_qentry_s</span><span class="w"> </span><span class="o">*</span><span class="n">qh_tail</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="cp">#endif </span><span class="cm">/* CONFIG_IOB_NCHAINS &gt; 0 */</span>
 </pre></div>
 </div>
 </section>
 <section id="public-function-prototypes">
-<h2>Public Function Prototypes<a class="headerlink" href="#public-function-prototypes" title="Permalink to this headline"></a></h2>
+<h2>Public Function Prototypes<a class="headerlink" href="#public-function-prototypes" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#c.iob_initialize" title="iob_initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">iob_initialize()</span></code></a></p></li>
@@ -400,7 +402,7 @@ without waiting for resources to become free.</p>
 <dd><p>Remove and return one I/O buffer chain from the
 head of a queue.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Returns a reference to the I/O buffer chain at
 the head of the queue.</p>
 </dd>
@@ -416,7 +418,7 @@ the I/O buffer chain is in place at the head of the queue. The I/O
 buffer chain may safely be modified by the caller but must be
 removed from the queue before it can be freed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Returns a reference to the I/O buffer chain at
 the head of the queue.</p>
 </dd>
@@ -502,7 +504,7 @@ hence, the head of the queue may change.</p>
 that the iob at the head of queue is modified with the trimming
 operations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The new iob at the head of the queue is
 returned.</p>
 </dd>

@@ -20,12 +20,13 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Congestion Control NewReno &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
@@ -33,13 +34,18 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Notifier Chain" href="notifier.html" />
+    <link rel="prev" title="Network Address Translation (NAT)" href="nat.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -51,9 +57,6 @@
     <a href="../../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -87,7 +90,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -95,7 +98,7 @@
 
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Getting Started</a></li>
@@ -104,7 +107,40 @@
 <li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../components/index.html">OS Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../index.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../user/index.html">Userspace API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Architecture APIs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="addrenv.html">Address Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_vs_os.html">Application OS vs. Internal OS Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arch.html">APIs Exported by Architecture-Specific Logic to NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="board.html">APIs Exported by Board-Specific Logic to NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conventions.html">Naming and Header File Conventions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="iob.html">I/O Buffer Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="led.html">LED Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mutex.html">Mutual Exclusion lock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Congestion Control NewReno</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#test">Test</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#test-topology">Test topology</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#test-steps">Test steps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#test-results">Test results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="notifier.html">Notifier Chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nuttx.html">APIs Exported by NuttX to Architecture-Specific Logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paging.html">On-Demand Paging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="shm.html">Shared Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="smp.html">Symmetric Multiprocessing (SMP) Application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="time_clock.html">System Time and Clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wqueue.html">Work Queues</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
@@ -123,8 +159,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Congestion Control NewReno</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Architecture APIs</a></li>
+      <li class="breadcrumb-item active">Congestion Control NewReno</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/os/newreno.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -135,7 +173,7 @@
            <div itemprop="articleBody">
              
   <section id="congestion-control-newreno">
-<h1>Congestion Control NewReno<a class="headerlink" href="#congestion-control-newreno" title="Permalink to this headline"></a></h1>
+<h1>Congestion Control NewReno<a class="headerlink" href="#congestion-control-newreno" title="Permalink to this heading"></a></h1>
 <dl>
 <dt>NewReno congestion control algorithm is used to solve the problem of network congestion breakdown, which includes:</dt><dd><ul class="simple">
 <li><p>Slow Start</p></li>
@@ -147,7 +185,7 @@
 </dd>
 </dl>
 <section id="workflow">
-<h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline"></a></h2>
+<h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this heading"></a></h2>
 <p>The NewReno on the tcp sender adjusts the cwnd and ssthresh based on received ack and Retransmitted Timeout (RTO) events.</p>
 <p>Using the cwnd, together with snd_wnd, controls the number of bytes sent to the network. Here’s how newreno works, as following:</p>
 <ul class="simple">
@@ -204,7 +242,7 @@
 </div>
 </section>
 <section id="configuration-options">
-<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this headline"></a></h2>
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
 <dl>
 <dt><code class="docutils literal notranslate"><span class="pre">NET_TCP_CC_NEWRENO</span></code></dt><dd><p>Enable or disable NewRenofunction.</p>
 <p>Depends on <code class="docutils literal notranslate"><span class="pre">NET_TCP_FAST_RETRANSMIT</span></code>.</p>
@@ -212,9 +250,9 @@
 </dl>
 </section>
 <section id="test">
-<h2>Test<a class="headerlink" href="#test" title="Permalink to this headline"></a></h2>
+<h2>Test<a class="headerlink" href="#test" title="Permalink to this heading"></a></h2>
 <section id="test-topology">
-<h3>Test topology<a class="headerlink" href="#test-topology" title="Permalink to this headline"></a></h3>
+<h3>Test topology<a class="headerlink" href="#test-topology" title="Permalink to this heading"></a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>                 IP:10.0.1.1
 
                  +--------+
@@ -241,10 +279,10 @@ sim1 | eth0  |                | eth0  | sim2
 </div>
 </section>
 <section id="test-steps">
-<h3>Test steps<a class="headerlink" href="#test-steps" title="Permalink to this headline"></a></h3>
+<h3>Test steps<a class="headerlink" href="#test-steps" title="Permalink to this heading"></a></h3>
 <p>Test the function on the Ubuntu 22.04 x86_64 with NuttX SIM by following steps:</p>
 <dl class="field-list simple">
-<dt class="field-odd">1.Configure the test environment</dt>
+<dt class="field-odd">1.Configure the test environment<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 <ul class="simple">
@@ -252,15 +290,15 @@ sim1 | eth0  |                | eth0  | sim2
 </ul>
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load fib module, and start ifb0 interface</span>
-modprobe ifb
-ip link <span class="nb">set</span> dev ifb0 up
+modprobe<span class="w"> </span>ifb
+ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ifb0<span class="w"> </span>up
 
 <span class="c1"># Import the nuttx0 ingress packets into ifb0</span>
-tc qdisc add dev nuttx0 handle ffff: ingress
-tc filter add dev nuttx0 parent ffff: u32 match u32 <span class="m">0</span> <span class="m">0</span> action mirred egress redirect dev ifb0
+tc<span class="w"> </span>qdisc<span class="w"> </span>add<span class="w"> </span>dev<span class="w"> </span>nuttx0<span class="w"> </span>handle<span class="w"> </span>ffff:<span class="w"> </span>ingress
+tc<span class="w"> </span>filter<span class="w"> </span>add<span class="w"> </span>dev<span class="w"> </span>nuttx0<span class="w"> </span>parent<span class="w"> </span>ffff:<span class="w"> </span>u32<span class="w"> </span>match<span class="w"> </span>u32<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>action<span class="w"> </span>mirred<span class="w"> </span>egress<span class="w"> </span>redirect<span class="w"> </span>dev<span class="w"> </span>ifb0
 
 <span class="c1"># Limit nuttx0 ingress 10Mbps</span>
-tc qdisc add dev ifb0 root tbf rate 10Mbit latency 50ms burst <span class="m">1540</span>
+tc<span class="w"> </span>qdisc<span class="w"> </span>add<span class="w"> </span>dev<span class="w"> </span>ifb0<span class="w"> </span>root<span class="w"> </span>tbf<span class="w"> </span>rate<span class="w"> </span>10Mbit<span class="w"> </span>latency<span class="w"> </span>50ms<span class="w"> </span>burst<span class="w"> </span><span class="m">1540</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -271,45 +309,45 @@ tc qdisc add dev ifb0 root tbf rate 10Mbit latency 50ms burst <span class="m">15
 <div><ul class="simple">
 <li><p>Start iperf3 server on ubuntu.</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>iperf3 -s -i1 -p10003  <span class="c1">#for sim1</span>
-iperf3 -s -i1 -p10004  <span class="c1">#for sim2</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>iperf3<span class="w"> </span>-s<span class="w"> </span>-i1<span class="w"> </span>-p10003<span class="w">  </span><span class="c1">#for sim1</span>
+iperf3<span class="w"> </span>-s<span class="w"> </span>-i1<span class="w"> </span>-p10004<span class="w">  </span><span class="c1">#for sim2</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>start the emulators sim1 and sim2 and configure ip addresses.</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># start and configure sim1</span>
-start gdb nuttx
-ifconfig eth0 <span class="m">10</span>.0.1.3
+start<span class="w"> </span>gdb<span class="w"> </span>nuttx
+ifconfig<span class="w"> </span>eth0<span class="w"> </span><span class="m">10</span>.0.1.3
 
 <span class="c1"># start and configure sim2</span>
-start gdb nuttx
-ifconfig eth0 <span class="m">10</span>.0.1.4 <span class="c1"># sim2</span>
+start<span class="w"> </span>gdb<span class="w"> </span>nuttx
+ifconfig<span class="w"> </span>eth0<span class="w"> </span><span class="m">10</span>.0.1.4<span class="w"> </span><span class="c1"># sim2</span>
 </pre></div>
 </div>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">2.Stream Testing</dt>
+<dt class="field-odd">2.Stream Testing<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 <ul class="simple">
 <li><p>Use iperf3 to perform the stream testing.</p></li>
 </ul>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>iperf3 -c <span class="m">10</span>.0.1.1 -i1 -t60 -p10003 <span class="c1"># sim1</span>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>iperf3<span class="w"> </span>-c<span class="w"> </span><span class="m">10</span>.0.1.1<span class="w"> </span>-i1<span class="w"> </span>-t60<span class="w"> </span>-p10003<span class="w"> </span><span class="c1"># sim1</span>
 
-iperf3 -c <span class="m">10</span>.0.1.1 -i1 -t60 -p10004 <span class="c1"># sim2</span>
+iperf3<span class="w"> </span>-c<span class="w"> </span><span class="m">10</span>.0.1.1<span class="w"> </span>-i1<span class="w"> </span>-t60<span class="w"> </span>-p10004<span class="w"> </span><span class="c1"># sim2</span>
 </pre></div>
 </div>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">3.Comparison Testing</dt>
+<dt class="field-odd">3.Comparison Testing<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Compares the test results of enabling and disabling NewReno.</p>
 </dd>
 </dl>
 </section>
 <section id="test-results">
-<h3>Test results<a class="headerlink" href="#test-results" title="Permalink to this headline"></a></h3>
+<h3>Test results<a class="headerlink" href="#test-results" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><p>The test results should indicate that the total network throughput was significantly increased when NewReno congestion control was enabled, which was close to the actual total network bandwidth, and the rates of both sim devices were stable.</p>
 </div></blockquote>
@@ -320,7 +358,10 @@ iperf3 -c <span class="m">10</span>.0.1.1 -i1 -t60 -p10004 <span class="c1"># si
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nat.html" class="btn btn-neutral float-left" title="Network Address Translation (NAT)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="notifier.html" class="btn btn-neutral float-right" title="Notifier Chain" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

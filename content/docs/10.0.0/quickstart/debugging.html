@@ -20,7 +20,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Debugging &mdash; NuttX latest documentation</title>
@@ -33,10 +33,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -54,9 +55,6 @@
   
 
   
-    
-    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
-  
   </a>
   
   <!-- this version selector is quite ugly, should be probably replaced by something
@@ -73,7 +71,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -124,9 +122,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Getting Started</a> &raquo;</li>
-      <li>Debugging</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Getting Started</a></li>
+      <li class="breadcrumb-item active">Debugging</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/quickstart/debugging.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -137,15 +135,15 @@
            <div itemprop="articleBody">
              
   <section id="debugging">
-<span id="id1"></span><h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline"></a></h1>
+<span id="id1"></span><h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h1>
 <p>Finding and fixing bugs is an important part of the hardware and software development process. Sometimes you also need
 to use debugging techniques to understand how the system works. Two tools that are helpful are debug logging and
 debugging using the GNU Debugger (gdb).</p>
 <section id="debug-logging">
-<h2>Debug Logging<a class="headerlink" href="#debug-logging" title="Permalink to this headline"></a></h2>
+<h2>Debug Logging<a class="headerlink" href="#debug-logging" title="Permalink to this heading"></a></h2>
 <p>NuttX has a powerful system logging facility (syslog) with <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">warn</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code> levels. You can enable
 debugging for your build for the subsystem or feature by using the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> system.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make menuconfig
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>menuconfig
 </pre></div>
 </div>
 <p>The debug options are available under <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">Setup</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">Debug</span> <span class="pre">Options</span></code>. You will most likely have to enable the
@@ -177,13 +175,13 @@ for available debug settings that are available. This can also be configured via
 faster than what the console can output.</p>
 </section>
 <section id="changing-debug-settings-quickly">
-<h2>Changing Debug Settings Quickly<a class="headerlink" href="#changing-debug-settings-quickly" title="Permalink to this headline"></a></h2>
+<h2>Changing Debug Settings Quickly<a class="headerlink" href="#changing-debug-settings-quickly" title="Permalink to this heading"></a></h2>
 <p>You can use the <code class="docutils literal notranslate"><span class="pre">kconfig-tweak</span></code> script that comes with the <code class="docutils literal notranslate"><span class="pre">kconfig-frontends</span></code> tools to quickly change debug settings,
 for instance turning them on or off before doing a build:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>kconfig-tweak --disable CONFIG_DEBUG_NET
-<span class="gp">$ </span>make olddefconfig  <span class="c1"># needed to have the kconfig system check the config</span>
-<span class="gp">$ </span>kconfig-tweak --enable CONFIG_DEBUG_NET
-<span class="gp">$ </span>make olddefconfig
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>kconfig-tweak<span class="w"> </span>--disable<span class="w"> </span>CONFIG_DEBUG_NET
+<span class="gp">$ </span>make<span class="w"> </span>olddefconfig<span class="w">  </span><span class="c1"># needed to have the kconfig system check the config</span>
+<span class="gp">$ </span>kconfig-tweak<span class="w"> </span>--enable<span class="w"> </span>CONFIG_DEBUG_NET
+<span class="gp">$ </span>make<span class="w"> </span>olddefconfig
 </pre></div>
 </div>
 <p>You can put a bunch of these into a simple script to configure the logging the way you want:</p>
@@ -207,7 +205,7 @@ for instance turning them on or off before doing a build:</p>
 </div>
 </section>
 <section id="jtag-debugging">
-<h2>JTAG Debugging<a class="headerlink" href="#jtag-debugging" title="Permalink to this headline"></a></h2>
+<h2>JTAG Debugging<a class="headerlink" href="#jtag-debugging" title="Permalink to this heading"></a></h2>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/JTAG">JTAG</a> is a set of standards that specify a way to attach a hardware device to
 your embedded board, and then remotely control the CPU. You can load code, start, stop, step through the program, and
 examine variables and memory.</p>

@@ -20,7 +20,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drivers &mdash; NuttX latest documentation</title>
@@ -33,10 +33,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,9 +54,6 @@
     <a href="../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +87,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -145,9 +143,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Guides</a> &raquo;</li>
-      <li>Drivers</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">Drivers</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/drivers.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -158,11 +156,11 @@
            <div itemprop="articleBody">
              
   <section id="drivers">
-<span id="id1"></span><h1>Drivers<a class="headerlink" href="#drivers" title="Permalink to this headline"></a></h1>
+<span id="id1"></span><h1>Drivers<a class="headerlink" href="#drivers" title="Permalink to this heading"></a></h1>
 <p>Some NuttX boards don’t have full support for all the on-chip peripherals. If you need support for this hardware,
 you will either need to port a driver from another chip, or write one yourself. This section discusses how to do that.</p>
 <section id="porting-a-driver">
-<span id="drivers-porting"></span><h2>Porting a Driver<a class="headerlink" href="#porting-a-driver" title="Permalink to this headline"></a></h2>
+<span id="drivers-porting"></span><h2>Porting a Driver<a class="headerlink" href="#porting-a-driver" title="Permalink to this heading"></a></h2>
 <p>Often support for on-chip peripherals exists in a closely related chip, or even a different family or from a different
 manufacturer. Many chips are made up of different Intellectual Property (IP) blocks that are licensed from vendors like
 Cadence, Synopsys, and others. The IP blocks may be similar enough to use another chip’s driver with little
@@ -199,14 +197,14 @@ logging. Sometimes it’s useful to quiet the flood of logging that comes from a
 shortcut.</p></li>
 <li><p>Note that printing info to the console will affect timing.</p></li>
 <li><p>Keep a file with just your debug settings in it, like this (<code class="docutils literal notranslate"><span class="pre">debugsettings</span></code>):</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_DEBUG_CUSTOM_INFO</span><span class="o">=</span><span class="n">y</span><span class="w"></span>
-<span class="p">(</span><span class="n">etc</span><span class="p">..)</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_DEBUG_CUSTOM_INFO</span><span class="o">=</span><span class="n">y</span>
+<span class="p">(</span><span class="n">etc</span><span class="p">..)</span>
 </pre></div>
 </div>
 </li>
 <li><p>Add the settings to the end of your <code class="docutils literal notranslate"><span class="pre">.config</span></code> file after running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> (that will reorder
 the file, making it harder to see and change the debug settings if you need to).</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ cat .config debugsettings &gt; .config1 <span class="p">;</span> mv .config1 .config
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cat<span class="w"> </span>.config<span class="w"> </span>debugsettings<span class="w"> </span>&gt;<span class="w"> </span>.config1<span class="w"> </span><span class="p">;</span><span class="w"> </span>mv<span class="w"> </span>.config1<span class="w"> </span>.config
 </pre></div>
 </div>
 </li>
@@ -214,17 +212,17 @@ the file, making it harder to see and change the debug settings if you need to).
 you can use printf debugging to see overlapping execution.</p>
 <ul>
 <li><p>Interrupts - here’s how to inspect the C stack frame to see what execution environment is currently running:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="cm">/* MUST be the very first thing in the function */</span><span class="w"></span>
-<span class="kt">uint32_t</span><span class="w"> </span><span class="n">p_frame</span><span class="p">;</span><span class="w"></span>
-<span class="n">frame</span><span class="o">++</span><span class="p">;</span><span class="w">             </span><span class="cm">/* make sure that frame doesn&#39;t get optimized out */</span><span class="w"></span>
-<span class="n">p_frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">frame</span><span class="p">);</span><span class="w"></span>
-<span class="n">custinfo</span><span class="p">(</span><span class="s">&quot;p_frame: %08x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">p_frame</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="cm">/* MUST be the very first thing in the function */</span>
+<span class="kt">uint32_t</span><span class="w"> </span><span class="n">p_frame</span><span class="p">;</span>
+<span class="n">frame</span><span class="o">++</span><span class="p">;</span><span class="w">             </span><span class="cm">/* make sure that frame doesn&#39;t get optimized out */</span>
+<span class="n">p_frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">frame</span><span class="p">);</span>
+<span class="n">custinfo</span><span class="p">(</span><span class="s">&quot;p_frame: %08x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">p_frame</span><span class="p">);</span>
 </pre></div>
 </div>
 </li>
 <li><p>Threads - here’s how to get the thread identifier to see which thread is currently executing:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">pthread_t</span><span class="w"> </span><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pthread_self</span><span class="p">();</span><span class="w"></span>
-<span class="n">custinfo</span><span class="p">(</span><span class="s">&quot;pthread_id: %08x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">thread_id</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">pthread_t</span><span class="w"> </span><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pthread_self</span><span class="p">();</span>
+<span class="n">custinfo</span><span class="p">(</span><span class="s">&quot;pthread_id: %08x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">thread_id</span><span class="p">);</span>
 </pre></div>
 </div>
 </li>
@@ -296,14 +294,14 @@ Breakpoint 1, mmcsd_readsingle (priv=0x200aa8c0, buffer=0x200aa9e0 &quot;WRTEST 
 </ul>
 </section>
 <section id="nuttx-drivers-as-a-reference">
-<h2>NuttX Drivers as a Reference<a class="headerlink" href="#nuttx-drivers-as-a-reference" title="Permalink to this headline"></a></h2>
+<h2>NuttX Drivers as a Reference<a class="headerlink" href="#nuttx-drivers-as-a-reference" title="Permalink to this heading"></a></h2>
 <p>If you’re not porting a NuttX driver from another architecture, it still helps to look at other similar NuttX
 drivers, if there are any. For instance, when implementing an Ethernet driver, look at other NuttX Ethernet drivers;
 for an SD Card driver, look at other NuttX SD Card drivers. Even if the chip-specific code won’t be the same, the
 structure to interface with NuttX can be used.</p>
 </section>
 <section id="using-chip-datasheets">
-<h2>Using Chip Datasheets<a class="headerlink" href="#using-chip-datasheets" title="Permalink to this headline"></a></h2>
+<h2>Using Chip Datasheets<a class="headerlink" href="#using-chip-datasheets" title="Permalink to this heading"></a></h2>
 <p>To port or write a driver, you’ll have to be familiar with the information in the chip datasheet. Definitely find
 the datasheet for your chip, and read the sections relevant to the peripheral you’re working with. Doing so ahead
 of time will save a lot of time later.</p>
@@ -332,14 +330,14 @@ examples.</p></li>
 </ul>
 </section>
 <section id="logic-analyzers">
-<h2>Logic Analyzers<a class="headerlink" href="#logic-analyzers" title="Permalink to this headline"></a></h2>
+<h2>Logic Analyzers<a class="headerlink" href="#logic-analyzers" title="Permalink to this heading"></a></h2>
 <p>For drivers that involve input and output (I/O), especially that involve complex protocols like SD Cards, SPI, I2C,
 etc., actually seeing the waveform that goes in and out the chip’s pins is extremely helpful. <a class="reference external" href="https://en.wikipedia.org/wiki/Logic_analyzer">Logic Analyzers</a>
 can capture that information and display it graphically, allowing you to see if the driver is doing the right thing
 on the wire.</p>
 </section>
 <section id="dma-debugging">
-<h2>DMA Debugging<a class="headerlink" href="#dma-debugging" title="Permalink to this headline"></a></h2>
+<h2>DMA Debugging<a class="headerlink" href="#dma-debugging" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>Dump registers before, during, and after transfer. Some NuttX drivers (<code class="docutils literal notranslate"><span class="pre">sam_sdmmc.c</span></code> or <code class="docutils literal notranslate"><span class="pre">imxrt_sdmmc.c</span></code> for
 example) have built-in code for debugging register states, and can sample registers before, during, and

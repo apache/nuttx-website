@@ -20,7 +20,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NFS Client How-To &mdash; NuttX latest documentation</title>
@@ -33,10 +33,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,9 +54,6 @@
     <a href="../index.html" class="icon icon-home"> NuttX
   
 
-  
-    
-    <img src="../_static/NuttX.png" class="logo" alt="Logo"/>
   
   </a>
 
@@ -89,7 +87,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -140,9 +138,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Guides</a> &raquo;</li>
-      <li>NFS Client How-To</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">NFS Client How-To</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/nfs.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -153,9 +151,9 @@
            <div itemprop="articleBody">
              
   <section id="nfs-client-how-to">
-<h1>NFS Client How-To<a class="headerlink" href="#nfs-client-how-to" title="Permalink to this headline"></a></h1>
+<h1>NFS Client How-To<a class="headerlink" href="#nfs-client-how-to" title="Permalink to this heading"></a></h1>
 <section id="adding-nfs-to-the-nuttx-configuration">
-<h2>Adding NFS to the NuttX Configuration<a class="headerlink" href="#adding-nfs-to-the-nuttx-configuration" title="Permalink to this headline"></a></h2>
+<h2>Adding NFS to the NuttX Configuration<a class="headerlink" href="#adding-nfs-to-the-nuttx-configuration" title="Permalink to this heading"></a></h2>
 <p>The NFS client is easily added to your configuration: You simply need to
 add <code class="docutils literal notranslate"><span class="pre">CONFIG_NFS</span></code> to your <code class="docutils literal notranslate"><span class="pre">nuttx/.config</span></code> file. There are, however, a
 few dependencies on other system settings:</p>
@@ -177,7 +175,7 @@ minimum, you need to have the following selections:</p>
 </div></blockquote>
 </section>
 <section id="mount-interface">
-<h2>Mount Interface<a class="headerlink" href="#mount-interface" title="Permalink to this headline"></a></h2>
+<h2>Mount Interface<a class="headerlink" href="#mount-interface" title="Permalink to this heading"></a></h2>
 <p>A low-level, C-callable interface is provided to mount a file system.
 That interface is called <code class="docutils literal notranslate"><span class="pre">mount()</span></code> and is mentioned in the
 porting guide and is prototyped in the header file <code class="docutils literal notranslate"><span class="pre">include/sys/mount.h</span></code>:</p>
@@ -188,7 +186,7 @@ porting guide and is prototyped in the header file <code class="docutils literal
 <code class="docutils literal notranslate"><span class="pre">source</span></code> block device name into the root file system at the path
 specified by <code class="docutils literal notranslate"><span class="pre">target</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>source</strong> – A null-terminated string providing the fill path to a
 block driver in the NuttX pseudo-file system.</p></li>
@@ -202,7 +200,7 @@ file system is mounted.</p></li>
 mount occurs.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>Zero is returned on success; -1 is returned on an
 error and <code class="docutils literal notranslate"><span class="pre">errno</span></code> is set appropriately:</p>
 <ul class="simple">
@@ -230,13 +228,13 @@ system mount in that: (1) there is no block driver for the NFS file
 system, and (2) special parameters must be passed as <code class="docutils literal notranslate"><span class="pre">data</span></code> to
 describe the remote NFS server. Thus the following code snippet might
 represent how an NFS file system is mounted:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/mount.h&gt;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/fs/nfs.h&gt;</span><span class="cp"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/mount.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/fs/nfs.h&gt;</span>
 
-<span class="k">struct</span><span class="w"> </span><span class="nc">nfs_args</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
-<span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">mountpoint</span><span class="p">;</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">nfs_args</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+<span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">mountpoint</span><span class="p">;</span>
 
-<span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mount</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">mountpoint</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="s">&quot;nfs&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">data</span><span class="p">);</span><span class="w"></span>
+<span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mount</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">mountpoint</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="s">&quot;nfs&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">data</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>NOTE that: (1) the block driver parameter is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. The <code class="docutils literal notranslate"><span class="pre">mount()</span></code>
@@ -247,24 +245,24 @@ NFS-specific argument.</p>
 <p>The NFS-specific interface is described in the file
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/nfs.h</span></code>. There you can see that <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nfs_args</span></code>
 is defined as:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">nfs_args</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">addrlen</span><span class="p">;</span><span class="w">               </span><span class="cm">/* Length of address */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">sotype</span><span class="p">;</span><span class="w">                </span><span class="cm">/* Socket type */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">flags</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Flags, determines if following are valid: */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">timeo</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Time value in deciseconds (with NFSMNT_TIMEO) */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">retrans</span><span class="p">;</span><span class="w">               </span><span class="cm">/* Times to retry send (with NFSMNT_RETRANS) */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">wsize</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Write size in bytes (with NFSMNT_WSIZE) */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">rsize</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Read size in bytes (with NFSMNT_RSIZE) */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">readdirsize</span><span class="p">;</span><span class="w">           </span><span class="cm">/* readdir size in bytes (with NFSMNT_READDIRSIZE) */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">char</span><span class="w">    </span><span class="o">*</span><span class="n">path</span><span class="p">;</span><span class="w">                  </span><span class="cm">/* Server&#39;s path of the directory being mount */</span><span class="w"></span>
-<span class="w">  </span><span class="k">struct</span><span class="w">   </span><span class="nc">sockaddr_storage</span><span class="w"> </span><span class="n">addr</span><span class="p">;</span><span class="w"> </span><span class="cm">/* File server address (requires 32-bit alignment) */</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">nfs_args</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">addrlen</span><span class="p">;</span><span class="w">               </span><span class="cm">/* Length of address */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">sotype</span><span class="p">;</span><span class="w">                </span><span class="cm">/* Socket type */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">flags</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Flags, determines if following are valid: */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">timeo</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Time value in deciseconds (with NFSMNT_TIMEO) */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">  </span><span class="n">retrans</span><span class="p">;</span><span class="w">               </span><span class="cm">/* Times to retry send (with NFSMNT_RETRANS) */</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">wsize</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Write size in bytes (with NFSMNT_WSIZE) */</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">rsize</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Read size in bytes (with NFSMNT_RSIZE) */</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">readdirsize</span><span class="p">;</span><span class="w">           </span><span class="cm">/* readdir size in bytes (with NFSMNT_READDIRSIZE) */</span>
+<span class="w">  </span><span class="kt">char</span><span class="w">    </span><span class="o">*</span><span class="n">path</span><span class="p">;</span><span class="w">                  </span><span class="cm">/* Server&#39;s path of the directory being mount */</span>
+<span class="w">  </span><span class="k">struct</span><span class="w">   </span><span class="nc">sockaddr_storage</span><span class="w"> </span><span class="n">addr</span><span class="p">;</span><span class="w"> </span><span class="cm">/* File server address (requires 32-bit alignment) */</span>
+<span class="p">};</span>
 </pre></div>
 </div>
 </section>
 <section id="nfs-mount-command">
-<h2>NFS Mount Command<a class="headerlink" href="#nfs-mount-command" title="Permalink to this headline"></a></h2>
+<h2>NFS Mount Command<a class="headerlink" href="#nfs-mount-command" title="Permalink to this heading"></a></h2>
 <p>The <a class="reference internal" href="../applications/nsh/nsh.html#nsh"><span class="std std-ref">NuttShell (NSH)</span></a> also supports a command called
 <code class="docutils literal notranslate"><span class="pre">nfsmount</span></code> that can be used to mount a remote file system via the NSH
 command line.</p>
@@ -324,25 +322,25 @@ This is a <span class="k">test</span>
 </div>
 </section>
 <section id="configuring-the-nfs-server-ubuntu">
-<h2>Configuring the NFS server (Ubuntu)<a class="headerlink" href="#configuring-the-nfs-server-ubuntu" title="Permalink to this headline"></a></h2>
+<h2>Configuring the NFS server (Ubuntu)<a class="headerlink" href="#configuring-the-nfs-server-ubuntu" title="Permalink to this heading"></a></h2>
 <p>Setting up the server will be done in two steps: First, setting up the
 configuration file for NFS, and then starting the NFS services. But
 first, you need to install the nfs server on Ubuntu with these two
 commands:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo apt-get install nfs-common
-<span class="gp"># </span>sudo apt-get install nfs-kernel-server
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>nfs-common
+<span class="gp"># </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>nfs-kernel-server
 </pre></div>
 </div>
 <p>After that, we need to make or choose the directory we want to export
 from the NFS server. In our case, we are going to make a new directory
 called <code class="docutils literal notranslate"><span class="pre">/export</span></code>.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo mkdir /export
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo<span class="w"> </span>mkdir<span class="w"> </span>/export
 </pre></div>
 </div>
 <p>It is important that <code class="docutils literal notranslate"><span class="pre">/export</span></code> directory allow access to everyone (777
 permissions) as we will be accessing the NFS share from the client with
 no authentication.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo chmod <span class="m">777</span> /export
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">777</span><span class="w"> </span>/export
 </pre></div>
 </div>
 <p>When all this is done, we will need to edit the configuration file to
@@ -364,27 +362,27 @@ that we replaced with <code class="docutils literal notranslate"><span class="pr
 access to the directory that we are exporting.</p>
 <p>After we do all the require configurations, we are ready to start the
 server with the next command:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo /etc/init.d/nfs-kernel-server start
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo<span class="w"> </span>/etc/init.d/nfs-kernel-server<span class="w"> </span>start
 </pre></div>
 </div>
 <p>Note: If you later decide to add more NFS exports to the /etc/exports
 file, you will need to either restart NFS daemon or run command
 exportfs.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo /etc/init.d/nfs-kernel-server start
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo<span class="w"> </span>/etc/init.d/nfs-kernel-server<span class="w"> </span>start
 </pre></div>
 </div>
 <p>Or</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>exportfs -ra
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>exportfs<span class="w"> </span>-ra
 </pre></div>
 </div>
 <p>Now we can check if the export directory and our mount point is properly
 set up.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo showmount -e
-<span class="gp"># </span>sudo showmount -a
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>sudo<span class="w"> </span>showmount<span class="w"> </span>-e
+<span class="gp"># </span>sudo<span class="w"> </span>showmount<span class="w"> </span>-a
 </pre></div>
 </div>
 <p>And also we can verify if NFS is running in the system with:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>rpcinfo –p
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>rpcinfo<span class="w"> </span>–p
 <span class="go">program vers proto   port</span>
 <span class="go">   100000   2   tcp    111  portmapper</span>
 <span class="go">   100000   2   udp    111  portmapper</span>
