@@ -372,13 +372,13 @@ are, in increasing order of importance:</p>
 <ul class="simple">
 <li><p><strong>Overhead</strong>: Although the CPU usage of the system timer
 interrupt at 100Hz is really very low, it is still mostly
-wasted processing time. One most timer interrupts, there is
-really nothing that needs be done other than incrementing the
+wasted processing time. On most timer interrupts, there is
+really nothing that needs to be done other than incrementing the
 counter.</p></li>
 <li><p><strong>Resolution</strong>: Resolution of all system timing is also
-determined by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>. So nothing that be time
-with resolution finer than 10 milliseconds be default. To
-increase this resolution, <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> an be
+determined by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>. So nothing can be timed
+with resolution finer than 10 milliseconds by default. To
+increase this resolution, <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> can be
 reduced. However, then the system timer interrupts use more of
 the CPU bandwidth processing useless interrupts.</p></li>
 <li><p><strong>Power Usage</strong>: But the biggest issue is power usage. When the
@@ -389,7 +389,7 @@ low power mode. Therefore, higher rates of interrupts cause
 greater power consumption.</p></li>
 </ul>
 <p><strong>Tickless OS</strong>. The so-called <em>Tickless OS</em> provides one solution
-to issue. The basic concept here is that the periodic, timer
+to this issue. The basic concept here is that the periodic, timer
 interrupt is eliminated and replaced with a one-shot, interval
 timer. It becomes event driven instead of polled: The default
 system timer is a polled design. On each interrupt, the NuttX
@@ -415,17 +415,24 @@ explain how to provide the Tickless OS support to any platform.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_TICKLESS</span></code>: If the platform provides
 support for the <em>Tickless OS</em>, then this setting should be
-selected in the <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code> file for the board. Here is what
-the selection looks in the <code class="docutils literal notranslate"><span class="pre">arch/Kconfig</span></code> file for the
+selected in the <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code> file for the architecture. Here is
+what the selection looks in the <code class="docutils literal notranslate"><span class="pre">arch/Kconfig</span></code> file for the
 simulated platform:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">config ARCH_SIM</span>
+<span class="go">   bool &quot;Simulation&quot;</span>
+<span class="go">   select ARCH_HAVE_TICKLESS</span>
+<span class="go">   ---help---</span>
+<span class="go">           Linux/Cywgin user-mode simulation.</span>
+</pre></div>
+</div>
 <p>When the simulation platform is selected,
 <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_TICKLESS</span></code> is automatically selected, informing the
 configuration system that <em>Tickless OS</em> options can be
 selected.</p>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS</span></code>: If <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_TICKLESS</span></code>
-is selected, then it will enable the Tickless OS features in
-NuttX.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS</span></code>: If <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_TICKLESS</span></code> is
+selected, then you will be able to use this option to enable the
+<em>Tickless OS</em> features in NuttX.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS_ALARM</span></code>: The tickless option can be
 supported either via a simple interval timer (plus elapsed
 time) or via an alarm. The interval timer allows programming
@@ -434,15 +441,15 @@ a time in the future and get an event when that alarm goes off.
 This option selects the use of an alarm.</p>
 <p>The advantage of an alarm is that it avoids some small timing
 errors; the advantage of the use of the interval timer is that
-the hardware requirement may be less.</p>
+the hardware requirement may be simpler.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>: This option is not unique to
 <em>Tickless OS</em> operation, but changes its relevance when the
-<em>Tickless OS</em> is selected. In the default configuration where
+<em>Tickless OS</em> is selected. In the default configuration, where
 system time is provided by a periodic timer interrupt, the
-default system timer is configure the timer for 100Hz or
+default system timer is configured for 100Hz, that is,
 <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK=10000</span></code>. If <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS</span></code> is
-selected, then there are no system timer interrupt. In this
+selected, then there are no system timer interrupts. In this
 case, <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> does not control any timer
 rates. Rather, it only determines the resolution of time
 reported by <code class="docutils literal notranslate"><span class="pre">clock_systime_ticks()</span></code> and the resolution of
@@ -498,25 +505,22 @@ interval timer.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code>: Starts (or re-starts)
 the interval timer.</p></li>
 </ul>
-<p>Note that a platform-specific implementation would probably
-require two hardware timers: (1) A interval timer to satisfy the
-requirements of <code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code> and
-<code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code>, and a (2) a counter to
-handle the requirement of
-<code class="docutils literal notranslate"><span class="pre">up_timer_gettime()</span></code>. Ideally, both timers
+<p>Note that a platform-specific implementation would probably require two
+hardware timers: (1) A interval timer to satisfy the requirements of
+<code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code> and <code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code>, and (2) a counter to
+handle the requirement of <code class="docutils literal notranslate"><span class="pre">up_timer_gettime()</span></code>. Ideally, both timers
 would run at the rate determined by <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code> (and
 certainly never slower than that rate).</p>
-<p>Since timers are a limited resource, the use of two timers could
-be an issue on some systems. The job could be done with a single
-timer if, for example, the single timer were kept in a
-free-running at all times. Some timer/counters have the capability
-to generate a compare interrupt when the timer matches a
-comparison value but also to continue counting without stopping.
-If your hardware supports such counters, one might used the
-<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS_ALARM</span></code> option and be able to simply set
-the comparison count at the value of the free running timer <em>PLUS</em>
-the desired delay. Then you could have both with a single timer:
-An alarm and a free-running counter with the same timer!</p>
+<p>Since timers are a limited resource, the use of two timers could be an
+issue on some systems. The job could be done with a single timer if, for
+example, the single timer were kept in a free-running mode at all times.
+Some timer/counters have the capability to generate a compare interrupt
+when the timer matches a comparison value but also to continue counting
+without stopping. If your hardware supports such counters, one might use
+the <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_TICKLESS_ALARM</span></code> option and be able to simply set the
+comparison count at the value of the free running timer <em>PLUS</em> the
+desired delay. Then you could have both with a single timer: An alarm
+and a free-running counter with the same timer!</p>
 <p>In addition to these imported interfaces, the RTOS will export the
 following interfaces for use by the platform-specific interval
 timer implementation:</p>
