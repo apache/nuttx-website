@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Custom Boards How-To &mdash; NuttX latest documentation</title>
+  <title>GDB with Python &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Custom Apps How-to" href="customapps.html" />
-    <link rel="prev" title="pysimCoder integration with NuttX" href="pysimcoder.html" /> 
+    <link rel="next" title="Glossary" href="../glossary.html" />
+    <link rel="prev" title="Core Dump" href="coredump.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -119,19 +119,18 @@
 <li class="toctree-l2"><a class="reference internal" href="tasktrace.html">Task Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Custom Boards How-To</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#add-a-custom-board">Add a Custom Board</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#kconfig-settings">Kconfig Settings</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance, Zero Latency Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">GDB with Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-write-a-gdb-python-script">How to write a GDB python script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -152,9 +151,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Custom Boards How-To</li>
+      <li class="breadcrumb-item active">GDB with Python</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/customboards.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/gdbwithpython.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -162,68 +161,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="custom-boards-how-to">
-<h1>Custom Boards How-To<a class="headerlink" href="#custom-boards-how-to" title="Permalink to this heading"></a></h1>
-<p>As explained in <a class="reference internal" href="../quickstart/configuring.html"><span class="doc">Configuring</span></a>, supported boards (also known
-as “in-tree” boards) are configured using a standard syntax:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
-<span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>-l<span class="w"> </span>board-name:config-name
-<span class="go">  Copy files</span>
-<span class="go">  Select CONFIG_HOST_LINUX=y</span>
-<span class="go">  Refreshing...</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>Sometimes it is not appropriate, or not wanted, to add a new or custom board to
-the NuttX boards tree itself. If so, the board can be defined out-of-tree in a
-custom directory and still be built easily.</p>
-<section id="add-a-custom-board">
-<h2>Add a Custom Board<a class="headerlink" href="#add-a-custom-board" title="Permalink to this heading"></a></h2>
-<p>The same set of files as provided for in-tree boards is required (i.e. configs,
-Kconfig, scripts, etc.) but these can be placed in a directory of your choice.</p>
-<dl>
-<dt>In this example, the files are assumed to exist in:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">../nuttx/CustomBoards/MyCustomBoardName</span></code></p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span><span class="nb">pwd</span>
-<span class="go">/home/nuttx/nuttx</span>
-<span class="gp">$ </span>ls<span class="w"> </span>-1<span class="w"> </span>../CustomBoards/MyCustomBoardName
-<span class="go">configs</span>
-<span class="go">helpers</span>
-<span class="go">include</span>
-<span class="go">Kconfig</span>
-<span class="go">scripts</span>
-<span class="gp">$ </span>ls<span class="w"> </span>../CustomBoards/MyCustomBoardName/configs
-<span class="go">nsh</span>
-<span class="go">MyCustomConfig</span>
-<span class="gp">$</span>
-</pre></div>
-</div>
-</div></blockquote>
-</dd>
-</dl>
-<p>To build the custom board, the syntax is slightly different to in-tree boards and configs:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>.tools/configure<span class="w"> </span>-l<span class="w"> </span>../CustomBoards/MyCustomBoardName/MyCustomConfig
-<span class="go">Copy files</span>
-<span class="go">Select CONFIG_HOST_LINUX=y</span>
-<span class="go">Refreshing...</span>
-</pre></div>
-</div>
-</div></blockquote>
-<section id="kconfig-settings">
-<h3>Kconfig Settings<a class="headerlink" href="#kconfig-settings" title="Permalink to this heading"></a></h3>
-<p>Once the board is configured, to ensure subsequent builds run correctly, there
-are two Kconfig settings that need to be set. These are:</p>
-<p><span class="menuselection">Board Selection ‣ Custom Board Configuration ‣ Custom Board Name</span></p>
-<p><span class="menuselection">Board Selection ‣ Custom Board Configuration ‣ Relative custom board directory</span></p>
-<p>They should be set to suit your board name and directory location.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you subsequently run a <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">distclean</span></code> operation, then these settings will be lost.
-They should be added back before building, and/or before running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>.</p>
-</div>
+  <section id="gdb-with-python">
+<h1>GDB with Python<a class="headerlink" href="#gdb-with-python" title="Permalink to this heading"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<p>We can better debug the nuttx kernel through GDB’s python extension.
+Some of the most common class usages are implemented under the nuttx/tools/gdb directory.
+Users can write their own python scripts to debug the nuttx kernel according to their needs</p>
 </section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Compile nuttx with CONFIG_DEBUG_SYMBOLS=y</p></li>
+<li><p>Use gdb to debug nuttx elf.(real device, or sim, or coredump)</p></li>
+<li><p>add args to gdb command line: -ix=”nuttx/tools/gdb/__init__.py”</p></li>
+<li><p>Then gdb will load the python script automatically.you can use the custom commands.</p></li>
+</ol>
+</section>
+<section id="how-to-write-a-gdb-python-script">
+<h2>How to write a GDB python script<a class="headerlink" href="#how-to-write-a-gdb-python-script" title="Permalink to this heading"></a></h2>
+<p>Here is an article to introduce, read it to understand the most basic principles of python,
+<a class="reference external" href="https://interrupt.memfault.com/blog/automate-debugging-with-gdb-python-api">Automate Debugging with GDB Python API</a>.</p>
+<p>For more documentation on gdb pyhton, please refer to the official documentation of gdb
+<a class="reference external" href="https://interrupt.memfault.com/blog/automate-debugging-with-gdb-python-api">GDB with pyhton</a>.</p>
 </section>
 </section>
 
@@ -231,8 +191,8 @@ They should be added back before building, and/or before running <code class="do
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pysimcoder.html" class="btn btn-neutral float-left" title="pysimCoder integration with NuttX" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="customapps.html" class="btn btn-neutral float-right" title="Custom Apps How-to" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coredump.html" class="btn btn-neutral float-left" title="Core Dump" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
