@@ -364,25 +364,26 @@ control        0x0                 0
 <p>You can also do NuttX aware debugging using <code class="docutils literal notranslate"><span class="pre">gdb</span></code> scripting support.
 The benefit is that it works also for the sim build where <code class="docutils literal notranslate"><span class="pre">openocd</span></code> is
 not applicable. For this to work, you will need to enable PROC filesystem support
-which will expose required task information (<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS=y</span></code>).</p>
-<p>To use this approach, you can load the <code class="docutils literal notranslate"><span class="pre">nuttx/tools/nuttx-gdbinit</span></code> file. An
-easy way to do this is to create a symbolic link:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$HOME</span>
-<span class="gp">$ </span>ln<span class="w"> </span>-s<span class="w"> </span>nuttx/tools/nuttx-gdbinit<span class="w"> </span>.gdbinit
+which will expose required task information (<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS=y</span> <span class="pre">CONFIG_DEBUG_TCBINFO=y</span></code>).</p>
+<p>To use this approach, you can load the <code class="docutils literal notranslate"><span class="pre">nuttx/tools/gdb/__init__.py</span></code> file. An
+easy way to do this is to  add an extra command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb<span class="w"> </span>nuttx<span class="w"> </span>-ex<span class="w"> </span><span class="s2">&quot;nuttx/tools/gdb/__init__.py&quot;</span>
 </pre></div>
 </div>
-<p>This way whenever gdb is started it will run the appropriate commands. To inspect
-the threads you can now use the following <code class="docutils literal notranslate"><span class="pre">gdb</span></code> command:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) info_nxthreads
-target examined
-_target_arch.name=armv7e-m
-$_target_has_fpu : 0
-$_target_has_smp : 0
-saved current_tcb (pid=0)
-* 0 Thread 0x20000308  (Name: Idle Task, State: Running, Priority: 0) 0xdc in __start()
-  1 Thread 0x20001480  (Name: init, State: Waiting,Semaphore, Priority: 100) 0x7e08 in arm_switchcontext()
+<p>gdb can need to set the current elf support architecture, for example,
+the prefix is arm-ebai-none-.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) info threads
+Id   Thread                Info                                                                             Frame
+*0   Thread 0x20000398     (Name: Idle Task, State: Running, Priority: 0, Stack: 1000)                      0x80001ac __start() at chip/stm32_start.c:111
+1    Thread 0x10000188     (Name: nsh_main, State: Waiting,Semaphore, Priority: 100, Stack: 2000)           0x800aa06 sys_call2() at /home/ajh/work/vela_all/nuttx/include/arch/syscall.h:187
 </pre></div>
 </div>
+<p>The python script has extended many commands like <code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">&lt;id&gt;</span></code> ,
+<code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">apply</span> <span class="pre">&lt;all|id</span> <span class="pre">list&gt;</span> <span class="pre">cmd</span></code>, <code class="docutils literal notranslate"><span class="pre">nxsetargs</span></code> etc.
+You can use <code class="docutils literal notranslate"><span class="pre">help</span> <span class="pre">&lt;command&gt;</span></code> to get help.</p>
+<p>Note that if you need to continue debugging after using the thread command,
+please use <code class="docutils literal notranslate"><span class="pre">c</span></code> instead of <code class="docutils literal notranslate"><span class="pre">continue</span></code>, because thread will force the register to be set,
+and the <cite>c</cite> command will restore the register before conitune.</p>
 </section>
 </section>
 </section>
