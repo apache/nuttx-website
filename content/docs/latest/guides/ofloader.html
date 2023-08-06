@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How to debug NuttX using QEMU and GDB &mdash; NuttX latest documentation</title>
+  <title>Open Flash Loader &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="How to use RNDIS" href="rndis.html" />
-    <link rel="prev" title="Simulator" href="simulator.html" /> 
+    <link rel="next" title="Glossary" href="../glossary.html" />
+    <link rel="prev" title="GDB with Python" href="gdbwithpython.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -117,12 +117,7 @@
 <li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">How to debug NuttX using QEMU and GDB</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#compiling">Compiling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#start-qemu">Start QEMU</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#start-gdb-to-connect-to-qemu">Start GDB to connect to QEMU</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="qemugdb.html">How to debug NuttX using QEMU and GDB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tasktrace.html">Task Trace</a></li>
@@ -135,7 +130,13 @@
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Open Flash Loader</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduce">Introduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">CONFIGURATION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#precautions">Precautions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -156,9 +157,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">How to debug NuttX using QEMU and GDB</li>
+      <li class="breadcrumb-item active">Open Flash Loader</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/qemugdb.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/ofloader.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -166,102 +167,50 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="how-to-debug-nuttx-using-qemu-and-gdb">
-<span id="qemugdb"></span><h1>How to debug NuttX using QEMU and GDB<a class="headerlink" href="#how-to-debug-nuttx-using-qemu-and-gdb" title="Permalink to this heading"></a></h1>
-<p>This guide explains the steps needed to use QEMU and GDB to debug
-an ARM board (lm3s6965-ek), but it could be modified to work with other
-board or architecture supported by QEMU.</p>
-<p>Start configuring and compiling the lm3s6965-ek board with qemu-flat profile.</p>
-<section id="compiling">
-<h2>Compiling<a class="headerlink" href="#compiling" title="Permalink to this heading"></a></h2>
-<ol class="arabic">
-<li><p>Configure the lm3s6965-ek</p>
-<p>There is a sample configuration to use lm3s6965-ek on QEMU.</p>
-<p>Just use <code class="docutils literal notranslate"><span class="pre">lm3s6965-ek:qemu-flat</span></code> board profile for this purpose.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
-<span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>lm3s6965-ek:qemu-flat
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Compile</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>-j
-</pre></div>
-</div>
-</div></blockquote>
-</li>
+  <section id="open-flash-loader">
+<h1>Open Flash Loader<a class="headerlink" href="#open-flash-loader" title="Permalink to this heading"></a></h1>
+<section id="introduce">
+<h2>Introduce<a class="headerlink" href="#introduce" title="Permalink to this heading"></a></h2>
+<p>Open Flash loader is an implementation in NuttX that bridges the device
+drivers in NuttX with the programming methods of a flash loader in J-Link.
+It allows J-Link to program any supported NuttX device driver.</p>
+</section>
+<section id="configuration">
+<h2>CONFIGURATION<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">`CONFIG_DISABLE_IDLE_LOOP</span></code> is used to disable the idle loop in NuttX.
+<code class="docutils literal notranslate"><span class="pre">`CONFIG_SYSTEM_OFLOADER`</span></code> is used to enable the Open Flash Loader.
+<code class="docutils literal notranslate"><span class="pre">`CONFIG_SYSTEM_OFLOADER_TABLE`</span></code> is used to configure the flash device
+frist parameter is the device name, second parameter is the start address.</p>
+<p>The reference configuration “stm32f429i-disco:ofloader” is designed
+to be used with the STM32F429I-DISCO board in NuttX,
+enabling the Open Flash loader functionality. This configuration allows
+the J-Link flash loader to program the NuttX image onto the STM32F429I-DISCO board.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Build NuttX with Open Flash Loader.</p></li>
+<li><p>Configure the Jlink xml file. like</p></li>
+</ol>
+<ol class="arabic simple" start="3">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">JLinkExe</span> <span class="pre">-if</span> <span class="pre">SWD</span> <span class="pre">-speed</span> <span class="pre">4000</span> <span class="pre">-device</span> <span class="pre">STM32NUTTX</span></code>,
+then <code class="docutils literal notranslate"><span class="pre">loadbin</span> <span class="pre">/home/ajh/work/nuttx.bin</span> <span class="pre">0x08000000</span></code>,
+we can flash nuttx.bin to /dev/flash</p></li>
 </ol>
 </section>
-<section id="start-qemu">
-<h2>Start QEMU<a class="headerlink" href="#start-qemu" title="Permalink to this heading"></a></h2>
-<ol class="arabic">
-<li><p>You need to start QEMU using the nuttx ELF file just create above:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-arm<span class="w"> </span>-M<span class="w"> </span>lm3s6965evb<span class="w"> </span>-device<span class="w"> </span>loader,file<span class="o">=</span>nuttx<span class="w"> </span>-serial<span class="w"> </span>mon:stdio<span class="w"> </span>-nographic<span class="w"> </span>-s
-<span class="go">Timer with period zero, disabling</span>
-<span class="go">ABCDF</span>
-<span class="go">telnetd [4:100]</span>
-
-<span class="go">NuttShell (NSH) NuttX-12.0.0</span>
-<span class="go">nsh&gt;</span>
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-</ol>
-</section>
-<section id="start-gdb-to-connect-to-qemu">
-<h2>Start GDB to connect to QEMU<a class="headerlink" href="#start-gdb-to-connect-to-qemu" title="Permalink to this heading"></a></h2>
-<blockquote>
-<div><p>These steps show how to connect GDB to QEMU running NuttX:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb-multiarch<span class="w"> </span>-ix<span class="w"> </span>tools/nuttx-gdbinit<span class="w"> </span>nuttx
-<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">target extended-remote localhost:1234</span>
-<span class="go">Remote debugging using localhost:1234</span>
-<span class="go">0x000012ee in up_mdelay (milliseconds=milliseconds@entry=250)</span>
-<span class="go">    at common/arm_mdelay.c:51</span>
-<span class="go">51             for (j = 0; j &lt; CONFIG_BOARD_LOOPSPERMSEC; j++)</span>
-<span class="gp gp-VirtualEnv">(gdb)</span>
-</pre></div>
-</div>
-</div></blockquote>
-</div></blockquote>
-<ol class="arabic">
-<li><p>From (gdb) prompt you can run commands to inpect NuttX:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">info_nxthreads</span>
-<span class="go">target examined</span>
-<span class="go">_target_arch.name=armv7</span>
-<span class="gp">$</span>_target_has_fpu<span class="w"> </span>:<span class="w"> </span><span class="m">1</span>
-<span class="gp">$</span>_target_has_smp<span class="w"> </span>:<span class="w"> </span><span class="m">0</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">*</span>
-<span class="go">0 Thread 0x20001538  (Name: Idle Task, State: Running, Priority: 0, Stack: 464/1000) PC: 0x12fc in up_mdelay()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">1 Thread 0x20005060  (Name: hpwork, State: Waiting,Semaphore, Priority: 224, Stack: 320/1992) PC: 0x47dd in work_thread()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">2 Thread 0x20005c30  (Name: nsh_main, State: Waiting,Semaphore, Priority: 100, Stack: 1016/2000) PC: 0x1 in _vectors()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">3 Thread 0x20006b40  (Name: NTP daemon, State: Waiting,Signal, Priority: 100, Stack: 864/1952) PC: 0x0 in _vectors()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">4 Thread 0x20008540  (Name: telnetd, State: Waiting,Semaphore, Priority: 100, Stack: 616/2008) PC: 0x20008fd4 in No()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="gp gp-VirtualEnv">(gdb)</span>
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-</ol>
-<p>As you can see QEMU and GDB are powerful tools to debug NuttX without using external board or expensive debugging hardware.</p>
+<section id="precautions">
+<h2>Precautions<a class="headerlink" href="#precautions" title="Permalink to this heading"></a></h2>
+<p>1.If you need to implement the ofloader on a different board,
+you will need to read the <cite>wiki &lt;https://wiki.segger.com/SEGGER_Flash_Loader&gt;</cite>
+and refer to the implementation of “ofloader.ld” linker script located
+in the “boards/arm/stm32/stm32f429i-disco/scripts” directory.
+This linker script defines how the different sections of the NuttX image are placed in memory.
+You should configure the corresponding sections to be located in RAM,
+where the J-Link can write the image correctly.</p>
+<p>2.When running the ofloader, J-Link disables any interrupts by default.
+Therefore, currently, it does not support programming devices with interrupt-driven drivers.</p>
+<p>3.Due to limitations of J-Link, the ofloader image file cannot exceed 64KB.
+It is essential to be mindful of this constraint during programming.</p>
 </section>
 </section>
 
@@ -269,8 +218,8 @@ board or architecture supported by QEMU.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="simulator.html" class="btn btn-neutral float-left" title="Simulator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rndis.html" class="btn btn-neutral float-right" title="How to use RNDIS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="gdbwithpython.html" class="btn btn-neutral float-left" title="GDB with Python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
