@@ -731,6 +731,74 @@ adb shell
 </pre></div>
 </div>
 </section>
+<section id="alsa">
+<h3>alsa<a class="headerlink" href="#alsa" title="Permalink to this heading"></a></h3>
+<p>This configuration enables testing audio applications on NuttX by
+implementing an audio-like driver that uses ALSA to forward the audio to
+the host system. It also enables the <cite>hostfs</cite> to enable direct access to
+the host system’s files mounted on the simulator. The ALSA audio driver
+allows uncompressed PCM files - as well as MP3 files - to be played.</p>
+<p>To check the audio devices:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./nuttx
+NuttShell (NSH) NuttX-10.4.0
+nsh&gt; ls /dev/audio
+/dev/audio:
+pcm0c
+pcm0p
+pcm1c
+pcm1p
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><cite>pcm0c</cite> represents the device to capture uncompressed PCM audio;</p></li>
+<li><p><cite>pcm0p</cite> represents the device to playback uncompressed PCM files;</p></li>
+<li><p><cite>pcm1c</cite> represents the device to capture MP3-encoded audio;</p></li>
+<li><p><cite>pcm1p</cite> represents the device to playback MP3-encoded files;</p></li>
+</ul>
+<section id="mounting-files-from-host-system">
+<h4>Mounting Files from Host System<a class="headerlink" href="#mounting-files-from-host-system" title="Permalink to this heading"></a></h4>
+<p>To mount files from the host system and enable them to be played in the sim:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t hostfs -o fs=/path/to/audio/files/ /host
+nsh&gt; ls /host
+/host:
+mother.mp3
+mother.wav
+.
+..
+</pre></div>
+</div>
+</section>
+<section id="playing-uncompressed-pcm-files">
+<h4>Playing uncompressed-PCM files<a class="headerlink" href="#playing-uncompressed-pcm-files" title="Permalink to this heading"></a></h4>
+<p>To play uncompressed-PCM files, we can use <cite>nxplayer</cite>’s <cite>playraw</cite> command.
+We need 1) select the appropriate audio device to playback this file and
+1) know in advance the file’s parameters (channels, bits/sample and
+sampling rate):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; nxplayer
+NxPlayer version 1.05
+h for commands, q to exit
+
+nxplayer&gt; device /dev/audio/pcm0p
+nxplayer&gt; playraw /host/mother.wav 2 16 44100
+</pre></div>
+</div>
+<p>In this example, the file <cite>mother.wav</cite> is a stereo (2-channel),
+16 bits/sample and 44,1KHz PCM-encoded file.</p>
+</section>
+<section id="playing-mp3-encoded-files">
+<h4>Playing MP3-encoded files<a class="headerlink" href="#playing-mp3-encoded-files" title="Permalink to this heading"></a></h4>
+<p>To play MP3 files, we can use <cite>nxplayer</cite>’s <cite>play</cite> command directly.
+We only need to select the appropriate audio device to playback this file:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; nxplayer
+NxPlayer version 1.05
+h for commands, q to exit
+
+nxplayer&gt; device /dev/audio/pcm1p
+nxplayer&gt; play /host/mother.mp3
+</pre></div>
+</div>
+</section>
+</section>
 <section id="bluetooth">
 <h3>bluetooth<a class="headerlink" href="#bluetooth" title="Permalink to this heading"></a></h3>
 <p>Supports some very limited, primitive, low-level debug of the Bluetooth
