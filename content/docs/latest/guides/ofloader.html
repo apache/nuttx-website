@@ -129,6 +129,7 @@
 <li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minidumpserver.html">minidumpserver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Open Flash Loader</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#introduce">Introduce</a></li>
@@ -177,6 +178,11 @@ It allows J-Link to program any supported NuttX device driver.</p>
 </section>
 <section id="configuration">
 <h2>CONFIGURATION<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_DISABLE_IDLE_LOOP</span><span class="o">=</span><span class="n">y</span>
+<span class="n">CONFIG_SYSTEM_OFLOADER</span><span class="o">=</span><span class="n">y</span>
+<span class="n">CONFIG_SYSTEM_OFLOADER_TABLE</span><span class="o">=</span><span class="s">&quot;/dev/flash,0x08000000,0x20000&quot;</span><span class="p">,</span><span class="mi">0</span>
+</pre></div>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">`CONFIG_DISABLE_IDLE_LOOP</span></code> is used to disable the idle loop in NuttX.
 <code class="docutils literal notranslate"><span class="pre">`CONFIG_SYSTEM_OFLOADER`</span></code> is used to enable the Open Flash Loader.
 <code class="docutils literal notranslate"><span class="pre">`CONFIG_SYSTEM_OFLOADER_TABLE`</span></code> is used to configure the flash device
@@ -192,6 +198,14 @@ the J-Link flash loader to program the NuttX image onto the STM32F429I-DISCO boa
 <li><p>Build NuttX with Open Flash Loader.</p></li>
 <li><p>Configure the Jlink xml file. like</p></li>
 </ol>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;Database&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Device&gt;</span>
+<span class="w">        </span><span class="nt">&lt;ChipInfo</span><span class="w"> </span><span class="na">Vendor=</span><span class="s">&quot;STM32NUTTX&quot;</span><span class="w"> </span><span class="na">Name=</span><span class="s">&quot;NuttX&quot;</span><span class="w"> </span><span class="na">Core=</span><span class="s">&quot;JLINK_CORE_CORTEX_M4&quot;</span><span class="w"> </span><span class="na">WorkRAMAddr=</span><span class="s">&quot;0x20000000&quot;</span><span class="w"> </span><span class="na">WorkRAMSize=</span><span class="s">&quot;0x10000000&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;FlashBankInfo</span><span class="w"> </span><span class="na">Name=</span><span class="s">&quot;Storage&quot;</span><span class="w"> </span><span class="na">BaseAddr=</span><span class="s">&quot;0x00000000&quot;</span><span class="w"> </span><span class="na">MaxSize=</span><span class="s">&quot;0xffffffff&quot;</span><span class="w"> </span><span class="na">Loader=</span><span class="s">&quot;/home/ajh/work/vela_all/nuttx/nuttx&quot;</span><span class="w"> </span><span class="na">LoaderType=</span><span class="s">&quot;FLASH_ALGO_TYPE_OPEN&quot;</span><span class="w"> </span><span class="na">AlwaysPresent=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/Device&gt;</span>
+<span class="nt">&lt;/Database&gt;</span>
+</pre></div>
+</div>
 <ol class="arabic simple" start="3">
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">JLinkExe</span> <span class="pre">-if</span> <span class="pre">SWD</span> <span class="pre">-speed</span> <span class="pre">4000</span> <span class="pre">-device</span> <span class="pre">STM32NUTTX</span></code>,
 then <code class="docutils literal notranslate"><span class="pre">loadbin</span> <span class="pre">/home/ajh/work/nuttx.bin</span> <span class="pre">0x08000000</span></code>,
