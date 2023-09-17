@@ -130,6 +130,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">ST STM32H7</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#supported-mcus">Supported MCUs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dual-core-support">Dual-core support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/nucleo-h743zi/index.html">ST Nucle H743ZI</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/nucleo-h743zi2/index.html">ST Nucle H743ZI2</a></li>
@@ -194,7 +195,103 @@
 <h1>ST STM32H7<a class="headerlink" href="#st-stm32h7" title="Permalink to this heading"></a></h1>
 <section id="supported-mcus">
 <h2>Supported MCUs<a class="headerlink" href="#supported-mcus" title="Permalink to this heading"></a></h2>
-<p>TODO</p>
+<p>Dual-core lines:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>MCU</p></th>
+<th class="head"><p>Support</p></th>
+<th class="head"><p>Note</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>STM32H747</p></td>
+<td><p>Partial</p></td>
+<td><p>Only STM32H747XI</p></td>
+</tr>
+<tr class="row-odd"><td><p>STM32H757</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>STM32H745</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>STM32H755</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Single-core lines:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>MCU</p></th>
+<th class="head"><p>Support</p></th>
+<th class="head"><p>Note</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>STM32H7A3</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>STM32H7B3</p></td>
+<td><p>Partial</p></td>
+<td><p>Only STM32H7B3LI</p></td>
+</tr>
+<tr class="row-even"><td><p>STM32H743</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>STM32H753</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>STM32H742</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>STM32H725</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>STM32H735</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>STM32H723</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>STM32H733</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Value lines:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>MCU</p></th>
+<th class="head"><p>Support</p></th>
+<th class="head"><p>Note</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>STM32H7B0</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>STM32H750</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>STM32H730</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="peripheral-support">
 <h2>Peripheral Support<a class="headerlink" href="#peripheral-support" title="Permalink to this heading"></a></h2>
@@ -409,6 +506,24 @@
 </tr>
 </tbody>
 </table>
+</section>
+<section id="dual-core-support">
+<h2>Dual-core support<a class="headerlink" href="#dual-core-support" title="Permalink to this heading"></a></h2>
+<p>Some of the STM32H7 chips have an additional Cortex-M4 core built-in.
+The selection of the core for which the image is build is made using options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_STM32H7_CORTEXM7</span></code> - selects Cortex-M7 core</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_STM32H7_CORTEXM4</span></code> - selects Cortex-M4 core</p></li>
+</ul>
+</div></blockquote>
+<p>Support for the CM7 core is always enabled, support for the CM4 core is controlled
+with the <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H7_CORTEXM4_ENABLED</span></code> option.</p>
+<p>Interprocessor communication between cores is realized with the NuttX RPTUN
+device based on the OpenAMP framework. <code class="docutils literal notranslate"><span class="pre">HSEM</span></code> is used for synchronization and
+notification between cores.</p>
+<p>32kB of the SRAM3 is reseved for shared memory and this is the only available
+option at the moment.</p>
 </section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>
