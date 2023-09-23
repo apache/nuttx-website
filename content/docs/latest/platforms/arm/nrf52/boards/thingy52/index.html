@@ -270,6 +270,14 @@ is a prototyping platform build around the nRF52832 from Nordic.</p>
 </section>
 <section id="serial-console">
 <h2>Serial Console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
+<p>At default serial console is available with Segger RTT driver.
+For access to the RTT console use this commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>JLinkGDBServer -if SWD -device stm32h743zi -speed 16000
+sudo socat -d -d PTY,link=/dev/ttyRTT0,raw,ignoreeof TCP:127.0.0.1:19021,reuseaddr
+minicom -D /dev/ttyRTT0
+</pre></div>
+</div>
+<p>An alternative option is to use the P4 connector and connect an external UART converter:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Pin</p></th>
@@ -279,15 +287,20 @@ is a prototyping platform build around the nRF52832 from Nordic.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>P0.02</p></td>
-<td><p>UART TX</p></td>
+<td><p>UART0 TX</p></td>
 <td><p>P4 header</p></td>
 </tr>
 <tr class="row-odd"><td><p>P0.03</p></td>
-<td><p>UART RX</p></td>
+<td><p>UART0 RX</p></td>
 <td><p>P4 header</p></td>
 </tr>
 </tbody>
 </table>
+<p>For this you need to select the following options in your configuration:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_NRF52_UART0=y
+CONFIG_UART0_SERIAL_CONSOLE=y
+</pre></div>
+</div>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
@@ -299,7 +312,7 @@ follow:</p>
 <p>Where &lt;subdir&gt; is one of the following:</p>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
-<p>Basic NuttShell configuration (console enabled in UART0, exposed via P4 header, at 115200 bps).</p>
+<p>Basic NuttShell configuration (console enabled on Segger RTT channel).</p>
 </section>
 </section>
 <section id="flash-debug">
