@@ -118,6 +118,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#text-based-partition-table">Text based Partition Table</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#zipfs">ZipFS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#config">CONFIG</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="nxflat.html">NXFLAT</a></li>
@@ -361,6 +366,39 @@ String between “%s %zx %zx” and “LF” will be ignored(eg. CR, or some com
 </div>
 </li>
 </ul>
+</section>
+</section>
+<section id="zipfs">
+<h2>ZipFS<a class="headerlink" href="#zipfs" title="Permalink to this heading"></a></h2>
+<p>Zipfs is a read only file system that mounts a zip file as a NuttX file system through the NuttX VFS interface.
+This allows users to read files while decompressing them, without requiring additional storage space.</p>
+<section id="config">
+<h3>CONFIG<a class="headerlink" href="#config" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_FS_ZIPFS</span><span class="o">=</span><span class="n">y</span>
+<span class="n">CONFIG_LIB_ZLIB</span><span class="o">=</span><span class="n">y</span>
+</pre></div>
+</div>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><cite>./tools/configure.sh sim:zipfs</cite> build sim platform with zipfs support.</p></li>
+<li><p><cite>make</cite> build NuttX.</p></li>
+<li><p><cite>./nuttx</cite> run NuttX.</p></li>
+<li><p><cite>nsh&gt; mount -t hostfs -o /home/&lt;your host name&gt;/work /host</cite> mount host directory to /host.</p></li>
+<li><p><cite>nsh&gt; mount -t zipfs -o /host/test.zip /zip</cite> mount zip file to /zipfs.</p></li>
+<li><p>Use cat/ls command to test.</p></li>
+</ol>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">nsh</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">/</span><span class="n">zip</span>
+<span class="o">/</span><span class="n">zip</span><span class="o">:</span>
+<span class="w"> </span><span class="n">a</span><span class="o">/</span><span class="mi">1</span>
+<span class="w"> </span><span class="n">a</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">nsh</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">/</span><span class="n">zip</span><span class="o">/</span><span class="n">a</span><span class="o">/</span><span class="mi">1</span>
+<span class="n">this</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">zipfs</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">nsh</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">/</span><span class="n">zip</span><span class="o">/</span><span class="n">a</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">this</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">zipfs</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="mi">2</span>
+</pre></div>
+</div>
 </section>
 </section>
 </section>
