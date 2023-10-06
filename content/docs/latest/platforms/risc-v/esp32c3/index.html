@@ -114,7 +114,10 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">RISC-V</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../bl602/index.html">Bouffalo Lab BL602</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Espressif ESP32-C3</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#esp32-c3-toolchain">ESP32-C3 Toolchain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esp32-c3-toolchain">ESP32-C3 Toolchain</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#installing">Installing</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#second-stage-bootloader-and-partition-table">Second stage bootloader and partition table</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#building-and-flashing">Building and flashing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#debugging-with-openocd">Debugging with OpenOCD</a></li>
@@ -201,8 +204,38 @@ core and supports 2.4 GHz Wi-Fi and Bluetooth Low Energy.</p>
 </ul>
 <section id="esp32-c3-toolchain">
 <h2>ESP32-C3 Toolchain<a class="headerlink" href="#esp32-c3-toolchain" title="Permalink to this heading"></a></h2>
-<p>A generic RISC-V toolchain can be used to build ESP32-C3 projects.
-SiFive’s toolchain can be downloaded from: <a class="reference external" href="https://github.com/sifive/freedom-tools/releases">https://github.com/sifive/freedom-tools/releases</a></p>
+<p>A generic RISC-V toolchain can be used to build ESP32-C3 projects. It’s recommended to use the same
+toolchain used by NuttX CI. Please refer to the Docker
+<a class="reference external" href="https://github.com/apache/nuttx/tree/master/tools/ci/docker/linux/Dockerfile">container</a> and
+check for the current compiler version being used. For instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>###############################################################################
+# Build image for tool required by RISCV builds
+###############################################################################
+FROM nuttx-toolchain-base AS nuttx-toolchain-riscv
+# Download the latest RISCV GCC toolchain prebuilt by xPack
+RUN mkdir riscv-none-elf-gcc &amp;&amp; \
+curl -s -L &quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-1/xpack-riscv-none-elf-gcc-12.3.0-1-linux-x64.tar.gz&quot; \
+| tar -C riscv-none-elf-gcc --strip-components 1 -xz
+</pre></div>
+</div>
+<p>It uses the xPack’s prebuilt toolchain based on GCC 12.3.0.</p>
+<section id="installing">
+<h3>Installing<a class="headerlink" href="#installing" title="Permalink to this heading"></a></h3>
+<p>First, create a directory to hold the toolchain:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/path/to/your/toolchain/riscv-none-elf-gcc
+</pre></div>
+</div>
+<p>Download and extract toolchain:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>curl<span class="w"> </span>-s<span class="w"> </span>-L<span class="w"> </span><span class="s2">&quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-1/xpack-riscv-none-elf-gcc-12.3.0-1-linux-x64.tar.gz&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>tar<span class="w"> </span>-C<span class="w"> </span>/path/to/your/toolchain/riscv-none-elf-gcc<span class="w"> </span>--strip-components<span class="w"> </span><span class="m">1</span><span class="w"> </span>-xz
+</pre></div>
+</div>
+<p>Add the toolchain to your <cite>PATH</cite>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;export PATH=/path/to/your/toolchain/riscv-none-elf-gcc/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</pre></div>
+</div>
+<p>You can edit your shell’s rc files if you don’t use bash.</p>
+</section>
 </section>
 <section id="second-stage-bootloader-and-partition-table">
 <h2>Second stage bootloader and partition table<a class="headerlink" href="#second-stage-bootloader-and-partition-table" title="Permalink to this heading"></a></h2>
