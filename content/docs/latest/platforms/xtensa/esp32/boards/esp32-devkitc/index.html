@@ -110,9 +110,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">Supported Platforms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm/index.html">ARM</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../avr/index.html">AVR8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../arm64/index.html">ARM64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../avr/index.html">Microchip AVR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../ceva/index.html">CEVA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../hc/index.html">HC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../mips/index.html">MIPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../misco/index.html">Misoc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../or1k/index.html">OpenRISC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../renesas/index.html">Renesas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../risc-v/index.html">RISC-V</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../sim/index.html">Simulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../sparc/index.html">SPARC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../x86/index.html">Intel 80x86</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../x86_64/index.html">Intel 80x86_64</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../../../index.html">Xtensa</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">Espressif ESP32</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#toolchain">Toolchain</a></li>
@@ -145,6 +155,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../esp32s3/index.html">Espressif ESP32-S3</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../z16/index.html">Z16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../z80/index.html">Z80</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../components/index.html">OS Components</a></li>
@@ -1274,77 +1286,69 @@ credentials in the menuconfig. You can define your credentials this way:</p>
 </pre></div>
 </div>
 <p>After compile and flash your board you need to confirm you have two interfaces:</p>
-<blockquote>
-<div><p>nsh&gt; ifconfig
-wlan0   Link encap:Ethernet HWaddr bc:dd:c2:d4:a9:ec at RUNNING mtu 1504</p>
-<blockquote>
-<div><p>inet addr:192.168.0.7 DRaddr:192.168.0.1 Mask:255.255.255.0</p>
-</div></blockquote>
-<dl class="simple">
-<dt>wlan1   Link encap:Ethernet HWaddr bc:dd:c2:d4:a9:ed at DOWN mtu 1504</dt><dd><p>inet addr:0.0.0.0 DRaddr:0.0.0.0 Mask:0.0.0.0</p>
-</dd>
-</dl>
-</div></blockquote>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifconfig
+wlan0   Link encap:Ethernet HWaddr bc:dd:c2:d4:a9:ec at RUNNING mtu 1504
+        inet addr:192.168.0.7 DRaddr:192.168.0.1 Mask:255.255.255.0
+
+wlan1   Link encap:Ethernet HWaddr bc:dd:c2:d4:a9:ed at DOWN mtu 1504
+        inet addr:0.0.0.0 DRaddr:0.0.0.0 Mask:0.0.0.0
+</pre></div>
+</div>
 <p>Now you need to configure your wlan1 to become a WiFi Access Point:</p>
-<blockquote>
-<div><p>nsh&gt; dhcpd_start wlan1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; dhcpd_start wlan1
 nsh&gt; wapi psk wlan1 mypasswd 3
-nsh&gt; wapi essid wlan1 nuttxap 1</p>
-</div></blockquote>
+nsh&gt; wapi essid wlan1 nuttxap 1
+</pre></div>
+</div>
 <p>And you need to make the route to your WiFi Router (i.e. 192.168.0.1) the default route:</p>
-<blockquote>
-<div><p>nsh&gt; addroute default 192.168.0.1 wlan0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; addroute default 192.168.0.1 wlan0
 nsh&gt; route
-SEQ   TARGET          NETMASK         ROUTER</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>0.0.0.0         0.0.0.0         192.168.0.1</p></li>
-</ol>
-</div></blockquote>
-</div></blockquote>
+SEQ   TARGET          NETMASK         ROUTER
+   1. 0.0.0.0         0.0.0.0         192.168.0.1
+</pre></div>
+</div>
 <p>Finally we will setup an iptables rule to NAT the wlan0 interface:</p>
-<blockquote>
-<div><p>nsh&gt; iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE</p>
-</div></blockquote>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+</pre></div>
+</div>
 <p>After connectig a client (i.e. Linux computer) to the <cite>nuttxap</cite> Access Point
 you can confirm it is working this way:</p>
-<blockquote>
-<div><p>$ ifconfig
-lo: flags=73&lt;UP,LOOPBACK,RUNNING&gt;  mtu 65536</p>
-<blockquote>
-<div><p>inet 127.0.0.1  netmask 255.0.0.0
-inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;
-loop  txqueuelen 1000  (Local Loopback)
-RX packets 5666  bytes 547514 (547.5 KB)
-RX errors 0  dropped 0  overruns 0  frame 0
-TX packets 5666  bytes 547514 (547.5 KB)
-TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</p>
-</div></blockquote>
-<dl class="simple">
-<dt>wlp0s20f3: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</dt><dd><p>inet 10.0.0.4  netmask 255.255.255.0  broadcast 10.0.0.255
-inet6 xxxx::xxxx:xxx:xxxx:xx  prefixlen 64  scopeid 0x20&lt;link&gt;
-ether xx:xx:xx:xx:xx:xx  txqueuelen 1000  (Ethernet)
-RX packets 127217  bytes 146539379 (146.5 MB)
-RX errors 0  dropped 0  overruns 0  frame 0
-TX packets 37079  bytes 23604536 (23.6 MB)
-TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</p>
-</dd>
-</dl>
-<p>$ ping 10.0.0.1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ifconfig
+lo: flags=73&lt;UP,LOOPBACK,RUNNING&gt;  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 5666  bytes 547514 (547.5 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 5666  bytes 547514 (547.5 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+wlp0s20f3: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 10.0.0.4  netmask 255.255.255.0  broadcast 10.0.0.255
+        inet6 xxxx::xxxx:xxx:xxxx:xx  prefixlen 64  scopeid 0x20&lt;link&gt;
+        ether xx:xx:xx:xx:xx:xx  txqueuelen 1000  (Ethernet)
+        RX packets 127217  bytes 146539379 (146.5 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 37079  bytes 23604536 (23.6 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+$ ping 10.0.0.1
 PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
 64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=3.28 ms
 64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=9.72 ms
 64 bytes from 10.0.0.1: icmp_seq=3 ttl=64 time=2.63 ms
 64 bytes from 10.0.0.1: icmp_seq=4 ttl=64 time=18.9 ms
-64 bytes from 10.0.0.1: icmp_seq=5 ttl=64 time=4.82 ms</p>
-<p>$ ping 8.8.8.8
+64 bytes from 10.0.0.1: icmp_seq=5 ttl=64 time=4.82 ms
+
+$ ping 8.8.8.8
 PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
 64 bytes from 8.8.8.8: icmp_seq=1 ttl=111 time=63.0 ms
 64 bytes from 8.8.8.8: icmp_seq=2 ttl=111 time=51.4 ms
 64 bytes from 8.8.8.8: icmp_seq=3 ttl=111 time=55.0 ms
 64 bytes from 8.8.8.8: icmp_seq=4 ttl=111 time=64.3 ms
-64 bytes from 8.8.8.8: icmp_seq=5 ttl=111 time=52.8 ms</p>
-</div></blockquote>
+64 bytes from 8.8.8.8: icmp_seq=5 ttl=111 time=52.8 ms
+</pre></div>
+</div>
 <p>That is it. You can use this 8.8.8.8 as DNS to resolve names.</p>
 </section>
 </section>
