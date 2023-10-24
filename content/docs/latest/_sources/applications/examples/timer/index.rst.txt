@@ -1,5 +1,6 @@
-``timer``
-=========
+=======================
+``timer`` Timer example
+=======================
 
 This is a simple test of the timer driver (see ``include/nuttx/timers/timer.h``).
 
