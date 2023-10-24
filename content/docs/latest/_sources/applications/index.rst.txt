@@ -14,8 +14,27 @@ more information at the repository.
    :maxdepth: 2
    :caption: Contents:
 
+   audioutils/index.rst
+   boot/index.rst
+   benchmarks/index.rst
+   canutils/index.rst
+   crypto/index.rst
+   fsutils/index.rst
+   games/index.rst
+   graphics/index.rst
+   industry/index.rst
+   inertial/index.rst
+   interpreters/index.rst
+   logging/index.rst
+   lte/index.rst
+   math/index.rst
+   mlearing/index.rst
+   netutils/index.rst
    nsh/index.rst
-   nxdiag/index.rst
-   wapi/index.rst
+   sdr/index.rst
+   system/index.rst
+   testing/index.rst
+   wireless/index.rst
+
    examples/index.rst
 
