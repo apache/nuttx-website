@@ -133,16 +133,27 @@
 <li class="toctree-l4"><a class="reference internal" href="sdio.html">SDIO Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbhost.html">USB Host-Side Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbdev.html">USB Device-Side Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rwbuffer.html"><code class="docutils literal notranslate"><span class="pre">rwbuffer.c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="regmap.html">drivers/regmap</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../index.html#lower-half-and-upper-half">Lower-half and upper-half</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#subdirectories-of-nuttx-drivers">Subdirectories of <cite>nuttx/drivers</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#skeleton-files">Skeleton Files</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../filesystem.html">NuttX File System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../nxflat.html">NXFLAT</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../nxgraphics/index.html">NX Graphics Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../nxwidgets.html">NxWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../paging.html">On-Demand Paging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../audio/index.html">Audio subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../filesystem/index.html">NuttX File System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../libs/index.html">NuttX libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../net/index.html">Network Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mm/index.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../syscall.html">Syscall Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../arch/index.html">Architecture-Specific Code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../applications/index.html">Applications</a></li>
@@ -183,46 +194,61 @@
 <h1>LCD Character Drivers<a class="headerlink" href="#lcd-character-drivers" title="Permalink to this heading"></a></h1>
 <p>The LCD driver exposes the LCD interface to userspace via <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> commands.</p>
 <p>The LCD driver is intended to be used in the following scenarios:</p>
-<ol class="arabic simple">
-<li><p>On memory-constrained devices, as it doesn’t require a buffer to represent the whole display:</p>
-<ol class="arabic simple">
-<li><p>Hence, it’s an alternative to the <a class="reference internal" href="framebuffer.html"><span class="doc">Frame Buffer Drivers</span></a>;</p></li>
-</ol>
+<ul class="simple">
+<li><dl class="simple">
+<dt>On memory-constrained devices, as it doesn’t require a buffer to represent</dt><dd><p>the whole display:</p>
+<ul>
+<li><p>Hence, it’s an alternative to the <a class="reference internal" href="framebuffer.html"><span class="doc">Frame Buffer Drivers</span></a></p></li>
+</ul>
+</dd>
+</dl>
 </li>
-<li><p>For graphics libraries that draw specific areas of the displays, like <code class="docutils literal notranslate"><span class="pre">LVGL</span></code>;</p></li>
-</ol>
+<li><p>For graphics libraries that draw specific areas of the displays, like <code class="docutils literal notranslate"><span class="pre">LVGL</span></code></p></li>
+</ul>
 <section id="binding">
 <h2>Binding<a class="headerlink" href="#binding" title="Permalink to this heading"></a></h2>
-<p>LCD drivers usually are not directly accessed by user code, but are usually bound to another, higher-level device driver.
-In general, the binding sequence is:</p>
+<p>LCD drivers usually are not directly accessed by user code, but are usually
+bound to another, higher-level device driver. In general, the binding sequence is:</p>
 <ol class="arabic simple">
 <li><p>Get an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lcd_dev_s</span></code> from the hardware-specific LCD screen driver, and</p></li>
 <li><p>Provide that instance to the initialization method of the higher-level character driver.</p></li>
 </ol>
 <section id="generic-lcd-character-driver">
 <span id="genericlcdlcd"></span><h3>Generic LCD Character Driver<a class="headerlink" href="#generic-lcd-character-driver" title="Permalink to this heading"></a></h3>
-<p>This example will walk through the path from userspace to hardware-specific details on how an LCD screen is bound to an LCD character driver.</p>
-<ol class="arabic">
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/lcd/lcd.h</span></code> provides all structures and APIs needed to work with LCD screens drivers:</p>
-<ol class="arabic simple">
-<li><p>This header file also depends on some of the same definitions used for the frame buffer driver as provided in <code class="docutils literal notranslate"><span class="pre">include/nuttx/video/fb.h</span></code>;</p></li>
-</ol>
+<p>This example will walk through the path from userspace to hardware-specific
+details on how an LCD screen is bound to an LCD character driver.</p>
+<ul>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">include/nuttx/lcd/lcd.h</span></code> provides all structures and APIs needed to work</dt><dd><p>with LCD screens drivers:</p>
+<ul class="simple">
+<li><p>This header file also depends on some of the same definitions used for the
+frame buffer driver as provided in <code class="docutils literal notranslate"><span class="pre">include/nuttx/video/fb.h</span></code></p></li>
+</ul>
+</dd>
+</dl>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">drivers/lcd/lcd_dev.c</span></code> is the higher-level device driver. An instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lcd_dev_s</span></code> will be provided to it:</p>
-<ol class="arabic simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">drivers/lcd/lcd_dev.c</span></code> is the higher-level device driver. An instance of</dt><dd><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lcd_dev_s</span></code> will be provided to it:</p>
+<ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/lcd/lcd_dev.h</span></code> prototypes public structures and functions;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lcddev_register</span></code> registers the LCD character driver as <code class="docutils literal notranslate"><span class="pre">/dev/lcdN</span></code> where N is the display number and,</p></li>
-<li><p>calls the <code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code>, an LCD-specific function usually defined in <code class="docutils literal notranslate"><span class="pre">boards/&lt;arch&gt;/&lt;chip&gt;/&lt;board&gt;/src</span></code> and prototyped in <code class="docutils literal notranslate"><span class="pre">include/nuttx/board.h</span></code>;</p></li>
-</ol>
+<li><p><code class="docutils literal notranslate"><span class="pre">lcddev_register</span></code> registers the LCD character driver as <code class="docutils literal notranslate"><span class="pre">/dev/lcdN</span></code>
+where N is the display number and,</p></li>
+<li><p>calls the <code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code>, an LCD-specific function usually defined in
+<code class="docutils literal notranslate"><span class="pre">boards/&lt;arch&gt;/&lt;chip&gt;/&lt;board&gt;/src</span></code> and prototyped in <code class="docutils literal notranslate"><span class="pre">include/nuttx/board.h</span></code></p></li>
+</ul>
+</dd>
+</dl>
 </li>
-<li><p>Finally, the LCD screen drivers are usually available at <code class="docutils literal notranslate"><span class="pre">drivers/lcd/</span></code> and implement the callbacks defined at <code class="docutils literal notranslate"><span class="pre">include/nuttx/lcd/lcd.h</span></code>:</p>
+<li><p>Finally, the LCD screen drivers are usually available at <code class="docutils literal notranslate"><span class="pre">drivers/lcd/</span></code> and
+implement the callbacks defined at <code class="docutils literal notranslate"><span class="pre">include/nuttx/lcd/lcd.h</span></code>:</p>
 <blockquote>
-<div><ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/lcd/lcd.h</span></code> provides structures and APIs needed to work with LCD screens, whether using the framebuffer adapter or the <a class="reference internal" href="#"><span class="doc">LCD Character Drivers</span></a>;</p></li>
-</ol>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/lcd/lcd.h</span></code> provides structures and APIs needed to work
+with LCD screens, whether using the framebuffer adapter or the <a class="reference internal" href="#"><span class="doc">LCD Character Drivers</span></a>;</p></li>
+</ul>
 </div></blockquote>
 </li>
-</ol>
+</ul>
 </section>
 </section>
 <section id="examples">
@@ -231,9 +257,11 @@ In general, the binding sequence is:</p>
 <section id="ttgo-t-display-esp32-board">
 <span id="ttgotdisplayesp32-lcd"></span><h3>TTGO T-Display ESP32 board<a class="headerlink" href="#ttgo-t-display-esp32-board" title="Permalink to this heading"></a></h3>
 <p>This board contains an ST7789 TFT Display (135x240).
-By selecting the <code class="docutils literal notranslate"><span class="pre">ttgo_t_display_esp32:lvgl_lcd</span></code> config, the <code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code> example will be built with the LCD character interface.</p>
+By selecting the <code class="docutils literal notranslate"><span class="pre">ttgo_t_display_esp32:lvgl_lcd</span></code> config, the <code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code>
+example will be built with the LCD character interface.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">boards/xtensa/esp32/ttgo_t_display_esp32/src/esp32_bringup.c</span></code> registers the LCD character driver:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">boards/xtensa/esp32/ttgo_t_display_esp32/src/esp32_bringup.c</span></code> registers the
+LCD character driver:</p></li>
 </ul>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifdef CONFIG_LCD_DEV</span>
 <span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">board_lcd_initialize</span><span class="p">();</span>
@@ -251,22 +279,28 @@ By selecting the <code class="docutils literal notranslate"><span class="pre">tt
 </pre></div>
 </div>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_initialize</span></code> and <code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code> are defined at <code class="docutils literal notranslate"><span class="pre">boards/xtensa/esp32/common/src/esp32_st7789.c</span></code>;</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_initialize</span></code> and <code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code> are defined at
+<code class="docutils literal notranslate"><span class="pre">boards/xtensa/esp32/common/src/esp32_st7789.c</span></code>;</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_initialize</span></code> initializes the LCD hardware on the board by defining the SPI interface which is connected to the display controller;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_initialize</span></code> initializes the LCD hardware on the board by
+defining the SPI interface which is connected to the display controller;</p></li>
 </ul>
 </div></blockquote>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">lcddev_register</span></code> then calls <code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code> calls the <code class="docutils literal notranslate"><span class="pre">st7789_lcdinitialize</span></code> and returns a reference to the LCD object for the specified LCD;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">st7789_lcdinitialize</span></code> is part of the LCD screen driver at <code class="docutils literal notranslate"><span class="pre">drivers/lcd/st7789.c</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code> calls the <code class="docutils literal notranslate"><span class="pre">st7789_lcdinitialize</span></code> and returns a
+reference to the LCD object for the specified LCD;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">st7789_lcdinitialize</span></code> is part of the LCD screen driver at
+<code class="docutils literal notranslate"><span class="pre">drivers/lcd/st7789.c</span></code>;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p>The LVGL demo application (<code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code>) makes use of the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system call to trigger an <code class="docutils literal notranslate"><span class="pre">LCDDEVIO_PUTAREA</span></code> request to the higher-level device driver to refresh the LCD screen with data:</p></li>
+<li><p>The LVGL demo application (<code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code>) makes use of the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system
+call to trigger an <code class="docutils literal notranslate"><span class="pre">LCDDEVIO_PUTAREA</span></code> request to the higher-level device
+driver to refresh the LCD screen with data:</p></li>
 </ul>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ioctl</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">LCDDEVIO_PUTAREA</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)((</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">lcd_area</span><span class="p">));;</span>
 </pre></div>
@@ -274,24 +308,36 @@ By selecting the <code class="docutils literal notranslate"><span class="pre">tt
 </section>
 <section id="nuttx-simulator">
 <h3>NuttX Simulator<a class="headerlink" href="#nuttx-simulator" title="Permalink to this heading"></a></h3>
-<p><a class="reference internal" href="../../../platforms/sim/sim/index.html"><span class="doc">NuttX Simulator</span></a> provides a X11-based LCD character driver to simulate the LCD character displat usage into a X11-compatible host.</p>
-<p>By selecting the <code class="docutils literal notranslate"><span class="pre">sim:lvgl_lcd</span></code> config, the <code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code> example will be built with the LCD character interface.</p>
+<dl class="simple">
+<dt><a class="reference internal" href="../../../platforms/sim/sim/index.html"><span class="doc">NuttX Simulator</span></a> provides a X11-based LCD</dt><dd><p>character driver to simulate the LCD character displat usage into a
+X11-compatible host.</p>
+</dd>
+</dl>
+<p>By selecting the <code class="docutils literal notranslate"><span class="pre">sim:lvgl_lcd</span></code> config, the <code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code> example will be
+built with the LCD character interface.</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">boards/sim/sim/sim/src/sim_bringup.c</span></code> registers the lcd driver the same way <a class="reference internal" href="#ttgotdisplayesp32-lcd"><span class="std std-ref">TTGO T-Display ESP32 board</span></a>;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/up_lcd.c</span></code> and <code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/up_x11framebuffer.c</span></code> will be built as <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_LCDDRIVER</span> <span class="pre">=</span> <span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_X11FB</span> <span class="pre">=</span> <span class="pre">y</span></code> are set, respectively;</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">boards/sim/sim/sim/src/sim_bringup.c</span></code> registers the lcd driver the
+same way <a class="reference internal" href="#ttgotdisplayesp32-lcd"><span class="std std-ref">TTGO T-Display ESP32 board</span></a>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/up_lcd.c</span></code> and <code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/up_x11framebuffer.c</span></code>
+will be built as <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_LCDDRIVER</span> <span class="pre">=</span> <span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_X11FB</span> <span class="pre">=</span> <span class="pre">y</span></code>
+are set, respectively;</p>
 <blockquote>
 <div><ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">up_lcd.c</span></code> provides <code class="docutils literal notranslate"><span class="pre">board_lcd_initialize</span></code> and <code class="docutils literal notranslate"><span class="pre">board_lcd_getdev</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_initialize</span></code> calls <code class="docutils literal notranslate"><span class="pre">up_x11initialize</span></code> from <code class="docutils literal notranslate"><span class="pre">up_x11framebuffer.c</span></code> that initializes a X11-based window as an LCD character device. This is the underlying “driver”.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_lcd_initialize</span></code> calls <code class="docutils literal notranslate"><span class="pre">up_x11initialize</span></code> from
+<code class="docutils literal notranslate"><span class="pre">up_x11framebuffer.c</span></code> that initializes a X11-based window as an LCD
+character device. This is the underlying “driver”.</p></li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
 </div></blockquote>
 </li>
-<li><p>The LVGL demo application (<code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code>) makes use of the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system call to trigger an <code class="docutils literal notranslate"><span class="pre">LCDDEVIO_PUTAREA</span></code> request to the higher-level device driver to refresh the LCD screen with data as usual;</p></li>
+<li><p>The LVGL demo application (<code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code>) makes use of the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system
+call to trigger an <code class="docutils literal notranslate"><span class="pre">LCDDEVIO_PUTAREA</span></code> request to the higher-level device
+driver to refresh the LCD screen with data as usual;</p></li>
 </ul>
 </section>
 </section>

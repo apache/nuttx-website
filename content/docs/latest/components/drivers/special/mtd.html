@@ -125,20 +125,35 @@
 <li class="toctree-l4"><a class="reference internal" href="socketcan.html">SocketCAN Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="framebuffer.html">Frame Buffer Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lcd.html">LCD Character Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Memory Technology Device Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Memory Technology Device Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#eeprom">EEPROM</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#nand-memory">NAND MEMORY</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="sdio.html">SDIO Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbhost.html">USB Host-Side Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbdev.html">USB Device-Side Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rwbuffer.html"><code class="docutils literal notranslate"><span class="pre">rwbuffer.c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="regmap.html">drivers/regmap</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../index.html#lower-half-and-upper-half">Lower-half and upper-half</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#subdirectories-of-nuttx-drivers">Subdirectories of <cite>nuttx/drivers</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#skeleton-files">Skeleton Files</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../filesystem.html">NuttX File System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../nxflat.html">NXFLAT</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../nxgraphics/index.html">NX Graphics Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../nxwidgets.html">NxWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../paging.html">On-Demand Paging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../audio/index.html">Audio subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../filesystem/index.html">NuttX File System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../libs/index.html">NuttX libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../net/index.html">Network Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mm/index.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../syscall.html">Syscall Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../arch/index.html">Architecture-Specific Code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../applications/index.html">Applications</a></li>
@@ -177,6 +192,11 @@
              
   <section id="memory-technology-device-drivers">
 <h1>Memory Technology Device Drivers<a class="headerlink" href="#memory-technology-device-drivers" title="Permalink to this heading"></a></h1>
+<p>MTD stands for “Memory Technology Devices”.  This directory contains
+drivers that operate on various memory technology devices and provide an
+MTD interface.  That MTD interface may then be used by higher level logic
+to control access to the memory device.</p>
+<p>See include/nuttx/mtd/mtd.h for additional information.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/mtd/mtd.h</span></code>. All structures and APIs needed
 to work with MTD drivers are provided in this header file.</p></li>
@@ -215,6 +235,141 @@ higher level device driver.</p></li>
 </li>
 <li><p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/mtd/m25px.c</span></code> and <code class="docutils literal notranslate"><span class="pre">drivers/mtd/ftl.c</span></code></p></li>
 </ul>
+<section id="eeprom">
+<h2>EEPROM<a class="headerlink" href="#eeprom" title="Permalink to this heading"></a></h2>
+<p>EEPROMs are a form of Memory Technology Device (MTD).  EEPROMs are non-
+volatile memory like FLASH, but differ in underlying memory technology and
+differ in usage in many respects:  They may not be organized into blocks
+(at least from the standpoint of the user) and it is not necessary to
+erase the EEPROM memory before re-writing it.  In addition, EEPROMs tend
+to be much smaller than FLASH parts, usually only a few kilobytes vs
+megabytes for FLASH.  EEPROM tends to be used to retain a small amount of
+device configuration information; FLASH tends to be used for program or
+massive data storage. For these reasons, it may not be convenient to use
+the more complex MTD interface but instead use the simple character
+interface provided by the EEPROM drivers.  See drivers/eeprom.</p>
+</section>
+<section id="nand-memory">
+<h2>NAND MEMORY<a class="headerlink" href="#nand-memory" title="Permalink to this heading"></a></h2>
+<section id="files">
+<h3>Files<a class="headerlink" href="#files" title="Permalink to this heading"></a></h3>
+<p>This directory also includes drivers for NAND memory.  These include:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mtd_nand.c: The &quot;upper half&quot; NAND MTD driver
+mtd_nandecc.c, mtd_nandscheme.c, and hamming.c: Implement NAND software
+  ECC
+mtd_onfi.c, mtd_nandmodel.c, and mtd_modeltab.c: Implement NAND FLASH
+  identification logic.
+</pre></div>
+</div>
+</section>
+<section id="file-systems">
+<h3>File Systems<a class="headerlink" href="#file-systems" title="Permalink to this heading"></a></h3>
+<p>NAND support is only partial in that there is no file system that works
+with it properly.  It should be considered a work in progress.  You will
+not want to use NAND unless you are interested in investing a little
+effort. See the STATUS section below.</p>
+<section id="nxffs">
+<h4>NXFFS<a class="headerlink" href="#nxffs" title="Permalink to this heading"></a></h4>
+<p>The NuttX FLASH File System (NXFFS) works well with NOR-like FLASH
+but does not work well with NAND.  Some simple usability issues
+include:</p>
+<ul class="simple">
+<li><p>NXFFS can be very slow.  The first time that you start the system,
+be prepared for a wait; NXFFS will need to format the NAND volume.
+I have lots of debug on so I don’t yet know what the optimized wait
+will be.  But with debug ON, software ECC, and no DMA the wait is
+in many tens of minutes (and substantially  longer if many debug
+options are enabled.</p></li>
+<li><p>On subsequent boots, after the NXFFS file system has been created
+the delay will be less.  When the new file system is empty, it will
+be very fast.  But the NAND-related boot time can become substantial
+whenthere has been a lot of usage of the NAND.  This is because
+NXFFS needs to scan the NAND device and build the in-memory dataset
+needed to access NAND and there is more that must be scanned after
+the device has been used.  You may want tocreate a separate thread at
+boot time to bring up NXFFS so that you don’t delay the boot-to-prompt
+time excessively in these longer delay cases.</p></li>
+<li><p>There is another NXFFS related performance issue:  When the FLASH
+is fully used, NXFFS will restructure the entire FLASH, the delay
+to restructure the entire FLASH will probably be even larger.  This
+solution in this case is to implement an NXFSS clean-up daemon that
+does the job a little-at-a-time so that there is no massive clean-up
+when the FLASH becomes full.</p></li>
+</ul>
+<p>But there is a more serious, showstopping problem with NXFFS and NAND:</p>
+<ul class="simple">
+<li><p>Bad NXFFS behavior with NAND:  If you restart NuttX, the files that
+you wrote to NAND will be gone.  Why?  Because the multiple writes
+have corrupted the NAND ECC bits.  See STATUS below.  NXFFS would
+require a major overhaul to be usable with NAND.</p></li>
+</ul>
+<p>There are a few reasons whay NXFFS does not work with NAND. NXFFS was
+designed to work with NOR-like FLASH and NAND differs from other that
+FLASH model in several ways.  For one thing, NAND requires error
+correction (ECC) bytes that must be set in order to work around bit
+failures.  This affects NXFFS in two ways:</p>
+<ul class="simple">
+<li><p>First, write failures are not fatal. Rather, they should be tried by
+bad blocks and simply ignored.  This is because unrecoverable bit
+failures will cause read failures when reading from NAND.  Setting
+the CONFIG_EXPERIMENTAL+CONFIG_NXFFS_NAND option will enable this
+behavior.</p></li>
+</ul>
+<p>[CONFIG_NXFFS_NAND is only available is CONFIG_EXPERIMENTAL is also
+selected.]</p>
+<ul class="simple">
+<li><p>Secondly, NXFFS will write a block many times.  It tries to keep
+bits in the erased state and assumes that it can overwrite those bits
+to change them from the erased to the non-erased state.  This works
+will with NOR-like FLASH.  NAND behaves this way too.  But the
+problem with NAND is that the ECC bits cannot be re-written in this
+way.  So once a block has been written, it cannot be modified.  This
+behavior has NOT been fixed in NXFFS.  Currently, NXFFS will attempt
+to re-write the ECC bits causing the ECC to become corrupted because
+the ECC bits cannot be overwritten without erasing the entire block.</p></li>
+</ul>
+<p>This may prohibit NXFFS from ever being used with NAND.</p>
+</section>
+<section id="fat">
+<h4>FAT<a class="headerlink" href="#fat" title="Permalink to this heading"></a></h4>
+<p>Another option is FAT.  FAT can be used if the Flast Translation Layer
+(FTL) is enabled.  FTL converts the NAND MTD interface to a block driver
+that can then be used with FAT.</p>
+<p>FAT, however, will not handle bad blocks and does not perform any wear
+leveling.  So you can bring up a NAND file system with FAT and a new,
+clean NAND FLASH but you need to know that eventually, there will be
+NAND bit failures and FAT will stop working: If you hit a bad block,
+then FAT is finished.  There is no mechanism in place in FAT not to
+mark and skip over bad blocks.</p>
+<p>FTL writes are also particularly inefficient with NAND.  In order to
+write a sector, FTL will read the entire erase block into memory, erase
+the block on FLASH, modify the sector and re-write the erase block back
+to FLASH.  For large NANDs this can be very inefficient.  For example,
+I am currently using nand with a 128KB erase block size and 2K page size
+so each write can cause a 256KB data transfer!</p>
+<p>NOTE that there is some caching logic within FAT and FTL so that this
+cached erase block can be re-used if possible and writes will be
+deferred as long as possible.</p>
+</section>
+<section id="smart-fs">
+<h4>SMART FS<a class="headerlink" href="#smart-fs" title="Permalink to this heading"></a></h4>
+<p>I have not yet tried SmartFS.  It does support some wear-leveling
+similar to NXFFS, but like FAT, cannot handle bad blocks and like NXFFS,
+it will try to re-write erased bits.  So SmartFS is not really an
+option either.</p>
+</section>
+<section id="what-is-needed">
+<h4>What is Needed<a class="headerlink" href="#what-is-needed" title="Permalink to this heading"></a></h4>
+<p>What is needed to work with FAT properly would be another MTD layer
+between the FTL layer and the NAND FLASH layer.  That layer would
+perform bad block detection and sparing so that FAT works transparently
+on top of the NAND.</p>
+<p>Another, less general, option would be support bad blocks within FAT.
+Such a solution migh be possible for SLC NAND, but would not be
+sufficiently general for all NAND types.</p>
+</section>
+</section>
+</section>
 </section>
 
 
