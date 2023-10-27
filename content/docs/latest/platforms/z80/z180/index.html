@@ -44,8 +44,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Zilog Z8Encore!" href="../z8/index.html" />
-    <link rel="prev" title="Zilog eZ80 Acclaim!" href="../ez80/index.html" /> 
+    <link rel="next" title="p112" href="boards/p112/index.html" />
+    <link rel="prev" title="z20x" href="../ez80/boards/z20x/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -129,7 +129,13 @@
 <li class="toctree-l2"><a class="reference internal" href="../../z16/index.html">Z16</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Z80</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../ez80/index.html">Zilog eZ80 Acclaim!</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Zilog Z180</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Zilog Z180</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="boards/p112/index.html">p112</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../z8/index.html">Zilog Z8Encore!</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../z80/index.html">Zilog Z80</a></li>
 </ul>
@@ -186,14 +192,60 @@ however, until the third quarter of 2013. So it will be some time before
 this port is verified on hardware. Refer to the NuttX board
 <a class="reference external" href="https://github.com/apache/nuttx/blob/master/boards/z80/z180/p112/README.txt">README</a>
 file for further information.</p>
+<p>The arch/z80 directories contain files to support a variety of 8-bit architectures
+from ZiLOG (and spin-architectures such as the Rabbit2000).  The arch/z80/src/z180
+sub-directory contains logic unique to the classic Z180 family of chips.</p>
+<p>Files in this directory include:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">z180_head.asm</span></code></dt><dd><p>This is the main entry point into the Z180 program.  This includes the
+handler for the RESET, power-up interrupt vector and address zero and all
+RST interrupts.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">z180_rom.asm</span></code></dt><dd><p>Some architectures may have ROM located at address zero.  In this case, a
+special version of the “head” logic must be used.  This special “head”
+file is probably board-specific and, hence, belongs in the board-specific
+boards/z80/z180/&lt;board-name&gt;/src directory.  This file may, however, be
+used as a model for such a board-specific file.</p>
+<p>z180_rom.S is enabled by specifying CONFIG_LINKER_ROM_AT_0000 in the
+configuration file.</p>
+<p>A board specific version in the boards/z80/z180/&lt;board-name&gt;/src
+directory can be used by:</p>
+<ol class="arabic simple">
+<li><p>Define CONFIG_ARCH_HAVEHEAD</p></li>
+<li><p>Add the board-specific head file, say &lt;filename&gt;.asm, to
+boards/z80/z180/&lt;board-name&gt;/src</p></li>
+<li><p>Add a file called Make.defs in the boards/z80/z180/&lt;board-name&gt;/src
+directory containing the line:  HEAD_ASRC = &lt;file-name&gt;.asm</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Make.defs</span></code></dt><dd><p>This is the standard makefile fragment that must be provided in all
+chip directories.  This fragment identifies the chip-specific file to
+be used in building libarch.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">chip.h</span></code></dt><dd><p>This is the standard header file that must be provided in all chip
+directories.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">z180_initialstate.c</span></code>, <code class="docutils literal notranslate"><span class="pre">z180_copystate.c</span></code>,  <code class="docutils literal notranslate"><span class="pre">z180_restoreusercontext.asm</span></code>, <code class="docutils literal notranslate"><span class="pre">z180_saveusercontext.asm</span></code></dt><dd><p>These files implement the Z180 context switching logic</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">z180_schedulesigaction.c</span></code> and  <code class="docutils literal notranslate"><span class="pre">z180_sigdeliver.c</span></code></dt><dd><p>These files implement Z180 signal handling.</p>
+</dd>
+</dl>
+<section id="supported-boards">
+<h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="boards/p112/index.html">p112</a></li>
+</ul>
+</div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../ez80/index.html" class="btn btn-neutral float-left" title="Zilog eZ80 Acclaim!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../z8/index.html" class="btn btn-neutral float-right" title="Zilog Z8Encore!" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../ez80/boards/z20x/index.html" class="btn btn-neutral float-left" title="z20x" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="boards/p112/index.html" class="btn btn-neutral float-right" title="p112" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

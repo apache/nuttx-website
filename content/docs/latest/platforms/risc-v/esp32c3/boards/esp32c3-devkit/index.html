@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
     <link rel="next" title="Espressif ESP32-C6" href="../../../esp32c6/index.html" />
-    <link rel="prev" title="Espressif ESP32-C3" href="../../index.html" /> 
+    <link rel="prev" title="esp32c3-devkit-rust-1" href="../esp32c3-devkit-rust-1/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -131,18 +131,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#peripheral-support">Peripheral Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#secure-boot-and-flash-encryption">Secure Boot and Flash Encryption</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="../esp32c3-devkit-rust-1/index.html">esp32c3-devkit-rust-1</a></li>
 <li class="toctree-l5 current"><a class="current reference internal" href="#">ESP32-C3 DevKit</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../esp32c6/index.html">Espressif ESP32-C6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../fe310/index.html">SiFive FE310</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../hpm6750/index.html">Hpmicro HPM6750</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../jh7110/index.html">StarFive JH7110</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../k210/index.html">Kendryte K210</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../litex/index.html">Enjoy Digital LiteX FPGA’s</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../mpfs/index.html">Microchip PolarFire® SoC FPGA’s (MPFS)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../qemu/index.html">QEMU Generic RV32/RV64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../qemu-rv/index.html">QEMU Generic RV32/RV64</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../rv32m1/index.html">NXP RV32M1</a></li>
 </ul>
 </li>
@@ -702,13 +704,139 @@ nsh&gt; renew wlan0
 </div>
 </section>
 </section>
+<section id="romfs-txt">
+<h2>ROMFS.txt<a class="headerlink" href="#romfs-txt" title="Permalink to this heading"></a></h2>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
+======
+
+  Overview
+  --------
+  This directory contains logic to support a custom ROMFS system-init script
+  and start-up script.  These scripts are used by by the NSH when it starts
+  provided that CONFIG_NSH_ARCHROMFS=y.  These scripts provide a ROMFS volume
+  that will be mounted at /etc and will look like this at run-time:
+
+    NuttShell (NSH) NuttX-10.1.0-RC1
+    MOTD: username=admin password=Administrator
+    nsh&gt; ls -Rl /etc
+    /etc:
+     dr-xr-xr-x       0 .
+     -r--r--r--      20 group
+     dr-xr-xr-x       0 init.d/
+     -r--r--r--      35 passwd
+    /etc/init.d:
+     dr-xr-xr-x       0 ..
+     -r--r--r--     110 rcS
+     -r--r--r--     110 rc.sysinit
+    nsh&gt;
+
+  /etc/init.d/rc.sysinit is system init script; /etc/init.d/rcS is the start-up
+  script; /etc/passwd is a the password file.  It supports a single user:
+
+    USERNAME:  admin
+    PASSWORD:  Administrator
+
+    nsh&gt; cat /etc/passwd
+    admin:8Tv+Hbmr3pLVb5HHZgd26D:0:0:/
+
+  The encrypted passwords in the provided passwd file are only valid if the
+  TEA key is set to:  012345678 9abcdef0 012345678 9abcdef0.  Changes to either
+  the key or the password word will require regeneration of the nsh_romfimg.h
+  header file.
+
+  The format of the password file is:
+
+    user:x:uid:gid:home
+
+  Where:
+    user:  User name
+    x:     Encrypted password
+    uid:   User ID (0 for now)
+    gid:   Group ID (0 for now)
+    home:  Login directory (/ for now)
+
+  /etc/group is a group file.  It is not currently used.
+
+    nsh&gt; cat /etc/group
+    root:*:0:root,admin
+
+  The format of the group file is:
+
+    group:x:gid:users
+
+  Where:
+    group:  The group name
+    x:      Group password
+    gid:    Group ID
+    users:  A comma separated list of members of the group
+
+  Updating the ROMFS File System
+  ------------------------------
+  The content on the nsh_romfsimg.h header file is generated from a sample
+  directory structure. You can directly modify files under etc/ folder,
+  The build system will regenerate nsh_romfsimg.h automatically.
+
+  See the esp32c3-devkit/nsh configuration for an example of the use of this file
+  system.
+
+  Replacing the Password File
+  ---------------------------
+  The esp32c3-devkit/nsh configuration can also be used to create a new password file.
+  First, make these configuration changes:
+
+    1. Disable logins
+
+       - CONFIG_NSH_CONSOLE_LOGIN=y
+       + # CONFIG_NSH_CONSOLE_LOGIN is not set
+         # CONFIG_NSH_TELNET_LOGIN is not set
+
+    2. Move the password file to a write-able file system:
+
+       - CONFIG_FSUTILS_PASSWD_PATH=&quot;/etc/passwd&quot;
+       + CONFIG_FSUTILS_PASSWD_PATH=&quot;/tmp/passwd&quot;
+
+    3. make the password file modifiable
+
+       - CONFIG_FSUTILS_PASSWD_READONLY=y
+       # CONFIG_FSUTILS_PASSWD_READONLY is not set
+
+  Now rebuild the simulation.  No login should be required to enter the
+  shell and you should find the &#39;useradd&#39;, &#39;userdel&#39;, and &#39;passwd&#39; commands
+  available in the help summary, provided that they are enabled.  Make
+  certain that the &#39;useradd&#39; command is not disabled:
+
+      # CONFIG_NSH_DISABLE_USERADD is not set
+
+  Use the NSH &#39;useradd&#39; command to add new uses with new user passwords like:
+
+    nsh&gt; useradd &lt;username&gt; &lt;password&gt;
+
+  Do this as many times as you would like.  Each time that you do this a new
+  entry with an encrypted password will be added to the passwd file at
+  /tmp/passwd.  You can see the passwd file like:
+
+    nsh&gt; cat /tmp/passwd
+
+  When you are finished, you can simply copy the /tmp/passwd content from the
+  &#39;cat&#39; command and paste it into an editor.  Make sure to remove any
+  carriage returns that may have ended up on the file if you are using
+  Windows.
+
+  Then recreate the nsh_romfsimg.h file as described above.  In step 2,
+  simply replace the old /etc/passwd file with the one in your editor.
+  When you are finished, the new passwd file will be in the ROMFS file
+  system at the path /etc/passwd.  When you restore the original NSH
+  sim configuration, these are the passwords that will be used.
+</pre></div>
+</div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../index.html" class="btn btn-neutral float-left" title="Espressif ESP32-C3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../esp32c3-devkit-rust-1/index.html" class="btn btn-neutral float-left" title="esp32c3-devkit-rust-1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../../../esp32c6/index.html" class="btn btn-neutral float-right" title="Espressif ESP32-C6" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

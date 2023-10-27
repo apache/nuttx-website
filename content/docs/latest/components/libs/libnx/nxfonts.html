@@ -141,6 +141,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../syscall.html">Syscall Layer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../arch/index.html">Architecture-Specific Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../boards.html">Boards support</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../applications/index.html">Applications</a></li>
@@ -193,21 +194,21 @@ in the NX graphic system:</p>
 <li><p>Use the bdf-converter program to convert the BDF font to the NuttX
 font format.  This will result in a C header file containing
 definitions.  That header file should be installed at, for example,
-graphics/nxfonts/nxfonts_myfont.h.</p></li>
+<code class="docutils literal notranslate"><span class="pre">graphics/nxfonts/nxfonts_myfont.h</span></code>.</p></li>
 </ol>
 <p>Create a new NuttX configuration variable.  For example, suppose
 you define the following variable:  CONFIG_NXFONT_MYFONT.  Then
 you would need to:</p>
-<ol class="arabic simple" start="3">
-<li><p>Define CONFIG_NXFONT_MYFONT=y in your NuttX configuration file.</p></li>
+<ol class="arabic simple">
+<li><p>Define <code class="docutils literal notranslate"><span class="pre">CONFIG_NXFONT_MYFONT=y</span></code> in your NuttX configuration file.</p></li>
 </ol>
 <p>A font ID number has to be assigned for each new font.  The font ID
-is defined in the file include/nuttx/nx/nxfonts.h.  Those definitions
+is defined in the file <code class="docutils literal notranslate"><span class="pre">include/nuttx/nx/nxfonts.h</span></code>.  Those definitions
 have to be extended to support your new font.  Look at how the font ID
-enabled by CONFIG_NXFONT_SANS23X27 is defined and add an ID for your
+enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_NXFONT_SANS23X27</span></code> is defined and add an ID for your
 new font in a similar fashion:</p>
-<ol class="arabic" start="4">
-<li><p>include/nuttx/nx/nxfonts.h. Add you new font as a possible system
+<ol class="arabic" start="3">
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/nx/nxfonts.h</span></code> Add you new font as a possible system
 default font:</p>
 <blockquote>
 <div><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#if defined(CONFIG_NXFONT_SANS23X27)</span>
@@ -237,12 +238,12 @@ default font:</p>
 <p>New Add the font to the NX build system.  There are several files that
 you have to modify to do this.  Look how the build system uses the
 font CONFIG_NXFONT_SANS23X27 for examaples:</p>
-<ol class="arabic" start="5">
-<li><p>nuttx/graphics/Makefile.  This file needs logic to auto-generate
+<ol class="arabic">
+<li><p><code class="docutils literal notranslate"><span class="pre">nuttx/graphics/Makefile</span></code>  This file needs logic to auto-generate
 a C source file from the header file that you generated with the
 the bdf-converter program.  Notice NXFONTS_FONTID=2; this must be
 set to the same font ID value that you defined in the
-include/nuttx/nx/nxfonts.h file.</p>
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/nx/nxfonts.h</span></code> file.</p>
 <blockquote>
 <div><div class="highlight-make notranslate"><div class="highlight"><pre><span></span><span class="nf">genfontsources</span><span class="o">:</span>
 <span class="cp">  ifeq ($(CONFIG_NXFONT_SANS23X27),y)</span>
@@ -255,7 +256,7 @@ include/nuttx/nx/nxfonts.h file.</p>
 </div>
 </div></blockquote>
 </li>
-<li><p>nuttx/graphics/nxfonts/Make.defs.  Set the make variable NXFSET_CSRCS.
+<li><p><code class="docutils literal notranslate"><span class="pre">nuttx/graphics/nxfonts/Make.defs</span></code>.  Set the make variable NXFSET_CSRCS.
 NXFSET_CSRCS determines the name of the font C file to build when
 NXFONTS_FONTID=2:</p>
 <blockquote>
@@ -269,7 +270,7 @@ NXFONTS_FONTID=2:</p>
 </div>
 </div></blockquote>
 </li>
-<li><p>nuttx/graphics/nxfonts/Makefile.sources.  This is the Makefile used
+<li><p><code class="docutils literal notranslate"><span class="pre">nuttx/graphics/nxfonts/Makefile.sources</span></code>.  This is the Makefile used
 in step 5 that will actually generate the font C file.  So, given
 your NXFONTS_FONTID=2, it needs to determine a prefix to use for
 auto-generated variable and function names and (again) the name of
@@ -288,9 +289,9 @@ was used in nuttx/graphics/nxfonts/Make.defs):</p>
 </div>
 </div></blockquote>
 </li>
-<li><p>graphics/nxfonts/nxfonts_bitmaps.c.  This is the file that contains
+<li><p><code class="docutils literal notranslate"><span class="pre">graphics/nxfonts/nxfonts_bitmaps.c</span></code>.  This is the file that contains
 the generic font structures.  It is used as a “template” file by
-nuttx/graphics/nxfonts/Makefile.sources to create your customized
+<code class="docutils literal notranslate"><span class="pre">nuttx/graphics/nxfonts/Makefile.sources</span></code> to create your customized
 font data set.</p>
 <blockquote>
 <div><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#if NXFONTS_FONTID == 1</span>
@@ -306,7 +307,7 @@ font data set.</p>
 <p>Where nxfonts_myfont.h is the NuttX font file that we generated in
 step 2 using the bdf-converter tool.</p>
 </li>
-<li><p>graphics/nxfonts/nxfonts_getfont.c.  Finally, we need to extend the
+<li><p><code class="docutils literal notranslate"><span class="pre">graphics/nxfonts/nxfonts_getfont.c</span></code>.  Finally, we need to extend the
 logic that does the run-time font lookups so that can find our new
 font.  The lookup function is NXHANDLE nxf_getfonthandle(enum nx_fontid_e fontid).
 The new font information needs to be added to data structures used by

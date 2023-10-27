@@ -157,6 +157,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../syscall.html">Syscall Layer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../arch/index.html">Architecture-Specific Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../boards.html">Boards support</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../applications/index.html">Applications</a></li>
@@ -211,11 +212,16 @@ reside in <code class="docutils literal notranslate"><span class="pre">arch/</sp
 directory for the specific processor <em>&lt;architecture&gt;</em> and for
 the specific <em>&lt;chip&gt;</em> timer peripheral devices.</p></li>
 </ul>
-<p>There are two ways to enable Timer Support along with the Timer Example. The first is faster and simpler. Just run the following command to use a ready config file with timer support and example included. You need to check if there’s a timer config file for your specific chip. You may check it at the specific board’s path: <code class="docutils literal notranslate"><span class="pre">/boards/&lt;arch&gt;/&lt;chip&gt;/&lt;variant&gt;/config</span></code>.</p>
+<p>There are two ways to enable Timer Support along with the Timer Example. The
+first is faster and simpler. Just run the following command to use a ready
+config file with timer support and example included. You need to check if there’s
+a timer config file for your specific chip. You may check it at the specific
+board’s path: <code class="docutils literal notranslate"><span class="pre">/boards/&lt;arch&gt;/&lt;chip&gt;/&lt;variant&gt;/config</span></code>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>&lt;variant&gt;:timer
 </pre></div>
 </div>
-<p>And the second way is creating your own config file. To do so, follow the next instructions.</p>
+<p>And the second way is creating your own config file. To do so, follow the next
+instructions.</p>
 <section id="enabling-the-timer-support-and-example-in-menuconfing">
 <h2>Enabling the Timer Support and Example in <code class="docutils literal notranslate"><span class="pre">menuconfing</span></code><a class="headerlink" href="#enabling-the-timer-support-and-example-in-menuconfing" title="Permalink to this heading"></a></h2>
 <blockquote>
@@ -243,31 +249,47 @@ the specific <em>&lt;chip&gt;</em> timer peripheral devices.</p></li>
 <ul class="simple">
 <li><p>[x] Timer example</p></li>
 </ul>
-<p>Below the option, it is possible to manually configure some parameters as the standard timer device path, the timeout, the sample rate in which the counter will be read, the number of samples to be executed, and other parameters.</p>
+<p>Below the option, it is possible to manually configure some parameters as the
+standard timer device path, the timeout, the sample rate in which the counter
+will be read, the number of samples to be executed, and other parameters.</p>
 </div></blockquote>
 </div></blockquote>
 </section>
 <section id="timer-example">
 <h2>Timer Example<a class="headerlink" href="#timer-example" title="Permalink to this heading"></a></h2>
-<p>The previously selected example will basically consult the timer status, set a timer alarm interval, set a timer signal handler function to be notified at the alarm, which only increments a variable, and then it will start the timer. The application will periodically consult the timer status at the sample rate previously configured through the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> to follow the time left until the timer expires. After the samples have been read, the application stops de timer.</p>
-<p>The <a class="reference external" href="https://github.com/apache/nuttx-apps/blob/master/examples/timer/timer_main.c">example code</a>  may be explored, its path is at <code class="docutils literal notranslate"><span class="pre">/examples/timer/timer_main.c</span></code> in the apps’ repository.</p>
-<p>In NuttX, the timer driver is a character driver and when a chip supports multiple timers, each one is accessible through its respective file in <code class="docutils literal notranslate"><span class="pre">/dev</span></code> directory. Each timer is registered using a unique numeric identifier (i.e. <code class="docutils literal notranslate"><span class="pre">/dev/timer0</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/timer1</span></code>, …).</p>
+<p>The previously selected example will basically consult the timer status, set a
+timer alarm interval, set a timer signal handler function to be notified at the
+alarm, which only increments a variable, and then it will start the timer. The
+application will periodically consult the timer status at the sample rate
+previously configured through the <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> to follow the time left until
+the timer expires. After the samples have been read, the application stops the
+timer.</p>
+<p>The <a class="reference external" href="https://github.com/apache/nuttx-apps/blob/master/examples/timer/timer_main.c">example code</a>
+may be explored, its path is at <code class="docutils literal notranslate"><span class="pre">/examples/timer/timer_main.c</span></code> in the apps’ repository.</p>
+<p>In NuttX, the timer driver is a character driver and when a chip supports multiple
+timers, each one is accessible through its respective file in <code class="docutils literal notranslate"><span class="pre">/dev</span></code> directory.
+Each timer is registered using a unique numeric identifier (i.e. <code class="docutils literal notranslate"><span class="pre">/dev/timer0</span></code>,
+<code class="docutils literal notranslate"><span class="pre">/dev/timer1</span></code>, …).</p>
 <p>Use the following command to run the example:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">`nsh&gt; timer`</span>
 </pre></div>
 </div>
-<p>This command will use the timer 0. To use the others, specify it through a parameter (where x is the timer number):</p>
+<p>This command will use the timer 0. To use the others, specify it through a
+parameter (where x is the timer number):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">`nsh&gt; timer -d /dev/timerx`</span>
 </pre></div>
 </div>
 </section>
 <section id="application-level-interface">
 <h2>Application Level Interface<a class="headerlink" href="#application-level-interface" title="Permalink to this heading"></a></h2>
-<p>The first necessary thing to be done in order to use the timer driver in an application is to include the header file for the NuttX timer driver. It contains the Application Level Interface to the timer driver. To do so, include:</p>
+<p>The first necessary thing to be done in order to use the timer driver in an
+application is to include the header file for the NuttX timer driver. It contains
+the Application Level Interface to the timer driver. To do so, include:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/timers/timer.h&gt;</span>
 </pre></div>
 </div>
-<p>At an application level, the timer functionalities may be accessed through <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> systems calls. The available <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands are:</p>
+<p>At an application level, the timer functionalities may be accessed through <code class="docutils literal notranslate"><span class="pre">ioctl</span></code>
+systems calls. The available <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands are:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#c.TCIOC_START" title="TCIOC_START"><code class="xref c c-macro docutils literal notranslate"><span class="pre">TCIOC_START</span></code></a></p></li>
@@ -278,8 +300,11 @@ the specific <em>&lt;chip&gt;</em> timer peripheral devices.</p></li>
 <li><p><a class="reference internal" href="#c.TCIOC_MAXTIMEOUT" title="TCIOC_MAXTIMEOUT"><code class="xref c c-macro docutils literal notranslate"><span class="pre">TCIOC_MAXTIMEOUT</span></code></a></p></li>
 </ul>
 </div></blockquote>
-<p>These <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands internally call lower-half layer operations and the parameters are forwarded to these ops through the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system call. The return of a system call is the return of an operation.
-These <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timer_ops_s</span></code> keeps pointers to the implementation of each operation. Following is the struct.</p>
+<p>These <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands internally call lower-half layer operations and the
+parameters are forwarded to these ops through the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system call. The return
+of a system call is the return of an operation.
+These <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timer_ops_s</span></code> keeps pointers to the implementation of each operation.
+Following is the struct.</p>
 <dl class="c struct">
 <dt class="sig sig-object c" id="c.timer_ops_s">
 <span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">timer_ops_s</span></span></span><a class="headerlink" href="#c.timer_ops_s" title="Permalink to this definition"></a><br /></dt>
@@ -329,7 +354,9 @@ These <code class="docutils literal notranslate"><span class="pre">struct</span>
 <span class="p">};</span>
 </pre></div>
 </div>
-<p>Since  <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system calls expect a file descriptor, before using these commands, it’s necessary to open the timer device special file in order to get a file descriptor. The following snippet demonstrates how to do so:</p>
+<p>Since  <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system calls expect a file descriptor, before using these commands,
+it’s necessary to open the timer device special file in order to get a file descriptor.
+The following snippet demonstrates how to do so:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Open the timer device */</span>
 
 <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Open %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">devname</span><span class="p">);</span>
@@ -352,7 +379,8 @@ These <code class="docutils literal notranslate"><span class="pre">struct</span>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.start">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">start</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.start" title="Permalink to this definition"></a><br /></dt>
-<dd><p>The start operation configures the timer, enables the interrupt if <code class="docutils literal notranslate"><span class="pre">TCIOC_NOTIFICATION</span></code> has already been called and finally starts the timer.</p>
+<dd><p>The start operation configures the timer, enables the interrupt if <code class="docutils literal notranslate"><span class="pre">TCIOC_NOTIFICATION</span></code>
+has already been called and finally starts the timer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A Linux System Error Code for failing or 0 for success.</p>
@@ -418,7 +446,15 @@ These <code class="docutils literal notranslate"><span class="pre">struct</span>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>status</strong> – A writable pointer to a struct <code class="docutils literal notranslate"><span class="pre">timer_status_s</span></code>. This struct contains 3 fields: <code class="docutils literal notranslate"><span class="pre">flags</span></code> (<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code>), <code class="docutils literal notranslate"><span class="pre">timeout</span></code> (<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code>) and <code class="docutils literal notranslate"><span class="pre">timeleft</span></code> (<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code>). Bit 0 from <cite>flags</cite> indicates the timer’s status, 1 indicates that the timer is running, zero it is stopped. Bit 1 from <cite>flags</cite> indicates if there’s a callback registered. The <cite>timeout</cite> indicates the time interval that was configured to trigger an alarm, it is in microseconds. The <cite>timeleft</cite> interval indicates how many microseconds it’s missing to trigger the alarm. The following snippet demonstrates how to use it and how to access these fields.</p></li>
+<li><p><strong>status</strong> – A writable pointer to a struct <code class="docutils literal notranslate"><span class="pre">timer_status_s</span></code>. This struct
+contains 3 fields: <code class="docutils literal notranslate"><span class="pre">flags</span></code> (<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code>), <code class="docutils literal notranslate"><span class="pre">timeout</span></code> (<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code>)
+and <code class="docutils literal notranslate"><span class="pre">timeleft</span></code> (<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code>). Bit 0 from <cite>flags</cite> indicates the timer’s
+status, 1 indicates that the timer is running, zero it is stopped. Bit 1
+from <cite>flags</cite> indicates if there’s a callback registered. The <cite>timeout</cite>
+indicates the time interval that was configured to trigger an alarm, it
+is in microseconds. The <cite>timeleft</cite> interval indicates how many microseconds
+it’s missing to trigger the alarm. The following snippet demonstrates how
+to use it and how to access these fields.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -454,7 +490,9 @@ These <code class="docutils literal notranslate"><span class="pre">struct</span>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.settimeout">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">settimeout</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">timeout</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.settimeout" title="Permalink to this definition"></a><br /></dt>
-<dd><p>The getstatus operation sets a timeout interval to trigger the alarm and then trigger an interrupt. It defines the timer interval in which the handler will be called.</p>
+<dd><p>The getstatus operation sets a timeout interval to trigger the alarm and then
+trigger an interrupt. It defines the timer interval in which the handler will
+be called.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -487,8 +525,17 @@ These <code class="docutils literal notranslate"><span class="pre">struct</span>
 <span class="sig-name descname"><span class="n"><span class="pre">TCIOC_NOTIFICATION</span></span></span><a class="headerlink" href="#c.TCIOC_NOTIFICATION" title="Permalink to this definition"></a><br /></dt>
 <dd></dd></dl>
 
-<p>The <code class="docutils literal notranslate"><span class="pre">TCIOC_NOTIFICATION</span></code> is used to configure the timer callback to notify the application via a signal when the timer expires. This command calls the <code class="docutils literal notranslate"><span class="pre">setcallback</span></code> operation. Which will not be described here, since the application does not set a callback directly. Instead, the user should configure a signal handler to catch notifications, and then, configure a timer notifier to notify and to signal the previously configured signal handler. For a better performance, a separate pthread may be configured to wait on sigwaitinfo() for timer events.</p>
-<p>In any case, this command expects a read-only pointer to a struct <cite>timer_notify_s</cite>. This struct contains 2 fields: <code class="docutils literal notranslate"><span class="pre">pid</span></code> (<code class="docutils literal notranslate"><span class="pre">pid_t</span></code>), that indicates the ID of the task/thread to receive the signal and <code class="docutils literal notranslate"><span class="pre">event</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sigevent</span></code>), which describes the way a task will be notified.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">TCIOC_NOTIFICATION</span></code> is used to configure the timer callback to notify the
+application via a signal when the timer expires. This command calls the <code class="docutils literal notranslate"><span class="pre">setcallback</span></code>
+operation. Which will not be described here, since the application does not set a
+callback directly. Instead, the user should configure a signal handler to catch
+notifications, and then, configure a timer notifier to notify and to signal the
+previously configured signal handler. For a better performance, a separate pthread
+may be configured to wait on sigwaitinfo() for timer events.</p>
+<p>In any case, this command expects a read-only pointer to a struct <cite>timer_notify_s</cite>.
+This struct contains 2 fields: <code class="docutils literal notranslate"><span class="pre">pid</span></code> (<code class="docutils literal notranslate"><span class="pre">pid_t</span></code>), that indicates the ID of the
+task/thread to receive the signal and <code class="docutils literal notranslate"><span class="pre">event</span></code> (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sigevent</span></code>), which
+describes the way a task will be notified.</p>
 <p>This command may be used like so:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Configure the notification</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 
@@ -519,7 +566,8 @@ These <code class="docutils literal notranslate"><span class="pre">struct</span>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>maxtimeout</strong> – A writable pointer to a variable of <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> type in which the value will be stored.</p></li>
+<li><p><strong>maxtimeout</strong> – A writable pointer to a variable of <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> type in
+which the value will be stored.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -546,7 +594,8 @@ These <code class="docutils literal notranslate"><span class="pre">struct</span>
 <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Maximum supported timeout: %&quot;</span><span class="w"> </span><span class="n">PRIu32</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">max_timeout</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Those snippets were taken from the Example which provides a great resource to demonstrate how to use those <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands.</p>
+<p>Those snippets were taken from the Example which provides a great resource to
+demonstrate how to use those <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands.</p>
 </section>
 </section>
 

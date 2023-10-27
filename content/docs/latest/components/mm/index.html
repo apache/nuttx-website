@@ -134,7 +134,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#debugging">Debugging</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#granule-allocator">Granule Allocator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#granule-allocator">Granule Allocator</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#general-usage-example">General Usage Example</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#page-allocator">Page Allocator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shared-memory-management">Shared Memory Management</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#i-o-buffers">I/O Buffers</a></li>
@@ -143,6 +146,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../syscall.html">Syscall Layer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../arch/index.html">Architecture-Specific Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../boards.html">Boards support</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
@@ -231,12 +235,12 @@ non-standard interfaces).  A heap is represented by <code class="docutils litera
 as defined in the file <code class="docutils literal notranslate"><span class="pre">include/nuttx/mm/mm.h</span></code>.  To create another heap
 instance, you would allocate a heap structure, most likely statically
 in memory:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>include &lt;nuttx/mm/mm.h&gt;
-static struct mm_heap_s *g_myheap;
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">nuttx</span><span class="o">/</span><span class="n">mm</span><span class="o">/</span><span class="n">mm</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+<span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mm_heap_s</span><span class="w"> </span><span class="o">*</span><span class="n">g_myheap</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Then initialize the heap using:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>g_myheap = mm_initialize(myheap_start, myheap_size);
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">g_myheap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mm_initialize</span><span class="p">(</span><span class="n">myheap_start</span><span class="p">,</span><span class="w"> </span><span class="n">myheap_size</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">mm_initialize()</span></code> and all related interfaces are prototyped in the
@@ -252,10 +256,8 @@ same mechanism, but with a global heap structure called <code class="docutils li
 </section>
 <section id="user-kernel-heaps">
 <h3>User/Kernel Heaps<a class="headerlink" href="#user-kernel-heaps" title="Permalink to this heading"></a></h3>
-<blockquote>
-<div><p>This multiple heap capability is exploited in some of the more complex NuttX
+<p>This multiple heap capability is exploited in some of the more complex NuttX
 build configurations to provide separate kernel-mode and user-mode heaps.</p>
-</div></blockquote>
 </section>
 <section id="sub-directories">
 <h3>Sub-Directories<a class="headerlink" href="#sub-directories" title="Permalink to this heading"></a></h3>
@@ -268,46 +270,45 @@ build configurations to provide separate kernel-mode and user-mode heaps.</p>
 <section id="debugging">
 <h3>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h3>
 <p>Please follow these steps to hook all memory related routines:</p>
-<blockquote>
-<div><p>1.Add a new header file(e.g. <code class="docutils literal notranslate"><span class="pre">xxx_malloc.h</span></code>):</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>...
-#include &lt;malloc.h&gt;
-#include &lt;stdlib.h&gt;
-#include &lt;string.h&gt;
-#include &lt;strings.h&gt;
+<ol class="arabic">
+<li><p>Add a new header file(e.g. <code class="docutils literal notranslate"><span class="pre">xxx_malloc.h</span></code>):</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="p">...</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;malloc.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;strings.h&gt;</span>
 
-#ifndef __ASSEMBLY__
-FAR void *xxx_malloc(FAR const char *file, int line, size_t size);
-void xxx_free(FAR const char *file, int line, FAR const void *ptr);
-FAR void *xxx_memcpy(FAR const char *file, int line,
-                     FAR void *dst, FAR const void *src, size_t len);
-...
-#define malloc(s) xxx_malloc(__FILE__, __LINE__, s)
-#define free(p) xxx_free(__FILE__, __LINE__, p)
-#define memcpy(d, s, l) xxx_memcpy(__FILE__, __LINE__, d, s, l)
-...
-#endif
-...
+<span class="cp">#ifndef __ASSEMBLY__</span>
+<span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">xxx_malloc</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">);</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">xxx_free</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">ptr</span><span class="p">);</span>
+<span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">xxx_memcpy</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">dst</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">len</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="cp">#define malloc(s) xxx_malloc(__FILE__, __LINE__, s)</span>
+<span class="cp">#define free(p) xxx_free(__FILE__, __LINE__, p)</span>
+<span class="cp">#define memcpy(d, s, l) xxx_memcpy(__FILE__, __LINE__, d, s, l)</span>
+<span class="p">...</span>
+<span class="cp">#endif</span>
+<span class="p">...</span>
 </pre></div>
 </div>
-<p>2.Implement <code class="docutils literal notranslate"><span class="pre">xxx_malloc</span></code>, <code class="docutils literal notranslate"><span class="pre">xxx_free</span></code>, <code class="docutils literal notranslate"><span class="pre">xxx_memcpy</span></code>… in source code,
+</li>
+<li><p>Implement <code class="docutils literal notranslate"><span class="pre">xxx_malloc</span></code>, <code class="docutils literal notranslate"><span class="pre">xxx_free</span></code>, <code class="docutils literal notranslate"><span class="pre">xxx_memcpy</span></code>… in source code,
 you can:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li><p>Modify some arguments(e.g. extend the allocation size for redzone)</p></li>
 <li><p>Check the critical arguments(e.g. pointer and length) in the range</p></li>
 <li><p>Forward to the original implementation(call malloc/free/memcpy)</p></li>
 <li><p>Attach the context info(e.g. file and line) before return</p></li>
 </ul>
-</div></blockquote>
-<p>3.Enable the hook by either:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Include xxx_malloc.h in your source code to hook one file</p></li>
+</li>
+<li><p>Enable the hook by either:</p>
+<ul class="simple">
+<li><p>Include <code class="docutils literal notranslate"><span class="pre">xxx_malloc.h</span></code> in your source code to hook one file</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">-include</span> <span class="pre">xxx_malloc.h</span></code> to <code class="docutils literal notranslate"><span class="pre">CFLAGS</span></code> to hook all source code</p></li>
 </ul>
-</div></blockquote>
-</div></blockquote>
+</li>
+</ol>
 </section>
 </section>
 <section id="granule-allocator">
@@ -316,11 +317,9 @@ you can:</p>
 granule allocator allocates memory in units of a fixed sized block (“granule”).
 Allocations may be aligned to a user-provided address boundary.</p>
 <p>The granule allocator interfaces are defined in <code class="docutils literal notranslate"><span class="pre">nuttx/include/nuttx/mm/gran.h</span></code>.
-The granule allocator consists of these files in this directory:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mm_gran.h, mm_granalloc.c, mm_grancritical.c, mm_granfree.c
-mm_graninit.c
-</pre></div>
-</div>
+The granule allocator consists of these files in this directory:
+<code class="docutils literal notranslate"><span class="pre">mm_gran.h</span></code>, <code class="docutils literal notranslate"><span class="pre">mm_granalloc.c</span></code>, <code class="docutils literal notranslate"><span class="pre">mm_grancritical.c</span></code>, <code class="docutils literal notranslate"><span class="pre">mm_granfree.c</span></code>
+<code class="docutils literal notranslate"><span class="pre">mm_graninit.c</span></code></p>
 <p>The granule allocator is not used anywhere within the base NuttX code
 as of this writing.  The intent of the granule allocator is to provide
 a tool to support platform-specific management of aligned DMA memory.</p>
@@ -335,30 +334,30 @@ and (b) your hardware has specific memory alignment requirements.</p>
 to 32 granules.  That restriction could be eliminated with some
 additional coding effort, but currently requires larger granule
 sizes for larger allocations.</p>
-<p>General Usage Example.</p>
+<section id="general-usage-example">
+<h3>General Usage Example<a class="headerlink" href="#general-usage-example" title="Permalink to this heading"></a></h3>
 <p>This is an example using the GCC section attribute to position a DMA
 heap in memory (logic in the linker script would assign the section
 .dmaheap to the DMA memory:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FAR uint32_t g_dmaheap[DMAHEAP_SIZE] locate_data(.dmaheap);
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">FAR</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">g_dmaheap</span><span class="p">[</span><span class="n">DMAHEAP_SIZE</span><span class="p">]</span><span class="w"> </span><span class="n">locate_data</span><span class="p">(.</span><span class="n">dmaheap</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>The heap is created by calling gran_initialize.  Here the granule size
 is set to 64 bytes and the alignment to 16 bytes:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>GRAN_HANDLE handle = gran_initialize(g_dmaheap, DMAHEAP_SIZE, 6, 4);
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">GRAN_HANDLE</span><span class="w"> </span><span class="n">handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gran_initialize</span><span class="p">(</span><span class="n">g_dmaheap</span><span class="p">,</span><span class="w"> </span><span class="n">DMAHEAP_SIZE</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Then the GRAN_HANDLE can be used to allocate memory:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FAR uint8_t *dma_memory = (FAR uint8_t *)gran_alloc(handle, 47);
+<p>Then the <code class="docutils literal notranslate"><span class="pre">GRAN_HANDLE</span></code> can be used to allocate memory:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">FAR</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">dma_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">gran_alloc</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="mi">47</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>The actual memory allocates will be 64 byte (wasting 17 bytes) and
 will be aligned at least to (<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;&lt;</span> <span class="pre">log2align</span></code>).</p>
 <p>Sub-Directories:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">mm/mm_gran</span></code> - Holds the granule allocation logic</p></li>
 </ul>
-</div></blockquote>
+</section>
 </section>
 <section id="page-allocator">
 <h2>Page Allocator<a class="headerlink" href="#page-allocator" title="Permalink to this heading"></a></h2>
