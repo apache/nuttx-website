@@ -1,3 +1,4 @@
+=============
 OS Components
 =============
 
@@ -10,12 +11,10 @@ case, you can head to the :doc:`reference <../reference/index>`.
    :maxdepth: 2
    :caption: Contents:
    
-   power.rst
    binfmt.rst
    drivers/index.rst
    nxflat.rst
    nxgraphics/index.rst
-   nxwidgets.rst
    paging.rst
    audio/index.rst
    filesystem/index.rst
@@ -26,3 +25,8 @@ case, you can head to the :doc:`reference <../reference/index>`.
    tools/index.rst
    arch/index.rst
    boards.rst
+   cmake.rst
+   openamp.rst
+   video.rst
+   crypto.rst
+   wireless.rst

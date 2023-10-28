@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fs/unionfs &mdash; NuttX latest documentation</title>
+  <title>Union File System &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="ZipFS" href="zipfs.html" />
-    <link rel="prev" title="SPIFFS" href="spiffs.html" /> 
+    <link rel="next" title="User file system" href="userfs.html" />
+    <link rel="prev" title="TMPFS" href="tmpfs.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -112,31 +112,39 @@
 <li class="toctree-l1"><a class="reference internal" href="../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">OS Components</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../power.html">Power Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../binfmt.html">Binary Loader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../drivers/index.html">Device Drivers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../nxflat.html">NXFLAT</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../nxgraphics/index.html">NX Graphics Subsystem</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nxwidgets.html">NxWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../paging.html">On-Demand Paging</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../audio/index.html">Audio subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../audio/index.html">Audio Subsystem</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">NuttX File System</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="binfs.html">BINFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cromfs.html">cromfs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fat.html">FAT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hostfs.html">Host File System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nfs.html">NFS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="partition.html">Partition Table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="procfs.html">PROCFS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="romfs.html">ROMFS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rpmsgfs.html">RPMSG File System</a></li>
 <li class="toctree-l3"><a class="reference internal" href="smartfs.html">SMARTFS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="shmfs.html">Shared Memory File System</a></li>
 <li class="toctree-l3"><a class="reference internal" href="spiffs.html">SPIFFS</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">fs/unionfs</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tmpfs.html">TMPFS</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Union File System</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#uses-of-the-union-file-system">Uses of the Union File System</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#prefixes">Prefixes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#example-configurations">Example Configurations</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="userfs.html">User file system</a></li>
 <li class="toctree-l3"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="partition.html">Partition Table</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
@@ -145,7 +153,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../syscall.html">Syscall Layer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../arch/index.html">Architecture-Specific Code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../boards.html">Boards support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../boards.html">Boards Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cmake.html">CMake Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../openamp.html">OpenAMP Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../video.html">Video Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../crypto.html">Crypto API Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../wireless.html">Wireless Subsystem</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
@@ -171,7 +184,7 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
           <li class="breadcrumb-item"><a href="index.html">NuttX File System</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">fs/unionfs</span></code></li>
+      <li class="breadcrumb-item active">Union File System</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/components/filesystem/unionfs.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -181,8 +194,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fs-unionfs">
-<h1><code class="docutils literal notranslate"><span class="pre">fs/unionfs</span></code><a class="headerlink" href="#fs-unionfs" title="Permalink to this heading"></a></h1>
+  <section id="union-file-system">
+<h1>Union File System<a class="headerlink" href="#union-file-system" title="Permalink to this heading"></a></h1>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
 <p>This directory contains the NuttX Union File System.  The Union file
@@ -190,20 +203,20 @@ system is provides a mechanism to overlay two different, mounted file
 systems so that they appear as one.  In general this works like this:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>Mount file system 1 at some location, say /mnt/file1</p></li>
-<li><p>Mount file system 2 at some location, say /mnt/file2</p></li>
-<li><p>Call mount() to combine and overly /mnt/file1 and mnt/file2
-as a new mount point, say /mnt/unionfs.</p></li>
+<li><p>Mount file system 1 at some location, say <code class="docutils literal notranslate"><span class="pre">/mnt/file1</span></code></p></li>
+<li><p>Mount file system 2 at some location, say <code class="docutils literal notranslate"><span class="pre">/mnt/file2</span></code></p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">mount()</span></code> to combine and overly <code class="docutils literal notranslate"><span class="pre">/mnt/file1</span></code> and <code class="docutils literal notranslate"><span class="pre">mnt/file2</span></code>
+as a new mount point, say <code class="docutils literal notranslate"><span class="pre">/mnt/unionfs</span></code>.</p></li>
 </ol>
 </div></blockquote>
-<p>/mnt/file1 and /mnt/file2 will disappear and be replaced by the single
-mountpoint /mnut/unionfs.  The previous contents under /mnt/file1 and
-/mnt/file2 will appear merged under /mnt/unionfs. Files at the same
+<p><code class="docutils literal notranslate"><span class="pre">/mnt/file1</span></code> and <code class="docutils literal notranslate"><span class="pre">/mnt/file2</span></code> will disappear and be replaced by the single
+mountpoint <code class="docutils literal notranslate"><span class="pre">/mnt/unionfs</span></code>.  The previous contents under <code class="docutils literal notranslate"><span class="pre">/mnt/file1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/mnt/file2</span></code> will appear merged under <code class="docutils literal notranslate"><span class="pre">/mnt/unionfs</span></code>. Files at the same
 relative path in file system1 will take presence. If another file of the
 same name and same relative location exists     in file system 2, it will
 not be visible because it will be occluded by the file in file system1.</p>
-<p>See include/nutts/unionfs.h for additional information.</p>
-<p>The Union File System is enabled by selecting the CONFIG_FS_UNIONFS option
+<p>See <code class="docutils literal notranslate"><span class="pre">include/nutts/unionfs.h</span></code> for additional information.</p>
+<p>The Union File System is enabled by selecting the <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_UNIONFS</span></code> option
 in the NuttX configuration file.</p>
 <p>Disclaimer:  This Union File System was certainly inspired by UnionFS
 (<a class="reference external" href="http://en.wikipedia.org/wiki/UnionFS">http://en.wikipedia.org/wiki/UnionFS</a>) and the similarity in naming is
@@ -238,11 +251,11 @@ combined in by the Union File System.  For example, suppose that:</p>
 <ul class="simple">
 <li><p>File system 1 is a ROMFS file system with prefix == NULL,</p></li>
 <li><p>File system 2 is a BINFS file system with prefix == “cgin-bin”, and</p></li>
-<li><p>The union file system is mounted at /mnt/www.</p></li>
+<li><p>The union file system is mounted at <code class="docutils literal notranslate"><span class="pre">/mnt/www</span></code>.</p></li>
 </ul>
 <p>Then the content in the in the ROMFS file system would appear at
-/mnt/www and the content of the BINFS file system would appear at
-/mnt/www/cgi-gin.</p>
+<code class="docutils literal notranslate"><span class="pre">/mnt/www</span></code> and the content of the BINFS file system would appear at
+<code class="docutils literal notranslate"><span class="pre">/mnt/www/cgi-gin</span></code>.</p>
 </section>
 <section id="example-configurations">
 <h2>Example Configurations<a class="headerlink" href="#example-configurations" title="Permalink to this heading"></a></h2>
@@ -265,7 +278,7 @@ essentially the same as the lincoln60 configuration.  It does not work,
 however, because the LPC1766 has insufficient RAM to support the THTTPD
 application in this configuration.</p></li>
 </ul>
-<p>See the README.txt file in each of these board directories for additional
+<p>See the documentation pages for each of these board for additional
 information about these configurations.</p>
 </section>
 </section>
@@ -274,14 +287,14 @@ information about these configurations.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="spiffs.html" class="btn btn-neutral float-left" title="SPIFFS" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="zipfs.html" class="btn btn-neutral float-right" title="ZipFS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tmpfs.html" class="btn btn-neutral float-left" title="TMPFS" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="userfs.html" class="btn btn-neutral float-right" title="User file system" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020, The Apache Software Foundation.</p>
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
   </div>
 
    
