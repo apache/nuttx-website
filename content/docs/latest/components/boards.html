@@ -132,6 +132,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#configuration-variables">Configuration Variables</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#supported-boards">Supported Boards</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-nuttx">Configuring NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-a-new-board-configuration">Adding a New Board Configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#building-symbol-tables">Building Symbol Tables</a></li>
 </ul>
 </li>
@@ -343,6 +344,42 @@ application directory on the command line like:</p>
 </div>
 </li>
 </ul>
+</section>
+<section id="adding-a-new-board-configuration">
+<h2>Adding a New Board Configuration<a class="headerlink" href="#adding-a-new-board-configuration" title="Permalink to this heading"></a></h2>
+<p>Okay, so you have created a new board configuration directory.
+Now, how do you hook this board into the configuration system so
+that you can select with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>?</p>
+<p>You will need modify the file <code class="docutils literal notranslate"><span class="pre">boards/Kconfig</span></code>. Let’s look at
+the STM32F4-Discovery configuration in the <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code> file and
+see how we would add a new board directory to the configuration.
+For this configuration let’s say that you new board resides in the
+directory <code class="docutils literal notranslate"><span class="pre">boards/myarch/mychip/myboard</span></code>; It uses an MCU
+selected with <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_MYMCU</span></code>; and you want the board
+to be selected with <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_MYBOARD</span></code>. Then here is
+how you can clone the STM32F4-Discovery configuration in
+<code class="docutils literal notranslate"><span class="pre">boards/Kconfig</span></code> to support your new board configuration.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">boards/Kconfig</span></code> for the stm32f4-discovery, you will see a
+configuration definition like this:</p>
+<p>The above selects the STM32F4-Discovery board. The <code class="docutils literal notranslate"><span class="pre">select</span></code>
+lines say that the board has both LEDs and buttons and that the
+board can generate interrupts from the button presses. You can
+just copy the above configuration definition to a new location
+(notice that they the configurations are in alphabetical order).
+Then you should edit the configuration to support your board. The
+final configuration definition might look something like:</p>
+<p>Later in the <code class="docutils literal notranslate"><span class="pre">boards/Kconfig</span></code> file, you will see a long, long
+string configuration with lots of defaults like this:</p>
+<p>This logic will assign string value to a configuration variable
+called <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD</span></code> that will name the directory where
+the board-specific files reside. In our case, these files reside
+in <code class="docutils literal notranslate"><span class="pre">boards/myarch/mychip/myboard</span></code> and we add the following to
+the long list of defaults (again in alphabetical order):</p>
+<p>Now the build system knows where to find your board configuration!</p>
+<p>And finally, add something like this near the bottom of
+<code class="docutils literal notranslate"><span class="pre">boards/myarch/mychip/myboard</span></code>:</p>
+<p>This includes additional, board-specific configuration variable
+definitions in <code class="docutils literal notranslate"><span class="pre">boards/myarch/mychip/myboard/Kconfig</span></code>.</p>
 </section>
 <section id="building-symbol-tables">
 <h2>Building Symbol Tables<a class="headerlink" href="#building-symbol-tables" title="Permalink to this heading"></a></h2>
