@@ -1,0 +1,583 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Critical Sections &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../reference/index.html" />
+    <link rel="prev" title="Linux Processes vs NuttX Tasks" href="processes_vs_tasks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Implementation Details</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html">Linux Processes vs NuttX Tasks</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Critical Sections</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#types-and-effects-of-critical-sections">Types and Effects of Critical Sections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#single-cpu-critical-sections">Single CPU Critical Sections</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#os-interfaces">OS Interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-sched-lock-for-critical-sections-don-t">Using sched_lock() for Critical Sections – <strong>DON’T</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#smp-critical-sections">SMP Critical Sections</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#up-irq-save-and-up-irq-restore"><code class="docutils literal notranslate"><span class="pre">up_irq_save()</span></code> and <code class="docutils literal notranslate"><span class="pre">up_irq_restore()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enter-critical-section-and-leave-critical-section"><code class="docutils literal notranslate"><span class="pre">enter_critical_section()</span></code> and <code class="docutils literal notranslate"><span class="pre">leave_critical_section()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spin-lock-irqsave-and-spin-unlock-irqrestore"><code class="docutils literal notranslate"><span class="pre">spin_lock_irqsave()</span></code> and <code class="docutils literal notranslate"><span class="pre">spin_unlock_irqrestore()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sched-lock-and-sched-unlock"><code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> and <code class="docutils literal notranslate"><span class="pre">sched_unlock()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-critical-section-monitor">The Critical Section Monitor</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#internal-os-hooks">Internal OS Hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#procfs">ProcFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#apps-system-critmon"><code class="docutils literal notranslate"><span class="pre">apps/system/critmon</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#irq-monitor-and-worst-case-response-time">IRQ Monitor and Worst Case Response Time</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#what-can-you-do">What can you do?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Implementation Details</a></li>
+      <li class="breadcrumb-item active">Critical Sections</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/implementation/critical_sections.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="critical-sections">
+<h1>Critical Sections<a class="headerlink" href="#critical-sections" title="Permalink to this heading"></a></h1>
+<section id="types-and-effects-of-critical-sections">
+<h2>Types and Effects of Critical Sections<a class="headerlink" href="#types-and-effects-of-critical-sections" title="Permalink to this heading"></a></h2>
+<p>A critical section is a short sequence of code where exclusive execution is
+assured by globally disabling other activities while that code sequence executes.
+When we discuss critical sections here we really refer to one of two mechanisms:</p>
+<ul class="simple">
+<li><p><strong>Critical Section proper</strong> A critical section is established by calling
+<code class="docutils literal notranslate"><span class="pre">enter_critical_section()</span></code>; the code sequence exits the critical section by
+calling <code class="docutils literal notranslate"><span class="pre">leave_critical_section()</span></code>. For the single CPU case, this amounts to
+simply disabling interrupts but is more complex in the SMP case where spinlocks
+are also involved.</p></li>
+<li><p><strong>Disabling Pre-emption</strong> This is a related mechanism that is lumped into this
+discussion because of the similarity of its effects on the system. When pre-emption
+is disabled (via <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code>), interrupts remain enabled, but context switches
+may not occur; the current task is locked in place and cannot be suspended until
+the scheduler is unlocked (via <code class="docutils literal notranslate"><span class="pre">sched_unlock()</span></code>).</p></li>
+</ul>
+<p>The use of either mechanism will always harm real-time performance.
+The effects of critical sections on real-time performance is discussed in
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Effects+of+Disabling+Interrupts+or+Pre-Emption+on+Response+Latency">Effects of Disabling Interrupts or Pre-Emption on Response Latency</a> [TODO: move to documentation].
+The end result is that a certain amount of <strong>jitter</strong> is added to the real-time response.</p>
+<p>Critical sections cannot be avoided within the OS and, as a consequence, a certain
+amount of “jitter” in the response time is expected. The important thing is to monitor
+the maximum time that critical sections are in place in order to manage that jitter so
+that the variability in response time is within an acceptable range.</p>
+<p>NOTE: This discussion applies to Normal interrupt processing. Most of this discussion
+does not apply to <a class="reference internal" href="../guides/zerolatencyinterrupts.html"><span class="doc">High Performance, Zero Latency Interrupts</span></a>. Those interrupts are not masked
+in the same fashion and none of the issues address in this page apply to those
+interrupts.</p>
+</section>
+<section id="single-cpu-critical-sections">
+<h2>Single CPU Critical Sections<a class="headerlink" href="#single-cpu-critical-sections" title="Permalink to this heading"></a></h2>
+<section id="os-interfaces">
+<h3>OS Interfaces<a class="headerlink" href="#os-interfaces" title="Permalink to this heading"></a></h3>
+<p>Before we talk about SMP Critical Sections let’s first review the internal OS
+interfaces avaiable and what they do in the single CPU case:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">up_irq_save()</span></code> (and its companion, <code class="docutils literal notranslate"><span class="pre">up_irq_restore()</span></code>). These simple
+interfaces just enable and disable interrupts globally. This is the simplest
+way to establish a critical section in the single CPU case. It does have
+side-effects to real-time behavior as discussed elsewhere.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_irq_save()</span></code> should never be called directly, however. Instead, the wrapper
+macros enter_critical_section() (and its companion <code class="docutils literal notranslate"><span class="pre">leave_critical_section()</span></code>)
+or <code class="docutils literal notranslate"><span class="pre">spin_lock_irqsave()</span></code> (and <code class="docutils literal notranslate"><span class="pre">spin_unlock_irqrestore()</span></code>) should be used.
+In the single CPU case, these macros are defined to be simply <code class="docutils literal notranslate"><span class="pre">up_irq_save()</span></code>
+(or <code class="docutils literal notranslate"><span class="pre">up_irq_save()</span></code>). Rather than being called directly, they should always
+be called indirectly through these macros so that the code will function in the
+SMP environment as well.</p></li>
+<li><p>Finally, there is <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> (and <code class="docutils literal notranslate"><span class="pre">sched_unlock()</span></code>) that disable (and
+enable) pre-emption. That is, <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> will lock your kernel thread in
+place and prevent other tasks from running. Interrupts are still enabled, but
+other tasks cannot run.</p></li>
+</ul>
+</section>
+<section id="using-sched-lock-for-critical-sections-don-t">
+<h3>Using sched_lock() for Critical Sections – <strong>DON’T</strong><a class="headerlink" href="#using-sched-lock-for-critical-sections-don-t" title="Permalink to this heading"></a></h3>
+<p>In the single CPU case, <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> can do a pretty good job of establishing a
+critical section too. After all, if no other tasks can run on the single CPU,
+then that task has pretty much exclusive access to all resources (provided that
+those resources are not shared with interrupt handlers). However, <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code>
+must never be used to establish a critical section because it does not work the
+same way in the SMP case. In the SMP case, locking the scheduer does not provide
+any kind of exclusive access to resources. Tasks running on other CPUs are still
+free to do whatever they wish.</p>
+</section>
+</section>
+<section id="smp-critical-sections">
+<h2>SMP Critical Sections<a class="headerlink" href="#smp-critical-sections" title="Permalink to this heading"></a></h2>
+<section id="up-irq-save-and-up-irq-restore">
+<h3><code class="docutils literal notranslate"><span class="pre">up_irq_save()</span></code> and <code class="docutils literal notranslate"><span class="pre">up_irq_restore()</span></code><a class="headerlink" href="#up-irq-save-and-up-irq-restore" title="Permalink to this heading"></a></h3>
+<p>As mentioned, <code class="docutils literal notranslate"><span class="pre">up_irq_save()</span></code> and <code class="docutils literal notranslate"><span class="pre">up_irq_restore()</span></code> should never be called
+directly. That is because the behavior is different in multiple CPU systems. In
+the multiple CPU case, these functions only enable (or disable) interrupts on the
+local CPU. They have no effect on interrupts in the other CPUs and hence really
+accomplish very little. Certainly they do not provide a critical section in any
+sense.</p>
+</section>
+<section id="enter-critical-section-and-leave-critical-section">
+<h3><code class="docutils literal notranslate"><span class="pre">enter_critical_section()</span></code> and <code class="docutils literal notranslate"><span class="pre">leave_critical_section()</span></code><a class="headerlink" href="#enter-critical-section-and-leave-critical-section" title="Permalink to this heading"></a></h3>
+<p><strong>spinlocks</strong></p>
+<p>In order to establish a critical section, we also need to employ spinlocks. Spins
+locks are simply loops that execute in one processor. If processor A sets spinlock
+x, then processor B would have to wait for the spinlock like:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">test_and_set</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Where test and set is an atomic operation that sets the value of a memory location
+but also returns its previous value. Here we are talking about atomic in terms of
+memory bus operations: The testing and setting of the memory location must be atomic
+with respect to other bus operations. Special hardware support of some kind is
+necessary to implement <code class="docutils literal notranslate"><span class="pre">test_and_set()</span></code> logic.</p>
+<p>When Task A released the lock x, Task B will successfully take the spinlock and
+continue.</p>
+<p><strong>Implementation</strong></p>
+<p>Without going into the details of the implementation of <code class="docutils literal notranslate"><span class="pre">enter_critical_section()</span></code>
+suffice it to say that it (1) disables interrupts on the local CPU and (2) uses
+spinlocks to assure exclusive access to a code sequence across all CPUs.</p>
+<p>NOTE that a critical section is indeed created: While within the critical section,
+the code does have exclusive access to the resource being protected. However the
+behavior is really very different:</p>
+<ul class="simple">
+<li><p>In the single CPU case, disable interrupts stops all possible activity from any
+other task. The single CPU becomes single threaded and un-interruptible.</p></li>
+<li><p>In the SMP case, tasks continue to run on other CPUs. It is only when those other
+tasks attempt to enter a code sequence protected by the critical section that those
+tasks on other CPUs will be stopped. They will be stopped waiting on a spinlock.</p></li>
+</ul>
+</section>
+<section id="spin-lock-irqsave-and-spin-unlock-irqrestore">
+<h3><code class="docutils literal notranslate"><span class="pre">spin_lock_irqsave()</span></code> and <code class="docutils literal notranslate"><span class="pre">spin_unlock_irqrestore()</span></code><a class="headerlink" href="#spin-lock-irqsave-and-spin-unlock-irqrestore" title="Permalink to this heading"></a></h3>
+<p><strong>Generic Interrupt Controller (GIC)</strong></p>
+<p>ARM provides a special, optional sub-system called MPCore that provides
+multi-core support. One MPCore component is the Generic Interrupt Controller
+or GIC. The GIC supports 16 inter-processor interrupts and is a key component for
+implementing SMP on those platforms. The are called Software Generated Interrupts
+or SGIs.</p>
+<p>One odd behavior of the GIC is that the SGIs cannot be disabled (at least not
+using the standard ARM global interrupt disable logic). So disabling local
+interrupts does not prevent these GIC interrupts.</p>
+<p>This causes numerous complexities and significant overhead in establishing a
+critical section.</p>
+<p><strong>ARMv7-M NVIC</strong></p>
+<p>The GIC is available in all recent ARM architectures. However, most embedded
+ARM7-M multi-core CPUs just incorporate the inter-processor interrupts as a
+normal interrupt that is mask-able via the NVIC (each CPU will have its own NVIC).</p>
+<p>This means in those cases, the critical section logic can be greatly simplified.</p>
+<p><strong>Implementation</strong></p>
+<p>For the case of the GIC with no support for disabling interrupts,
+<code class="docutils literal notranslate"><span class="pre">spin_lock_irqsave()</span></code> and <code class="docutils literal notranslate"><span class="pre">spin_unlock_irqstore()</span></code> are equivalent to
+<code class="docutils literal notranslate"><span class="pre">enter_critical_section()</span></code> and <code class="docutils literal notranslate"><span class="pre">leave_critical_section()</span></code>. In is only in the
+case where inter-processor interrupts can be disabled that there is a difference.</p>
+<p>In that case, <code class="docutils literal notranslate"><span class="pre">spin_lock_irqsave()</span></code> will disable local interrupts and take
+a spinlock. This is really very simple and efficient implementation of a critical
+section.</p>
+<p>There are two important things to note, however:</p>
+<ul class="simple">
+<li><p>The logic within this critical section must never suspend! For example, if
+code were to call <code class="docutils literal notranslate"><span class="pre">spin_lock_irqsave()</span></code> then <code class="docutils literal notranslate"><span class="pre">sleep()</span></code>, then the sleep
+would occur with the spinlock in the lock state and the whole system could
+be blocked. Rather, <code class="docutils literal notranslate"><span class="pre">spin_lock_irqsave()</span></code> can only be used with straight
+line code.</p></li>
+<li><p>This is a different critical section than the one established via
+<code class="docutils literal notranslate"><span class="pre">enter_critical_section()</span></code>. Taking one critical section, does not prevent
+logic on another CPU from taking the other critical section and the result
+is that you make not have the protection that you think you have.</p></li>
+</ul>
+</section>
+<section id="sched-lock-and-sched-unlock">
+<h3><code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> and <code class="docutils literal notranslate"><span class="pre">sched_unlock()</span></code><a class="headerlink" href="#sched-lock-and-sched-unlock" title="Permalink to this heading"></a></h3>
+<p>Other than some details, the SMP <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> works much like it does in
+the single CPU case. Here are the caveats:</p>
+<ul class="simple">
+<li><p>As in the single CPU case, the case that calls <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> is locked
+in place and cannot be suspected.</p></li>
+<li><p>However, tasks will continue to run on other CPUs so <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> cannot
+be used as a critical section.</p></li>
+<li><p>Tasks on other CPUs are also locked in place. However, they may opt to suspend
+themselves at any time (say, via <code class="docutils literal notranslate"><span class="pre">sleep()</span></code>). In that case, only the CPU’s
+IDLE task will be permitted to run.</p></li>
+</ul>
+</section>
+</section>
+<section id="the-critical-section-monitor">
+<h2>The Critical Section Monitor<a class="headerlink" href="#the-critical-section-monitor" title="Permalink to this heading"></a></h2>
+<section id="internal-os-hooks">
+<h3>Internal OS Hooks<a class="headerlink" href="#internal-os-hooks" title="Permalink to this heading"></a></h3>
+<p><strong>The Critical Section Monitor</strong></p>
+<p>In order to measure the time that tasks hold critical sections, the OS supports
+a Critical Section Monitor. This is internal instrumentation that records the
+time that a task holds a critical section. It also records the amount of time
+that interrupts are disabled globally. The Critical Section Monitor then retains
+the maximum time that the critical section is in place, both per-task and globally.</p>
+<p>The Critical Section Monitor is enabled with the following setting in the
+configuration:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR=y
+</pre></div>
+</div>
+<p><strong>Perf Timers interface</strong></p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>missing description for perf_xxx interface</p>
+</div>
+<p><strong>Per Thread and Global Critical Sections</strong></p>
+<p>In NuttX critical sections are controlled on a per-task basis. For example,
+consider the following code sequence:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">irqstate_t</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">enter_critical_section</span><span class="p">();</span>
+<span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+<span class="n">leave_critical_section</span><span class="p">(</span><span class="n">flags</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The task, say Task A, establishes the critical section with
+<code class="docutils literal notranslate"><span class="pre">enter_critical_section()</span></code>, but when Task A is suspended by the <code class="docutils literal notranslate"><span class="pre">sleep(5)</span></code>
+statement, it relinquishes the critical section. The state of the system will
+then be determined by the next task to be resumed, say Task B: Typically, the
+next task will not be in a critical section and so the critical section is
+broken while the task sleeps. That critical section will be re-established when
+that Task A runs again after the sleep time expires.</p>
+<p>However, if Task B that is resumed is also within a critical section, then the
+critical section will be extended even longer! This is why the global time that
+the critical section in place may be longer than any time that an individual
+thread holds the critical section.</p>
+</section>
+<section id="procfs">
+<h3>ProcFS<a class="headerlink" href="#procfs" title="Permalink to this heading"></a></h3>
+<p>The OS reports these maximum times via the ProcFS file system, typically
+mounted at <code class="docutils literal notranslate"><span class="pre">/proc</span></code>:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">/proc/&lt;ID&gt;/critmon</span></code> pseudo-file reports the per-thread maximum value
+for thread ID = &lt;ID&gt;. There is one instance of this critmon file for each
+active task in the system.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">/proc/critmon</span></code> pseuo-file reports similar information for the global
+state of the CPU.</p></li>
+</ul>
+<p>The form of the output from the <code class="docutils literal notranslate"><span class="pre">/proc/&lt;ID&gt;/critmon</span></code> file is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>X.XXXXXXXXX,X.XXXXXXXXX
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">X.XXXXXXXXX</span></code> is the time in seconds with nanosecond precision
+(but not necessarily accuracy, accuracy is dependent on the timing clock
+source). The first number is the maximum time that the held pre-emption
+disabled; the second number number is the longest duration that the critical
+section was held.</p>
+<p>This file cat be read from NSH like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>cat<span class="w"> </span>/proc/1/critmon
+<span class="m">0</span>.000009610,0.000001165
+</pre></div>
+</div>
+<p>The form of the output from the <code class="docutils literal notranslate"><span class="pre">/proc/critmon</span></code> file is simlar:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>X,X.XXXXXXXXX,X.XXXXXXXXX
+</pre></div>
+</div>
+<p>Where the first X is the CPU number and the following two numbers have the
+same interpretation as for <code class="docutils literal notranslate"><span class="pre">/proc/&lt;ID&gt;/critmon</span></code>. In the single CPU case,
+there will be one line in the pseudo-file with <code class="docutils literal notranslate"><span class="pre">X=0</span></code>; in the SMP case
+there will be multiple lines, one for each CPU.</p>
+<p>This file can also be read from NSH:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>cat<span class="w"> </span>/proc/critmon
+<span class="m">0</span>,0.000009902,0.000023590
+</pre></div>
+</div>
+<p>These statistics are cleared each time that the pseudo-file is read so that
+the reported values are the maximum since the last time that the ProcFS pseudo
+file was read.</p>
+</section>
+<section id="apps-system-critmon">
+<h3><code class="docutils literal notranslate"><span class="pre">apps/system/critmon</span></code><a class="headerlink" href="#apps-system-critmon" title="Permalink to this heading"></a></h3>
+<p>Also available is a application daemon at <code class="docutils literal notranslate"><span class="pre">apps/sysem/critmon</span></code>. This daemon
+periodically reads the ProcFS files described above and dumps the output to
+stdout. This daemon is enabled with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>critmon_start
+Csection<span class="w"> </span>Monitor:<span class="w"> </span>Started:<span class="w"> </span><span class="m">3</span>
+Csection<span class="w"> </span>Monitor:<span class="w"> </span>Running:<span class="w"> </span><span class="m">3</span>
+nsh&gt;
+PRE-EMPTION<span class="w"> </span>CSECTION<span class="w">    </span>PID<span class="w">   </span>DESCRIPTION
+MAX<span class="w"> </span>DISABLE<span class="w"> </span>MAX<span class="w"> </span>TIME
+<span class="m">0</span>.000100767<span class="w"> </span><span class="m">0</span>.000005242<span class="w">  </span>---<span class="w">  </span>CPU<span class="w"> </span><span class="m">0</span>
+<span class="m">0</span>.000000292<span class="w"> </span><span class="m">0</span>.000023590<span class="w">     </span><span class="m">0</span><span class="w"> </span>Idle<span class="w"> </span>Task
+<span class="m">0</span>.000036696<span class="w"> </span><span class="m">0</span>.000004078<span class="w">     </span><span class="m">1</span><span class="w"> </span>init
+<span class="m">0</span>.000000000<span class="w"> </span><span class="m">0</span>.000014562<span class="w">     </span><span class="m">3</span><span class="w"> </span>Csection<span class="w"> </span>Monitor
+...
+</pre></div>
+</div>
+<p>And can be stopped with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>critmon_stop
+Csection<span class="w"> </span>Monitor:<span class="w"> </span>Stopping:<span class="w"> </span><span class="m">3</span>
+Csection<span class="w"> </span>Monitor:<span class="w"> </span>Stopped:<span class="w"> </span><span class="m">3</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="irq-monitor-and-worst-case-response-time">
+<h2>IRQ Monitor and Worst Case Response Time<a class="headerlink" href="#irq-monitor-and-worst-case-response-time" title="Permalink to this heading"></a></h2>
+<p>The IRQ Monitor is additional OS instrumentation. A full discusssion of the
+IRQ Monitor is beyond the scope of this page. Suffice it to say:</p>
+<ul class="simple">
+<li><p>The IRQ Monitor is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_IRQMONITOR=y</span></code>.</p></li>
+<li><p>The data collected by the IRQ Monitor is provided in <code class="docutils literal notranslate"><span class="pre">/proc/irqs</span></code>.</p></li>
+<li><p>This data can also be viewed using the <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">irqinfo</span></code> command.</p></li>
+<li><p>This data includes the number of interrupts received for each IRQ and the
+time required to process the interrupt, from entry into the attached
+interrupt handler until exit from the interrupt handler.</p></li>
+</ul>
+<p>From this information we can calculate the worst case response time from
+interrupt request until a task runs that can process the the interrupt.
+That worst cast response time, <code class="docutils literal notranslate"><span class="pre">Tresp</span></code>, is given by:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Tresp1</span> <span class="pre">=</span> <span class="pre">Tcrit</span> <span class="pre">+</span> <span class="pre">Tintr</span> <span class="pre">+</span> <span class="pre">C1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tresp2</span> <span class="pre">=</span> <span class="pre">Tintr</span> <span class="pre">+</span> <span class="pre">Tpreempt</span> <span class="pre">+</span> <span class="pre">C2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tresp</span> <span class="pre">=</span> <span class="pre">MAX(Tresp1,</span> <span class="pre">Tresp2)</span></code></p></li>
+</ul>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">C1</span></code> and <code class="docutils literal notranslate"><span class="pre">C2</span></code> are unknown, irreducible constants that reflect such things as
+hardware interrupt latency and context switching time,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tcrit</span></code> is the longest observed time within a critical section,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tintr</span></code> is the time required for interrupt handler execution for the event
+of interest, and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tpreempt</span></code> is the longest observed time with preemption disabled.</p></li>
+</ul>
+<p>NOTES:</p>
+<ol class="arabic">
+<li><p>This calculation assumes that the task of interest is the highest priority task
+in the system. It does not consider the possibility of the responding task being
+delayed due to insufficient priority.</p></li>
+<li><p>This calculation does not address the case where the interfering task has both
+preemption disabled and holds the critical section. Certainly Tresp1 is valid
+in this case, but Tresp2 is not. There might some additional, unmeasured delay
+after the interrupt and before the responding task can run depending on the order
+in which the critical section is released and preemption is re-enabled:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>When the task leaves the critical section, the pending interrupt will execute
+immediately with or without preemption enabled.</p></li>
+<li><p>If preemption is enabled first, then the will be no delay after the interrupt
+because preemption will be enabled when the interrupt returns.</p></li>
+<li><p>If the task leaves critical section first, then there will be some small delay
+of unknown duration after the interrupts returns and before the responding
+task can run because preemption will be disabled when the interrupt returns.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>This calculation does not address concurrent interrupts. All interrupts run at the
+same priority and if an interrupt request occurs while within an interrupt handler,
+then it must pend until completion of that interrupt. So perhaps the above formula
+for <code class="docutils literal notranslate"><span class="pre">Tresp1</span></code> should instead be the following? (This assumes that hardware arbitration
+is such that the interrupt of interest will be deferred by no more than one interrupt).
+Concurrent, nested interrupts might be better supported with prioritized.
+See more: <a class="reference internal" href="../guides/nestedinterrupts.html"><span class="doc">Nested Interrupts</span></a>.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tresp1</span> <span class="pre">=</span> <span class="pre">Tcrit</span> <span class="pre">+</span> <span class="pre">Tintrmax</span> <span class="pre">+</span> <span class="pre">Tintr</span> <span class="pre">+</span> <span class="pre">C1</span></code></p>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Tintrmax</span></code> is the longest interrupt processing time of all interrupt sources
+(excluding the interrupt for the event under consideration).</p></li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<section id="what-can-you-do">
+<h3>What can you do?<a class="headerlink" href="#what-can-you-do" title="Permalink to this heading"></a></h3>
+<p>What can you do if the timing data indicates that you cannot meet your deadline?
+You have these options:</p>
+<ol class="arabic simple">
+<li><p>Use these tools to find the exact function that holds the critical section or
+disables preemption too long. Then optimize that function so that it releases
+that resource sooner. Often critical sections are established over long sequences
+or code when they could be re-designed to use critical sections over shorter code
+sequences.</p></li>
+<li><p>In some cases, use of critical sections or disabling of pre-emption could replaced
+with a locking semaphore. The scope of the locking effect for the use of such locks
+is not global but is limited only to tasks that share the same resource. Critical
+sections should correctly be used only to protect resources that are shared between
+tasking level logic and interrupt level logic.</p></li>
+<li><p>Switch to <a class="reference internal" href="../guides/zerolatencyinterrupts.html"><span class="doc">High Performance, Zero Latency Interrupts</span></a>. Those interrupts are not subject
+to most of the issues discussed in this page.</p></li>
+</ol>
+<p><strong>NOTE</strong></p>
+<p>There are a few places in the OS were preemption is disabled via <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> in
+order to establish a critical section. That is an incorrect use of <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code>.
+<code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> simply prevents the currently executing task from being suspended.
+For the case of the single CPU platform, that does effectively create a critical
+section: Since no other task can run, the locking task does have exclusive access
+to all resources that are not shared with interrupt level logic.</p>
+<p>But in the multi-CPU SMP case that is not true. <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> still keeps the
+current task running on CPU from being suspended, but it does not support any
+exclusivity in accesses because there will be other tasks running on other CPUs
+that may access the same resources.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="processes_vs_tasks.html" class="btn btn-neutral float-left" title="Linux Processes vs NuttX Tasks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../reference/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

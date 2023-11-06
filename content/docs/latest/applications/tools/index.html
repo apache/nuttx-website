@@ -135,12 +135,21 @@
 <li class="toctree-l2"><a class="reference internal" href="../testing/index.html">Testing</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Host Side Tools</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#bitmap-converter-py-nxwidgets"><code class="docutils literal notranslate"><span class="pre">bitmap_converter.py</span></code> NxWidgets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mkromfsimg-sh"><code class="docutils literal notranslate"><span class="pre">mkromfsimg.sh</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#processes-and-programs-in-the-kernel-build">Processes and Programs in the KERNEL Build</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kernel-build-differences">KERNEL Build Differences</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#apps-bin">apps/bin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#apps-tools-mkromfsimg-sh">apps/tools/mkromfsimg.sh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#application-initialization">Application Initialization</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../wireless/index.html">Wireless Libraries and NSH Add-Ons</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation/index.html">Implementation Details</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
@@ -200,6 +209,63 @@ For most simple graphic images this might be as few as 6 or 8 colors.</p></li>
 <li><p>Save the image as PNG or other lossless format (NOT jpeg).</p></li>
 <li><p>Then generate the image.</p></li>
 </ul>
+</section>
+<section id="mkromfsimg-sh">
+<h2><code class="docutils literal notranslate"><span class="pre">mkromfsimg.sh</span></code><a class="headerlink" href="#mkromfsimg-sh" title="Permalink to this heading"></a></h2>
+<p><strong>Q</strong>: Why are there two versions of the script <code class="docutils literal notranslate"><span class="pre">mkromfsimg.sh</span></code>, one in
+<code class="docutils literal notranslate"><span class="pre">apps/tools</span></code> and one in <code class="docutils literal notranslate"><span class="pre">nuttx/tools</span></code>.</p>
+<p><strong>A</strong>: The version of <code class="docutils literal notranslate"><span class="pre">mkromfsimg.sh</span></code> in <code class="docutils literal notranslate"><span class="pre">nuttx/tools</span></code> is a generic
+tool to simplify creation of ROMFS file system from any directory contain
+content that you would like to access within the the target.</p>
+<p>The version in <code class="docutils literal notranslate"><span class="pre">apps/tools</span></code>, on the other hand, has a very special purpose.
+It is part of the support that can be used in the KERNEL build mode.</p>
+<section id="processes-and-programs-in-the-kernel-build">
+<h3>Processes and Programs in the KERNEL Build<a class="headerlink" href="#processes-and-programs-in-the-kernel-build" title="Permalink to this heading"></a></h3>
+<p>In the kernel build, there are no tasks. There are only processes and all
+code lives in its own, private address space.
+See <a class="reference internal" href="../../implementation/processes_vs_tasks.html"><span class="doc">Linux Processes vs NuttX Tasks</span></a>.</p>
+<p>One consequence of that is that functions like <code class="docutils literal notranslate"><span class="pre">task_create()</span></code> and friends
+cannot be used in the KERNEL build mode. Instead, all processes must be loaded
+into a virtual address space from an ELF or NxFLAT file residing in the file
+system. ROMFS is one of many file system, but one that is particularly usable
+for this purpose in deeply embedded systems.</p>
+</section>
+<section id="kernel-build-differences">
+<h3>KERNEL Build Differences<a class="headerlink" href="#kernel-build-differences" title="Permalink to this heading"></a></h3>
+<p>In the FLAT and PROTECTED build mode all applications are built into a single
+BLOB, so every symbol must have a unique name to avoid name collisions.</p>
+<p>In the KERNEL build mode, all applications are built at separately linked
+programs that reside in a file system. The entry point to ALL programs is the
+function <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
+</section>
+<section id="apps-bin">
+<h3>apps/bin<a class="headerlink" href="#apps-bin" title="Permalink to this heading"></a></h3>
+<p>When you build the <code class="docutils literal notranslate"><span class="pre">apps/</span></code> programs in FLAT or PROTECTED modes, all of the
+object files are put into an archive apps/libapps.a which is, eventually,
+copied to <code class="docutils literal notranslate"><span class="pre">nuttx/libs</span></code> and the BLOB is created by linking NuttX archives
+with <code class="docutils literal notranslate"><span class="pre">lib/libapps.a</span></code>.</p>
+<p>But when you build the <code class="docutils literal notranslate"><span class="pre">apps/</span></code> programs in the KERNEL mode, the directory
+<code class="docutils literal notranslate"><span class="pre">apps/bin</span></code> is created by the top-level apps/Makefile. Each source file is
+compiled, but the object files are not added to ayn archive. Instead, the
+object files are linked into a separate compiled and linked program. Each program
+is then installed at <code class="docutils literal notranslate"><span class="pre">apps/bin</span></code>.</p>
+</section>
+<section id="apps-tools-mkromfsimg-sh">
+<h3>apps/tools/mkromfsimg.sh<a class="headerlink" href="#apps-tools-mkromfsimg-sh" title="Permalink to this heading"></a></h3>
+<p>When the <code class="docutils literal notranslate"><span class="pre">apps/</span></code> kernel build is complete, all of the programs have been installed
+in <code class="docutils literal notranslate"><span class="pre">apps/bin</span></code>. That is where <code class="docutils literal notranslate"><span class="pre">apps/tools/mkromfsimg.sh</span></code> file comes into to play.
+It takes all of the programs in apps/bin and creates a ROMFS file system image
+containing all of the applications. That ROMFS file system image is built into
+the kernel.</p>
+</section>
+<section id="application-initialization">
+<h3>Application Initialization<a class="headerlink" href="#application-initialization" title="Permalink to this heading"></a></h3>
+<p>At run time, when the kernel boots, it will mount that ROMFS file system at <code class="docutils literal notranslate"><span class="pre">/bin</span></code>.
+In the FLAT build mode, the OS boot logic calls <code class="docutils literal notranslate"><span class="pre">task_create()</span></code> to start the initial
+task you have configured with <code class="docutils literal notranslate"><span class="pre">CONFIG_INIT_ENTRYPOINT</span></code>. But in the KERNEL build, something
+different happens. <code class="docutils literal notranslate"><span class="pre">CONFIG_INIT_ENTRYPOINT</span></code> is not used. Instead, <code class="docutils literal notranslate"><span class="pre">CONFIG_INIT_FILEPATH</span></code>
+is used. This will be the name of the program to stared in <code class="docutils literal notranslate"><span class="pre">/bin</span></code> to bring up the system.</p>
+</section>
 </section>
 </section>
 

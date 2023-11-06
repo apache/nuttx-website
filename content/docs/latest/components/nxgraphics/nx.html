@@ -121,6 +121,7 @@
 <li class="toctree-l3 current"><a class="reference internal" href="index.html#nx-header-files">NX Header Files</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="nxgl.html">NX Graphics Library (<code class="docutils literal notranslate"><span class="pre">NXGL</span></code>)</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">NX</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#pre-processor-definitions">Pre-Processor Definitions</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#nx-types">NX Types</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#starting-the-nx-server">Starting the NX Server</a></li>
@@ -154,6 +155,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation/index.html">Implementation Details</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
@@ -188,6 +190,57 @@
              
   <section id="nx">
 <h1>NX<a class="headerlink" href="#nx" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>NX provides a tiny windowing system in the spirit of X, but greatly scaled
+down and appropriate for most resource-limited embedded environments.
+The current NX implementation supports the general following, high-level
+features:</p>
+<ul class="simple">
+<li><p><strong>Virtual Vertical Graphics Space</strong> Windows that reside in a virtual,
+vertical space so that it makes sense to talk about one window being
+on top of another and obscuring the window below it.</p></li>
+<li><p><strong>Client/Server Model</strong> A standard client server/model was adopted.
+NX may be considered a server and other logic that presents the windows
+are NX clients.</p></li>
+<li><p><strong>Multi-User Support</strong> NX includes front-end logic to an NX server
+daemon that can serve multiple NX client threads. The NX sever
+thread/daemon serializes graphics operations from multiple clients.</p></li>
+<li><p><strong>Minimal Graphics Toolset</strong> The actual implementation of the graphics
+operations is performed by common, back-end logic. This back-end supports
+only a primitive set of graphic and rendering operations.</p></li>
+<li><p><strong>Device Interface</strong> NX supports any graphics device either of two
+device interfaces:</p>
+<ol class="arabic simple">
+<li><p>Any device with random accesss video memory using the NuttX framebuffer
+driver interface (see include/nuttx/video/fb.h).</p></li>
+<li><p>Any LCD-like device than can accept raster line runs through a parallel
+or serial interface (see include/nuttx/lcd/lcd.h). By default, NX is
+configured to use the frame buffer driver unless CONFIG_NX_LCDDRIVER
+is defined =y in your NuttX configuration file.</p></li>
+</ol>
+</li>
+<li><p><strong>Transparent to NX Client</strong> The window client on “sees” the sub-window
+that is operates in and does not need to be concerned with the virtual,
+vertical space (other that to respond to redraw requests from NX when needed).</p></li>
+<li><p><strong>Framed Windows and Toolbars</strong> NX also adds the capability to support
+windows with frames and toolbars on top of the basic windowing support.
+These are windows such as those shown in the screenshot above. These framed
+windows sub-divide one one window into three relatively independent
+subwindows: A frame, the contained window and an (optional) toolbar window.</p></li>
+<li><p><strong>Mouse Support</strong> NX provides support for a mouse or other X/Y pointing
+devices. APIs are provided to allow external devices to give X/Y position
+information and mouse button presses to NX. NX will then provide the mouse
+input to the relevant window clients via callbacks. Client windows only
+receive the mouse input callback if the mouse is positioned over a visible
+portion of the client window; X/Y position is provided to the client in the
+relative coordinate system of the client window.</p></li>
+<li><p><strong>Keyboard input</strong> NX also supports keyboard/keypad devices. APIs are provided
+to allow external devices to give keypad information to NX. NX will then
+provide the mouse input to the top window on the display (the window that
+has the focus) via a callback function.</p></li>
+</ul>
+</section>
 <section id="pre-processor-definitions">
 <h2>Pre-Processor Definitions<a class="headerlink" href="#pre-processor-definitions" title="Permalink to this heading"></a></h2>
 <p>The default server message queue name used by the <a class="reference internal" href="#c.nx_run" title="nx_run"><code class="xref c c-macro docutils literal notranslate"><span class="pre">nx_run</span></code></a> macro:</p>

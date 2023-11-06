@@ -124,6 +124,7 @@
 <li class="toctree-l4"><a class="reference internal" href="nxtk.html">NX Tool Kit (<code class="docutils literal notranslate"><span class="pre">NXTK</span></code>)</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">NX Fonts Support (<code class="docutils literal notranslate"><span class="pre">NXFONTS</span></code>)</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#nxfonts-types">NXFONTS types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#wide-font-support">Wide Font Support</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="nxcursor.html">NX Cursor Support (<code class="docutils literal notranslate"><span class="pre">NXCURSOR</span></code>)</a></li>
@@ -151,6 +152,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation/index.html">Implementation Details</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
@@ -345,6 +347,80 @@ character encoding.</p>
 </dl>
 </dd></dl>
 
+</section>
+<section id="wide-font-support">
+<h2>Wide Font Support<a class="headerlink" href="#wide-font-support" title="Permalink to this heading"></a></h2>
+<p>Question:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&gt; My team is trying the nuttx graphics with chinese fonts, but nx seems not
+&gt; support fonts quantity more than 256 chars, right?
+</pre></div>
+</div>
+<p>Answer:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>NuttX currently only uses fonts with 7-bit and 8-bit character sets. But
+I believe that that limitation is mostly arbitrary. It should be a simple
+extension to the font subsystem to use 16-bit fonts.
+</pre></div>
+</div>
+<section id="adding-16-bit-font-support">
+<h3>Adding 16-Bit Font support<a class="headerlink" href="#adding-16-bit-font-support" title="Permalink to this heading"></a></h3>
+<section id="current-7-8-bit-font-implementation">
+<h4>Current 7/8-bit Font Implementation<a class="headerlink" href="#current-7-8-bit-font-implementation" title="Permalink to this heading"></a></h4>
+<p>All of critical font interfaces allow for 16-bit character sets:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">nx_fontbitmap_s</span><span class="w"> </span><span class="o">*</span><span class="n">nxf_getbitmap</span><span class="p">(</span><span class="n">NXHANDLE</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">ch</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The character code is only used to look-up of a glyph in a table. There is a
+definition that controls the width of the character set: CONFIG_NXFONTS_CHARBITS.
+This currently defaults to 7 but all existing fonts support 8-bits.</p>
+<p>My first guess is that the only thing that would have to change is that single
+file nxfonts_bitmaps.c (and the function nxf_getglyphset() in the file
+nxfonts_getfont.c) . nxfonts_bitmaps.c is used to auto-generate 7/8-bit font
+data sents. Here is how that works:</p>
+<ul class="simple">
+<li><p>Each 7-8 bit file is described by a header file like, for example,
+nxfonts_sans17x22.h.</p></li>
+<li><p>At build time each of these header files is used to create a C file,
+like, nxfonts_bitmaps_sans17x22.c.</p></li>
+<li><p>It creates the C file (like nxfonts_bitmaps_sans17x22.c) by compiling
+nxfonts_bitmaps.c and including nxfonts_sans17x22.h to create the font
+dataset at build time.</p></li>
+</ul>
+<p>The function nxf_getglyphset() in the file nxfonts_getfont.c selects the 7-bit
+font range (codes &lt; 128) or the 8-bit range (code &gt;= 128 &gt; 256). The fonts are
+kept in simple arrays splitting the data up into ranges of values lets you above
+the non-printable codes at the beginning and end of each range. There is even a
+comment in the code there “Someday, perhaps 16-bit fonts will go here”.</p>
+</section>
+<section id="adding-wide-fonts">
+<h4>Adding Wide Fonts<a class="headerlink" href="#adding-wide-fonts" title="Permalink to this heading"></a></h4>
+<p>To add a single wide font, the easiest way would be to simply add the final
+.C file without going through the C auto-generation step. That should be VERY
+easy. (But since it has never been used with larger character sets, I am sure
+that there are bugs and things that need to be fixed).</p>
+<p>If you want to add many wide fonts, then perhaps you would have to create a new
+version of the C auto-generation logic. That would require more effort.</p>
+<p>I am willing to help and advise. Having good wide character support in the NuttX
+graphics would be an important improvement to NuttX. This is not a lot of code
+nor is it very difficult code so you should not let it be an obstacle for you.</p>
+</section>
+</section>
+<section id="font-storage-issues">
+<h3>Font Storage Issues<a class="headerlink" href="#font-storage-issues" title="Permalink to this heading"></a></h3>
+<p>One potential problem may be the amount of memory required by fonts with
+thousands of characters. If you have a lot of flash, it may not be a problem,
+but on many microcontrollers it will be quite limiting.</p>
+<p>Options are:</p>
+<ul class="simple">
+<li><p><strong>Font Compression</strong> Addition of some font compression algorithm in NuttX.
+However, Chinese character bitmaps do not compress well: Many of them contain
+so much data that there is not much of anything to compress. Some actually
+expand under certain compression algorithms.</p></li>
+<li><p><strong>Mass Storage</strong> A better option would be put the wide the fonts in file
+system, in NAND or serial FLASH or on an SD card. In this case, additional
+logic would be required to (1) format a font binary file and to (2) access
+the font binary from the file system as needed.</p></li>
+</ul>
+</section>
 </section>
 </section>
 

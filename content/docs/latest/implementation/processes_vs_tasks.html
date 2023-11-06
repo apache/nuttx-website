@@ -1,0 +1,429 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linux Processes vs NuttX Tasks &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Critical Sections" href="critical_sections.html" />
+    <link rel="prev" title="Implementation Details" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Implementation Details</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Linux Processes vs NuttX Tasks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#nuttx-build-types">NuttX Build Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initialization-of-global-variables">Initialization of Global Variables</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linux-behavior">Linux Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nuttx-flat-build-behavior">NuttX Flat-Build Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nuttx-load-able-programs">NuttX Load-able Programs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#global-variables-and-multiple-task-copies">Global Variables and Multiple Task Copies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#memory-clean-up">Memory Clean-Up</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#linux-process-exit">Linux Process Exit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nuttx-task-exit">NuttX Task Exit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nuttx-process-exit">NuttX Process Exit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ways-to-free-memory-on-task-exit">Ways to Free Memory on Task Exit</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html">Critical Sections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Implementation Details</a></li>
+      <li class="breadcrumb-item active">Linux Processes vs NuttX Tasks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/implementation/processes_vs_tasks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="linux-processes-vs-nuttx-tasks">
+<h1>Linux Processes vs NuttX Tasks<a class="headerlink" href="#linux-processes-vs-nuttx-tasks" title="Permalink to this heading"></a></h1>
+<p>You may be used to running programs that are stored in files on Linux or Windows.
+If you transition to using NuttX tasks on an MCU with limited resources, you will
+encounter some behavioral differences. This Wiki page will summarize a few of
+those differences.</p>
+<section id="nuttx-build-types">
+<h2>NuttX Build Types<a class="headerlink" href="#nuttx-build-types" title="Permalink to this heading"></a></h2>
+<p>NuttX can be built in several different ways:</p>
+<ul class="simple">
+<li><p><strong>Kernel Build</strong> The kernal build, selected with <code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_KERNEL</span></code>, uses
+the MCU’s Memory Management Unit (MMU) to implement processes very similar to
+Linux processes. There is no interesting discussion here; NuttX behaves very
+much like Linux.</p></li>
+<li><p><strong>Flat Build</strong> Most resource-limited MCUs have no MMU and the code is built as
+a blob that runs in an unprotected, flat address space out of on-chip FLASH
+memory. This build mode is selected with <code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_FLAT</span></code> and is, by far, the
+most common way that people build NuttX. This is the interesting case to which
+this Wiki page is directed.</p></li>
+<li><p><strong>Protected Build</strong> Another build option is the protected build. This is essentially
+the same as the flat build, but uses the MCU’s Memory Protection Unit (MPU) to
+separate unproctect user address ranges from protected system address ranges.
+The comments of this Wiki page also apply in this case.</p></li>
+</ul>
+</section>
+<section id="initialization-of-global-variables">
+<h2>Initialization of Global Variables<a class="headerlink" href="#initialization-of-global-variables" title="Permalink to this heading"></a></h2>
+<section id="linux-behavior">
+<h3>Linux Behavior<a class="headerlink" href="#linux-behavior" title="Permalink to this heading"></a></h3>
+<p>If you are used to writing programs for Linux, then one thing you will notice is that
+global variables are initialized only once when the system powers up. For example.
+Consider this tiny program:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">);</span>
+<span class="w">  </span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If you build and run this program under Linux, you will always see this output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>test: 1
+test: 0
+</pre></div>
+</div>
+<p>In this case, the global variables are re-initialized each time that you load the
+file into memory and run it.</p>
+</section>
+<section id="nuttx-flat-build-behavior">
+<h3>NuttX Flat-Build Behavior<a class="headerlink" href="#nuttx-flat-build-behavior" title="Permalink to this heading"></a></h3>
+<p>But if you build this program into on-chip FLASH and start it as a task (via, say,
+<code class="docutils literal notranslate"><span class="pre">task_start()</span></code>) you will see this the first time that you run the program:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>test: 1
+test: 0
+</pre></div>
+</div>
+<p>But after that, you will always see:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>test: 0
+test: 0
+</pre></div>
+</div>
+<p>The test variable was initialized to true (1) only once at power up, but reset to
+false (0) each time that the program runs.</p>
+<p>If you want the same behavior when the program is built into the common FLASH blob,
+then you will have modify the code so that global variables are explicitly reset
+each time the program runs like:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">test</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">);</span>
+<span class="w">  </span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="nuttx-load-able-programs">
+<h3>NuttX Load-able Programs<a class="headerlink" href="#nuttx-load-able-programs" title="Permalink to this heading"></a></h3>
+<p>If you load programs from an file into RAM and execute them, as Linux does, then
+NuttX will again behave like Linux. Because the flat build NuttX works the same way:
+When you execute a NuttX ELF or NxFLAT module in a file, the file is copied into RAM
+and the global variables are initialized before the program runs.</p>
+<p>But code that is built into FLASH works differently. There is only one set of global
+variables: All of the global variables for the blob that is the monolithic FLASH image.
+They are all initialized  once at power-up reset.</p>
+<p>This is one of the things that makes porting Linux applications into the FLASH blob
+more complex. You have to manually initialize each global variable in the <code class="docutils literal notranslate"><span class="pre">main()</span></code>
+each time your start the task.</p>
+</section>
+</section>
+<section id="global-variables-and-multiple-task-copies">
+<h2>Global Variables and Multiple Task Copies<a class="headerlink" href="#global-variables-and-multiple-task-copies" title="Permalink to this heading"></a></h2>
+<p>It is better to avoid the use of global variables in the flat build context whenever
+possible because that usage adds another limitation:  No more that one copy of the
+program can run at any given time.  That is because the global variables are shared
+by each instance (unlike, again, running a program from a file where there is a private
+copy of each global variable).</p>
+<p>One way to support multiple copies of an in-FLASH program is to move all global variables
+into a structure. If the amount of memory need for global variables is small, then each
+<code class="docutils literal notranslate"><span class="pre">main()</span></code> could simply allocate a copy of that structure on the stack. In the simple
+example above, this might be:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">my_globals_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">test</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_globals_s</span><span class="w"> </span><span class="n">my_globals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">};</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">my_globals</span><span class="p">.</span><span class="n">test</span><span class="p">);</span>
+<span class="w">  </span><span class="n">my_globals</span><span class="p">.</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">my_globals</span><span class="p">.</span><span class="n">test</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A pointer to the structure containing the allocated global variables would then have
+to passed as a parameter to every internal function that needs access to the global
+variables. So you would change a internal function like:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">print_value</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>to:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">print_value</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_globals_s</span><span class="w"> </span><span class="o">*</span><span class="n">globals</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">globals</span><span class="o">-&gt;</span><span class="n">test</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Then pass a reference to the allocated global data structure each time that the
+function is called like:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">print_value</span><span class="p">(</span><span class="o">&amp;</span><span class="n">my_globals</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If the size of the global variable structure is large, then allocating the instance
+on the stack might not be such a good idea. In that case, it might be better to
+allocate the global variable structure using <code class="docutils literal notranslate"><span class="pre">malloc()</span></code>. But don’t forget to <code class="docutils literal notranslate"><span class="pre">free()</span></code>
+the allocated variable structure before exiting! (See the following Memory Clean-Up
+discussion).</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">my_globals_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">test</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_globals_s</span><span class="w"> </span><span class="o">*</span><span class="n">my_globals</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">my_globals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_globals_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">my_globals_s</span><span class="p">));</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">my_globals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ERROR: Failed to allocate state structure</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">EXIT_FAILURE</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">my_globals</span><span class="o">=&gt;</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">my_globals</span><span class="o">-&gt;</span><span class="n">test</span><span class="p">);</span>
+<span class="w">  </span><span class="n">my_globals</span><span class="o">=&gt;</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;test: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">my_globals</span><span class="o">-&gt;</span><span class="n">test</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">my_globals</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="memory-clean-up">
+<h2>Memory Clean-Up<a class="headerlink" href="#memory-clean-up" title="Permalink to this heading"></a></h2>
+<section id="linux-process-exit">
+<h3>Linux Process Exit<a class="headerlink" href="#linux-process-exit" title="Permalink to this heading"></a></h3>
+<p>Another, unrelated thing that makes porting Linux programs into the FLASH blob
+is the memory clean-up.  When a Linux process exits, its entire address environment
+is destroyed including all of allocated memory. This tiny program will not leak
+memory if implemented as a Linux process:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="mi">1024</span><span class="p">);</span>
+<span class="w">  </span><span class="p">...</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="n">stuff</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="p">...</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>That same program, if ported into the FLASH blob will now have memory leaks because
+there is no automatic clean-up of allocated memory when the task exits. Instead, you
+must explicitly clean up all allocated memory by freeing it:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="mi">1024</span><span class="p">);</span>
+<span class="w">  </span><span class="p">...</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="n">stuff</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="p">...</span>
+<span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The memory clean-up with the Linux process exits is a consequent of the teardown of
+the process address environment when the process terminates. Each process contains
+its own heap; when the process address environment is torndown, that process heap
+is returned to the OS page allocator. So the memory clean-up basically comes for free.</p>
+</section>
+<section id="nuttx-task-exit">
+<h3>NuttX Task Exit<a class="headerlink" href="#nuttx-task-exit" title="Permalink to this heading"></a></h3>
+<p>But when you run a task in the monolithic, on-chip FLASH blob, you share the same
+heap with all other tasks. There is no magic clean-up that can find and free your
+tasks’s allocations within the common heap (see “Ways to Free Memory on Task Exit”).</p>
+</section>
+<section id="nuttx-process-exit">
+<h3>NuttX Process Exit<a class="headerlink" href="#nuttx-process-exit" title="Permalink to this heading"></a></h3>
+<p>NOTE that when you run processes on NuttX (with <code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_KERNEL</span></code>), NuttX also
+behaves the same way as Linux:  The address environment is destroyed with the task
+exits and all of the memory is reclaimed.  But all other cases will leak memory.</p>
+</section>
+<section id="ways-to-free-memory-on-task-exit">
+<h3>Ways to Free Memory on Task Exit<a class="headerlink" href="#ways-to-free-memory-on-task-exit" title="Permalink to this heading"></a></h3>
+<p>There are ways that you could associate allocated memory with a task so that it could
+cleaned up when the task exits. That approach has been rejected, however, because (1)
+it could not be done reliably, and (2) it would add a memory allocation overhead that
+would not be acceptable in context where memory is constrained.</p>
+<p>Related issue can be found on <a class="reference external" href="https://github.com/apache/nuttx/issues/3345">Github</a>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Implementation Details" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="critical_sections.html" class="btn btn-neutral float-right" title="Critical Sections" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
