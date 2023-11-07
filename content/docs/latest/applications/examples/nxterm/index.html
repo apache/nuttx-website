@@ -250,7 +250,12 @@
 <li class="toctree-l4"><a class="reference internal" href="../nximage/index.html"><code class="docutils literal notranslate"><span class="pre">nximage</span></code> Display NuttX Logo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../nxlines/index.html"><code class="docutils literal notranslate"><span class="pre">nxlines</span></code> NX Line Drawing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../nxscope/index.html"><code class="docutils literal notranslate"><span class="pre">nxscope</span></code> NxScope library example</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nxterm</span></code> Display NuttShell (NSH) as NX Console</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nxterm</span></code> Display NuttShell (NSH) as NX Console</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#initialization">Initialization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#character-i-o">Character I/O</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#character-data-flow-keyboard-to-display">Character Data Flow:  Keyboard to Display</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../nxtext/index.html"><code class="docutils literal notranslate"><span class="pre">nxtext</span></code> Display NX Text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../obd2/index.html"><code class="docutils literal notranslate"><span class="pre">obd2</span></code> OBD-II application example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../oneshot/index.html"><code class="docutils literal notranslate"><span class="pre">oneshot</span></code> Oneshot Timer</a></li>
@@ -361,6 +366,9 @@
              
   <section id="nxterm-display-nuttshell-nsh-as-nx-console">
 <h1><code class="docutils literal notranslate"><span class="pre">nxterm</span></code> Display NuttShell (NSH) as NX Console<a class="headerlink" href="#nxterm-display-nuttshell-nsh-as-nx-console" title="Permalink to this heading"></a></h1>
+<figure class="align-center">
+<img alt="../../../_images/nxtermexample.png" src="../../../_images/nxtermexample.png" />
+</figure>
 <p>This directory contains yet another version of the NuttShell (NSH). This version
 uses the NX console device defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/nx/nxterm.h</span></code> for output.
 the result is that the NSH input still come from the standard console input
@@ -405,6 +413,164 @@ server. Default: <code class="docutils literal notranslate"><span class="pre">20
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXTERM_LISTENERPRIO</span></code> – The priority of the event listener
 thread. Default: <code class="docutils literal notranslate"><span class="pre">80</span></code>.</p></li>
 </ul>
+<section id="initialization">
+<h2>Initialization<a class="headerlink" href="#initialization" title="Permalink to this heading"></a></h2>
+<section id="nx-server">
+<h3>NX Server<a class="headerlink" href="#nx-server" title="Permalink to this heading"></a></h3>
+<p>The NxTerm example initializes the NX Server through the following steps:</p>
+<ul class="simple">
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_NX_START,</span> <span class="pre">0)</span></code> to start the NX server, then</p></li>
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">nx_connect()</span></code> to connect to the NX server.</p></li>
+<li><p>It also creates a separate thread at entry <code class="docutils literal notranslate"><span class="pre">nxterm_listener()</span></code> to listen for
+NX server events.</p></li>
+</ul>
+</section>
+<section id="window-creation">
+<h3>Window Creation<a class="headerlink" href="#window-creation" title="Permalink to this heading"></a></h3>
+<p>The Nxterm Example then initializes the Windows:</p>
+<ul class="simple">
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">nxtk_openwindow()</span></code> to create a bordered window,</p></li>
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">nxtk_setposition()</span></code> and <code class="docutils literal notranslate"><span class="pre">nxtk_setsize()</span></code> to position the window in
+the display,</p></li>
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">nxtk_opentoolbar()</span></code> to create a toolbar sub-window on the main window
+(This toolbar window is not used by the example, it is just for illustration).</p></li>
+</ul>
+<p>A more practical use case for, say, a handheld device with a single NxTerm display
+would be to use the background window.  The background is a window like any other
+with these special properties:  It cannot be moved; it is always positioned at (0,0).
+It cannot be resized; it is always the full size of the display.  And it cannot be
+raised, it is always the lowest windows in the z-axis.</p>
+</section>
+<section id="nxterm-driver">
+<h3>NxTerm Driver<a class="headerlink" href="#nxterm-driver" title="Permalink to this heading"></a></h3>
+<p>And binds the Nxterm driver to the permit drawing in the window. This is done when it:</p>
+<ul class="simple">
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_NXTERM,</span> <span class="pre">(uintptr_t)&amp;nxcreate)</span></code></p></li>
+</ul>
+</section>
+<section id="console-task">
+<h3>Console Task<a class="headerlink" href="#console-task" title="Permalink to this heading"></a></h3>
+<p>Finally, it sets up the NxTerm and starts the console task:</p>
+<ul class="simple">
+<li><p>Opens the NxTerm driver,</p></li>
+<li><p>It then re-directs stdout and stderr to the NxTerm driver. This will cause all
+standard output to be rendered into the main windows, and</p></li>
+<li><p>It then starts a separate console daemon that inherits the re-directed output
+and exits.</p></li>
+</ul>
+</section>
+</section>
+<section id="character-i-o">
+<h2>Character I/O<a class="headerlink" href="#character-i-o" title="Permalink to this heading"></a></h2>
+<section id="normal-keyboard-input">
+<h3>Normal Keyboard Input<a class="headerlink" href="#normal-keyboard-input" title="Permalink to this heading"></a></h3>
+<p>Keyboard and mouse inputs are received by the application through window callbacks,
+just like with the Xorg X server.  Some listener needs to inject the keyboard input
+via <code class="docutils literal notranslate"><span class="pre">nx_kbdin()</span></code> (<code class="docutils literal notranslate"><span class="pre">libs/libnx/nx_kbdin.c</span></code>) which sends a message containing the
+keyboard input to the NX server.  The NX server will forward that keyboard input to
+the window that has focus.</p>
+<p>The Window application listens for NX server events by calling <code class="docutils literal notranslate"><span class="pre">nx_eventhandler()</span></code>
+(<code class="docutils literal notranslate"><span class="pre">libs/libnx/nx_eventhandler</span></code>) on another listener thread.  If the window has
+focus when the key press is entered, <code class="docutils literal notranslate"><span class="pre">nx_eventhandler()</span></code> will forward the key
+press information to the registered window event handler.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">apps/examples/nxterm</span></code>, <code class="docutils literal notranslate"><span class="pre">nxterm_listener.c</span></code> is the thread that drives
+<code class="docutils literal notranslate"><span class="pre">nx_eventhandler()</span></code>. The window NX keyboard callback is the function <code class="docutils literal notranslate"><span class="pre">nxwndo_kbdin()</span></code>
+in <code class="docutils literal notranslate"><span class="pre">nxterm_wndo.c</span></code>.  That callback function is just a stub that writes the keyboard
+data to stdout.  It is a stub because keyboard input is not received from the NxTerm
+in this example.</p>
+</section>
+<section id="the-apps-examples-nxterm-kludge">
+<h3>The apps/examples/nxterm/ Kludge<a class="headerlink" href="#the-apps-examples-nxterm-kludge" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">apps/examples/nxterm</span></code> does not do things in the normal way.  NSH does not receive
+keyboard input from NX; it gets keyboard input directly from the default stdin which
+is probably not a keyboard at all but more likely the host PC serial console. This is
+okay because only a single window is used and that example does not need the help of
+NX to select the window that has focus.</p>
+</section>
+<section id="re-direction-of-stdout-and-stderr">
+<h3>Re-direction of stdout and stderr<a class="headerlink" href="#re-direction-of-stdout-and-stderr" title="Permalink to this heading"></a></h3>
+<p>stdin in and stderr are re-directed to the NxTerm character driver in <code class="docutils literal notranslate"><span class="pre">nxterm_main.c</span></code>
+just before starting the console task.  That logic looks like this:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Now re-direct stdout and stderr so that they use the NX console driver.</span>
+<span class="cm"> * Note that stdin is retained (file descriptor 0, probably the serial</span>
+<span class="cm"> * console).</span>
+<span class="cm"> */</span>
+
+<span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;nxterm_main: Starting the console task</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+<span class="w"> </span><span class="n">fflush</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span>
+<span class="w"> </span><span class="n">fflush</span><span class="p">(</span><span class="n">stderr</span><span class="p">);</span>
+
+<span class="w"> </span><span class="n">fclose</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span>
+<span class="w"> </span><span class="n">fclose</span><span class="p">(</span><span class="n">stderr</span><span class="p">);</span>
+
+<span class="w"> </span><span class="n">dup2</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w"> </span><span class="n">dup2</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note that stdin is not re-directed in this example!  This means that keyboard
+input does not come from the NxTerm driver but, rather, from whatever input
+device was previously configured for stdin, often a serial console.</p>
+<p>There is a configuration option that determines if NxTerm receives keyboard
+input or not:  <code class="docutils literal notranslate"><span class="pre">CONFIG_NXTERM_NXKBDIN</span></code>,  For this NxTerm example, that option can be disabled.</p>
+</section>
+<section id="what-is-boardioc-nxterm-ioctl-and-where-is-it-used">
+<h3>What Is BOARDIOC_NXTERM_IOCTL and Where Is It Used?<a class="headerlink" href="#what-is-boardioc-nxterm-ioctl-and-where-is-it-used" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> command <code class="docutils literal notranslate"><span class="pre">BOARDIOC_NXTERM_IOCTL</span></code> allows an application to
+inject keyboard data into NX for forwarding to the window with focus.
+In <code class="docutils literal notranslate"><span class="pre">apps/examples/nxterm</span></code>, the <code class="docutils literal notranslate"><span class="pre">BOARDIOC_NXTERM_IOCTL</span></code> is only called for the
+case of a redraw event. A redraw event may happen when a window above the current
+window is moved and the text is exposed.</p>
+<p>If you use only a single window for the NxTerm example, then that window will
+always have focus. It will always have focus and will never be redrawn and the
+<code class="docutils literal notranslate"><span class="pre">BOARDIOC_NXTERM_IOCTL</span></code> will never be used (Unless, perhaps, you choose to implement
+pop-up error messages or menus on top of the NxTerm window).</p>
+<p>Redraw callbacks will not be received even in a multi-window configuration if you
+use per-window frame buffers, either. In that case, the system will automatically
+redraw windows as needed using the per-window frame buffer shadow memory.  This is
+controlled by the option <code class="docutils literal notranslate"><span class="pre">CONFIG_NX_RAMBACKED</span></code>. This option is recommended for
+performance reasons if you have sufficient memory to support it.</p>
+</section>
+</section>
+<section id="character-data-flow-keyboard-to-display">
+<h2>Character Data Flow:  Keyboard to Display<a class="headerlink" href="#character-data-flow-keyboard-to-display" title="Permalink to this heading"></a></h2>
+<section id="character-data-flow-in-apps-examples-nxterm">
+<h3>Character Data Flow in apps/examples/nxterm<a class="headerlink" href="#character-data-flow-in-apps-examples-nxterm" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Character input driver receives input</p></li>
+<li><p>NSH receives input on stdin and processes it (stdin is not redirected)</p></li>
+<li><p>Data is output to stdout (redirected to the NxTerm driver)</p></li>
+</ul>
+<p>In this simple, single-window case, <code class="docutils literal notranslate"><span class="pre">BOARDIOC_NXTERM_IOCTL</span></code> will never be used.</p>
+</section>
+<section id="character-data-flow-in-the-generic-window-case">
+<h3>Character Data Flow in the Generic Window Case<a class="headerlink" href="#character-data-flow-in-the-generic-window-case" title="Permalink to this heading"></a></h3>
+<p>See, for an example, <code class="docutils literal notranslate"><span class="pre">apps/graphics/nxwm/src/cnxterm.cxx</span></code>.  In this case, the
+behavior will change, depending on the selection of <code class="docutils literal notranslate"><span class="pre">CONFIG_NXTERM_NXKBDIN</span></code>:
+If <code class="docutils literal notranslate"><span class="pre">CONFIG_NXTERM_NXKBDIN</span></code> is not selected, then the behavior will be similar
+to <code class="docutils literal notranslate"><span class="pre">apps/examples/nxterm</span></code>; stdin will not be redirected an keyboard input will
+come directly from the the system console.</p>
+<p>But is <code class="docutils literal notranslate"><span class="pre">CONFIG_NXTERM_NXKBDIN</span></code> is select, NSH’s stdin will be re-redirected to
+the to the NxTerm character driver. Keyboard input will arrive on stdin from the
+NxTerm driver rather than from the system console.  The following sequence describes
+the keyboard input in this latter case:</p>
+<ul class="simple">
+<li><p>Character input driver receives input,</p></li>
+<li><p>Some keyboard listener thread receives input and injects it into NX via
+a call to <code class="docutils literal notranslate"><span class="pre">nx_kbdin()</span></code>,</p></li>
+<li><p>NX sends an event to the registered <code class="docutils literal notranslate"><span class="pre">kbdin()</span></code> method of the window that has
+focus, providing the keyboard input to the window application.  In this case,
+the window application of interest is the window bound to the NxTerm character
+driver by the application.  The <code class="docutils literal notranslate"><span class="pre">kbin()</span></code> callback provides the focused keyboard
+input to the NxTerm driver via <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_NXTERM_IOCTL,</span> <span class="pre">(uintptr_t)&amp;iocargs)</span></code>,</p></li>
+<li><p>The NxTerm character driver receives keyboard data, buffers it, and provides
+that keyboard input for the next read operation,</p></li>
+<li><p>NSH receives input on stdin which was re-directed to the NxTerm character driver.
+NSH processes the input, and</p></li>
+<li><p>,NSH outputs data to stdout which was re-directed to the NxTerm character driver.</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 

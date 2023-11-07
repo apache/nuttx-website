@@ -7,6 +7,9 @@ Network Support
 
   sixlowpan.rst
   socketcan.rst
+  netguardsize.rst
+  slip.rst
+  wqueuedeadlocks.rst
 
 ``net`` Directory Structure ::
 

@@ -24,3 +24,5 @@ Guides
   minidumpserver.rst
   gdbwithpython.rst
   ofloader.rst
+  testingtcpip.rst
+  automounter.rst

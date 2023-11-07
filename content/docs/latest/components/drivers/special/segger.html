@@ -131,7 +131,10 @@
 <li class="toctree-l4"><a class="reference internal" href="rptun.html">Remote Proc Tunnel Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rwbuffer.html"><code class="docutils literal notranslate"><span class="pre">rwbuffer.c</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="sensors.html">Sensor Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Segger RTT drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Segger RTT drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#segger-systemview">Segger SystemView</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="spi.html">SPI Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="syslog.html">SYSLOG</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sdio.html">SDIO Device Drivers</a></li>
@@ -210,13 +213,56 @@
              
   <section id="segger-rtt-drivers">
 <h1>Segger RTT drivers<a class="headerlink" href="#segger-rtt-drivers" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Segger drivers works only with J-Link debug probes.
+Sometimes it’s possible to replace vendor-specific debug interface
+with J-Link OB firmware. For details look at
+<a class="reference external" href="https://www.segger.com/downloads/jlink">Segger website</a></p>
+</div>
 <p>Supported Segger drivers:</p>
 <ul class="simple">
-<li><p>serial over RTT - <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_RTTx</span></code>,</p></li>
-<li><p>console over RTT - <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_RTT_CONSOLE_CHANNEL</span></code></p></li>
+<li><p>Serial over RTT - <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_RTTx</span></code>,</p></li>
+<li><p>Console over RTT - <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_RTT_CONSOLE_CHANNEL</span></code></p></li>
 <li><p>Segger SystemView - <code class="docutils literal notranslate"><span class="pre">CONFIG_SEGGER_SYSVIEW</span></code></p></li>
 <li><p>Note RTT - <code class="docutils literal notranslate"><span class="pre">CONFIG_NOTE_RTT</span></code></p></li>
 </ul>
+<section id="segger-systemview">
+<h2>Segger SystemView<a class="headerlink" href="#segger-systemview" title="Permalink to this heading"></a></h2>
+<p>Steps to enable SystemView support:</p>
+<ol class="arabic">
+<li><p>Make sure your architecture supports a high-performance counter.
+In most cases it will be:</p>
+<p><span class="menuselection">CONFIG_ARCH_PERF_EVENTS=y</span></p>
+<p>In that case, the the architecture logic must initialize the perf counter
+with <code class="docutils literal notranslate"><span class="pre">up_perf_init()</span></code>.</p>
+</li>
+<li><p>Enable instrumentation support:</p>
+<p><span class="menuselection">CONFIG_SCHED_INSTRUMENTATION=y</span></p>
+</li>
+<li><p>Configure instrumentation support. Available options for SystemView are:</p>
+<p><span class="menuselection">CONFIG_SCHED_INSTRUMENTATION_SWITCH=y</span></p>
+<p><span class="menuselection">CONFIG_SCHED_INSTRUMENTATION_SYSCALL=y</span></p>
+<p><span class="menuselection">CONFIG_SCHED_INSTRUMENTATION_IRQHANDLER=y</span></p>
+</li>
+<li><p>Make sure that <code class="docutils literal notranslate"><span class="pre">CONFIG_TASK_NAME_SIZE</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, otherwise task/thread
+names will not be displayed correctly</p></li>
+<li><p>Enable Note Driver support and disable Note RAM driver:</p>
+<p><span class="menuselection">CONFIG_DRIVERS_NOTE=y</span></p>
+<p><span class="menuselection">CONFIG_DRIVERS_NOTERAM=n</span></p>
+</li>
+<li><p>Enable Note RTT and Segger SystemView support:</p>
+<p><span class="menuselection">CONFIG_NOTE_RTT=y</span></p>
+<p><span class="menuselection">CONFIG_SEGGER_SYSVIEW=y</span></p>
+</li>
+<li><p>Configure RTT channel and RTT buffer size for SystemView:</p>
+<p><span class="menuselection">CONFIG_SEGGER_SYSVIEW_RTT_CHANNEL=0</span></p>
+<p><span class="menuselection">CONFIG_SEGGER_SYSVIEW_RTT_BUFFER_SIZE=1024</span></p>
+<p>In case SystemView returns buffer overflow errors, you should increase
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NOTE_RTT_BUFFER_SIZE_UP</span></code>.</p>
+</li>
+</ol>
+</section>
 </section>
 
 
