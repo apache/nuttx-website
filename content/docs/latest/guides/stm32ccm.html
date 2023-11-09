@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Dump &mdash; NuttX latest documentation</title>
+  <title>STM32 CCM Allocator &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="minidumpserver" href="minidumpserver.html" />
-    <link rel="prev" title="Analyzing Cortex-M Hardfaults" href="cortexmhardfaults.html" /> 
+    <link rel="next" title="Glossary" href="../glossary.html" />
+    <link rel="prev" title="STM32 Null Pointer Detection" href="stm32nullpointer.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -131,20 +131,20 @@
 <li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance, Zero Latency Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Core Dump</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#how-to-use">How to use</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="minidumpserver.html">minidumpserver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">STM32 CCM Allocator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ccm-memory">CCM Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#config-stm32-ccmexclude">CONFIG_STM32_CCMEXCLUDE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ccm-allocator">CCM Allocator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ccm-stacks">CCM Stacks</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -165,9 +165,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Core Dump</li>
+      <li class="breadcrumb-item active">STM32 CCM Allocator</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/coredump.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/stm32ccm.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -175,83 +175,98 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="core-dump">
-<h1>Core Dump<a class="headerlink" href="#core-dump" title="Permalink to this heading"></a></h1>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
-<img alt="../_images/coredump-overview.png" src="../_images/coredump-overview.png" />
-<section id="how-to-use">
-<h3>How to use<a class="headerlink" href="#how-to-use" title="Permalink to this heading"></a></h3>
-<ol class="arabic simple">
-<li><p>Enable NuttX Core dump</p></li>
-</ol>
-<p>Enable Kconfig</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">CONFIG_ELF=y                        /* Enable ELF */</span>
-
-<span class="go">CONFIG_ELF_COREDUMP=y               /* Enable ELF Coredump */</span>
-
-<span class="go">CONFIG_BOARD_COREDUMP=y             /* Enable Board Coredump, if exceptions and assertions occur, */</span>
-
-<span class="go">CONFIG_SYSTEM_COREDUMP=y            /* Enable coredump in user command, which can capture the current</span>
-<span class="go">                                       state of one or all threads when the system is running, the</span>
-<span class="go">                                       output can be redirect to console or file */</span>
-
-<span class="go">CONFIG_BOARD_COREDUMP_COMPRESSION=y /* Default y, enable Coredump compression to</span>
-<span class="go">                                       reduce the size of the original core image */</span>
-
-<span class="go">CONFIG_BOARD_COREDUMP_FULL=y        /* Default y, save all task information */</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Run Coredump on nsh (CONFIG_SYSTEM_COREDUMP=y)</p></li>
-</ol>
-<p>Parameters of coredump tool</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>coredump<span class="w"> </span>&lt;pid&gt;<span class="w">        </span>/*<span class="w"> </span>If<span class="w"> </span>pid<span class="w"> </span>is<span class="w"> </span>specified,<span class="w"> </span>coredump<span class="w"> </span>will<span class="w"> </span>only<span class="w"> </span>capture<span class="w"> </span>the<span class="w"> </span>thread<span class="w"> </span>with<span class="w"> </span>the
-<span class="go">                           specified pid, otherwise all threads will be captured */</span>
-
-<span class="gp">$ </span>coredump<span class="w"> </span>&lt;filename&gt;<span class="w">   </span>/*<span class="w"> </span>If<span class="w"> </span>filename<span class="w"> </span>is<span class="w"> </span>specified,<span class="w"> </span><span class="k">then</span><span class="w"> </span>coredump<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>output<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>specified
-<span class="go">                           file by default, otherwise it will be redirect in stdout stream */</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="3">
-<li><p>Capture coredump from stdout</p></li>
-</ol>
-<p>Save the print of the red frame part in the figure as file</p>
-<blockquote>
-<div><img alt="../_images/coredump-hexdump.png" src="../_images/coredump-hexdump.png" />
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cat<span class="w"> </span>elf.dump
-<span class="go">[CPU0] [ 6] 5A5601013D03FF077F454C4601010100C0000304002800C00D003420036000070400053400200008200A4000000420030034C024200001D8092004E00200601A</span>
-<span class="go">...</span>
-<span class="go">[CPU0] [ 6] 401B018D37814720005A5601000800090100006000010000</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="4">
-<li><p>Convert the dump file</p></li>
-</ol>
-<p>If the core file is post-processed by lzf compress and hexdump stream, execute the coredump script (<a class="reference external" href="https://github.com/apache/nuttx/blob/master/tools/coredump.py">tools/coredump.py</a>) to convert hex to binary and lzf decompression, If the -o parameter is not added in commandline, the output of &lt;original file name&gt;.core will be automatically generated:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx/tools/coredump.py<span class="w"> </span>elf.dump
-<span class="go">Core file conversion completed: elf.core</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="5">
-<li><p>Analysis by gdb</p></li>
-</ol>
-<p>After generating elf.core, combined with compiled nuttx.elf, you can view the call stack and related register information of all threads directly through gdb:</p>
-<p>(NOTE: Toolchain version must be newer than 11.3)</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>prebuilts/gcc/linux/arm/bin/arm-none-eabi-gdb<span class="w"> </span>-c<span class="w"> </span>elf.core<span class="w"> </span>nuttx
-</pre></div>
-</div>
-<img alt="../_images/coredump-gdb.png" src="../_images/coredump-gdb.png" />
-</div></blockquote>
+  <section id="stm32-ccm-allocator">
+<h1>STM32 CCM Allocator<a class="headerlink" href="#stm32-ccm-allocator" title="Permalink to this heading"></a></h1>
+<section id="ccm-memory">
+<h2>CCM Memory<a class="headerlink" href="#ccm-memory" title="Permalink to this heading"></a></h2>
+<p>The STM32 F2, F3, and F4 families have a special block of SRAM available called
+CCM (Core Coupled Memory). This memory has the drawback that it cannot be used
+for STM32 DMA operations.</p>
+<p>By default, the CCM memory is lumped in with the rest of memory when the NuttX
+heaps are created. But this can be a problem because it will be a toss of the
+coin if non-DMA-able CCM memory or other DMA-able memory gets returned when
+<code class="docutils literal notranslate"><span class="pre">malloc()</span></code> is called. That usually does not matter but it certainly does make
+a difference if you are allocating memory that will be used for DMA! In that
+case, getting CCM memory for your DMA buffer will cause a failure.</p>
 </section>
+<section id="config-stm32-ccmexclude">
+<h2>CONFIG_STM32_CCMEXCLUDE<a class="headerlink" href="#config-stm32-ccmexclude" title="Permalink to this heading"></a></h2>
+<p>There is a configuration option called <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_CCMEXCLUDE</span></code> that can be
+used to exclude CCM memory from the heap. That solves the problem of getting
+CCM memory when you want to allocate a DMA buffer. But then what do you do
+with the CCM memory? Do you let it go unused?</p>
+</section>
+<section id="ccm-allocator">
+<h2>CCM Allocator<a class="headerlink" href="#ccm-allocator" title="Permalink to this heading"></a></h2>
+<p>In order to make use of the CCM memory, a CCM memory allocator is available.
+This memory allocator is automatically enabled when the following options are set:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_CCMEXCLUDE</span></code> CCM memory is excluded from the normal heap, and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MM_MULTIHEAP</span></code> Support for multiple heaps is enabled.</p></li>
+</ul>
+<p>Under those conditions, the CCM memory allocator is enabled and the allocator
+interfaces prototyped in the <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/stm32_ccm.h</span></code> are available.</p>
+<p>NOTE: These interfaces are, technically, not prototyped since they are really
+provided via C pre-processor macros.</p>
+<p>NOTE: In order to use the CCM memory allocator functions, you must first call
+<code class="docutils literal notranslate"><span class="pre">ccm_initialize()</span></code> somwhere in your early boot-up logic.</p>
+<p>With these interfaces you have a (nearly) standard way to manage memory from a
+heap that consists of the the CCM SRAM. And, since the CCM memory is no longer
+a part of the normal heap, all allocated I/O buffers will be DMA-able (unless you
+have included other non-DMA-able memory regions in the stack).</p>
+</section>
+<section id="ccm-stacks">
+<h2>CCM Stacks<a class="headerlink" href="#ccm-stacks" title="Permalink to this heading"></a></h2>
+<p>One particular problem that has been reported by Petteri Aimonen requires some
+additional work-arounds. The STM32 SPI driver supports DMA and with SPI it is
+sometimes necessary to do some very small transfers for which there is no real
+gain from using DMA. In this case, Petteri has devised a clever way to both 1) make
+use of the CMM memory and 2) to force fallback to non-DMA transfers for these small
+stack transfers.</p>
+<p>Here is what Petteri has done:</p>
+<ol class="arabic">
+<li><p>First, he has modified <code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/up_createstack.c</span></code> and
+<code class="docutils literal notranslate"><span class="pre">up_releasestack.c</span></code> so that stacks are allocated from CCM memory. That
+allocation is something like the following:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ccm_zalloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">result</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">   </span><span class="cm">/* Fall back to main heap */</span>
+<span class="w">    </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zalloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>With the matching:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(((</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">p</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF0000000</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x10000000</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">ccm_free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="k">else</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>Then Petteri added special DMA support enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_DMACAPABLE</span></code>.
+That option enables an option in all of the DMA logic called:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">stm32_dmacapable</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">maddr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>That will return true if it is possible to do DMA from the address and false
+if not.</p>
+</li>
+<li><p>Finally, Petteri added logic to the STM32 SPI driver that use <code class="docutils literal notranslate"><span class="pre">stm32_dmacapable()</span></code>:
+If the address is not DMA capable, then the SPI driver will fall back to
+non-DMA operation.</p>
+<p>With Petteri’s changes all of the large I/O buffers will be allocated from
+DMA-able memory. All stacks will be allocated from non-DMA-able CCM memory
+(provided that there is space). Small SPI DMA buffers on the non-DMA-able stack
+will be detected by <code class="docutils literal notranslate"><span class="pre">stm32_dmacapable()</span></code> and in that case, the STM32 SPI driver
+will fall back and use non-DMA-transfers.</p>
+<p>From all reports this works quite well.</p>
+</li>
+</ol>
 </section>
 </section>
 
@@ -259,8 +274,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cortexmhardfaults.html" class="btn btn-neutral float-left" title="Analyzing Cortex-M Hardfaults" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="minidumpserver.html" class="btn btn-neutral float-right" title="minidumpserver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="stm32nullpointer.html" class="btn btn-neutral float-left" title="STM32 Null Pointer Detection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

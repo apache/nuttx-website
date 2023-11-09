@@ -1,0 +1,306 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bottom-Half Interrupt Handlers &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../reference/index.html" />
+    <link rel="prev" title="Effects of Disabling Interrupts or Pre-Emption on Response Latency" href="preemption_latency.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Implementation Details</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html">Linux Processes vs NuttX Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html">Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preemption_latency.html">Effects of Disabling Interrupts or Pre-Emption on Response Latency</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Bottom-Half Interrupt Handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rtos-interrupts">RTOS Interrupts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extending-interrupt-processing">Extending interrupt processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#high-priority-work-queue">High Priority Work Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-bottom-half-interrupt-processing">Setting Up Bottom Half Interrupt Processing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Implementation Details</a></li>
+      <li class="breadcrumb-item active">Bottom-Half Interrupt Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/implementation/bottomhalf_interrupt.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bottom-half-interrupt-handlers">
+<h1>Bottom-Half Interrupt Handlers<a class="headerlink" href="#bottom-half-interrupt-handlers" title="Permalink to this heading"></a></h1>
+<section id="rtos-interrupts">
+<h2>RTOS Interrupts<a class="headerlink" href="#rtos-interrupts" title="Permalink to this heading"></a></h2>
+<p>A well-design RTOS depends on the most minimal of interrupt level processing.
+This is a very different concept that for bare metal programming:</p>
+<ul class="simple">
+<li><p>With bare metal programming most of the real-time work is usually performed
+in interrupt handlers. Interrupt handler execution may then extend in time
+considerably due to this interrupt level processing.</p></li>
+</ul>
+<p>To compensate for this extended interrupt processing time, bare metal programmers
+also need prioritized interrupts:</p>
+<ul class="simple">
+<li><p>If an interrupt request for a higher priority interrupt occurs during the
+extended processing of the lower priority interrupt, then that interrupt handler
+will itself be interrupted to service the higher priority interrupt requests.
+In this way bare metal interrupt handling is nested.</p></li>
+</ul>
+<p>With an RTOS, the real-time strategy is very different:</p>
+<ul class="simple">
+<li><p>Interrupts must run very, very briefly so that they do not interfere with the
+RTOS real-time scheduling. Normally, the interrupt simply performs whatever
+minor housekeeping is necessary and then immediately defers processing by waking up
+some task via some Inter-Process Communication(IPC). The RTOS is then responsible for
+the real-time behavior, not the interrupt. And,</p></li>
+<li><p>since the interrupts must be very brief, there is little or no gain from nesting of interrupts.</p></li>
+</ul>
+</section>
+<section id="extending-interrupt-processing">
+<h2>Extending interrupt processing<a class="headerlink" href="#extending-interrupt-processing" title="Permalink to this heading"></a></h2>
+<p>But what if extended interrupt processing is required?
+What if there is a significant amount of hardware-related operations that absolutely
+must be performed as quickly as possible before we can turn processing over to
+general, real-time tasking?</p>
+<p>In NuttX, this is handled through a high priority trampoline called
+the “High Priority Work Queue”. It is a trampoline because it changes the interrupt
+processing context for extended interrupt processing before notifying the normal
+real-time task.</p>
+<p>Processing on that ultra-high priority work thread then completes the extended
+interrupt processing with interrupts enabled, but without interference from any
+other real-time tasks.</p>
+<p>At the completion of the extended processing, the high priority worker thread can
+then continue processing via some IPC to a normal real-time task.</p>
+<p>The portion of interrupt processing that is performed in the interrupt handler with
+interrupts disabled is referred to as Top Half Interrupt processing; the portion of
+interrupt processing that is performed on the high priority work queue with interrupts
+enabled is referred to as Bottom Half Interrupt processing.</p>
+</section>
+<section id="high-priority-work-queue">
+<h2>High Priority Work Queue<a class="headerlink" href="#high-priority-work-queue" title="Permalink to this heading"></a></h2>
+<p>NuttX supports a high priority work queue as well as a low priority work queue with
+somewhat different properties.
+The high priority work queue is dedicated to the support of Bottom Half Interrupt
+processing.
+Other uses of the high priority work queue may be inappropriate and may harm the
+real-time performance of your system.</p>
+<p>The high priority work queue must have these properties:</p>
+<ul class="simple">
+<li><p><strong>Highest Priority</strong> The high priority work queue must be the highest priority
+task in your system. No other task should execute at a higher priority; No other
+task can be permitted to interfere with execution of the high priority work queue.</p></li>
+<li><p><strong>Zero Latency Context Switches</strong> Provided that the priority of the high priority
+work queue is the highest in the system, then there will be no context switch
+overhead in getting from the Top Half Interrupt processing to the Bottom Half
+Interrupt processing other that the normal overhead of returning from an interrupt.
+Upon return from the interrupt, the system will immediately vector to high priority
+worker thread.</p></li>
+<li><p><strong>Brief Processing</strong> Processing on the high priority work queue must still be brief.
+If there is high priority work in progress when the high priority worker is signaled,
+then that processing will be queued and delayed until it can be processed. That delay
+will add jitter to your real-time response. You must not generate a backlog of work
+for the high priority worker thread!</p></li>
+<li><p><strong>No Waiting</strong> Work executing on the high priority work queue must not wait for
+resources or events on the high priority worker thread. Waiting on the high priority
+work queue blocks the queue and will, again, damage real-time performance.</p></li>
+</ul>
+</section>
+<section id="setting-up-bottom-half-interrupt-processing">
+<h2>Setting Up Bottom Half Interrupt Processing<a class="headerlink" href="#setting-up-bottom-half-interrupt-processing" title="Permalink to this heading"></a></h2>
+<p>Bottom half interrupt processing is scheduled by top half interrupt processing by
+simply calling the function <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code>:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">work_queue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">qid</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">work_s</span><span class="w"> </span><span class="o">*</span><span class="n">work</span><span class="p">,</span><span class="w"> </span><span class="n">worker_t</span><span class="w"> </span><span class="n">worker</span><span class="p">,</span>
+<span class="w">               </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">,</span><span class="w"> </span><span class="kt">clock_t</span><span class="w"> </span><span class="n">delay</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This same interface is the same for both high- and low-priority.
+The qid argument distinguishes which work queue will be used. For bottom half
+interrupt processing, <code class="docutils literal notranslate"><span class="pre">qid</span></code> must be set to <code class="docutils literal notranslate"><span class="pre">HPWORK</span></code>.</p>
+<p>The work argument is memory that will be used to actually queue the work.
+It has no meaning to the caller; it is simply a memory allocation by the caller.
+Otherwise, the work structure is completely managed by the work queue logic.
+The caller should never modify the contents of the work queue structure directly.
+If <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> is called before the previous work as been performed and removed
+from the queue, then any pending work will be canceled and lost.
+The <code class="docutils literal notranslate"><span class="pre">work_available()</span></code> function can be called to determine if the work represented
+by the work structure is still in-use.</p>
+<p>For the interrupt handling case at hand, the work structure must be pre-allocated
+or statically allocated since dynamic allocations are not supported from the
+interrupt handling context.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">worker</span></code> is the name of the function that will perform the bottom half interrupt
+work.
+<code class="docutils literal notranslate"><span class="pre">arg</span></code> is an arbitrary value that the user provides and will be given to the worker
+function when it executes.
+Normally <code class="docutils literal notranslate"><span class="pre">arg</span></code> produces some context in which the work will be performed.
+The type of the worker function is given by:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="n">CODE</span><span class="w"> </span><span class="nf">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">worker_t</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">arg</span></code> has the same value as was passed to <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code>.</p>
+<p>Processing or work can be delayed in time.
+The <code class="docutils literal notranslate"><span class="pre">work_queue()</span></code> <code class="docutils literal notranslate"><span class="pre">delay</span></code> argument provides that time delay in units of system
+clock ticks. However, when used to provide bottom half interrupt processing, the
+delay should always be zero.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="preemption_latency.html" class="btn btn-neutral float-left" title="Effects of Disabling Interrupts or Pre-Emption on Response Latency" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../reference/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

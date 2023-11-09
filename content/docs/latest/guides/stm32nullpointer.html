@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Dump &mdash; NuttX latest documentation</title>
+  <title>STM32 Null Pointer Detection &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="minidumpserver" href="minidumpserver.html" />
-    <link rel="prev" title="Analyzing Cortex-M Hardfaults" href="cortexmhardfaults.html" /> 
+    <link rel="next" title="STM32 CCM Allocator" href="stm32ccm.html" />
+    <link rel="prev" title="Auto-Mounter" href="automounter.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -131,19 +131,20 @@
 <li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance, Zero Latency Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Core Dump</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#how-to-use">How to use</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="minidumpserver.html">minidumpserver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">STM32 Null Pointer Detection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-null-pointer-problem">The NULL Pointer Problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cortex-m-memory">Cortex-M Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stm32-memory-aliasing">STM32 Memory Aliasing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-cortex-m-memory-protection-unit">The Cortex-M Memory Protection Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-the-mpu-to-detect-null-pointer-usage">Using the MPU to Detect Null Pointer Usage</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
 </ul>
 </li>
@@ -165,9 +166,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Core Dump</li>
+      <li class="breadcrumb-item active">STM32 Null Pointer Detection</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/coredump.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/stm32nullpointer.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -175,83 +176,66 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="core-dump">
-<h1>Core Dump<a class="headerlink" href="#core-dump" title="Permalink to this heading"></a></h1>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
-<img alt="../_images/coredump-overview.png" src="../_images/coredump-overview.png" />
-<section id="how-to-use">
-<h3>How to use<a class="headerlink" href="#how-to-use" title="Permalink to this heading"></a></h3>
-<ol class="arabic simple">
-<li><p>Enable NuttX Core dump</p></li>
-</ol>
-<p>Enable Kconfig</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">CONFIG_ELF=y                        /* Enable ELF */</span>
-
-<span class="go">CONFIG_ELF_COREDUMP=y               /* Enable ELF Coredump */</span>
-
-<span class="go">CONFIG_BOARD_COREDUMP=y             /* Enable Board Coredump, if exceptions and assertions occur, */</span>
-
-<span class="go">CONFIG_SYSTEM_COREDUMP=y            /* Enable coredump in user command, which can capture the current</span>
-<span class="go">                                       state of one or all threads when the system is running, the</span>
-<span class="go">                                       output can be redirect to console or file */</span>
-
-<span class="go">CONFIG_BOARD_COREDUMP_COMPRESSION=y /* Default y, enable Coredump compression to</span>
-<span class="go">                                       reduce the size of the original core image */</span>
-
-<span class="go">CONFIG_BOARD_COREDUMP_FULL=y        /* Default y, save all task information */</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Run Coredump on nsh (CONFIG_SYSTEM_COREDUMP=y)</p></li>
-</ol>
-<p>Parameters of coredump tool</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>coredump<span class="w"> </span>&lt;pid&gt;<span class="w">        </span>/*<span class="w"> </span>If<span class="w"> </span>pid<span class="w"> </span>is<span class="w"> </span>specified,<span class="w"> </span>coredump<span class="w"> </span>will<span class="w"> </span>only<span class="w"> </span>capture<span class="w"> </span>the<span class="w"> </span>thread<span class="w"> </span>with<span class="w"> </span>the
-<span class="go">                           specified pid, otherwise all threads will be captured */</span>
-
-<span class="gp">$ </span>coredump<span class="w"> </span>&lt;filename&gt;<span class="w">   </span>/*<span class="w"> </span>If<span class="w"> </span>filename<span class="w"> </span>is<span class="w"> </span>specified,<span class="w"> </span><span class="k">then</span><span class="w"> </span>coredump<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>output<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>specified
-<span class="go">                           file by default, otherwise it will be redirect in stdout stream */</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="3">
-<li><p>Capture coredump from stdout</p></li>
-</ol>
-<p>Save the print of the red frame part in the figure as file</p>
-<blockquote>
-<div><img alt="../_images/coredump-hexdump.png" src="../_images/coredump-hexdump.png" />
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cat<span class="w"> </span>elf.dump
-<span class="go">[CPU0] [ 6] 5A5601013D03FF077F454C4601010100C0000304002800C00D003420036000070400053400200008200A4000000420030034C024200001D8092004E00200601A</span>
-<span class="go">...</span>
-<span class="go">[CPU0] [ 6] 401B018D37814720005A5601000800090100006000010000</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="4">
-<li><p>Convert the dump file</p></li>
-</ol>
-<p>If the core file is post-processed by lzf compress and hexdump stream, execute the coredump script (<a class="reference external" href="https://github.com/apache/nuttx/blob/master/tools/coredump.py">tools/coredump.py</a>) to convert hex to binary and lzf decompression, If the -o parameter is not added in commandline, the output of &lt;original file name&gt;.core will be automatically generated:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx/tools/coredump.py<span class="w"> </span>elf.dump
-<span class="go">Core file conversion completed: elf.core</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="5">
-<li><p>Analysis by gdb</p></li>
-</ol>
-<p>After generating elf.core, combined with compiled nuttx.elf, you can view the call stack and related register information of all threads directly through gdb:</p>
-<p>(NOTE: Toolchain version must be newer than 11.3)</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>prebuilts/gcc/linux/arm/bin/arm-none-eabi-gdb<span class="w"> </span>-c<span class="w"> </span>elf.core<span class="w"> </span>nuttx
-</pre></div>
-</div>
-<img alt="../_images/coredump-gdb.png" src="../_images/coredump-gdb.png" />
-</div></blockquote>
+  <section id="stm32-null-pointer-detection">
+<h1>STM32 Null Pointer Detection<a class="headerlink" href="#stm32-null-pointer-detection" title="Permalink to this heading"></a></h1>
+<section id="the-null-pointer-problem">
+<h2>The NULL Pointer Problem<a class="headerlink" href="#the-null-pointer-problem" title="Permalink to this heading"></a></h2>
+<p>A common cause of software bugs is null pointers. Pointers may be NULL if they
+are un-initialized and un-checked. The use of NULL pointers almost always results
+in something bad happening. Often, NULL pointer access can cause error exceptions
+and or diagnostic crashes. But on MCUs that have valid address decoding at address
+0x0000:0000, the use of NULL pointers may not cause a crash at all but may, instead,
+cause strange behaviors that can sometimes be difficult to debug.</p>
 </section>
+<section id="cortex-m-memory">
+<h2>Cortex-M Memory<a class="headerlink" href="#cortex-m-memory" title="Permalink to this heading"></a></h2>
+<p>The Cortex-M family (Cortex-M0, M3, and M4) are such MCUs. They have their
+interrupt vectors positioned at address zero. Because of this, NULL pointer
+accesses will not necessarily cause crashes. Instead, the NULL pointers will
+access memory in the vicinity of the vector table and who knows what will happen
+next?</p>
+</section>
+<section id="stm32-memory-aliasing">
+<h2>STM32 Memory Aliasing<a class="headerlink" href="#stm32-memory-aliasing" title="Permalink to this heading"></a></h2>
+<p>The STMicro STM32 family of Cortex-M3/4 MCUs do things a little differently.
+FLASH is physically addressed at address 0x0800:0000; the STM32 vector table
+is then physically located at 0x0800:0000 instead of 0x0000:0000. If the STM32
+hardware is configured to boot from FLASH, then the the STM32 will remap the
+FLASH memory so that is aliased at address 0x0000:00000. In that way, the STM32
+can boot from FLASH or external memory or any other memory region that it is
+capable of mapping.</p>
+<p>In the NuttX linker scripts, the applications are linked to execute from the
+physical FLASH region at address 0x0800:0000. All valid FLASH memory access
+will then access memory in the 0x0800:0000 FLASH address range. But illegal
+NULL pointer access will access the aliased copy of FLASH beginning at 0x0000:0000.
+So we still have the problem.</p>
+</section>
+<section id="the-cortex-m-memory-protection-unit">
+<h2>The Cortex-M Memory Protection Unit<a class="headerlink" href="#the-cortex-m-memory-protection-unit" title="Permalink to this heading"></a></h2>
+<p>The Memory Protection Unit (MPU) is an optional component of a Cortex-M implementation.
+Most popular Cortex-M3/4 MCUs do support the MPU. The MPU can be used to protect regions
+of memory so that if there is any attempted, unauthorized access to certain memory
+regions, then a memory protection violation exception will occur and the system will
+detect the illegal access.</p>
+<p>See the ARM website for more information about the Cortex-M3/4 families and the
+Cortex-M3/4 MPU. See, for example
+<a class="reference external" href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0179b/CHDFDFIG.html">2.2. Memory Protection Unit (MPU)</a>.</p>
+</section>
+<section id="using-the-mpu-to-detect-null-pointer-usage">
+<h2>Using the MPU to Detect Null Pointer Usage<a class="headerlink" href="#using-the-mpu-to-detect-null-pointer-usage" title="Permalink to this heading"></a></h2>
+<p>So, for the STM32, one thing that we can do is to program the MPU to prohibit software
+access to the memory region beginning at address 0x0000:0000. Petteri Aimonen posted a code
+snippet on the NuttX Forum showing how to do this. Here is Petteri’s post:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Catch any null pointer dereferences */</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="n">putreg32</span><span class="p">(</span><span class="n">region</span><span class="p">,</span><span class="w"> </span><span class="n">MPU_RNR</span><span class="p">);</span>
+<span class="n">putreg32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">MPU_RBAR</span><span class="p">);</span>
+<span class="n">putreg32</span><span class="p">(</span><span class="n">MPU_RASR_ENABLE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">MPU_RASR_SIZE_LOG2</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="mh">0xFF</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">MPU_RASR_SRD_SHIFT</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">MPU_RASR_AP_NONO</span><span class="p">,</span><span class="w"> </span><span class="n">MPU_RASR</span><span class="p">);</span>
+<span class="n">mpu_control</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -259,8 +243,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cortexmhardfaults.html" class="btn btn-neutral float-left" title="Analyzing Cortex-M Hardfaults" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="minidumpserver.html" class="btn btn-neutral float-right" title="minidumpserver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="automounter.html" class="btn btn-neutral float-left" title="Auto-Mounter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="stm32ccm.html" class="btn btn-neutral float-right" title="STM32 CCM Allocator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
