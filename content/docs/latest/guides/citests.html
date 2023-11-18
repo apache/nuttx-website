@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open Flash Loader &mdash; NuttX latest documentation</title>
+  <title>Running CI Test Locally &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Testing TCP/IP Network Stacks" href="testingtcpip.html" />
-    <link rel="prev" title="GDB with Python" href="gdbwithpython.html" /> 
+    <link rel="next" title="High Performance, Zero Latency Interrupts" href="zerolatencyinterrupts.html" />
+    <link rel="prev" title="Custom Apps How-to" href="customapps.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -128,20 +128,18 @@
 <li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
-<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Running CI Test Locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-nuttx">Configuring NuttX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-ci-tests">Running CI Tests</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance, Zero Latency Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="minidumpserver.html">minidumpserver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Open Flash Loader</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#introduce">Introduce</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#configuration">CONFIGURATION</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#precautions">Precautions</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
@@ -166,9 +164,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Open Flash Loader</li>
+      <li class="breadcrumb-item active">Running CI Test Locally</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/ofloader.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/citests.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -176,63 +174,65 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="open-flash-loader">
-<h1>Open Flash Loader<a class="headerlink" href="#open-flash-loader" title="Permalink to this heading"></a></h1>
-<section id="introduce">
-<h2>Introduce<a class="headerlink" href="#introduce" title="Permalink to this heading"></a></h2>
-<p>Open Flash loader is an implementation in NuttX that bridges the device
-drivers in NuttX with the programming methods of a flash loader in J-Link.
-It allows J-Link to program any supported NuttX device driver.</p>
-</section>
-<section id="configuration">
-<h2>CONFIGURATION<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_DISABLE_IDLE_LOOP</span><span class="o">=</span><span class="n">y</span>
-<span class="n">CONFIG_SYSTEM_OFLOADER</span><span class="o">=</span><span class="n">y</span>
-<span class="n">CONFIG_SYSTEM_OFLOADER_TABLE</span><span class="o">=</span><span class="s">&quot;/dev/flash,0x08000000,0x20000&quot;</span><span class="p">,</span><span class="mi">0</span>
+  <section id="running-ci-test-locally">
+<span id="citests"></span><h1>Running CI Test Locally<a class="headerlink" href="#running-ci-test-locally" title="Permalink to this heading"></a></h1>
+<p>NuttX automatically runs continuous integration (CI) tests on
+<a class="reference external" href="https://nuttx.apache.org/docs/latest/guides/simulator.html">simulator</a>
+target when new pull request is submited. To avoid the tests failing you can
+also run them locally on your computer prior to submiting new pull request.
+This page describes the step by step manual to do so.</p>
+<section id="configuring-nuttx">
+<h2>Configuring NuttX<a class="headerlink" href="#configuring-nuttx" title="Permalink to this heading"></a></h2>
+<p>NuttX has a simulator target that allows the user to run NuttX as a regular
+program on a computer. The simulator target with CI test is configured and
+compiled followingly.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>sim:citest
+<span class="gp">$ </span>make
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">`CONFIG_DISABLE_IDLE_LOOP</span></code> is used to disable the idle loop in NuttX.
-<code class="docutils literal notranslate"><span class="pre">`CONFIG_SYSTEM_OFLOADER`</span></code> is used to enable the Open Flash Loader.
-<code class="docutils literal notranslate"><span class="pre">`CONFIG_SYSTEM_OFLOADER_TABLE`</span></code> is used to configure the flash device
-first parameter is the device name, second parameter is the start address.</p>
-<p>The reference configuration “stm32f429i-disco:ofloader” is designed
-to be used with the STM32F429I-DISCO board in NuttX,
-enabling the Open Flash loader functionality. This configuration allows
-the J-Link flash loader to program the NuttX image onto the STM32F429I-DISCO board.</p>
-</section>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p>Build NuttX with Open Flash Loader.</p></li>
-<li><p>Configure the Jlink xml file. like</p></li>
-</ol>
-<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;Database&gt;</span>
-<span class="w">    </span><span class="nt">&lt;Device&gt;</span>
-<span class="w">        </span><span class="nt">&lt;ChipInfo</span><span class="w"> </span><span class="na">Vendor=</span><span class="s">&quot;STM32NUTTX&quot;</span><span class="w"> </span><span class="na">Name=</span><span class="s">&quot;NuttX&quot;</span><span class="w"> </span><span class="na">Core=</span><span class="s">&quot;JLINK_CORE_CORTEX_M4&quot;</span><span class="w"> </span><span class="na">WorkRAMAddr=</span><span class="s">&quot;0x20000000&quot;</span><span class="w"> </span><span class="na">WorkRAMSize=</span><span class="s">&quot;0x10000000&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
-<span class="w">        </span><span class="nt">&lt;FlashBankInfo</span><span class="w"> </span><span class="na">Name=</span><span class="s">&quot;Storage&quot;</span><span class="w"> </span><span class="na">BaseAddr=</span><span class="s">&quot;0x00000000&quot;</span><span class="w"> </span><span class="na">MaxSize=</span><span class="s">&quot;0xffffffff&quot;</span><span class="w"> </span><span class="na">Loader=</span><span class="s">&quot;/home/ajh/work/vela_all/nuttx/nuttx&quot;</span><span class="w"> </span><span class="na">LoaderType=</span><span class="s">&quot;FLASH_ALGO_TYPE_OPEN&quot;</span><span class="w"> </span><span class="na">AlwaysPresent=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
-<span class="w">    </span><span class="nt">&lt;/Device&gt;</span>
-<span class="nt">&lt;/Database&gt;</span>
+</div></blockquote>
+<p>Now you can run the simulator to check the configuration was successful.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx
+<span class="go">login: admin</span>
+<span class="go">password: Administrator</span>
 </pre></div>
 </div>
-<ol class="arabic simple" start="3">
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">JLinkExe</span> <span class="pre">-if</span> <span class="pre">SWD</span> <span class="pre">-speed</span> <span class="pre">4000</span> <span class="pre">-device</span> <span class="pre">STM32NUTTX</span></code>,
-then <code class="docutils literal notranslate"><span class="pre">loadbin</span> <span class="pre">/home/ajh/work/nuttx.bin</span> <span class="pre">0x08000000</span></code>,
-we can flash nuttx.bin to /dev/flash</p></li>
-</ol>
+</div></blockquote>
+<p>You should see NuttX shell with built in test applications. Now you can exit
+the simulator.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; poweroff</span>
+<span class="gp">$</span>
+<span class="gp">$ </span><span class="c1"># we&#39;re back at the Linux prompt.</span>
+</pre></div>
+</div>
+</div></blockquote>
 </section>
-<section id="precautions">
-<h2>Precautions<a class="headerlink" href="#precautions" title="Permalink to this heading"></a></h2>
-<p>1.If you need to implement the ofloader on a different board,
-you will need to read the <cite>wiki &lt;https://wiki.segger.com/SEGGER_Flash_Loader&gt;</cite>
-and refer to the implementation of “ofloader.ld” linker script located
-in the “boards/arm/stm32/stm32f429i-disco/scripts” directory.
-This linker script defines how the different sections of the NuttX image are placed in memory.
-You should configure the corresponding sections to be located in RAM,
-where the J-Link can write the image correctly.</p>
-<p>2.When running the ofloader, J-Link disables any interrupts by default.
-Therefore, currently, it does not support programming devices with interrupt-driven drivers.</p>
-<p>3.Due to limitations of J-Link, the ofloader image file cannot exceed 64KB.
-It is essential to be mindful of this constraint during programming.</p>
+<section id="running-ci-tests">
+<h2>Running CI Tests<a class="headerlink" href="#running-ci-tests" title="Permalink to this heading"></a></h2>
+<p>Running CI tests locally requires Minicom and Python 3.6 or newer to be
+installed on the system. Other requirements can be installed with following
+set of commands.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>tools/ci/testrun/env
+<span class="gp">$ </span>pip3<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>..
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>script
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now you have everything prepared to run CI tests. The tests themself are run
+by following command.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;common or sim&#39;</span><span class="w"> </span>./<span class="w"> </span>-B<span class="w"> </span>sim<span class="w"> </span>-P<span class="w"> </span>nuttx-path<span class="w"> </span>-L<span class="w"> </span>log-path<span class="w"> </span>-R<span class="w"> </span>sim<span class="w"> </span>-C<span class="w"> </span>--json<span class="o">=</span>log-path/pytest.json
+</pre></div>
+</div>
+</div></blockquote>
+<p>Where nuttx-path is an absolute path to NuttX root directory and log-path is
+a user defined directory to which tests log are saved.</p>
 </section>
 </section>
 
@@ -240,8 +240,8 @@ It is essential to be mindful of this constraint during programming.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="gdbwithpython.html" class="btn btn-neutral float-left" title="GDB with Python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="testingtcpip.html" class="btn btn-neutral float-right" title="Testing TCP/IP Network Stacks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="customapps.html" class="btn btn-neutral float-left" title="Custom Apps How-to" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="zerolatencyinterrupts.html" class="btn btn-neutral float-right" title="High Performance, Zero Latency Interrupts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
