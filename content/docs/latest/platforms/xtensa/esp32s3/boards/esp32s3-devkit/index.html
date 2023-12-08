@@ -670,6 +670,53 @@ example.</p>
 </div>
 <p>Where x in the timer instance.</p>
 </section>
+<section id="toywasm">
+<h3>toywasm<a class="headerlink" href="#toywasm" title="Permalink to this heading"></a></h3>
+<p>This config is an example to use toywasm.</p>
+<p>This example uses littlefs on the SPI flash to store wasm modules.</p>
+<p>Note: This example assumes a board with 32MB flash. To use a smaller one,
+tweak the –img-size option and CONFIG_ESP32S3_STORAGE_MTD_SIZE.</p>
+<p>Note: To use flash larger than 4MB, you need to install a custom bootloader.
+<a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/bootloader.html#spi-flash-configuration">https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/bootloader.html#spi-flash-configuration</a></p>
+<ol class="arabic">
+<li><p>Create a littlefs image which contains wasm modules.</p>
+<p><a class="reference external" href="https://github.com/jrast/littlefs-python/blob/master/examples/mkfsimg.py">https://github.com/jrast/littlefs-python/blob/master/examples/mkfsimg.py</a>
+is used in the following example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>% python3 mkfsimg.py \
+  --img-filename ..../littlefs.bin \
+  --img-size 31981568 \
+  --block-size 4096 \
+  --prog-size 256 \
+  --read-size 256 \
+  --name-max 32 \
+  --disk-version 2.0 \
+  ..../wasm_module_dir
+</pre></div>
+</div>
+</li>
+<li><p>Build a NuttX binary as usual with this config.</p></li>
+<li><p>Write the NuttX binary and the filesystem image to the board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>% esptool.py \
+  -c esp32s3 \
+  -p /dev/tty.SLAB_USBtoUART \
+  -b 921600 \
+  write_flash \
+  -fs detect \
+  -fm dio \
+  -ff 40m \
+  0x10000 nuttx.bin \
+  0x180000 ..../littlefs.bin
+</pre></div>
+</div>
+</li>
+<li><p>Mount the filesystem and run a wasm module on it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t littlefs /dev/esp32s3flash /mnt
+nsh&gt; toywasm --print-stats --wasi /mnt/....
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
 <section id="twai">
 <h3>twai<a class="headerlink" href="#twai" title="Permalink to this heading"></a></h3>
 <p>This configuration enables the support for the TWAI (Two-Wire Automotive Interface) driver.
