@@ -194,22 +194,21 @@
 <p>The <a class="reference external" href="https://developer.canaan-creative.com/k230/dev/zh/CanMV_K230_%E6%95%99%E7%A8%8B.html">CanMV K230</a> is a raspberry-pi sized single board computer with 512MB DRAM and a microSD card slot for booting. It comes with serial console, Ethernet, HDMI and USB/OTG ports. Unfortuunately it doesn’t support JTAG alike debugging interfaces.</p>
 <p>The <a class="reference external" href="https://github.com/kendryte/k230_sdk">K230 SDK</a> contains source code, libraries and user guides for booting up an AMP enviroment with Linux on CPU0 and RT-Thread on CPU1.</p>
 <p>K230 boots from CPU0 and loads U-Boot into DRAM first, then U-Boot kicks off OpenSBI wrapped Linux/RTT OS images on respective CPU cores accordingly.</p>
-<p>The K230 U-Boot operates in machine mode, thus provides an ideal environment for NuttX. allowing one to run flat or kernel builds in theory.</p>
+<p>The K230 U-Boot runs in machine mode, thus it can run flat or kernel NuttX builds. The kernel build shall run with or without SBI layer.</p>
 <section id="preparations">
 <h2>Preparations<a class="headerlink" href="#preparations" title="Permalink to this heading"></a></h2>
-<p>Please follow the K230 SDK to prepare a booting SD card for the board, or use prebuilt boot image from <a class="reference external" href="https://kendryte-download.canaan-creative.com/developer/k230/k230_canmv_sdcard_v1.2_nncase_v2.5.1.img.gz">here</a>.</p>
+<p>Take the prebuilt CanMV-k230 boot image from <cite>here &lt;https://gitee.com/yf1972/filexfers/tree/canmv230-tools-for-nuttx-v1.2&gt;</cite> as the v1.2 K230 SDK doesn’t provide RiscV standard PTE format support needed by NuttX. This package also contains extract of OpenSBI from K230 SDK v1.2 release, which is needed to wrap kernel build NuttX binary.</p>
 <p>Make sure that before trying NuttX:</p>
 <ul class="simple">
-<li><p>The board can boot default SDK image normally.</p></li>
-<li><p>U-Boot console can be accessed from host(e.g. <cite>minicom -D /dev/ttyACM0</cite>).</p></li>
-<li><p>U-Boot has access to a TFTP service is available.</p></li>
-<li><p>You can drop files to the TFTP service folder.</p></li>
+<li><p>The board can boot K230 SDK image normally.</p></li>
+<li><p>Device console access available (e.g. <cite>minicom -D /dev/ttyACM0</cite>).</p></li>
+<li><p>U-Boot connectivity to TFTP service available.</p></li>
 </ul>
-<p>Note for below NuttX tests, the SD image is only used to enter U-Boot console.</p>
+<p>For NuttX tests, the microSD card is only used to enter U-Boot console, NuttX isn’t using any persistent storage on the target now.</p>
 </section>
-<section id="risc-v-toolchain">
-<h2>RISC-V Toolchain<a class="headerlink" href="#risc-v-toolchain" title="Permalink to this heading"></a></h2>
-<p>Before building NuttX for Star64, download the <strong>RISC-V Toolchain riscv64-unknown-elf</strong> from <a class="reference external" href="https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack">XPack</a> or use “gcc-riscv64-unknown-elf” on Ubuntu.</p>
+<section id="toolchains">
+<h2>Toolchains<a class="headerlink" href="#toolchains" title="Permalink to this heading"></a></h2>
+<p>Before building NuttX, download the <strong>RISC-V Toolchain riscv64-unknown-elf</strong> from <a class="reference external" href="https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack">XPack</a> or use the stock “gcc-riscv64-unknown-elf” on Ubuntu.</p>
 </section>
 <section id="building">
 <h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
@@ -220,18 +219,47 @@
 <span class="gp">$ </span>make<span class="w"> </span>-j4
 </pre></div>
 </div>
-<p>There should have <cite>nuttx.bin</cite> generated.</p>
+<p>This should have <cite>nuttx.bin</cite> generated, it can be used without OpenSBI wrapping on the board.</p>
+<p>The kernel build requires two build passes: first pass to build kernel and apps, second pass to build the kernel with a ROMFS image that includes some built apps.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>canmv230:knsh
+<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">  </span><span class="c1"># first pass for apps build preparations</span>
+<span class="gp">$ </span><span class="o">(</span>make<span class="w"> </span>export<span class="p">;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>../apps<span class="p">;</span><span class="w"> </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.gz<span class="p">;</span><span class="w"> </span>make<span class="w"> </span>import<span class="o">)</span>
+<span class="gp">$ </span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>../apps/<span class="p">;</span><span class="w"> </span>tools/mkromfsimg.sh<span class="w"> </span>../nuttx/boards/risc-v/k230/canmv230/src/romfs_boot.c<span class="o">)</span>
+<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">  </span><span class="c1"># second pass to pick up ROMFS</span>
+</pre></div>
+</div>
+<p>The built <cite>nuttx.bin</cite> can be then wrapped with K230 OpenSBI like below:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$HOME</span>
+<span class="gp">$ </span>tar<span class="w"> </span>xvf<span class="w"> </span>canmv230-opensbi-dtb.tar.xz
+<span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">OSBI</span><span class="o">=</span><span class="nv">$HOME</span>/opensbi
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>/tmp/aaa<span class="w">    </span><span class="c1"># use a temporary work folder</span>
+<span class="gp">$ </span>make<span class="w"> </span>-C<span class="w"> </span><span class="nv">$OSBI</span><span class="w"> </span><span class="nv">O</span><span class="o">=</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="w"> </span><span class="nv">PLATFORM</span><span class="o">=</span>generic<span class="se">\</span>
+<span class="w">       </span><span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-unknown-elf-<span class="w"> </span><span class="nv">FW_PIC</span><span class="o">=</span>n<span class="w"> </span><span class="nv">K230_LIITLE_CORE</span><span class="o">=</span><span class="m">1</span><span class="se">\</span>
+<span class="w">       </span><span class="nv">FW_FDT_PATH</span><span class="o">=</span><span class="nv">$OSBI</span>/k230.dtb<span class="w"> </span><span class="nv">FW_PAYLOAD_PATH</span><span class="o">=</span>nuttx.bin<span class="w"> </span>-j4
+<span class="gp">$ </span>cp<span class="w"> </span>platform/generic/firmware/fw_payload.bin<span class="w"> </span>tftp-server-path/nuttx.bin
+</pre></div>
+</div>
+<p>Note to use actual paths of SBI source tree, device dtb, TFTP folder etc when using above commands.</p>
 </section>
 <section id="booting">
 <h2>Booting<a class="headerlink" href="#booting" title="Permalink to this heading"></a></h2>
-<p>Copy the <cite>nuttx.bin</cite> to the TFTP service folder and work with the U-Boot console:</p>
+<p>Within U-boot console, load <cite>nuttx.bin</cite> from TFTP service and run it:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">k230# usb start</span>
 <span class="go">k230# ping $serverip</span>
 <span class="go">k230# tftp 8000000 nuttx.bin</span>
-<span class="go">k230# boot_barememtal 0 8000000 $filesize</span>
+<span class="go">k230# go 8000000</span>
 </pre></div>
 </div>
-<p>Then the <cite>nsh&gt; `console should appear, type `help</cite> to see available commands.</p>
+<p>Then the <cite>nsh&gt; ` console should appear, type `help</cite> to see available commands.</p>
+</section>
+<section id="issues">
+<h2>Issues<a class="headerlink" href="#issues" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>The <cite>ostest</cite> app only works with flat build.</p></li>
+</ul>
+</div></blockquote>
 </section>
 </section>
 
