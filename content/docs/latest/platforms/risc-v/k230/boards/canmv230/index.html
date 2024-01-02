@@ -197,36 +197,36 @@
 <p>The K230 U-Boot runs in machine mode, thus it can run flat or kernel NuttX builds. The kernel build shall run with or without SBI layer.</p>
 <section id="preparations">
 <h2>Preparations<a class="headerlink" href="#preparations" title="Permalink to this heading"></a></h2>
-<p>Take the prebuilt CanMV-k230 boot image from <cite>here &lt;https://gitee.com/yf1972/filexfers/tree/canmv230-tools-for-nuttx-v1.2&gt;</cite> as the v1.2 K230 SDK doesn’t provide RiscV standard PTE format support needed by NuttX. This package also contains extract of OpenSBI from K230 SDK v1.2 release, which is needed to wrap kernel build NuttX binary.</p>
+<p>Take the prebuilt CanMV-k230 boot image from <a class="reference external" href="https://gitee.com/yf1972/filexfers/tree/canmv230-tools-for-nuttx-v1.2">here</a> as the default K230 SDK doesn’t support RiscV standard PTE format at least till v1.2. This package also contains an extract of the OpenSBI from K230 SDK v1.2 release, which is needed to wrap Nuttx kernel build binary.</p>
 <p>Make sure that before trying NuttX:</p>
 <ul class="simple">
-<li><p>The board can boot K230 SDK image normally.</p></li>
+<li><p>The board can boot with prebuilt CanMV-k230 image.</p></li>
 <li><p>Device console access available (e.g. <cite>minicom -D /dev/ttyACM0</cite>).</p></li>
 <li><p>U-Boot connectivity to TFTP service available.</p></li>
 </ul>
-<p>For NuttX tests, the microSD card is only used to enter U-Boot console, NuttX isn’t using any persistent storage on the target now.</p>
+<p>For below NuttX tests, the microSD card is only used to enter the U-Boot console environment, as NuttX isn’t using any storage yet.</p>
 </section>
 <section id="toolchains">
 <h2>Toolchains<a class="headerlink" href="#toolchains" title="Permalink to this heading"></a></h2>
-<p>Before building NuttX, download the <strong>RISC-V Toolchain riscv64-unknown-elf</strong> from <a class="reference external" href="https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack">XPack</a> or use the stock “gcc-riscv64-unknown-elf” on Ubuntu.</p>
+<p>Before building NuttX, download the <strong>RISC-V Toolchain riscv64-unknown-elf</strong> from <a class="reference external" href="https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack">XPack</a> or get the stock “gcc-riscv64-unknown-elf” via <cite>apt</cite> on Ubuntu.</p>
 </section>
 <section id="building">
 <h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
 <p>To build NuttX for CanMV, <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">install the prerequisites</span></a> and <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">clone the git repositories</span></a> for <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> and <code class="docutils literal notranslate"><span class="pre">apps</span></code>.</p>
-<p>Configure the NuttX project and build the project:</p>
+<p>Configure and build FLAT mode NuttX:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
-<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>canmv230:nsh
+<span class="gp">$ </span>make<span class="w"> </span>distclean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>tools/configure.sh<span class="w"> </span>canmv230:nsh
 <span class="gp">$ </span>make<span class="w"> </span>-j4
 </pre></div>
 </div>
-<p>This should have <cite>nuttx.bin</cite> generated, it can be used without OpenSBI wrapping on the board.</p>
-<p>The kernel build requires two build passes: first pass to build kernel and apps, second pass to build the kernel with a ROMFS image that includes some built apps.</p>
+<p>This should have <cite>nuttx.bin</cite> generated, it can be loaded by U-Boot on the board.</p>
+<p>The NuttX KERNEL build requires two build passes: first pass to build kernel w/ dummy ROMFS and apps, second pass to build the kernel with real ROMFS image containing apps built in first pass.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
-<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>canmv230:knsh
-<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">  </span><span class="c1"># first pass for apps build preparations</span>
-<span class="gp">$ </span><span class="o">(</span>make<span class="w"> </span>export<span class="p">;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>../apps<span class="p">;</span><span class="w"> </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.gz<span class="p">;</span><span class="w"> </span>make<span class="w"> </span>import<span class="o">)</span>
-<span class="gp">$ </span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>../apps/<span class="p">;</span><span class="w"> </span>tools/mkromfsimg.sh<span class="w"> </span>../nuttx/boards/risc-v/k230/canmv230/src/romfs_boot.c<span class="o">)</span>
-<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">  </span><span class="c1"># second pass to pick up ROMFS</span>
+<span class="gp">$ </span>make<span class="w"> </span>distclean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>tools/configure.sh<span class="w"> </span>canmv230:knsh
+<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">    </span><span class="c1"># first pass to build kernel</span>
+<span class="gp">$ </span><span class="o">(</span>make<span class="w"> </span>export<span class="p">;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>../apps<span class="p">;</span><span class="w"> </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.gz<span class="p">;</span><span class="w"> </span>make<span class="w"> </span>import<span class="o">)</span><span class="w">  </span><span class="c1"># build the apps</span>
+<span class="gp">$ </span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>../apps/<span class="p">;</span><span class="w"> </span>tools/mkromfsimg.sh<span class="w"> </span>../nuttx/boards/risc-v/k230/canmv230/src/romfs_boot.c<span class="o">)</span><span class="w"> </span><span class="c1"># update the ROMFS image</span>
+<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">    </span><span class="c1"># build again to pick up the ROMFS</span>
 </pre></div>
 </div>
 <p>The built <cite>nuttx.bin</cite> can be then wrapped with K230 OpenSBI like below:</p>
@@ -240,7 +240,7 @@
 <span class="gp">$ </span>cp<span class="w"> </span>platform/generic/firmware/fw_payload.bin<span class="w"> </span>tftp-server-path/nuttx.bin
 </pre></div>
 </div>
-<p>Note to use actual paths of SBI source tree, device dtb, TFTP folder etc when using above commands.</p>
+<p>Please use actual paths on your host for <cite>nuttx.bin</cite> and TFTP folder when running above commands.</p>
 </section>
 <section id="booting">
 <h2>Booting<a class="headerlink" href="#booting" title="Permalink to this heading"></a></h2>
@@ -257,7 +257,7 @@
 <h2>Issues<a class="headerlink" href="#issues" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><p>The <cite>ostest</cite> app only works with flat build.</p></li>
+<li><p>The <cite>ostest</cite> app has non-zero exit code in Kernel build.</p></li>
 </ul>
 </div></blockquote>
 </section>
