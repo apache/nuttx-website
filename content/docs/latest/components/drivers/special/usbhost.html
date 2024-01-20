@@ -211,33 +211,33 @@
   <section id="usb-host-side-drivers">
 <h1>USB Host-Side Drivers<a class="headerlink" href="#usb-host-side-drivers" title="Permalink to this heading"></a></h1>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/usb/usbhost.h</span></code>. All structures and APIs
-needed to work with USB host-side drivers are provided in this
-header file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_driver_s</span></code> and
-<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_connection_s</span></code>. Each USB host controller
-driver must implement an instance of
-<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_driver_s</span></code> and
-<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_connection_s</span></code>: <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_driver_s</span></code>
-provides the interface between the USB host driver and the USB
-class driver; <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_connection_s</span></code> provides the
-interface between the USB host driver and platform-specific
-connection management and device enumeration logic. These
-structures are defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/usb/usbhost.h</span></code>.</p>
+<li><p><strong>USB host controller driver</strong> abstracts the host controller
+device in the target chip. Each USB host controller driver
+must implement an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_driver_s</span></code> and
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_connection_s</span></code> defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/usb/usbhost.h</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_driver_s</span></code> provides the interface between
+the USB host driver and the USB host class driver.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_connection_s</span></code> provides the interface between
+the USB host driver and platform-specific connection management
+and device enumeration logic.</p></li>
+</ul>
 <p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">arch/arm/src/lpc17xx_40xx/lpc17_40_usbhost.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/stm32_otgfshost.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">arch/arm/src/sama5/sam_ohci.c</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">arch/arm/src/sama5/sam_ehci.c</span></code>.</p>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_class_s</span></code>. Each USB host class driver must
-implement an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_class_s</span></code>. This
-structure is also defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/usb/usbhost.h</span></code>.</p>
+<li><p><strong>USB host class driver</strong> abstracts USB peripherals conected to
+the USB host controller. Each USB host class driver must implement
+an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usbhost_class_s</span></code> defined also in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/usb/usbhost.h</span></code>.</p>
 <p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/usbhost/usbhost_storage.c</span></code></p>
 </li>
 <li><p><strong>USB Host Class Driver Registry</strong>. The NuttX USB host
 infrastructure includes a <em>registry</em>. During its
 initialization, each USB host class driver must call the
-interface, <code class="docutils literal notranslate"><span class="pre">usbhost_registerclass()</span></code> in order add its
+interface, <code class="docutils literal notranslate"><span class="pre">usbhost_registerclass()</span></code> in order to add its
 interface to the registry. Later, when a USB device is
 connected, the USB host controller will look up the USB host
 class driver that is needed to support the connected device in
@@ -288,7 +288,7 @@ the event the device that it supports is connected.</p>
 <p><strong>Examples</strong>: The function <code class="docutils literal notranslate"><span class="pre">usbhost_msc_initialize()</span></code> in
 the file <code class="docutils literal notranslate"><span class="pre">drivers/usbhost/usbhost_storage.c</span></code></p>
 </li>
-<li><p>Each application must include a <em>waiter</em> thread thread that
+<li><p>Each application must include a <em>waiter</em> thread that
 (1) calls the USB host controller driver’s <code class="docutils literal notranslate"><span class="pre">wait()</span></code> to
 detect the connection of a device, and then (2) call the USB
 host controller driver’s <code class="docutils literal notranslate"><span class="pre">enumerate</span></code> method to bind the
