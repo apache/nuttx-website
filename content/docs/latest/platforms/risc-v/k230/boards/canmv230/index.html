@@ -190,11 +190,10 @@
              
   <section id="canmv-k230">
 <h1>CanMV K230<a class="headerlink" href="#canmv-k230" title="Permalink to this heading"></a></h1>
-<p>The <a class="reference external" href="https://www.canaan.io/product/k230">Kendryte K230</a> SoC contains two indepedent T-Head C908 based RV64GC CPU cores. The CPU1 even has RVV1.0 vector extension and operates at higher speed. The SoC contains accelerators for depth image processing, audio processing and neural network inferencing etc.</p>
 <p>The <a class="reference external" href="https://developer.canaan-creative.com/k230/dev/zh/CanMV_K230_%E6%95%99%E7%A8%8B.html">CanMV K230</a> is a raspberry-pi sized single board computer with 512MB DRAM and a microSD card slot for booting. It comes with serial console, Ethernet, HDMI and USB/OTG ports. Unfortuunately it doesn’t support JTAG alike debugging interfaces.</p>
 <p>The <a class="reference external" href="https://github.com/kendryte/k230_sdk">K230 SDK</a> contains source code, libraries and user guides for booting up an AMP enviroment with Linux on CPU0 and RT-Thread on CPU1.</p>
 <p>K230 boots from CPU0 and loads U-Boot into DRAM first, then U-Boot kicks off OpenSBI wrapped Linux/RTT OS images on respective CPU cores accordingly.</p>
-<p>The K230 U-Boot runs in machine mode, thus it can run flat or kernel NuttX builds. The kernel build shall run with or without SBI layer.</p>
+<p>The K230 U-Boot runs in machine mode, thus it supports flat, protected or kernel <a class="reference external" href="https://nuttx.apache.org/docs/latest/implementation/processes_vs_tasks.html">build modes</a>. The kernel build mode further allows use of OpenSBI or not.</p>
 <section id="preparations">
 <h2>Preparations<a class="headerlink" href="#preparations" title="Permalink to this heading"></a></h2>
 <p>Take the prebuilt CanMV-k230 boot image from <a class="reference external" href="https://gitee.com/yf1972/filexfers/tree/canmv230-tools-for-nuttx-v1.2">here</a> as the default K230 SDK doesn’t support RiscV standard PTE format at least till v1.2. This package also contains an extract of the OpenSBI from K230 SDK v1.2 release, which is needed to wrap Nuttx kernel build binary.</p>
@@ -212,7 +211,7 @@
 </section>
 <section id="building">
 <h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
-<p>To build NuttX for CanMV, <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">install the prerequisites</span></a> and <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">clone the git repositories</span></a> for <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> and <code class="docutils literal notranslate"><span class="pre">apps</span></code>.</p>
+<p>To build NuttX for CanMV-k230, <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">install the prerequisites</span></a> and <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">clone the git repositories</span></a> for <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> and <code class="docutils literal notranslate"><span class="pre">apps</span></code>.</p>
 <section id="flat-build">
 <h3>FLAT Build<a class="headerlink" href="#flat-build" title="Permalink to this heading"></a></h3>
 <p>FLAT build is straightforward:</p>
@@ -241,22 +240,48 @@
 </section>
 <section id="kernel-build">
 <h3>KERNEL Build<a class="headerlink" href="#kernel-build" title="Permalink to this heading"></a></h3>
-<p>KERNEL build requires two build passes: first pass to build kernel w/ dummy ROMFS, then we build the apps and update ROMFS, second pass to build the kernel with real ROMFS image containing the apps.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<p>KERNEL build requires two build passes:</p>
+<ul class="simple">
+<li><p>First pass to build kernel w/ dummy ROMFS, then we build the apps and update ROMFS,</p></li>
+<li><p>Second pass to build the kernel with real ROMFS image containing the apps.</p></li>
+</ul>
+<p>There are two configurations for KERNEL build mode:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> is for use within standard SBI environment.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> uses a built-in minimal SBI environment.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> has smaller footprint and is simpler to use, the <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> is for cases requiring stanard SBI environment.</p>
+<p>Take the following steps to build the kernel mode export package:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="c1"># first pass to build kernel exports</span>
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
 <span class="gp">$ </span>make<span class="w"> </span>distclean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>tools/configure.sh<span class="w"> </span>canmv230:knsh
-<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">    </span><span class="c1"># first pass to build kernel</span>
-<span class="gp">$ </span><span class="o">(</span>make<span class="w"> </span>export<span class="p">;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>../apps<span class="p">;</span><span class="w"> </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.gz<span class="p">;</span><span class="w"> </span>make<span class="w"> </span>import<span class="o">)</span><span class="w">  </span><span class="c1"># build the apps</span>
-<span class="gp">$ </span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>../apps/<span class="p">;</span><span class="w"> </span>tools/mkromfsimg.sh<span class="w"> </span>../nuttx/boards/risc-v/k230/canmv230/src/romfs_boot.c<span class="o">)</span><span class="w"> </span><span class="c1"># update the ROMFS image</span>
-<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">    </span><span class="c1"># build again to pick up the ROMFS</span>
+<span class="gp">$ </span>make<span class="w"> </span>-j4
+<span class="gp">$ </span>make<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="c1"># build nuttx-export-*.gz package</span>
 </pre></div>
 </div>
-<p>The built <cite>nuttx.bin</cite> can be then wrapped with K230 OpenSBI like below:</p>
+<p>With export package, we can move ahead to build the apps:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>apps
+<span class="gp">$ </span><span class="c1"># import the nuttx-export-*.gz package from kernel</span>
+<span class="gp">$ </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.gz
+<span class="gp">$ </span>make<span class="w"> </span>import<span class="o">)</span><span class="w">  </span><span class="c1"># build the apps</span>
+<span class="gp">$ </span><span class="c1"># generate ROMFS image for contents in apps/bin folder</span>
+<span class="gp">$ </span>tools/mkromfsimg.sh<span class="w"> </span>../nuttx/arch/risc-v/src/board/romfs_boot.c
+</pre></div>
+</div>
+<p>Once ROMFS for apps is ready, build the kernel again:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">    </span><span class="c1"># build kernel again with real ROMFS</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> is the artifact of kernel build. For <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> case, simply copy it to the TFTP folder and try on the target.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> case, take following steps to wrap the artifact with the  OpenSBI extract from the K230 SDK downloaded above:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$HOME</span>
+<span class="gp">$ </span><span class="c1"># unpack the OpenSBI extract from K230 SDK</span>
 <span class="gp">$ </span>tar<span class="w"> </span>xvf<span class="w"> </span>canmv230-opensbi-dtb.tar.xz
 <span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">OSBI</span><span class="o">=</span><span class="nv">$HOME</span>/opensbi
 <span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>/tmp/aaa<span class="w">    </span><span class="c1"># use a temporary work folder</span>
-<span class="gp">$ </span>make<span class="w"> </span>-C<span class="w"> </span><span class="nv">$OSBI</span><span class="w"> </span><span class="nv">O</span><span class="o">=</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="w"> </span><span class="nv">PLATFORM</span><span class="o">=</span>generic<span class="se">\</span>
-<span class="w">       </span><span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-unknown-elf-<span class="w"> </span><span class="nv">FW_PIC</span><span class="o">=</span>n<span class="w"> </span><span class="nv">K230_LIITLE_CORE</span><span class="o">=</span><span class="m">1</span><span class="se">\</span>
+<span class="gp">$ </span>make<span class="w"> </span>-C<span class="w"> </span><span class="nv">$OSBI</span><span class="w"> </span><span class="nv">O</span><span class="o">=</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="w"> </span><span class="nv">PLATFORM</span><span class="o">=</span>generic<span class="w"> </span><span class="se">\</span>
+<span class="w">       </span><span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-unknown-elf-<span class="w"> </span><span class="nv">FW_PIC</span><span class="o">=</span>n<span class="w"> </span><span class="nv">K230_LIITLE_CORE</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
 <span class="w">       </span><span class="nv">FW_FDT_PATH</span><span class="o">=</span><span class="nv">$OSBI</span>/k230.dtb<span class="w"> </span><span class="nv">FW_PAYLOAD_PATH</span><span class="o">=</span>nuttx.bin<span class="w"> </span>-j4
 <span class="gp">$ </span>cp<span class="w"> </span>platform/generic/firmware/fw_payload.bin<span class="w"> </span>tftp-server-path/nuttx.bin
 </pre></div>
@@ -266,22 +291,20 @@
 </section>
 <section id="running">
 <h2>Running<a class="headerlink" href="#running" title="Permalink to this heading"></a></h2>
-<p>Within U-boot console, load <cite>nuttx.bin</cite> from TFTP service and run it:</p>
+<p>Within U-boot console, load <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> from TFTP and run it as shown below:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">k230# usb start</span>
 <span class="go">k230# ping $serverip</span>
 <span class="go">k230# tftp 8000000 nuttx.bin</span>
 <span class="go">k230# go 8000000</span>
 </pre></div>
 </div>
-<p>Then the <cite>nsh&gt; ` console should appear, type `help</cite> to see available commands.</p>
+<p>Then the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> console should appear, type <code class="docutils literal notranslate"><span class="pre">help</span></code> to see available commands.</p>
 </section>
 <section id="issues">
 <h2>Issues<a class="headerlink" href="#issues" title="Permalink to this heading"></a></h2>
-<blockquote>
-<div><ul class="simple">
-<li><p>The <cite>ostest</cite> app has non-zero exit code in Kernel build.</p></li>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">ostest</span></code> app has non-zero exit code in Kernel mode.</p></li>
 </ul>
-</div></blockquote>
 </section>
 </section>
 
