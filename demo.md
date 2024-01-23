@@ -1,6 +1,6 @@
 ---
-layout: page
-title: Home
+layout: demo
+title: Demo
 tagline: Apache Project !
 ---
 
@@ -25,22 +25,6 @@ limitations under the License.
 
 {% include JB/setup %}
 
-## Apache NuttX
+## NuttX Online Demo
 
-NuttX is a real-time operating system (RTOS) with an emphasis on standards
-compliance and small footprint. Scalable from 8-bit to 64-bit microcontroller
-environments, the primary governing standards in NuttX are Posix and ANSI
-standards. Additional standard APIs from Unix and other common RTOS's (such as
-VxWorks) are adopted for functionality not available under these standards, or
-for functionality that is not appropriate for deeply-embedded environments (such
-as fork()).
-
-
-## Documentation
-
-Extensive documentation can be found [here]({{ site.baseurl }}/docs/latest).
-
-
-## Online Demo
-
-Try the online demo [here]({{ site.baseurl }}/demo).
+Enter `help` to see the available commands.
