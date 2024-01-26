@@ -36,6 +36,22 @@ P.S. In some distros, ``grub-mkrescue`` is called ``grub2-mkrescue``::
 
   grub-mkrescue -o boot.iso iso
 
+Grub with UEFI
+--------------
+
+This flow is very similar except you need to have the BOOTX64.EFI file.
+You can find this in most Linux distributions::
+
+  iso/
+  └── boot
+      ├── efi
+      │   └── EFI
+      │       └── BOOT
+      │           └── BOOTX64.EFI
+      ├── grub
+      │   └── grub.cfg
+      └── nuttx.elf
+
 QEMU/KVM
 ========
 
@@ -70,6 +86,17 @@ Use control-a x to terminate the emulation.
 
 P.S. Make sure that you CPU supports the mandatory features. Look at Real machine
 section for more information.
+
+For testing the PCI bus and driver layers.  This QEMU configuration can be used
+with the pcitest NuttX configuration::
+
+    qemu-system-x86_64  -cpu host,+pcid,+x2apic,+tsc-deadline,+xsave,+rdrand --enable-kvm -smp 1 -m 2G -cdrom boot.iso --nographic -s -no-reboot -device edu -device pci-testdev
+  
+This will enable the QEMU pci-test and edu PCI test devices which test PIO, MMIO, IRQ, and DMA
+functions.  Additionally it will show detailed information about the enumeration of the PCI bus.
+
+If you want to boot using UEFI and TianoCore you will need to add a flag like this to
+point at OVMF ``--bios /usr/share/edk2/ovmf/OVMF_CODE.fd``
 
 Bochs
 =====
