@@ -231,9 +231,10 @@ indication only if the files differ.
 
 **Command Syntax**::
 
-  date [-s "MMM DD HH:MM:SS YYYY"]
+  date [-s "MMM DD HH:MM:SS YYYY"] [-u] [+%format]
 
-**Synopsis**. Show or set the current date and time.
+**Synopsis**. Show or set the current date and time or UTC with ``-u`` option,
+and support format output with ``+%format``.
 
 To show the current system time and date, type in the ``date`` command.
 The output displays the day of the week, day of the month, month, year,
@@ -502,6 +503,34 @@ examples:
 
 The ``export`` command is not supported by NSH unless both
 ``CONFIG_NSH_VARS=y`` and ``CONFIG_DISABLE_ENVIRON``\ is not set.
+
+.. _cmdexpr:
+
+``expr`` Evaluate expressions
+=============================
+
+**Command Syntax**::
+
+  expr <operand1> <operator> <operand2>
+
+**Synopsis**. It is a mini version for the expr command, which implements the
+features of addition, subtraction, multiplication, division and mod.
+
+**Examples**:
+
+  nsh> expr 5 - 2
+  3
+  nsh> set hello 10
+  nsh> expr $hello - 2
+  8
+  nsh> expr 8 a 9
+  Unknown operator
+  nsh> expr 20 / 5
+  4
+  nsh> expr 10 % 4
+  2
+  nsh> expr 100 + 0
+  100
 
 .. _cmdfree:
 
@@ -876,7 +905,7 @@ implementation is simplified for use with NuttX in these ways:
 
 **Command Syntax**::
 
-  ls [-lRs] <dir-path>
+  ls [-lRsh] <dir-path>
 
 **Synopsis**. Show the contents of the directory at
 ``<dir-path>``. NOTE: ``<dir-path>`` must refer to a directory and
@@ -888,6 +917,7 @@ no other file system object.
 ``-R`` 	Show the contents of specified directory and all of its sub-directories.
 ``-s`` 	Show the size of the files along with the filenames in the listing
 ``-l`` 	Show size and mode information along with the filenames in the listing.
+``-h`` 	Show size and mode information along with the filenames in the listing with humanable.
 ======  ================================
 
 .. _cmdlsmod:
@@ -1756,6 +1786,27 @@ and the group-wide environment variables. For example::
 
   nsh>
 
+.. _cmduptime:
+
+``uptime`` Show how long the system has been running
+====================================================
+
+**Command Syntax**:
+
+  uptime [-sph]
+
+**Synopsis**. Display of the following information: the current time,
+how long the system has been running, and the load averages for the past 1, 5,
+and 15 minutes.
+
+**Options**
+
+======  ================================
+``-p`` 	show uptime in pretty format
+``-s`` 	system up since
+``-h`` 	display this help and exit
+======  ================================
+
 .. _cmdurldecode:
 
 ``urldecode`` URL Decode
@@ -1898,4 +1949,3 @@ Example::
   nsh>
 
 ``ping6`` differs from ``ping`` in that it uses IPv6 addressing.
-
