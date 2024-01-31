@@ -44,7 +44,7 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="SiFive FE310" href="../../../fe310/index.html" />
+    <link rel="next" title="Espressif ESP32-H2" href="../../../esp32h2/index.html" />
     <link rel="prev" title="Espressif ESP32-C6" href="../../index.html" /> 
 </head>
 
@@ -124,11 +124,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../bl602/index.html">Bouffalo Lab BL602</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../bl808/index.html">Bouffalo Lab BL808</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../c906/index.html">THEAD C906</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../esp32c3-legacy/index.html">Espressif ESP32-C3 (Legacy)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../esp32c3/index.html">Espressif ESP32-C3</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">Espressif ESP32-C6</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#esp32-c6-toolchain">ESP32-C6 Toolchain</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#second-stage-bootloader-and-partition-table">Second stage bootloader and partition table</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#building-and-flashing">Building and flashing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#debugging-with-openocd">Debugging with OpenOCD</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#peripheral-support">Peripheral Support</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5 current"><a class="current reference internal" href="#">ESP32-C6-DevKitC-1</a></li>
@@ -136,6 +138,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../esp32h2/index.html">Espressif ESP32-H2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../fe310/index.html">SiFive FE310</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../hpm6750/index.html">Hpmicro HPM6750</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../jh7110/index.html">StarFive JH7110</a></li>
@@ -197,7 +200,7 @@
 <p>ESP32-C6-DevKitC-1 is an entry-level development board based on ESP32-C6-WROOM-1(U),
 a general-purpose module with a 8 MB SPI flash. This board integrates complete Wi-Fi,
 Bluetooth LE, Zigbee, and Thread functions. You can find the board schematic
-<a class="reference external" href="https://espressif-docs.readthedocs-hosted.com/projects/espressif-esp-dev-kits/en/latest/_static/esp32-c6-devkitc-1/schematics/esp32-c6-devkitc-1-schematics_v1.2.pdf">here</a>.</p>
+<a class="reference external" href="https://espressif-docs.readthedocs-hosted.com/projects/esp-dev-kits/en/latest/_static/esp32-c6-devkitc-1/schematics/esp32-c6-devkitc-1-schematics_v1.2.pdf">here</a>.</p>
 <p>Most of the I/O pins are broken out to the pin headers on both sides for easy interfacing.
 Developers can either connect peripherals with jumper wires or mount ESP32-C6-DevKitC-1 on
 a breadboard.</p>
@@ -288,9 +291,99 @@ disables the NuttShell to get the best possible score.</p>
 system is turned on.</p>
 </div>
 </section>
+<section id="gpio">
+<h2>gpio<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h2>
+<p>This is a test for the GPIO driver. It uses GPIO1 and GPIO2 as outputs and
+GPIO9 as an interrupt pin.</p>
+<p>At the nsh, we can turn the outputs on and off with the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gpio -o 1 /dev/gpio0
+nsh&gt; gpio -o 1 /dev/gpio1
+
+nsh&gt; gpio -o 0 /dev/gpio0
+nsh&gt; gpio -o 0 /dev/gpio1
+</pre></div>
+</div>
+<p>We can use the interrupt pin to send a signal when the interrupt fires:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gpio -w 14 /dev/gpio2
+</pre></div>
+</div>
+<p>The pin is configured as a rising edge interrupt, so after issuing the
+above command, connect it to 3.3V.</p>
+</section>
 <section id="nsh">
 <h2>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h2>
 <p>Basic configuration to run the NuttShell (nsh).</p>
+</section>
+<section id="ostest">
+<h2>ostest<a class="headerlink" href="#ostest" title="Permalink to this heading"></a></h2>
+<p>This is the NuttX test at <code class="docutils literal notranslate"><span class="pre">apps/testing/ostest</span></code> that is run against all new
+architecture ports to assure a correct implementation of the OS.</p>
+</section>
+<section id="pwm">
+<h2>pwm<a class="headerlink" href="#pwm" title="Permalink to this heading"></a></h2>
+<p>This configuration demonstrates the use of PWM through a LED connected to GPIO8.
+To test it, just execute the <code class="docutils literal notranslate"><span class="pre">pwm</span></code> application:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; pwm
+pwm_main: starting output with frequency: 10000 duty: 00008000
+pwm_main: stopping output
+</pre></div>
+</div>
+</section>
+<section id="rtc">
+<h2>rtc<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h2>
+<p>This configuration demonstrates the use of the RTC driver through alarms.
+You can set an alarm, check its progress and receive a notification after it expires:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; alarm 10
+alarm_daemon started
+alarm_daemon: Running
+Opening /dev/rtc0
+Alarm 0 set in 10 seconds
+nsh&gt; alarm -r
+Opening /dev/rtc0
+Alarm 0 is active with 10 seconds to expiration
+nsh&gt; alarm_daemon: alarm 0 received
+</pre></div>
+</div>
+</section>
+<section id="sotest">
+<h2>sotest<a class="headerlink" href="#sotest" title="Permalink to this heading"></a></h2>
+<p>This config is to run apps/examples/sotest.</p>
+</section>
+<section id="timer">
+<h2>timer<a class="headerlink" href="#timer" title="Permalink to this heading"></a></h2>
+<p>This config test the general use purpose timers. It includes the 4 timers,
+adds driver support, registers the timers as devices and includes the timer
+example.</p>
+<p>To test it, just run the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; timer -d /dev/timerx
+</pre></div>
+</div>
+<p>Where x in the timer instance.</p>
+</section>
+<section id="usbconsole">
+<h2>usbconsole<a class="headerlink" href="#usbconsole" title="Permalink to this heading"></a></h2>
+<p>This configuration tests the built-in USB-to-serial converter found in ESP32-C6.
+<code class="docutils literal notranslate"><span class="pre">esptool</span></code> can be used to check the version of the chip and if this feature is
+supported.  Running <code class="docutils literal notranslate"><span class="pre">esptool.py</span> <span class="pre">-p</span> <span class="pre">&lt;port&gt;</span> <span class="pre">chip_id</span></code> should have <code class="docutils literal notranslate"><span class="pre">Chip</span> <span class="pre">is</span>
+<span class="pre">ESP32-C6</span></code> in its output.
+When connecting the board a new device should appear, a <code class="docutils literal notranslate"><span class="pre">/dev/ttyACMX</span></code> on Linux
+or a <code class="docutils literal notranslate"><span class="pre">/dev/cu.usbmodemXXX</span></code> om macOS.
+This can be used to flash and monitor the device with the usual commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make download ESPTOOL_PORT=/dev/ttyACM0
+minicom -D /dev/ttyACM0
+</pre></div>
+</div>
+</section>
+<section id="watchdog">
+<h2>watchdog<a class="headerlink" href="#watchdog" title="Permalink to this heading"></a></h2>
+<p>This configuration tests the watchdog timers. It includes the 1 MWDTS,
+adds driver support, registers the WDTs as devices and includes the watchdog
+example application.</p>
+<p>To test it, just run the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wdog -i /dev/watchdogX
+</pre></div>
+</div>
+<p>Where X is the watchdog instance.</p>
 </section>
 </section>
 
@@ -299,7 +392,7 @@ system is turned on.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../../index.html" class="btn btn-neutral float-left" title="Espressif ESP32-C6" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../../fe310/index.html" class="btn btn-neutral float-right" title="SiFive FE310" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../../esp32h2/index.html" class="btn btn-neutral float-right" title="Espressif ESP32-H2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

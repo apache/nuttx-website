@@ -1,3 +1,5 @@
+.. _esp32c3:
+
 ==================
 Espressif ESP32-C3
 ==================
@@ -143,26 +145,26 @@ The following list indicates the state of peripherals' support in NuttX:
 =========== ======= =====
 Peripheral  Support NOTES
 =========== ======= =====
-ADC          Yes
-AES          Yes
-Bluetooth    Yes
+ADC          No
+AES          No
+Bluetooth    No
 CDC Console  Yes    Rev.3
-DMA          Yes
-eFuse        Yes
+DMA          No
+eFuse        No
 GPIO         Yes
-I2C          Yes
+I2C          No
 LED_PWM      Yes
-RNG          Yes
-RSA          Yes
+RNG          No
+RSA          No
 RTC          Yes
-SHA          Yes
-SPI          Yes
-SPIFLASH     Yes
+SHA          No
+SPI          No
+SPIFLASH     No
 Timers       Yes
-Touch        Yes
+Touch        No
 UART         Yes
 Watchdog     Yes
-Wifi         Yes
+Wifi         No
 =========== ======= =====
 
 Secure Boot and Flash Encryption

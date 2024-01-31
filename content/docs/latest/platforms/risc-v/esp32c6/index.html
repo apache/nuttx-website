@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="ESP32-C6-DevKitC-1" href="boards/esp32c6-devkit/index.html" />
-    <link rel="prev" title="ESP32-C3 DevKit" href="../esp32c3/boards/esp32c3-devkit/index.html" /> 
+    <link rel="prev" title="ESP32-C3 DevKit" href="../esp32c3/boards/esp32c3-generic/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -124,6 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../bl602/index.html">Bouffalo Lab BL602</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../bl808/index.html">Bouffalo Lab BL808</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../c906/index.html">THEAD C906</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../esp32c3-legacy/index.html">Espressif ESP32-C3 (Legacy)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../esp32c3/index.html">Espressif ESP32-C3</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Espressif ESP32-C6</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#esp32-c6-toolchain">ESP32-C6 Toolchain</a><ul>
@@ -132,6 +133,7 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#second-stage-bootloader-and-partition-table">Second stage bootloader and partition table</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#building-and-flashing">Building and flashing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#debugging-with-openocd">Debugging with OpenOCD</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/esp32c6-devkit/index.html">ESP32-C6-DevKitC-1</a></li>
@@ -139,6 +141,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../esp32h2/index.html">Espressif ESP32-H2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fe310/index.html">SiFive FE310</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hpm6750/index.html">Hpmicro HPM6750</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../jh7110/index.html">StarFive JH7110</a></li>
@@ -287,6 +290,33 @@ Note that this step is required only one time.  Once the bootloader and partitio
 table are flashed, we don’t need to flash them again.  So subsequent builds
 would just require: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span> <span class="pre">ESPTOOL_PORT=/dev/ttyUSBXX</span></code></p>
 </section>
+<section id="debugging-with-openocd">
+<h2>Debugging with OpenOCD<a class="headerlink" href="#debugging-with-openocd" title="Permalink to this heading"></a></h2>
+<p>Download and build OpenOCD from Espressif, that can be found in
+<a class="reference external" href="https://github.com/espressif/openocd-esp32">https://github.com/espressif/openocd-esp32</a></p>
+<p>You don not need an external JTAG is to debug, the ESP32-C6 integrates a
+USB-to-JTAG adapter.</p>
+<p>OpenOCD can then be used:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd -c &#39;set ESP_RTOS none&#39; -f board/esp32c6-builtin.cfg
+</pre></div>
+</div>
+<p>If you want to debug with an external JTAG adapter it can
+be connected as follows:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>TMS -&gt; GPIO4
+TDI -&gt; GPIO5
+TCK -&gt; GPIO6
+TDO -&gt; GPIO7
+</pre></div>
+</div>
+<p>Furthermore, an efuse needs to be burnt to be able to debug:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>espefuse.py -p &lt;port&gt; burn_efuse DIS_USB_JTAG
+</pre></div>
+</div>
+<p>OpenOCD can then be used:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd  -c &#39;set ESP_RTOS none&#39; -f board/esp32c6-ftdi.cfg
+</pre></div>
+</div>
+</section>
 <section id="peripheral-support">
 <h2>Peripheral Support<a class="headerlink" href="#peripheral-support" title="Permalink to this heading"></a></h2>
 <p>The following list indicates the state of peripherals’ support in NuttX:</p>
@@ -319,7 +349,7 @@ would just require: <code class="docutils literal notranslate"><span class="pre"
 <td><p>No</p></td>
 </tr>
 <tr class="row-odd"><td><p>GPIO</p></td>
-<td><p>No</p></td>
+<td><p>Yes</p></td>
 </tr>
 <tr class="row-even"><td><p>HMAC</p></td>
 <td><p>No</p></td>
@@ -337,7 +367,7 @@ would just require: <code class="docutils literal notranslate"><span class="pre"
 <td><p>No</p></td>
 </tr>
 <tr class="row-odd"><td><p>LED_PWM</p></td>
-<td><p>No</p></td>
+<td><p>Yes</p></td>
 </tr>
 <tr class="row-even"><td><p>MCPWM</p></td>
 <td><p>No</p></td>
@@ -355,7 +385,7 @@ would just require: <code class="docutils literal notranslate"><span class="pre"
 <td><p>No</p></td>
 </tr>
 <tr class="row-odd"><td><p>RTC</p></td>
-<td><p>No</p></td>
+<td><p>Yes</p></td>
 </tr>
 <tr class="row-even"><td><p>SD/MMC</p></td>
 <td><p>No</p></td>
@@ -373,7 +403,7 @@ would just require: <code class="docutils literal notranslate"><span class="pre"
 <td><p>No</p></td>
 </tr>
 <tr class="row-odd"><td><p>Timers</p></td>
-<td><p>No</p></td>
+<td><p>Yes</p></td>
 </tr>
 <tr class="row-even"><td><p>UART</p></td>
 <td><p>Yes</p></td>
@@ -404,7 +434,7 @@ would just require: <code class="docutils literal notranslate"><span class="pre"
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../esp32c3/boards/esp32c3-devkit/index.html" class="btn btn-neutral float-left" title="ESP32-C3 DevKit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../esp32c3/boards/esp32c3-generic/index.html" class="btn btn-neutral float-left" title="ESP32-C3 DevKit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="boards/esp32c6-devkit/index.html" class="btn btn-neutral float-right" title="ESP32-C6-DevKitC-1" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
