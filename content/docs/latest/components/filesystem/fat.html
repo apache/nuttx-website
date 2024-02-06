@@ -122,7 +122,22 @@
 <li class="toctree-l3"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="binfs.html">BINFS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">FAT</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">FAT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#fat-structure">FAT Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#master-boot-record-mbr">Master Boot Record (MBR)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#partition-table-entries">Partition Table Entries</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#allocation-table">Allocation Table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#directory-entires">Directory Entires</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#filename">8.3 filename</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#files">Files</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#file-attributes">File attributes</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#implementation">Implementation</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hostfs.html">Host File System</a></li>
 <li class="toctree-l3"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
@@ -191,7 +206,184 @@
              
   <section id="fat">
 <h1>FAT<a class="headerlink" href="#fat" title="Permalink to this heading"></a></h1>
-<p>Support for FAT filesystem.</p>
+<p>File Allocation Table (FAT) is a very simple file system designed by Microsoft
+and, as the name suggests, it uses a table to track clusters on a storage
+volume. There have been multiple versions of FAT, like <code class="docutils literal notranslate"><span class="pre">FAT12</span></code>, <code class="docutils literal notranslate"><span class="pre">FAT16</span></code>,
+and lastly <code class="docutils literal notranslate"><span class="pre">FAT32</span></code> to consider for growing data volumes. Even though FAT
+has been superseded by more recent file systems in most Windows computers,
+current Windows editions, macOS, Linux, Unix as well as Apache NuttX support
+FAT. It is still used for floppy disks, USB flash drives as well as for
+storage media in smaller, portable devices like digital cameras.</p>
+<p>FAT uses a magic number <code class="docutils literal notranslate"><span class="pre">0x4D44</span></code>, and has been named as <code class="docutils literal notranslate"><span class="pre">vfat</span></code> in the
+codebase, due to the implementation being actually VFAT, which is an extension
+that allows for long file names. This page contains information about the FAT
+file system from the perspective of the implementation of FAT that exists in
+NuttX.</p>
+<section id="fat-structure">
+<h2>FAT Structure<a class="headerlink" href="#fat-structure" title="Permalink to this heading"></a></h2>
+<p>The number beside <code class="docutils literal notranslate"><span class="pre">FAT</span></code> (eg. <code class="docutils literal notranslate"><span class="pre">16</span></code> in <code class="docutils literal notranslate"><span class="pre">FAT16</span></code>) represents the number of
+bits used for each entry in the allocation table.  A FAT volume has multiple
+sections:</p>
+<ul class="simple">
+<li><p><strong>Master Boot Record</strong>: Master Boot Record (MBR) or Boot Sector contains
+information needed by the file system to access the volume, including the
+volume’s layout and file system structure, akin to a superblock in Linux
+file systems.</p></li>
+<li><p><strong>Allocation Table Region</strong>: Stores the file allocation table, as well as
+its copy which acts as a backup. The file allocation table keeps a track of
+all the clusters in the volume, and thus has one entry for each cluster.</p></li>
+<li><p><strong>Root Directory</strong>: It stores a directory table containing entries
+describing the files and directories stored on the volume. Each entry
+contains metadata about file system objects.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Root Directory exists as a separate section if the volume is for <code class="docutils literal notranslate"><span class="pre">FAT12</span></code>
+or <code class="docutils literal notranslate"><span class="pre">FAT16</span></code>, right after the Allocation Table Region and has a fixed upper
+limit to the number of entries. <code class="docutils literal notranslate"><span class="pre">FAT32</span></code> does not have a dedicated region
+for the Root Directory, but has it incorporated into the following Data
+Region, and thus <code class="docutils literal notranslate"><span class="pre">FAT32</span></code> does not have any hard coded upper limit to the
+number of entries.</p>
+</div>
+<ul class="simple">
+<li><p><strong>Data Region</strong>: This region stores the actual data of the files as well as
+directory data. Data Region is divided into multiple clusters, which are
+numbered sequentially and have corresponding entries in the allocation
+table. Cluster sizes can vary depending on the volume size as well as on
+the type of the FAT file system.</p></li>
+</ul>
+<p>The first entry in the Allocation Table is for the volume’s FAT ID while the
+second entry indicates that the cluster is reserved. Given that <code class="docutils literal notranslate"><span class="pre">FAT32</span></code> does
+not have a dedicated Root Directory section, in <code class="docutils literal notranslate"><span class="pre">FAT32</span></code> volume, the third
+entry points to the root directory.</p>
+<p>File names can be either <a class="reference external" href="https://en.wikipedia.org/wiki/8.3_filename">short</a>
+(also known as 8.3 filename or SFN), or long (LFN), till a maximum length
+limit.</p>
+</section>
+<section id="master-boot-record-mbr">
+<h2>Master Boot Record (MBR)<a class="headerlink" href="#master-boot-record-mbr" title="Permalink to this heading"></a></h2>
+<p>The Boot Record may be one of two types. One is a much older type which does
+not contain partitions, and one more recent with them. One distinguishing
+feature of FAT is that all MBRs contain <code class="docutils literal notranslate"><span class="pre">0x55AA</span></code> at an offset of 510 from
+the start, which can be used to determine the type of FAT being used in the
+block device.</p>
+<p>For the older type, the MBR exists at the start of the drive. It does not
+contain any partitions.</p>
+<p>The newer type has a partition table at an offset of 446 from the start of
+the drive. It allows for 4 primary partitions. It has FAT Boot Records (FBRs)
+at the start of every partition, which, for most parts, are identical in
+structure to the older MBRs.</p>
+</section>
+<section id="partition-table-entries">
+<h2>Partition Table Entries<a class="headerlink" href="#partition-table-entries" title="Permalink to this heading"></a></h2>
+<p>The partition table contains information for 4 primary partitions, each
+partition having entries in the table of 16 bytes each. These have various
+information about the partition including, but not limited to, type of the
+partition, starting sector, and partition size.</p>
+</section>
+<section id="allocation-table">
+<h2>Allocation Table<a class="headerlink" href="#allocation-table" title="Permalink to this heading"></a></h2>
+<p>The allocation table follows the boot record, and has an entry for each
+cluster available in the data region. Each entry has a size defined by the
+file system type. <code class="docutils literal notranslate"><span class="pre">FAT12</span></code> has 12 byte long entries, <code class="docutils literal notranslate"><span class="pre">FAT16</span></code> has 16 byte
+entries and <code class="docutils literal notranslate"><span class="pre">FAT32</span></code> has 32 byte entries.</p>
+<p>File data is made up of a linked list (or chain) of clusters. Entries in the
+allocation table, which correspond to actual clusters, contain the cluster
+number of the next cluster that appears in the file. The last cluster of a
+file has a value in their allocation table entry such that all of its bits
+are set (<code class="docutils literal notranslate"><span class="pre">0xFFF</span></code> for FAT12, <code class="docutils literal notranslate"><span class="pre">0xFFFF</span></code> for FAT16, <code class="docutils literal notranslate"><span class="pre">0xFFFFFFFF</span></code> for FAT32).</p>
+<p>The starting cluster (head of the file chain) is pointed to by the directory
+entry of that file.</p>
+</section>
+<section id="directory-entires">
+<h2>Directory Entires<a class="headerlink" href="#directory-entires" title="Permalink to this heading"></a></h2>
+<p>A directory is basically a file which has a table that contains directory
+entries that contain the metadata about the files and subdirectories in it.
+Each directory entry describes a file or a subdirectory inside the directory.</p>
+<p>Root directory in FAT12/16 have a dedicated region, separate from the data
+area. In FAT32, root directory is just like a regular directory in the data
+region (ie. without any dedicated region) except for:</p>
+<ul class="simple">
+<li><p>Its starting cluster is denoted in the boot record.</p></li>
+<li><p>It is not pointed to by any other directory.</p></li>
+<li><p>It has no entries corresponding to <code class="docutils literal notranslate"><span class="pre">.</span></code> and <code class="docutils literal notranslate"><span class="pre">..</span></code> (all non-root
+directories have both of these entries).</p></li>
+</ul>
+<p>Directory entries are 32 bytes long, and start with an 11 bytes long SFN. The
+rest of the directory entry contain information like the file attributes,
+timestamps of creation as well as access and write, cluster number and
+file size, to name a few.</p>
+<section id="filename">
+<h3>8.3 filename<a class="headerlink" href="#filename" title="Permalink to this heading"></a></h3>
+<p>The first byte of a directory’s 8.3 filename (and hence first byte of the
+entire directory entry) has a special meaning. It has 3 possible values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0xe5</span></code> : Denotes that the current directory entry is empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x00</span></code> : Denotes that this entry, as well as all following entries, are
+empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x05</span></code> : Actual value is <code class="docutils literal notranslate"><span class="pre">0xe5</span></code>.</p></li>
+</ul>
+<p>The rest of the 7 + 3 byte of the directory entry are for the name (with
+extension).</p>
+</section>
+</section>
+<section id="files">
+<h2>Files<a class="headerlink" href="#files" title="Permalink to this heading"></a></h2>
+<p>The starting cluster of data in a file is pointed by the directory entry of
+the file.</p>
+<p>File allocation is very primitive in FAT, and the first available location in
+the volume is given to a file.</p>
+<section id="file-attributes">
+<h3>File attributes<a class="headerlink" href="#file-attributes" title="Permalink to this heading"></a></h3>
+<p>File attributes are denoted by a bit flag of the size of a single bit.
+The file flags in FAT, with their bit representation, are as follows:</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">File Attributes</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute Macro</p></th>
+<th class="head"><p>Bit representation</p></th>
+<th class="head"><p>Hex value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FATATTR_READONLY</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">00000001</span></code></p></td>
+<td><p>0x1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FATATTR_HIDDEN</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">00000010</span></code></p></td>
+<td><p>0x2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FATATTR_SYSTEM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">00000100</span></code></p></td>
+<td><p>0x4</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FATATTR_VOLUMEID</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">00001000</span></code></p></td>
+<td><p>0x8</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FATATTR_DIRECTORY</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">00010000</span></code></p></td>
+<td><p>0x10</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FATATTR_ARCHIVE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">00100000</span></code></p></td>
+<td><p>0x20</p></td>
+</tr>
+</tbody>
+</table>
+<p>Out of these, FAT exposes a user to <code class="docutils literal notranslate"><span class="pre">FATATTR_READONLY</span></code>, <code class="docutils literal notranslate"><span class="pre">FATATTR_HIDDEN</span></code>,
+<code class="docutils literal notranslate"><span class="pre">FATATTR_SYSTEM</span></code> and <code class="docutils literal notranslate"><span class="pre">FATATTR_ARCHIVE</span></code> to the user.</p>
+</section>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this heading"></a></h2>
+<p>The Apache NuttX implementation of VFAT can be found in:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fs/fat</span></code> directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/fat.h</span></code> header file.</p></li>
+</ul>
+</section>
 </section>
 
 
