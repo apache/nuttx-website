@@ -192,128 +192,327 @@
              
   <section id="rv-virt">
 <h1>rv-virt<a class="headerlink" href="#rv-virt" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. Download and install toolchain
-
-  $ curl https://static.dev.sifive.com/dev-tools/riscv64-unknown-elf-gcc-8.3.0-2019.08.0-x86_64-linux-ubuntu14.tar.gz
-
-2. Build and install qemu
-
-  $ git clone https://github.com/qemu/qemu
-  $ cd qemu
-  $ ./configure --target-list=riscv32-softmmu,riscv64-softmmu
-  $ make
-  $ sudo make install
-
-3.1. Configure and build NuttX for BUILD_FLAT
-
-  $ mkdir ./nuttx; cd ./nuttx
-  $ git clone https://github.com/apache/nuttx.git nuttx
-  $ git clone https://github.com/apache/nuttx-apps.git apps
-  $ cd nuttx
-  $ make distclean
-  $ ./tools/configure.sh rv-virt:nsh
-  $ make V=1 -j7
-
-3.2 Configure and build NuttX for BUILD_KERNEL, 64-bit or 32-bit
-
-  $ mkdir ./nuttx; cd ./nuttx
-  $ git clone https://github.com/apache/nuttx.git nuttx
-  $ git clone https://github.com/apache/nuttx-apps.git apps
-  $ cd nuttx
-  $ make distclean
-  $ # For 64-bit build.
-  $ ./tools/configure.sh rv-virt:knsh64
-  $ # For 32-bit build.
-  $ ./tools/configure.sh rv-virt:knsh32
-  $ make V=1 -j7
-  $ make export V=1
-  $ cd ../apps
-  $ ./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
-  $ make import V=1
-  $ cd ../nuttx
-
-4. Run the nuttx with qemu
-
-  $ qemu-system-riscv32 -semihosting -M virt,aclint=on -cpu rv32 -smp 8 -bios none -kernel nuttx -nographic
-
-  or
-
-  $ qemu-system-riscv64 -semihosting -M virt,aclint=on -cpu rv64 -smp 8 -bios none -kernel nuttx -nographic
-
-  NuttShell (NSH) NuttX-10.3.0-RC1
-  nsh&gt; mount -t hostfs -o fs=. /host
-  nsh&gt; cat /host/AUTHORS
-  This is a list of all the contributors that have submitted ICLA, SGA
-  If you are not on this list and believe you should be, please inform us.
-
-  ICLA
-  ====
-  ...
-  nsh&gt;
-
-4. Run the virtio network, block, serial and rng driver with qemu
-
-  $ dd if=/dev/zero of=./mydisk-1gb.img bs=1M count=1024
-
-  $ qemu-system-riscv32 -semihosting -M virt,aclint=on -cpu rv32 -smp 8 \
-    -global virtio-mmio.force-legacy=false \
-    -device virtio-serial-device,bus=virtio-mmio-bus.0 \
-    -chardev socket,telnet=on,host=127.0.0.1,port=3450,server=on,wait=off,id=foo \
-    -device virtconsole,chardev=foo \
-    -device virtio-rng-device,bus=virtio-mmio-bus.1 \
-    -netdev user,id=u1,hostfwd=tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd=tcp:127.0.0.1:15001-10.0.2.15:5001 \
-    -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.2 \
-    -drive file=./mydisk-1gb.img,if=none,format=raw,id=hd \
-    -device virtio-blk-device,bus=virtio-mmio-bus.3,drive=hd \
-    -bios none -kernel ./nuttx/nuttx -nographic
-
-  or
-
-  $ qemu-system-riscv64 -semihosting -M virt,aclint=on -cpu rv64 -smp 8 \
-    -global virtio-mmio.force-legacy=false \
-    -device virtio-serial-device,bus=virtio-mmio-bus.0 \
-    -chardev socket,telnet=on,host=127.0.0.1,port=3450,server=on,wait=off,id=foo \
-    -device virtconsole,chardev=foo \
-    -device virtio-rng-device,bus=virtio-mmio-bus.1 \
-    -netdev user,id=u1,hostfwd=tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd=tcp:127.0.0.1:15001-10.0.2.15:5001 \
-    -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.2 \
-    -drive file=./mydisk-1gb.img,if=none,format=raw,id=hd \
-    -device virtio-blk-device,bus=virtio-mmio-bus.3,drive=hd \
-    -bios none -kernel ./nuttx/nuttx -nographic
-
-5. Run the virtio gpu driver with qemu and test fb demo
-  $ # For 32-bit build.
-  $ ./tools/configure.sh rv-virt:fb
-  $ make -j
-  $ qemu-system-riscv32 -semihosting -M virt -cpu rv32 -smp 8 \
-    -chardev stdio,id=con,mux=on \
-    -serial chardev:con \
-    -device virtio-gpu-device,xres=640,yres=480,bus=virtio-mmio-bus.0 \
-    -mon chardev=con,mode=readline \
-    -bios none -kernel nuttx
-
-  NuttShell (NSH) NuttX-10.4.0
-  nsh&gt; fb
-
-  $ # For 64-bit build.
-  $ ./tools/configure.sh rv-virt:fb64
-  $ make -j
-  $ qemu-system-riscv64 -semihosting -M virt -cpu rv64 -smp 8 \
-    -chardev stdio,id=con,mux=on \
-    -serial chardev:con \
-    -device virtio-gpu-device,xres=640,yres=480,bus=virtio-mmio-bus.0 \
-    -mon chardev=con,mode=readline \
-    -bios none -kernel nuttx
-
-  NuttShell (NSH) NuttX-10.4.0
-  nsh&gt; fb
-
-6. TODO
-
-  Support FPU
-  Support RISC-V User mode
+<section id="risc-v-toolchain">
+<h2>RISC-V Toolchain<a class="headerlink" href="#risc-v-toolchain" title="Permalink to this heading"></a></h2>
+<p>Any generic RISC-V toolchain can be used. It’s recommended to use the same toolchain used by NuttX CI.</p>
+<p>Please refer to the <a class="reference external" href="https://github.com/apache/nuttx/tree/master/tools/ci/docker/linux/Dockerfile">Docker container</a> and
+check for the current compiler version being used. For instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>###############################################################################
+# Build image for tool required by RISCV builds
+###############################################################################
+FROM nuttx-toolchain-base AS nuttx-toolchain-riscv
+# Download the latest RISCV GCC toolchain prebuilt by xPack
+RUN mkdir riscv-none-elf-gcc &amp;&amp; \
+curl -s -L &quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-2/xpack-riscv-none-elf-gcc-13.2.0-2-linux-x64.tar.gz&quot; \
+| tar -C riscv-none-elf-gcc --strip-components 1 -xz
 </pre></div>
 </div>
+<p>It uses the xPack’s prebuilt toolchain based on GCC 13.2.0-2.</p>
+</section>
+<section id="risc-v-qemu">
+<h2>RISC-V QEMU<a class="headerlink" href="#risc-v-qemu" title="Permalink to this heading"></a></h2>
+<p>Build and install <code class="docutils literal notranslate"><span class="pre">qemu</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/qemu/qemu
+$ cd qemu
+$ ./configure --target-list=riscv32-softmmu,riscv64-softmmu
+$ make
+$ sudo make install
+</pre></div>
+</div>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>All of the configurations presented below can be tested by running the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh rv-virt:&lt;config_name&gt;
+</pre></div>
+</div>
+<p>Where &lt;config_name&gt; is the name of the configuration you want to use, i.e.: nsh, knsh32, knsh64…</p>
+<p>To build it, run the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make -j$(nproc)
+</pre></div>
+</div>
+<p>or, with more verbosity:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make V=1 -j$(nproc)
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Some configurations require additional steps to be built. Please refer to the specific
+configurations to check it out</p>
+</div>
+<p>Finally, to run it, use the following command:</p>
+<p>For 32-bit configurations:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv32 -semihosting -M virt,aclint=on -cpu rv32 -smp 8 -bios none -kernel nuttx -nographic
+</pre></div>
+</div>
+<p>And, for 64-bit configurations:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv64 -semihosting -M virt,aclint=on -cpu rv64 -smp 8 -bios none -kernel nuttx -nographic
+</pre></div>
+</div>
+<section id="citest">
+<h3>citest<a class="headerlink" href="#citest" title="Permalink to this heading"></a></h3>
+<p>This configuration is the default configuration intended to be used by the automated
+testing on CI of 32-bit RISC-V using QEMU.</p>
+</section>
+<section id="citest64">
+<h3>citest64<a class="headerlink" href="#citest64" title="Permalink to this heading"></a></h3>
+<p>Identical to the <a class="reference internal" href="#citest">citest</a> configuration, but for 64-bit RISC-V.</p>
+</section>
+<section id="fb">
+<h3>fb<a class="headerlink" href="#fb" title="Permalink to this heading"></a></h3>
+<p>Uses the VirtIO GPU driver to run the <cite>fb</cite> demo application on 32-bit RISC-V.</p>
+<p>To run it with QEMU, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv32 -semihosting -M virt -cpu rv32 -smp 8 \
+  -chardev stdio,id=con,mux=on \
+  -serial chardev:con \
+  -device virtio-gpu-device,xres=640,yres=480,bus=virtio-mmio-bus.0 \
+  -mon chardev=con,mode=readline \
+  -bios none -kernel nuttx
+</pre></div>
+</div>
+</section>
+<section id="fb64">
+<h3>fb64<a class="headerlink" href="#fb64" title="Permalink to this heading"></a></h3>
+<p>Identical to the <a class="reference internal" href="#fb">fb</a> configuration, but for 64-bit RISC-V.</p>
+<p>To run it with QEMU, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv64 -semihosting -M virt -cpu rv64 -smp 8 \
+  -chardev stdio,id=con,mux=on \
+  -serial chardev:con \
+  -device virtio-gpu-device,xres=640,yres=480,bus=virtio-mmio-bus.0 \
+  -mon chardev=con,mode=readline \
+  -bios none -kernel nuttx
+</pre></div>
+</div>
+</section>
+<section id="knetnsh64">
+<h3>knetnsh64<a class="headerlink" href="#knetnsh64" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#knsh32">knsh32</a> configuration, but with networking support and 64-bit RISC-V.</p>
+<p>To run it with QEMU, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ dd if=/dev/zero of=./mydisk-1gb.img bs=1M count=1024
+
+$ qemu-system-riscv64 -semihosting -M virt,aclint=on -cpu rv64 -smp 8 \
+  -global virtio-mmio.force-legacy=false \
+  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
+  -chardev socket,telnet=on,host=127.0.0.1,port=3450,server=on,wait=off,id=foo \
+  -device virtconsole,chardev=foo \
+  -device virtio-rng-device,bus=virtio-mmio-bus.1 \
+  -netdev user,id=u1,hostfwd=tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd=tcp:127.0.0.1:15001-10.0.2.15:5001 \
+  -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.2 \
+  -drive file=./mydisk-1gb.img,if=none,format=raw,id=hd \
+  -device virtio-blk-device,bus=virtio-mmio-bus.3,drive=hd \
+  -bios none -kernel ./nuttx/nuttx -nographic
+</pre></div>
+</div>
+</section>
+<section id="knetnsh64-smp">
+<h3>knetnsh64_smp<a class="headerlink" href="#knetnsh64-smp" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#knetnsh64">knetnsh64</a> configuration, but with SMP support for 64-bit RISC-V.</p>
+</section>
+<section id="knsh32">
+<h3>knsh32<a class="headerlink" href="#knsh32" title="Permalink to this heading"></a></h3>
+<p>This is similar to the <a class="reference internal" href="#nsh">nsh</a> configuration except that NuttX
+is built as a kernel-mode, monolithic module, and the user applications
+are built separately. It uses <cite>hostfs</cite> and QEMU in semi-hosting mode to
+load the user-space applications. This is intended to 32-bit RISC-V.</p>
+<p>To build it, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make V=1 -j$(nproc)
+$ make export V=1 -j$(nproc)
+$ pushd ../apps
+$ ./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
+$ make import V=1 -j$(nproc)
+$ popd
+</pre></div>
+</div>
+<p>Run it with QEMU using the default command for 32-bit RISC-V.</p>
+<p>In <cite>nsh</cite>, applications can be run from the <cite>/system/bin</cite> directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; /system/bin/hello
+</pre></div>
+</div>
+</section>
+<section id="knsh32-romfs">
+<h3>knsh32_romfs<a class="headerlink" href="#knsh32-romfs" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#knsh32">knsh32</a> configuration, but uses ROMFS instead of <cite>hostfs</cite>.
+A ROMFS image is generated and linked to the kernel. This requires re-running <code class="docutils literal notranslate"><span class="pre">make</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make V=1 -j$(nproc)
+$ make export V=1 -j$(nproc)
+$ pushd ../apps
+$ ./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
+$ make import V=1 -j$(nproc)
+$ ./tools/mkromfsimg.sh ../nuttx/arch/risc-v/src/board/romfs_boot.c
+$ popd
+$ make V=1 -j$(nproc)
+</pre></div>
+</div>
+<p>To run it, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv32 -M virt,aclint=on -cpu rv32 -smp 8 -bios none -kernel nuttx -nographic
+</pre></div>
+</div>
+<p>In <cite>nsh</cite>, applications can be run from the <cite>/system/bin</cite> directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; /system/bin/hello
+</pre></div>
+</div>
+</section>
+<section id="knsh64">
+<h3>knsh64<a class="headerlink" href="#knsh64" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#knsh32">knsh32</a> configuration, but for 64-bit RISC-V.</p>
+<p>Run it with QEMU using the default command for 64-bit RISC-V.</p>
+<p>In <cite>nsh</cite>, applications can be run from the <cite>/system/bin</cite> directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; /system/bin/hello
+</pre></div>
+</div>
+</section>
+<section id="ksmp64">
+<h3>ksmp64<a class="headerlink" href="#ksmp64" title="Permalink to this heading"></a></h3>
+<p>Identical to the <a class="reference internal" href="#knsh64">knsh64</a> configuration but with SMP support.</p>
+</section>
+<section id="netnsh">
+<h3>netnsh<a class="headerlink" href="#netnsh" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#nsh">nsh</a> configuration, but with networking support for 32-bit RISC-V.</p>
+<p>To run it with QEMU, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ dd if=/dev/zero of=./mydisk-1gb.img bs=1M count=1024
+
+$ qemu-system-riscv32 -semihosting -M virt,aclint=on -cpu rv32 -smp 8 \
+  -global virtio-mmio.force-legacy=false \
+  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
+  -chardev socket,telnet=on,host=127.0.0.1,port=3450,server=on,wait=off,id=foo \
+  -device virtconsole,chardev=foo \
+  -device virtio-rng-device,bus=virtio-mmio-bus.1 \
+  -netdev user,id=u1,hostfwd=tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd=tcp:127.0.0.1:15001-10.0.2.15:5001 \
+  -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.2 \
+  -drive file=./mydisk-1gb.img,if=none,format=raw,id=hd \
+  -device virtio-blk-device,bus=virtio-mmio-bus.3,drive=hd \
+  -bios none -kernel ./nuttx/nuttx -nographic
+</pre></div>
+</div>
+</section>
+<section id="netnsh64">
+<h3>netnsh64<a class="headerlink" href="#netnsh64" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#netnsh">netnsh</a> configuration, but for 64-bit RISC-V.</p>
+<p>To run it with QEMU, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ dd if=/dev/zero of=./mydisk-1gb.img bs=1M count=1024
+
+$ qemu-system-riscv64 -semihosting -M virt,aclint=on -cpu rv64 -smp 8 \
+  -global virtio-mmio.force-legacy=false \
+  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
+  -chardev socket,telnet=on,host=127.0.0.1,port=3450,server=on,wait=off,id=foo \
+  -device virtconsole,chardev=foo \
+  -device virtio-rng-device,bus=virtio-mmio-bus.1 \
+  -netdev user,id=u1,hostfwd=tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd=tcp:127.0.0.1:15001-10.0.2.15:5001 \
+  -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.2 \
+  -drive file=./mydisk-1gb.img,if=none,format=raw,id=hd \
+  -device virtio-blk-device,bus=virtio-mmio-bus.3,drive=hd \
+  -bios none -kernel ./nuttx/nuttx -nographic
+</pre></div>
+</div>
+</section>
+<section id="netnsh64-smp">
+<h3>netnsh64_smp<a class="headerlink" href="#netnsh64-smp" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#netnsh64">netnsh64</a> configuration, but with SMP support for 64-bit RISC-V.</p>
+<p>To run it with QEMU, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ dd if=/dev/zero of=./mydisk-1gb.img bs=1M count=1024
+
+$ qemu-system-riscv64 -semihosting -M virt,aclint=on -cpu rv64 -smp 8 \
+  -global virtio-mmio.force-legacy=false \
+  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
+  -chardev socket,telnet=on,host=127.0.0.1,port=3450,server=on,wait=off,id=foo \
+  -device virtconsole,chardev=foo \
+  -device virtio-rng-device,bus=virtio-mmio-bus.1 \
+  -netdev user,id=u1,hostfwd=tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd=tcp:127.0.0.1:15001-10.0.2.15:5001 \
+  -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.2 \
+  -drive file=./mydisk-1gb.img,if=none,format=raw,id=hd \
+  -device virtio-blk-device,bus=virtio-mmio-bus.3,drive=hd \
+  -bios none -kernel ./nuttx/nuttx -nographic
+</pre></div>
+</div>
+</section>
+<section id="netnsh-smp">
+<h3>netnsh_smp<a class="headerlink" href="#netnsh-smp" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#netnsh">netnsh</a> configuration, but with SMP support for 32-bit RISC-V.</p>
+<p>To run it with QEMU, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ dd if=/dev/zero of=./mydisk-1gb.img bs=1M count=1024
+
+$ qemu-system-riscv32 -semihosting -M virt,aclint=on -cpu rv32 -smp 8 \
+  -global virtio-mmio.force-legacy=false \
+  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
+  -chardev socket,telnet=on,host=127.0.0.1,port=3450,server=on,wait=off,id=foo \
+  -device virtconsole,chardev=foo \
+  -device virtio-rng-device,bus=virtio-mmio-bus.1 \
+  -netdev user,id=u1,hostfwd=tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd=tcp:127.0.0.1:15001-10.0.2.15:5001 \
+  -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.2 \
+  -drive file=./mydisk-1gb.img,if=none,format=raw,id=hd \
+  -device virtio-blk-device,bus=virtio-mmio-bus.3,drive=hd \
+  -bios none -kernel ./nuttx/nuttx -nographic
+</pre></div>
+</div>
+</section>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>Configures the NuttShell (nsh) located at examples/nsh.  This NSH
+configuration is focused on low-level, command-line driver testing.
+This configuration is used for 32-bit RISC-V</p>
+</section>
+<section id="nsh64">
+<h3>nsh64<a class="headerlink" href="#nsh64" title="Permalink to this heading"></a></h3>
+<p>Identical to the <a class="reference internal" href="#nsh">nsh</a> configuration, but for 64-bit RISC-V.</p>
+</section>
+<section id="smp">
+<h3>smp<a class="headerlink" href="#smp" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#nsh">nsh</a> configuration, but with SMP support.
+This configuration is used for 32-bit RISC-V</p>
+</section>
+<section id="smp64">
+<h3>smp64<a class="headerlink" href="#smp64" title="Permalink to this heading"></a></h3>
+<p>Similar to the <a class="reference internal" href="#nsh">nsh</a> configuration, but with SMP support
+This configuration is used for 64-bit RISC-V</p>
+</section>
+</section>
+<section id="risc-v-gdb-debugging">
+<h2>RISC-V GDB Debugging<a class="headerlink" href="#risc-v-gdb-debugging" title="Permalink to this heading"></a></h2>
+<p>First of all, make sure to select <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_SYMBOLS=y</span></code> in <cite>menuconfig</cite>.</p>
+<p>After building the kernel (and the applications, in kernel mode), use the toolchain’s GDB
+to debug RISC-V applications. For instance, if you are using the xPack’s prebuilt toolchain,
+you can use the following command to start GDB:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ riscv-none-elf-gdb-py3 -ix tools/gdb/__init__.py --tui nuttx
+</pre></div>
+</div>
+<p>To use QEMU for debugging, one should add the parameters <code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">-S</span></code> to the QEMU command line.</p>
+<p>For instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv32 -semihosting -M virt,aclint=on -cpu rv32 -smp 8 -bios none -kernel nuttx -nographic -s -S
+</pre></div>
+</div>
+<p>Then, in GDB, use the following command to connect to QEMU:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ target extended-remote localhost:1234
+</pre></div>
+</div>
+<section id="debugging-applications-in-kernel-mode">
+<h3>Debugging Applications in Kernel Mode<a class="headerlink" href="#debugging-applications-in-kernel-mode" title="Permalink to this heading"></a></h3>
+<p>In kernel mode, only the kernel symbols are loaded by default.</p>
+<p>If needed, one should also load the application symbols using the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ add-symbol-file &lt;file&gt; &lt;address&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">address</span></code> refers to the <code class="docutils literal notranslate"><span class="pre">.text</span></code> section of the application and can be retrieved from the ELF file using the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ riscv-none-elf-readelf -WS &lt;file&gt; | grep .text
+</pre></div>
+</div>
+<p>For instance, to check the <code class="docutils literal notranslate"><span class="pre">.text</span></code> section address of the <code class="docutils literal notranslate"><span class="pre">hello</span></code> application, use the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ riscv-none-elf-readelf -WS ../apps/bin/hello | grep .text
+[ 1] .text             PROGBITS        c0000000 001000 0009e0 00  AX  0   0  2
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pay attention that <code class="docutils literal notranslate"><span class="pre">riscv-none-elf-readelf</span></code> refers to your toolchain’s readelf utility. Adjust accordingly if you are
+using a different toolchain.</p>
+</div>
+<p>Then, look for the <code class="docutils literal notranslate"><span class="pre">.text</span></code> section address and use the <code class="docutils literal notranslate"><span class="pre">c0000000</span></code> as the address to load the symbols.</p>
+<p>For instance, if you want to load the <code class="docutils literal notranslate"><span class="pre">hello</span></code> application, you can use the following command in GDB:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ add-symbol-file ../apps/bin/hello 0xc0000000
+</pre></div>
+</div>
+<p>Then, you can set breakpoints, step through the code, and inspect the memory and registers of the applications too.</p>
+</section>
+</section>
 </section>
 
 
