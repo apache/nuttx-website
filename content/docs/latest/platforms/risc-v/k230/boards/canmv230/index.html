@@ -196,22 +196,25 @@
 <h1>CanMV K230<a class="headerlink" href="#canmv-k230" title="Permalink to this heading"></a></h1>
 <p>The <a class="reference external" href="https://developer.canaan-creative.com/k230/dev/zh/CanMV_K230_%E6%95%99%E7%A8%8B.html">CanMV K230</a> is a raspberry-pi sized single board computer with 512MB DRAM and a microSD card slot for booting. It comes with serial console, Ethernet, HDMI and USB/OTG ports. Unfortuunately it doesn’t support JTAG alike debugging interfaces.</p>
 <p>The <a class="reference external" href="https://github.com/kendryte/k230_sdk">K230 SDK</a> contains source code, libraries and user guides for booting up an AMP enviroment with Linux on CPU0 and RT-Thread on CPU1.</p>
-<p>K230 boots from CPU0 and loads U-Boot into DRAM first, then U-Boot kicks off OpenSBI wrapped Linux/RTT OS images on respective CPU cores accordingly.</p>
-<p>The K230 U-Boot runs in machine mode, thus it supports flat, protected or kernel <a class="reference external" href="https://nuttx.apache.org/docs/latest/implementation/processes_vs_tasks.html">build modes</a>. The kernel build mode further allows use of OpenSBI or not.</p>
+<p>K230 boots from CPU0 and loads U-Boot SPL into DRAM first, then U-Boot kicks off OpenSBI wrapped Linux/RTT OS images on respective CPU cores accordingly.</p>
+<p>The K230 U-Boot kicks off firmwares in machine mode, thus it allows flat, protected or kernel
+NuttX <a class="reference external" href="https://nuttx.apache.org/docs/latest/implementation/processes_vs_tasks.html">build modes</a>. The kernel build mode further works with OpenSBI or a builtin minimal SBI layer.</p>
 <section id="preparations">
 <h2>Preparations<a class="headerlink" href="#preparations" title="Permalink to this heading"></a></h2>
-<p>Take the prebuilt CanMV-k230 boot image from <a class="reference external" href="https://gitee.com/yf1972/filexfers/tree/canmv230-tools-for-nuttx-v1.2">here</a> as the default K230 SDK doesn’t support RiscV standard PTE format at least till v1.2. This package also contains an extract of the OpenSBI from K230 SDK v1.2 release, which is needed to wrap Nuttx kernel build binary.</p>
+<p>Take the prebuilt CanMV-k230 boot image from <a class="reference external" href="https://gitee.com/yf1972/filexfers/tree/canmv230-tools-for-nuttx-v1.2">here</a> as the default K230 SDK doesn’t support RiscV standard PTE format at least till v1.2. The package also contains an extract of the OpenSBI from K230 SDK v1.2 release, which is needed to wrap the <cite>canmv230/knsh</cite> kernel build. The K230 SBI extract is
+also available at <a class="reference external" href="https://github.com/yf13/k230osbi">this Github repository</a>, it will updated
+over the time to match updates at NuttX repository.</p>
 <p>Make sure that before trying NuttX:</p>
 <ul class="simple">
 <li><p>The board can boot with prebuilt CanMV-k230 image.</p></li>
-<li><p>Device console access available (e.g. <cite>minicom -D /dev/ttyACM0</cite>).</p></li>
+<li><p>Device console access available (e.g. <code class="docutils literal notranslate"><span class="pre">minicom</span> <span class="pre">-D</span> <span class="pre">/dev/ttyACM0</span></code>).</p></li>
 <li><p>U-Boot connectivity to TFTP service available.</p></li>
 </ul>
 <p>For below NuttX tests, the microSD card is only used to enter the U-Boot console environment, as NuttX isn’t using any storage yet.</p>
 </section>
 <section id="toolchains">
 <h2>Toolchains<a class="headerlink" href="#toolchains" title="Permalink to this heading"></a></h2>
-<p>Before building NuttX, download the <strong>RISC-V Toolchain riscv64-unknown-elf</strong> from <a class="reference external" href="https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack">XPack</a> or get the stock “gcc-riscv64-unknown-elf” via <cite>apt</cite> on Ubuntu.</p>
+<p>To build NuttX, we can use the stock  <strong>gcc-riscv64-unknown-elf</strong> toolchain on Ubuntu, or download the RISC-V Toolchain riscv64-unknown-elf from <a class="reference external" href="https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack">XPack</a>.</p>
 </section>
 <section id="building">
 <h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
@@ -246,7 +249,7 @@
 <h3>KERNEL Build<a class="headerlink" href="#kernel-build" title="Permalink to this heading"></a></h3>
 <p>KERNEL build requires two build passes:</p>
 <ul class="simple">
-<li><p>First pass to build kernel w/ dummy ROMFS, then we build the apps and update ROMFS,</p></li>
+<li><p>First pass to build kernel and export package so that to build apps as ROMFS.</p></li>
 <li><p>Second pass to build the kernel with real ROMFS image containing the apps.</p></li>
 </ul>
 <p>There are two configurations for KERNEL build mode:</p>
@@ -254,8 +257,8 @@
 <li><p>The <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> is for use within standard SBI environment.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> uses a built-in minimal SBI environment.</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> has smaller footprint and is simpler to use, the <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> is for cases requiring stanard SBI environment.</p>
-<p>Take the following steps to build the kernel mode export package:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> has smaller footprint and is simpler to use, the <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> is more tedious to build and is for situatinos with standard SBI environment.</p>
+<p>Take the following steps to build the kernel export package:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="c1"># first pass to build kernel exports</span>
 <span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
 <span class="gp">$ </span>make<span class="w"> </span>distclean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>tools/configure.sh<span class="w"> </span>canmv230:knsh
@@ -263,7 +266,7 @@
 <span class="gp">$ </span>make<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="c1"># build nuttx-export-*.gz package</span>
 </pre></div>
 </div>
-<p>With export package, we can move ahead to build the apps:</p>
+<p>With export package, we can then build the apps and ROMFS:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>apps
 <span class="gp">$ </span><span class="c1"># import the nuttx-export-*.gz package from kernel</span>
 <span class="gp">$ </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.gz
@@ -277,20 +280,21 @@
 <span class="gp">$ </span>make<span class="w"> </span>-j4<span class="w">    </span><span class="c1"># build kernel again with real ROMFS</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> is the artifact of kernel build. For <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> case, simply copy it to the TFTP folder and try on the target.</p>
-<p>For <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> case, take following steps to wrap the artifact with the  OpenSBI extract from the K230 SDK downloaded above:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> is the artifact of kernel build. For <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> case, simply copy it to the TFTP folder then run on the target.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">canmv230/knsh</span></code> case, take additional steps to wrap the artifact with the  OpenSBI extract from the K230 SDK downloaded above:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$HOME</span>
-<span class="gp">$ </span><span class="c1"># unpack the OpenSBI extract from K230 SDK</span>
+<span class="gp">$ </span><span class="c1"># unpack the K230 OpenSBI extract</span>
 <span class="gp">$ </span>tar<span class="w"> </span>xvf<span class="w"> </span>canmv230-opensbi-dtb.tar.xz
 <span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">OSBI</span><span class="o">=</span><span class="nv">$HOME</span>/opensbi
-<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>/tmp/aaa<span class="w">    </span><span class="c1"># use a temporary work folder</span>
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>/tmp/aaa<span class="w">    </span><span class="c1"># use a temporary folder</span>
 <span class="gp">$ </span>make<span class="w"> </span>-C<span class="w"> </span><span class="nv">$OSBI</span><span class="w"> </span><span class="nv">O</span><span class="o">=</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="w"> </span><span class="nv">PLATFORM</span><span class="o">=</span>generic<span class="w"> </span><span class="se">\</span>
 <span class="w">       </span><span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-unknown-elf-<span class="w"> </span><span class="nv">FW_PIC</span><span class="o">=</span>n<span class="w"> </span><span class="nv">K230_LIITLE_CORE</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
 <span class="w">       </span><span class="nv">FW_FDT_PATH</span><span class="o">=</span><span class="nv">$OSBI</span>/k230.dtb<span class="w"> </span><span class="nv">FW_PAYLOAD_PATH</span><span class="o">=</span>nuttx.bin<span class="w"> </span>-j4
 <span class="gp">$ </span>cp<span class="w"> </span>platform/generic/firmware/fw_payload.bin<span class="w"> </span>tftp-server-path/nuttx.bin
 </pre></div>
 </div>
-<p>Please use actual paths on your host for <cite>nuttx.bin</cite> and TFTP folder when running above commands.</p>
+<p>Please use actual paths on your host for <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> and TFTP folder when running above commands.</p>
+<p>This Github <a class="reference external" href="https://github.com/yf13/k230osbi">repository</a> contains latest version of the K230 OpenSBI extract.</p>
 </section>
 </section>
 <section id="running">
@@ -303,6 +307,23 @@
 </pre></div>
 </div>
 <p>Then the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> console should appear, type <code class="docutils literal notranslate"><span class="pre">help</span></code> to see available commands.</p>
+</section>
+<section id="asymmetric-multi-processing">
+<h2>Asymmetric Multi Processing<a class="headerlink" href="#asymmetric-multi-processing" title="Permalink to this heading"></a></h2>
+<p>We can do Asymmetric Multi Processing on K230 using the little core as master and the big core as remote.</p>
+<p>Take the <code class="docutils literal notranslate"><span class="pre">canmv230/master</span></code> and <code class="docutils literal notranslate"><span class="pre">canmv230/remote</span></code> configurations to build the master and remote NuttX images respectively. They are both kernel builds derived from <code class="docutils literal notranslate"><span class="pre">canmv230/nsbi</span></code> mentioned above, so we can follow above kernel mode build steps to build them.</p>
+<p>Let’s put the NuttX image files as <code class="docutils literal notranslate"><span class="pre">master.bin</span></code> and <code class="docutils literal notranslate"><span class="pre">remote.bin</span></code> respectively on the TFTP folder. To run them on K230 device, do the following from U-Boot console:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">k230# usb start</span>
+<span class="go">k230# ping $serverip</span>
+<span class="go">k230# tftp 7000000 remote.bin</span>
+<span class="go">k230# mw.l 80200000 0 8192</span>
+<span class="go">k230# boot_baremetal 1 7000000 $filesize</span>
+<span class="go">k230# tftp 8000000 master.bin</span>
+<span class="go">k230# go 8000000</span>
+</pre></div>
+</div>
+<p>Then we should see the “master&gt; ” prompt, this is the master console. where we can further run the <code class="docutils literal notranslate"><span class="pre">cu</span></code> command and press Return key to see the remote console, within remote console type <code class="docutils literal notranslate"><span class="pre">~.</span></code> to get back to the master console.</p>
+<p>There is a <a class="reference external" href="https://github.com/apache/nuttx/pull/11673">session log</a> showing how to enter remote node and check file system status then get back and check master file system status.</p>
 </section>
 <section id="issues">
 <h2>Issues<a class="headerlink" href="#issues" title="Permalink to this heading"></a></h2>
