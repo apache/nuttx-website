@@ -228,7 +228,17 @@ input.</p>
 <section id="board-leds">
 <h3>Board LEDs<a class="headerlink" href="#board-leds" title="Permalink to this heading"></a></h3>
 <p>There are several on-board LEDs for that indicate the presence of power
-and USB activity.  None of these are available for use by software.</p>
+and USB activity.  None of these are available for use by software.
+Another WS2812 LED is connected to GPIO48 or GPIO38 depending on the boards
+version.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Both the initial and v1.1 versions of ESP32-S3-DevKitC-1 are
+available on the market. The main difference lies in the GPIO assignment
+for the RGB LED: the initial version (1.0) uses GPIO48, whereas v1.1 uses
+GPIO38. The initial version is selected by default, but one can select
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ESP32S3_DEVKITC_1_V11</span></code> through <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>.</p>
+</div>
 </section>
 </section>
 <section id="i2s">
@@ -589,6 +599,34 @@ Random values (0x3ffe0b00):
 0010  8f 0e 0b 04 29 64 21 72 01 92 7c a2 27 60 6f 90  ....)d!r..|.&#39;`o.
 </pre></div>
 </div>
+</section>
+<section id="rmt">
+<h3>rmt<a class="headerlink" href="#rmt" title="Permalink to this heading"></a></h3>
+<p>This configuration configures the transmitter and the receiver of the
+Remote Control Transceiver (RMT) peripheral on the ESP32-S3 using GPIOs 48
+(or 38, depending on the board version) and 2, respectively.
+The RMT peripheral is better explained
+<a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/rmt.html">here</a>,
+in the ESP-IDF documentation. The minimal data unit in the frame is called the
+RMT symbol, which is represented by <code class="docutils literal notranslate"><span class="pre">rmt_item32_t</span></code> in the driver:</p>
+<figure class="align-center">
+<img alt="../../../../../_images/rmt_symbol4.png" src="../../../../../_images/rmt_symbol4.png" />
+</figure>
+<p>The example <code class="docutils literal notranslate"><span class="pre">rmtchar</span></code> can be used to test the RMT peripheral. Connecting
+these pins externally to each other will make the transmitter send RMT items
+and demonstrates the usage of the RMT peripheral:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; rmtchar
+</pre></div>
+</div>
+<p><strong>WS2812 addressable RGB LEDs</strong></p>
+<p>This same configuration enables the usage of the RMT peripheral and the example
+<code class="docutils literal notranslate"><span class="pre">ws2812</span></code> to drive addressable RGB LEDs:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ws2812
+</pre></div>
+</div>
+<p>Please note that this board contains an on-board WS2812 LED connected to GPIO48
+(or GPIO38, depending on the board version) and, by default, this config
+configures the RMT transmitter in the same pin.</p>
 </section>
 <section id="rtc">
 <h3>rtc<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h3>
