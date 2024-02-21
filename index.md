@@ -36,6 +36,16 @@ for functionality that is not appropriate for deeply-embedded environments (such
 as fork()).
 
 
+## Documentation
+
+Extensive documentation can be found [here]({{ site.baseurl }}/docs/latest).
+
+
+## Online Demo
+
+Try the online demo [here]({{ site.baseurl }}/demo).
+
+
 ## Community Events
 
 ### International Workshop 2024
@@ -46,36 +56,10 @@ This year we meet on 13-14 Jun 2024 at Sony Office, Tokyo, Japan. See you there!
 
 Please visit [events website]({{ site.data.project.community_events }}) for more details.
 You can join the event at [LinkedIn]({{ site.data.project.community_events_workshop_2024_linkedin_event }}).
-[Call For Papers](({{ site.data.project.community_events_workshop_2024_cfp }}) is now open!
+[Call For Papers]({{ site.data.project.community_events_workshop_2024_cfp }}) is now open!
 
 The scope of the workshop is the Apache Nuttx® Real Time Operating System, the
 tools used for its design, development, deployment, debugging, and maintenance,
 the applications that use it, and the hardware on which it typically runs.
 The target audience is embedded systems practitioners across both industry and
 academia.
-
-Apache NuttX® International Workshop has four primary objectives; (i) To allow
-the developers and users of Apache NuttX® to meet up, to network together,
-exchange ideas, and to understand their mutual needs and aspirations for the
-OS. (ii) To agree on directions for the future development of Apache NuttX®
-together with Apache Software Foundation and to coalesce development groups
-to work on these initiatives. (iii) To raise the profile of Apache NuttX®
-and allow potential adopters from around the world to see how widely it is
-already used and (iv) to understand how we can make the development process
-for Apache NuttX® more diverse and robust.
-
-Participation at the workshop shall be limited to 200 attendees and we
-strongly prefer delegates that will contribute to the event. Active
-participation may take a form of short lecture or full presentation.
-All proposals will be considered with a duration from 20 minutes (short
-lecture) to 40 minutes (full presentation).
-
-
-## Documentation
-
-Extensive documentation can be found [here]({{ site.baseurl }}/docs/latest).
-
-
-## Online Demo
-
-Try the online demo [here]({{ site.baseurl }}/demo).
