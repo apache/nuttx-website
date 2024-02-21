@@ -121,26 +121,35 @@
 <li class="toctree-l2"><a class="reference internal" href="../paging.html">On-Demand Paging</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../audio/index.html">Audio Subsystem</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">NuttX File System</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="binfs.html">BINFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fat.html">FAT</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hostfs.html">Host File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="nfs.html">NFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="partition.html">Partition Table</a></li>
-<li class="toctree-l3"><a class="reference internal" href="procfs.html">PROCFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="romfs.html">ROMFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rpmsgfs.html">RPMSG File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="smartfs.html">SMARTFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="shmfs.html">Shared Memory File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="spiffs.html">SPIFFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tmpfs.html">TMPFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="unionfs.html">Union File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="userfs.html">User file system</a></li>
-<li class="toctree-l3"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#virtual-file-system-vfs">Virtual File System (VFS)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#how-vfs-works">How VFS works</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vfs-interface">VFS Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#file-systems">File systems</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binfs.html">BINFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="fat.html">FAT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hostfs.html">Host File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nfs.html">NFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="partition.html">Partition Table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="procfs.html">PROCFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="romfs.html">ROMFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rpmsgfs.html">RPMSG File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="smartfs.html">SMARTFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="shmfs.html">Shared Memory File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spiffs.html">SPIFFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tmpfs.html">TMPFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unionfs.html">Union File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="userfs.html">User file system</a></li>
+<li class="toctree-l4"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fs-categories">FS Categories</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
@@ -192,10 +201,9 @@
              
   <section id="nuttx-file-system">
 <h1>NuttX File System<a class="headerlink" href="#nuttx-file-system" title="Permalink to this heading"></a></h1>
-<p><strong>Overview</strong>. NuttX includes an optional, scalable file system.
-This file-system may be omitted altogether; NuttX does not depend
-on the presence of any file system.</p>
-<p><strong>Pseudo Root File System</strong>. A simple <em>in-memory</em>, <em>pseudo</em> file
+<p>NuttX includes an optional, scalable file system. This file-system may be
+omitted altogether; NuttX does not depend on the presence of any file system.</p>
+<p id="root-fs"><strong>Pseudo Root File System</strong>. A simple <em>in-memory</em>, <em>pseudo</em> file
 system can be enabled by default. This is an <em>in-memory</em> file
 system because it does not require any storage medium or block
 driver support. Rather, file system contents are generated
@@ -206,8 +214,7 @@ is <em>pseudo</em> file system (in the same sense that the Linux
 system).</p>
 <p>Any user supplied data or logic can be accessed via the
 pseudo-file system. Built in support is provided for character and
-block <a class="reference external" href="#DeviceDrivers">drivers</a> in the <code class="docutils literal notranslate"><span class="pre">/dev</span></code> pseudo file
-system directory.</p>
+block drivers in the <code class="docutils literal notranslate"><span class="pre">/dev</span></code> pseudo file system directory.</p>
 <p><strong>Mounted File Systems</strong> The simple in-memory file system can be
 extended my mounting block devices that provide access to true
 file systems backed up via some mass storage device. NuttX
@@ -226,6 +233,832 @@ comparison, the Linux root file system is a true file system and
 pseudo file systems may be mounted in the true, root file system.
 The approach selected by NuttX is intended to support greater
 scalability from the very tiny platform to the moderate platform.</p>
+<section id="virtual-file-system-vfs">
+<h2>Virtual File System (VFS)<a class="headerlink" href="#virtual-file-system-vfs" title="Permalink to this heading"></a></h2>
+<p>Virtual File System provides a unified interface for various file systems to
+be able to co-exist together by exposing a blueprint that each file system
+needs to implement. This also allows the file system to be free from worry
+about the device driver implementations for storage devices, as they also
+expose a unified way of accessing the underlying devices.</p>
+<section id="how-vfs-works">
+<h3>How VFS works<a class="headerlink" href="#how-vfs-works" title="Permalink to this heading"></a></h3>
+<p>Threads are controllable sequences of instruction execution with their own
+stacks. Each task in NuttX is represented by a Task Control Block (TCB) (TCB
+is defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/sched.h</span></code>) and tasks are organized in task
+lists.</p>
+<p>All threads that are created by <code class="docutils literal notranslate"><span class="pre">pthread_create()</span></code> are part of the same task
+group. A task group (defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/sched.h</span></code>) is a shared
+structure pointed to by the TCBs of all the threads that belong to the same
+task group, and this task group contains all the resources shared across the
+task group which includes <em>file descriptors</em> in the form of a <strong>file list</strong>.</p>
+<p>A file list (defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/fs.h</span></code>) contains file structures
+that denote open files (along with a spinlock to manage access to the file
+list). With the devices listed in the <a class="reference internal" href="#root-fs"><span class="std std-ref">root file system</span></a> (on
+points like <code class="docutils literal notranslate"><span class="pre">/dev/led</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/mmcsd0</span></code>, etc. which are henceforth called
+blockdriver mount points) in an unmounted state, storage devices can be
+mounted using the <code class="docutils literal notranslate"><span class="pre">mount()</span></code> command (to any point like <code class="docutils literal notranslate"><span class="pre">/dir/abcd</span></code>) with
+any specific supported file system, which internally calls its implemented
+<code class="docutils literal notranslate"><span class="pre">mountpt_operations-&gt;bind()</span></code> method and passes the blockdriver’s mount
+point inode to it, thus creating a <strong>mount point</strong>. The blockdriver mount
+point inode will have a <code class="docutils literal notranslate"><span class="pre">mountpt-&gt;i_private</span></code> which contains any (file system
+dependent) information about the mount and is to be filled by the file system
+during the execution of <code class="docutils literal notranslate"><span class="pre">mountpt_operations-&gt;bind()</span></code> (and usually this data
+includes a pointer to the blockdriver mount point as well). After that,
+according to system calls, the other exposed functions of the filesystem
+are called as per need.</p>
+</section>
+<section id="vfs-interface">
+<h3>VFS Interface<a class="headerlink" href="#vfs-interface" title="Permalink to this heading"></a></h3>
+<p>VFS allows file systems to expose their own implementations of methods
+belonging to a unified interface:</p>
+<ul class="simple">
+<li><p><strong>File operations</strong></p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.open">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">open</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">oflags</span></span>, <span class="n"><span class="pre">mode_t</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.open" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Opens a file. Files are required to be opened before any other file
+operations are performed on it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer. The
+<code class="docutils literal notranslate"><span class="pre">filep-&gt;f_priv</span></code> member needs to be set here with the file system
+specific data that represents an open file.</p></li>
+<li><p><strong>relpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Relative path of the file from the root of
+the mounted file system.</p></li>
+<li><p><strong>oflags</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">int</span></span></span>) – Flags in a bit field that specify the mode for openning
+the file (eg. <code class="docutils literal notranslate"><span class="pre">O_RDONLY</span></code>, <code class="docutils literal notranslate"><span class="pre">O_RDWR</span></code>, etc. defined in
+<code class="docutils literal notranslate"><span class="pre">include/fcntl.h</span></code>).</p></li>
+<li><p><strong>mode</strong> (<span><span class="c-expr sig sig-inline c"><span class="n">mode_t</span></span></span>) – Specifies the mode (permissions). If <code class="docutils literal notranslate"><span class="pre">oflags</span></code> include
+<code class="docutils literal notranslate"><span class="pre">O_CREAT</span></code>, then this contains the mode for the file to be created.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of openning a file.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.close">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">close</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.close" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This closes the opened file, and ideally syncs all the changes to the file
+to be written to the disk, as well as free the memory allocated to store the
+open file’s data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of closing a file.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.read">
+<span class="n"><span class="pre">ssize_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">read</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buffer</span></span>, <a class="reference internal" href="../../reference/user/structures.html#c.size_t" title="size_t"><span class="n"><span class="pre">size_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">buflen</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.read" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Reads maximum <code class="docutils literal notranslate"><span class="pre">buflen</span></code> bytes from an opened file (from the current offset
+the opened file descriptor is pointing at if the file system supports
+seeking).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer.</p></li>
+<li><p><strong>buffer</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Buffer to store the read data.</p></li>
+<li><p><strong>buflen</strong> (<span><span class="c-expr sig sig-inline c"><a class="reference internal" href="../../reference/user/structures.html#c.size_t" title="size_t"><span class="n">size_t</span></a></span></span>) – Length of the maximum number of bytes to be read.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of bytes read.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>&gt; 0</strong> – Size of bytes read.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.write">
+<span class="n"><span class="pre">ssize_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">write</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buffer</span></span>, <a class="reference internal" href="../../reference/user/structures.html#c.size_t" title="size_t"><span class="n"><span class="pre">size_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">buflen</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.write" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Writes maximum <code class="docutils literal notranslate"><span class="pre">buflen</span></code> bytes to an opened file (from the current offset
+the opened file is at if the file system supports seeking).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer.</p></li>
+<li><p><strong>buffer</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Buffer which contains the data to be written.</p></li>
+<li><p><strong>buflen</strong> (<span><span class="c-expr sig sig-inline c"><a class="reference internal" href="../../reference/user/structures.html#c.size_t" title="size_t"><span class="n">size_t</span></a></span></span>) – Length of the maximum number of bytes to be written.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of bytes written.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>&gt; 0</strong> – Size of bytes written.</p></li>
+<li><p><strong>&lt; buflen</strong> – Insufficient storage or file size limit reached</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>POSIX requires that a <code class="docutils literal notranslate"><span class="pre">read()</span></code> after a <code class="docutils literal notranslate"><span class="pre">write()</span></code> should get the newly
+written data, but not all file systems conform to POSIX, especially as
+POSIX requires atomic writes, which is not usually implemented
+as it can impact performance.</p>
+<p>To be POSIX compliant in concurrent situations, either the writes have to
+be atomic, or read is blocked with a lock until an on-going write is
+finished, which, as stated, would impact performance.</p>
+</div>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.seek">
+<span class="n"><span class="pre">off_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">seek</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="n"><span class="pre">off_t</span></span><span class="w"> </span><span class="n"><span class="pre">offset</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">whence</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.seek" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Underlying implementation of <code class="docutils literal notranslate"><span class="pre">lseek()</span></code>, it allows the open file’s file
+structure to point to any particular location in the file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer.</p></li>
+<li><p><strong>offset</strong> (<span><span class="c-expr sig sig-inline c"><span class="n">off_t</span></span></span>) – The offset required.</p></li>
+<li><p><strong>whence</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">int</span></span></span>) – <p>This controls how the offset it applied. It can have
+values (defined in <code class="docutils literal notranslate"><span class="pre">/include/sys/types.h</span></code>):</p>
+<ul>
+<li><p>SEEK_SET: Offset from start of file.</p></li>
+<li><p>SEEK_CUR: Offset from current location in file.</p></li>
+<li><p>SEEK_END: Offset <em>after</em> end of file.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>According to POSIX, <code class="docutils literal notranslate"><span class="pre">lseek()</span></code> to any point after the end of the file
+<em>does not</em> by itself increase the size of the file. Later writes to this
+part will, however, increase it to at least the end of the written data, and
+the “gap” before this written data should be filled with <code class="docutils literal notranslate"><span class="pre">\0</span></code> in case of
+any reads after such a write operation.</p>
+</div>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ioctl">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ioctl</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">cmd</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ioctl" title="Permalink to this definition"></a><br /></dt>
+<dd><p>It is the underlying implementation of <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> (I/O Control).
+<code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> manipulates the underlying device parameters of files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer.</p></li>
+<li><p><strong>cmd</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">int</span></span></span>) – It can take a variety of values (which are defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/ioctl.h</span></code>). It represents the command that will be
+carried out on the file. Both the filesystem, as well as the device driver
+needs to support the command in order for the function to run.</p></li>
+<li><p><strong>arg</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span></span></span>) – Additional argument that may be required for
+ioctl. Details for what is required is written in the comments beside
+the desired ioctl command in <code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/ioctl.h</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of ioctl operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.mmap">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mmap</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">mm_map_entry_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">map</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.mmap" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Underlying implementation of <code class="docutils literal notranslate"><span class="pre">mmap()</span></code>. <code class="docutils literal notranslate"><span class="pre">mmap()</span></code> creates a new mapping
+in the virtual address space of the calling process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer.</p></li>
+<li><p><strong>map</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">mm_map_entry_s</span><span class="p">*</span></span></span>) – mmap entry strucutre pointer, which
+includes the virtual address.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of mmap operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>NuttX operates in a flat open address space. Therefore, it generally does
+not require <code class="docutils literal notranslate"><span class="pre">mmap()</span></code> functionality. There are two notable exceptions where
+<code class="docutils literal notranslate"><span class="pre">mmap()</span></code> functionality is required:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mmap()</span></code> is the API that is used to support direct access to random
+access media under the following very restrictive conditions:</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>The filesystem implements the mmap file operation.  Any file
+system that maps files contiguously on the media should support
+this ioctl. (vs. file system that scatter files over the media
+in non-contiguous sectors).  As of this writing, ROMFS is the
+only file system that meets this requirement.</p></li>
+<li><p>The underlying block driver supports the BIOC_XIPBASE ioctl
+command that maps the underlying media to a randomly accessible
+address. At  present, only the RAM/ROM disk driver does this.</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>If CONFIG_FS_RAMMAP is defined in the configuration, then mmap() will
+support simulation of memory mapped files by copying files whole
+into RAM.</p></li>
+</ol>
+</div>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.truncate">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">truncate</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="n"><span class="pre">off_t</span></span><span class="w"> </span><span class="n"><span class="pre">length</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.truncate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Shrinks or expands the file to be of the desired size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s file structure pointer.</p></li>
+<li><p><strong>length</strong> (<span><span class="c-expr sig sig-inline c"><span class="n">off_t</span></span></span>) – Final size of the file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of truncate operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.poll">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">poll</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">pollfd</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">fds</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n"><span class="pre">setup</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.poll" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Underlying implementation of <code class="docutils literal notranslate"><span class="pre">poll()</span></code>. The <code class="docutils literal notranslate"><span class="pre">poll()</span></code> function provides
+applications with a mechanism for multiplexing input/output over a set of
+file descriptors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s pointer.</p></li>
+<li><p><strong>fds</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">pollfd</span><span class="p">*</span></span></span>) – The structure describing the events to be
+monitored, OR NULL if this is a request to stop monitoring events.</p></li>
+<li><p><strong>setup</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">bool</span></span></span>) – true: Setup up the poll; false: Teardown the poll</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of poll operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<ul class="simple">
+<li><p><strong>Additional open file specific operations</strong></p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.sync">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sync</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.sync" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This synchronizes the on-disk file system state of the file with the
+in-memory file system state, ie. commits the file system caches to the disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">file</span></code> (defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/fs.h</span></code>) pointer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of syncing a file.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.dup">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dup</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">oldp</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">newp</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.dup" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Duplicate an open file structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>oldp</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Pointer to structure that is to be
+duplicated.</p></li>
+<li><p><strong>newp</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Pointer to structure in which the duplicate
+data will be stored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of duplicating open file’s structure.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.fstat">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fstat</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n"><span class="pre">stat</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buf</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.fstat" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Obtain information about an open file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s pointer.</p></li>
+<li><p><strong>buf</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n">stat</span></a><span class="p">*</span></span></span>) – Pointer to the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">stat</span></code> (defined in
+<code class="docutils literal notranslate"><span class="pre">include/sys/stat.h</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of obtaining open file’s information.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.fchstat">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fchstat</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n"><span class="pre">stat</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buf</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">flags</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.fchstat" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Change file stats. It can change the mode, timestamps and ownership.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filep</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">file</span><span class="p">*</span></span></span>) – Open file’s pointer.</p></li>
+<li><p><strong>buf</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n">stat</span></a><span class="p">*</span></span></span>) – Pointer to stat structure describing
+the values that need to be updated.</p></li>
+<li><p><strong>flags</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">int</span></span></span>) – <p>Bit field that can include (defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/fs.h</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CH_STAT_MODE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CH_STAT_UID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CH_STAT_GID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CH_STAT_ATIME</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CH_STAT_MTIME</span></code></p></li>
+</ul>
+<p>This describes what needs to be updated.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of changin open file’s stats.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<ul class="simple">
+<li><p><strong>Directory operations</strong></p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.opendir">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">opendir</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">fs_dirent_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dir</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.opendir" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Opens a directory stream for the provided directory. Other directory
+operations can be used after this to do various directory related operations
+. We say the directory stream points to the first entry, but you need
+<code class="docutils literal notranslate"><span class="pre">readdir()</span></code> to read the first entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>relpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Relative path from the root of the point
+point of the directory.</p></li>
+<li><p><strong>dir</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">fs_dirent_s</span><span class="p">*</span><span class="p">*</span></span></span>) – A directory stream structure pointer
+which needs to be populated with the required fields (defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/fs.h</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of openning the directory.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.closedir">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">closedir</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">fs_dirent_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dir</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.closedir" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Closes a directory stream, as well as deallocates any memory used while
+while openning a directory stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>dir</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">fs_dirent_s</span><span class="p">*</span><span class="p">*</span></span></span>) – A directory stream structure pointer
+which was previously allocated (and needs to be freed).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of closing the directory.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>OK (0)</strong> – Success.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.readdir">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">readdir</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">fs_dirent_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dir</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">dirent</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">entry</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.readdir" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This reads the next directory entry in a directory stream. If the stream
+points to the base of the directory, then the first directory entry in the
+directory is given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>dir</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">fs_dirent_s</span><span class="p">*</span><span class="p">*</span></span></span>) – A directory stream structure pointer.</p></li>
+<li><p><strong>entry</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">dirent</span><span class="p">*</span></span></span>) – Pointer to the directory entry. This will
+be modified to point to the directory entry after it in the directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of reading the directory.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.rewinddir">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rewinddir</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">fs_dirent_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dir</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.rewinddir" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Resets the directory stream back to the first entry, like it was after
+openning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>dir</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">fs_dirent_s</span><span class="p">*</span><span class="p">*</span></span></span>) – A directory stream structure pointer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of rewinding the directory.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<ul class="simple">
+<li><p><strong>Volume-relations operations</strong></p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.bind">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bind</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">blkdriver</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">handle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.bind" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This is where the file system related data is initialized, and
+is part of the mount process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>blkdriver</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Pointer to the block driver’s device
+inode. This needs to be opened in this function.</p></li>
+<li><p><strong>data</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="p">*</span></span></span>) – The options provided during mount.</p></li>
+<li><p><strong>handle</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="kt">void</span><span class="p">*</span><span class="p">*</span></span></span>) – Whatever data <code class="docutils literal notranslate"><span class="pre">handle</span></code> points to is attached
+to the <code class="docutils literal notranslate"><span class="pre">mountpt</span></code> inode after this function is called during the mount
+process. This way, this file system’s other methods can receive
+this information if they have access to <code class="docutils literal notranslate"><span class="pre">mountpt</span></code> inode, by accessing
+<code class="docutils literal notranslate"><span class="pre">mountpt-&gt;i_private</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of binding operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.unbind">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">unbind</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">handle</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">blkdriver</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">flags</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.unbind" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This is part of the unmounting process. The file system first
+needs to assess the flags passed to it and appropriately do the tasks
+required by these flags, and then it needs to free the private data
+(<code class="docutils literal notranslate"><span class="pre">handle</span></code> and any allocated members), as well as close the
+previously-opened (during mount) block driver’s inode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>handle</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="kt">void</span><span class="p">*</span></span></span>) – Private data of the file-system.</p></li>
+<li><p><strong>blkdriver</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span><span class="p">*</span></span></span>) – The device inode of the block driver’s
+device inode.</p></li>
+<li><p><strong>flags</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span></span></span>) – <p>Flags dictate the actions needed to be carried
+out before the file system data is removed and the block driver inode is
+closed. The values can be (as defined in <code class="docutils literal notranslate"><span class="pre">include/sys/mount.h</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">MNT_FORCE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MNT_DETACH</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MNT_EXPIRE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UMOUNT_NOFOLLOW</span></code></p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of unbinding operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.statfs">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">statfs</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.statfs" title="statfs"><span class="n"><span class="pre">statfs</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buf</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.statfs" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Provides stats for that instance of the file system. The exact
+stats that are provided can be viewed in the members of
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">statfs</span></code> (in file <code class="docutils literal notranslate"><span class="pre">include/sys/statfs.h</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>buf</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><a class="reference internal" href="#c.statfs" title="statfs"><span class="n">statfs</span></a><span class="p">*</span></span></span>) – Buffer that needs to be filled with the
+relevant file system information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of finding the filesystem stats operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<ul class="simple">
+<li><p><strong>Path operations</strong></p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.unlink">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">unlink</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.unlink" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Removes a file, specifically, removes a name from the file system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>relpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – The relative path of the file from the root
+of the file system.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of unlinking operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.mkdir">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mkdir</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span>, <span class="n"><span class="pre">mode_t</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.mkdir" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Creates a directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>relpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Relative path of the new directory from the
+root of the file system.</p></li>
+<li><p><strong>mode</strong> (<span><span class="c-expr sig sig-inline c"><span class="n">mode_t</span></span></span>) – The mode (permissions) for the directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of creating a directory operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.rmdir">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rmdir</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.rmdir" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Removes a directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>relpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Relative path of the directory from the
+root of the file system.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of removing a directory operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.rename">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rename</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">oldrelpath</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">newrelpath</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.rename" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Renames a file or a directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>oldrelpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Existing path of the file or directory.</p></li>
+<li><p><strong>newrelpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – New path of the file or directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of renaming a file or a directory operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.stat">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">stat</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n"><span class="pre">stat</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buf</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.stat" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Information about a file or a directory. The exact information that is
+provided can be viewed in the members of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">stat</span></code>
+(in file <code class="docutils literal notranslate"><span class="pre">include/sys/stat.h</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>relpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Relative path of the file or directory from
+the root of the file system.</p></li>
+<li><p><strong>buf</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n">stat</span></a><span class="p">*</span></span></span>) – Buffer that needs to be filled with the
+relevant file or directory information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of finding information about a file or directory.1 operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.chstat">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">chstat</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n"><span class="pre">stat</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buf</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">flags</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.chstat" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Change the stats of a file or directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>relpath</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="p">*</span></span></span>) – Relative path of the file or directory from
+the root of the file system.</p></li>
+<li><p><strong>buf</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><a class="reference internal" href="#c.stat" title="stat"><span class="n">stat</span></a><span class="p">*</span></span></span>) – Contains the new stat information. Access
+only the ones that are required according to the flags.</p></li>
+<li><p><strong>flags</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">int</span></span></span>) – A bit field that can have values including <code class="docutils literal notranslate"><span class="pre">CH_STAT_MODE</span></code>
+, <code class="docutils literal notranslate"><span class="pre">CH_STAT_UID</span></code>, <code class="docutils literal notranslate"><span class="pre">CH_STAT_GID</span></code>, <code class="docutils literal notranslate"><span class="pre">CH_STAT_ATIME</span></code> or <code class="docutils literal notranslate"><span class="pre">CH_STAT_MTIME</span></code>
+which are or-ed together.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.syncfs">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">syncfs</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.syncfs" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This works like <code class="docutils literal notranslate"><span class="pre">sync()</span></code> but instead of the file, it syncs the entire
+filesystem’s metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of syncing file system metadata operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>The file systems can have their own implementations for these functions
+under-the-hood, but the user does not have to worry about the underlying file
+system during file I/O, as the file system has to expose its implementations
+in a unified interface.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each file system has to globally expose their implementations of the unified
+interface as defined by <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mountpt_operations</span></code> (in
+<code class="docutils literal notranslate"><span class="pre">include/fs/fs.h</span></code>) to one of the lists defined in <code class="docutils literal notranslate"><span class="pre">fs/mount/fs_mount.c</span></code>
+depending on the type of the file system.</p>
+<p>They also need their own <a class="reference external" href="https://en.wikipedia.org/wiki/Magic_number_(programming)">magic number</a>
+to be listed in <code class="docutils literal notranslate"><span class="pre">include/sys</span></code> and in <code class="docutils literal notranslate"><span class="pre">fs_gettype</span></code> function (in
+<code class="docutils literal notranslate"><span class="pre">fs/mount/fs_gettype.c</span></code>) for identification of the filesystem.</p>
+</div>
+</section>
+</section>
+<section id="file-systems">
+<h2>File systems<a class="headerlink" href="#file-systems" title="Permalink to this heading"></a></h2>
+<p>NuttX provides support for a variety of file systems out of the box.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
@@ -250,6 +1083,21 @@ scalability from the very tiny platform to the moderate platform.</p>
 <li class="toctree-l1"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
 </ul>
 </div>
+<section id="fs-categories">
+<h3>FS Categories<a class="headerlink" href="#fs-categories" title="Permalink to this heading"></a></h3>
+<p>File systems can be divided into these categories on the basis of the drivers
+they require:</p>
+<ol class="arabic simple">
+<li><p>They require a block device driver. They include vfat, romfs, smartfs, and
+littlefs.</p></li>
+<li><p>They require MTD drivers. They include romfs, spiffs, littlefs.</p></li>
+<li><p>They require neither block nor MTD drivers. They include nxffs, tmpfs, nfs
+binfs, procfs, userfs, hostfs, cromfs, unionfs, rpmsgfs, and zipfs.</p></li>
+</ol>
+<p>The requirements are specified by declaring the filesystem in the proper
+array in <code class="docutils literal notranslate"><span class="pre">fs/mount/fs_mount.c</span></code>.</p>
+</section>
+</section>
 </section>
 
 

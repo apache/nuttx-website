@@ -121,26 +121,35 @@
 <li class="toctree-l2"><a class="reference internal" href="../paging.html">On-Demand Paging</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../audio/index.html">Audio Subsystem</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">NuttX File System</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="binfs.html">BINFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fat.html">FAT</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hostfs.html">Host File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="nfs.html">NFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="partition.html">Partition Table</a></li>
-<li class="toctree-l3"><a class="reference internal" href="procfs.html">PROCFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="romfs.html">ROMFS</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">RPMSG File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="smartfs.html">SMARTFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="shmfs.html">Shared Memory File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="spiffs.html">SPIFFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tmpfs.html">TMPFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="unionfs.html">Union File System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="userfs.html">User file system</a></li>
-<li class="toctree-l3"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#virtual-file-system-vfs">Virtual File System (VFS)</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#file-systems">File systems</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binfs.html">BINFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="fat.html">FAT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hostfs.html">Host File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nfs.html">NFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="partition.html">Partition Table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="procfs.html">PROCFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="romfs.html">ROMFS</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">RPMSG File System</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#building">Building</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#running">Running</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="smartfs.html">SMARTFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="shmfs.html">Shared Memory File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spiffs.html">SPIFFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tmpfs.html">TMPFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unionfs.html">Union File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="userfs.html">User file system</a></li>
+<li class="toctree-l4"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#fs-categories">FS Categories</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
@@ -193,7 +202,26 @@
              
   <section id="rpmsg-file-system">
 <h1>RPMSG File System<a class="headerlink" href="#rpmsg-file-system" title="Permalink to this heading"></a></h1>
-<p>Use rpmsg file system to mount remote directories to local.</p>
+<p>Once RPMsg link is available, we can use rpmsg file system to mount remote directories with the help of RPMsg file system drivers.</p>
+<p>Here we show an example of mounting and using a master file system path from remote side, it is as easy as using a local file system.</p>
+<section id="building">
+<h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
+<p>At file system server side (the master), we need enable the <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_RPMSGFS_SERVER</span></code> configuration.</p>
+<p>At file system client side (the remote), we need enable the <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_RPMSGFS</span></code> configuration.</p>
+<p>Then we build the two sides accordingly.</p>
+</section>
+<section id="running">
+<h2>Running<a class="headerlink" href="#running" title="Permalink to this heading"></a></h2>
+<p>Using the following command to mount the master’s <code class="docutils literal notranslate"><span class="pre">/proc</span></code> file system to <code class="docutils literal notranslate"><span class="pre">/proc.master</span></code> from the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> sessino of the remote node.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">remote&gt; mount -t rpmsgfs -o cpu=master,fs=/proc /proc.master</span>
+<span class="go">remote&gt; cat /proc/uptime /proc.master/uptime</span>
+<span class="go">      39.06</span>
+<span class="go">      39.06</span>
+<span class="go">remote&gt;</span>
+</pre></div>
+</div>
+<p>Note the <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">cpu=master,fs=/proc</span></code> specifies the <code class="docutils literal notranslate"><span class="pre">master</span></code> node’s <code class="docutils literal notranslate"><span class="pre">/proc</span></code> path as the source, the <code class="docutils literal notranslate"><span class="pre">/proc.master</span></code> is the mount point at remote side. All files under that mount point is actually hosted at the master side. The <code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">rpmsgfs</span></code> selects the RPMsg file system driver to serve the operation.</p>
+</section>
 </section>
 
 
