@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocketCAN Device Drivers &mdash; NuttX latest documentation</title>
+  <title>“Raw” packet socket support &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="“Raw” packet socket support" href="pkt.html" />
-    <link rel="prev" title="6LoWPAN" href="sixlowpan.html" /> 
+    <link rel="next" title="Network Address Translation (NAT)" href="nat.html" />
+    <link rel="prev" title="SocketCAN Device Drivers" href="socketcan.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -124,8 +124,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Network Support</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="sixlowpan.html">6LoWPAN</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">SocketCAN Device Drivers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pkt.html">“Raw” packet socket support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="socketcan.html">SocketCAN Device Drivers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">“Raw” packet socket support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="netdev.html">Network Devices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="netguardsize.html">CONFIG_NET_GUARDSIZE</a></li>
@@ -169,9 +173,9 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
           <li class="breadcrumb-item"><a href="index.html">Network Support</a></li>
-      <li class="breadcrumb-item active">SocketCAN Device Drivers</li>
+      <li class="breadcrumb-item active">“Raw” packet socket support</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../_sources/components/net/socketcan.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/components/net/pkt.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -179,75 +183,49 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="socketcan-device-drivers">
-<h1>SocketCAN Device Drivers<a class="headerlink" href="#socketcan-device-drivers" title="Permalink to this heading"></a></h1>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/net/netdev.h</span></code>. All structures and APIs
-needed to work with drivers are provided in this header file.
-The structure struct net_driver_s defines the interface and is
-passed to the network via <code class="docutils literal notranslate"><span class="pre">netdev_register()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/can.h</span></code>. CAN &amp; CAN FD frame data structures.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">netdev_register(FAR</span> <span class="pre">struct</span> <span class="pre">net_driver_s</span> <span class="pre">*dev,</span> <span class="pre">enum</span> <span class="pre">net_lltype_e</span> <span class="pre">lltype)'</span></code>.
-Each driver registers itself by calling <code class="docutils literal notranslate"><span class="pre">netdev_register()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Include/nuttx/net/can.h</span></code>. contains lookup tables for CAN
-dlc to CAN FD len sizes named</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">can_dlc_to_len</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
-<span class="k">extern</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">len_to_can_dlc</span><span class="p">[</span><span class="mi">65</span><span class="p">];</span>
+  <section id="raw-packet-socket-support">
+<h1>“Raw” packet socket support<a class="headerlink" href="#raw-packet-socket-support" title="Permalink to this heading"></a></h1>
+<p>Packet sockets (<code class="xref c c-macro docutils literal notranslate"><span class="pre">AF_PACKET</span></code>) allow receiving and transmitting frames
+without a transport protocol in between. Frames received are copied into a
+packet socket tap before they enter the network. Data written into a packet
+socket will bypass the network altogether and be placed in the transmission
+buffer of the network interface driver.</p>
+<section id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_PREALLOC_CONNS</span></code></dt><dd><p>Number of preallocated packet connections (all tasks).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_ALLOC_CONNS</span></code></dt><dd><p>Dynamic memory allocations for packet connections.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_MAX_CONNS</span></code></dt><dd><p>Maximum number of packet connections.</p>
+</dd>
+</dl>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr_ll</span><span class="w"> </span><span class="n">addr</span><span class="p">;</span>
+<span class="kt">uint8_t</span><span class="w"> </span><span class="n">buffer</span><span class="p">[</span><span class="n">BUFSIZE</span><span class="p">];</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">sd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">socket</span><span class="p">(</span><span class="n">AF_PACKET</span><span class="p">,</span><span class="w"> </span><span class="n">SOCK_RAW</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="cm">/* Create a packet socket */</span>
+
+<span class="n">addr</span><span class="p">.</span><span class="n">sll_family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AF_PACKET</span><span class="p">;</span>
+<span class="n">addr</span><span class="p">.</span><span class="n">sll_ifindex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">if_nametoindex</span><span class="p">(</span><span class="s">&quot;eth0&quot;</span><span class="p">);</span>
+<span class="n">bind</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">addr</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">addr</span><span class="p">));</span><span class="w"> </span><span class="cm">/* Bind to device */</span>
+
+<span class="n">recv</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="cm">/* read(sd, buffer, sizeof(buffer)); */</span>
+<span class="n">send</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="cm">/* write(sd, buffer, sizeof(buffer)); */</span>
+
+<span class="n">close</span><span class="p">(</span><span class="n">sd</span><span class="p">);</span><span class="w"> </span><span class="cm">/* Close the socket */</span>
 </pre></div>
 </div>
-</li>
-<li><p><strong>Initialization sequence is as follows</strong>.</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">xxx_netinitialize(void)</span></code> is called on startup of NuttX in this
-function you call your own init function to initialize your
-CAN driver</p></li>
-<li><p>In your own init function you create the net_driver_s
-structure set required init values and register the required
-callbacks for SocketCAN</p></li>
-<li><p>Then you ensure that the CAN interface is in down mode
-(usually done by calling the d_ifdown function)</p></li>
-<li><p>Register the net_driver_s using netdev_register</p></li>
-</ol>
-</li>
-<li><p><strong>Receive sequence is as follows</strong>.</p>
-<ol class="arabic simple">
-<li><p>Device generates interrupt</p></li>
-<li><p>Process this interrupt in your interrupt handler</p></li>
-<li><p>When a new CAN frame has been received you process this frame</p></li>
-<li><p>When the CAN frame is a normal CAN frame you allocate the
-can_frame struct, when it’s a CAN FD frame you allocate a
-canfd_frame struct (note you can of course preallocate and
-just use the pointer).</p></li>
-<li><p>Copy the frame from the driver to the struct you’ve
-allocated in the previous step.</p></li>
-<li><p>Point the net_driver_s d_buf pointer to the allocated can_frame</p></li>
-<li><p>Call the <code class="docutils literal notranslate"><span class="pre">can_input(FAR</span> <span class="pre">struct</span> <span class="pre">net_driver_s</span> <span class="pre">*dev)</span></code>
-function <code class="docutils literal notranslate"><span class="pre">include/nuttx/net/can.h</span></code></p></li>
-</ol>
-</li>
-<li><p><strong>Transmit sequence is as follows</strong>.</p>
-<ol class="arabic simple">
-<li><p>Socket layer executes d_txavail callback</p></li>
-<li><p>An example of the txavail function can be found in
-<code class="docutils literal notranslate"><span class="pre">arch/arm/src/s32k1xx/s32k1xx_flexcan.c</span></code></p></li>
-<li><p>An example of the txpoll function can be found in
-<code class="docutils literal notranslate"><span class="pre">arch/arm/src/s32k1xx/s32k1xx_flexcan.c</span></code></p></li>
-<li><p>In your <code class="docutils literal notranslate"><span class="pre">transmit(struct</span> <span class="pre">driver_s</span> <span class="pre">*priv)</span></code> function you
-check the length of <code class="docutils literal notranslate"><span class="pre">net_driver_s.d_len</span></code> whether it
-matches the size of a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">can_frame</span></code> or
-<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">canfd_frame</span></code> then you cast the content of the
-<code class="docutils literal notranslate"><span class="pre">net_driver_s.d_buf</span></code> pointer to the correct CAN frame struct</p></li>
-</ol>
-</li>
-</ul>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="sixlowpan.html" class="btn btn-neutral float-left" title="6LoWPAN" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pkt.html" class="btn btn-neutral float-right" title="“Raw” packet socket support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="socketcan.html" class="btn btn-neutral float-left" title="SocketCAN Device Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nat.html" class="btn btn-neutral float-right" title="Network Address Translation (NAT)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
