@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>monkey Monkey test &mdash; NuttX latest documentation</title>
+  <title>nand - NAND Flash Device Simulator &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="mtd_nvs MTD non-volatile storage Test" href="../mtd_config_fs/index.html" />
-    <link rel="prev" title="mm Memory management test" href="../mm/index.html" /> 
+    <link rel="next" title="nist-sts NIST Statistical Test Suite" href="../nist-sts/index.html" />
+    <link rel="prev" title="mtd_nvs MTD non-volatile storage Test" href="../mtd_config_fs/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -156,9 +156,17 @@
 <li class="toctree-l3"><a class="reference internal" href="../memstress/index.html"><code class="docutils literal notranslate"><span class="pre">memstress</span></code> memory stress test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../memtester/index.html"><code class="docutils literal notranslate"><span class="pre">memtester</span></code> utils_memtester</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../mm/index.html"><code class="docutils literal notranslate"><span class="pre">mm</span></code> Memory management test</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">monkey</span></code> Monkey test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../monkey/index.html"><code class="docutils literal notranslate"><span class="pre">monkey</span></code> Monkey test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../mtd_config_fs/index.html"><code class="docutils literal notranslate"><span class="pre">mtd_nvs</span></code> MTD non-volatile storage Test</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../nand_sim/index.html"><code class="docutils literal notranslate"><span class="pre">nand</span></code> - NAND Flash Device Simulator</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nand</span></code> - NAND Flash Device Simulator</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#structure-of-nand-flash">Structure of NAND Flash</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ram-to-device-lower-half">RAM to Device (Lower Half)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#upper-half">Upper Half</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wrapper-over-upper-half">Wrapper Over Upper Half</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#registering-device-daemon">Registering Device &amp; Daemon</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#known-issues">Known Issues</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../nist-sts/index.html"><code class="docutils literal notranslate"><span class="pre">nist-sts</span></code> NIST Statistical Test Suite</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxfss/index.html"><code class="docutils literal notranslate"><span class="pre">nxffs</span></code> NXFFS file system example</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../open_memstream/index.html"><code class="docutils literal notranslate"><span class="pre">open_memstream</span></code> - open_memstream test tool</a></li>
@@ -207,9 +215,9 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Testing</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">monkey</span></code> Monkey test</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">nand</span></code> - NAND Flash Device Simulator</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/applications/testing/monkey/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/applications/testing/nand_sim/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -217,16 +225,167 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="monkey-monkey-test">
-<h1><code class="docutils literal notranslate"><span class="pre">monkey</span></code> Monkey test<a class="headerlink" href="#monkey-monkey-test" title="Permalink to this heading"></a></h1>
+  <section id="nand-nand-flash-device-simulator">
+<h1><code class="docutils literal notranslate"><span class="pre">nand</span></code> - NAND Flash Device Simulator<a class="headerlink" href="#nand-nand-flash-device-simulator" title="Permalink to this heading"></a></h1>
+<p>In order to test the filesystems that work with NAND flash devices in a
+simulator, this exists to provide a virtual NAND flash device, along with its
+driver, to allow manual (or scripted) testing, as well as to provide an
+option to log the various actions performed under-the-hood along with the
+state of the device, which includes the read, write and erase counts of each
+page in the device.</p>
+<section id="structure-of-nand-flash">
+<h2>Structure of NAND Flash<a class="headerlink" href="#structure-of-nand-flash" title="Permalink to this heading"></a></h2>
+<p>Most NAND flashes share a common interface, specified by the
+<a class="reference external" href="https://www.onfi.org/">Open NAND Flash Interface (ONFI)</a>.</p>
+<p>The important part from it, required in this context, is that a NAND Flash is
+divided into a lot of blocks. And each blocks are divided into a lot of
+pages.</p>
+<p>Here’s the peculiar bit. If you want to erase a page, you need to erase
+the <em>entire</em> block that it is part of, ie. blocks are the smallest erasable
+units in a NAND flash. However, a page is the smallest unit to which you can
+write data, or read data from.</p>
+<p>Why would you need erase operation? The Program/ Erase (P/E) cycle states
+that a page (and thus its block) need to be erased first before data can be
+written to it (Erase-Before-Write).</p>
+<p>Each page has a data area, and a spare area. Depending on the data area’s
+size, the spare area may have different structures (schemes). All the
+required schemes are defined in <code class="docutils literal notranslate"><span class="pre">/drivers/mtd/mtd_nandscheme.c</span></code> (in
+the <code class="docutils literal notranslate"><span class="pre">g_nand_sparescheme*</span></code> structures).</p>
+<p>Due to the nature of NAND flash, upon testing, a manufaturer may decide that
+a certain block fails some test(s), and mark it as a <strong>bad block</strong> by
+writing a certain value in a certain position in the spare area (depends on
+data area’s size, and thus, the spare area’s scheme) of every page in it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>While certain blocks may <em>still work</em> even if they are marked as bad,
+it’s inadvisable to store any data in it.</p></li>
+<li><p>The spare data is the <strong>only</strong> record of a block being bad or not.
+Please do not erase it.</p></li>
+<li><p>Certain blocks may become bad after continuous usage, and would need
+to be marked as such by either the filesystem or the driver.</p></li>
+</ul>
+</div>
+<p>Currently, this simulator supports only 512 B sized pages, which means it
+will follow  the <code class="docutils literal notranslate"><span class="pre">g_nand_sparescheme512</span></code> scheme for its spare area, and
+thus have a bad block marker at index <code class="docutils literal notranslate"><span class="pre">5</span></code>.</p>
+<p>If a block is <em>not</em> bad, it contains a value of <code class="docutils literal notranslate"><span class="pre">0xff</span></code> in the place of a
+bad block marker. Any other value denote it’s a bad block.</p>
+</section>
+<section id="ram-to-device-lower-half">
+<h2>RAM to Device (Lower Half)<a class="headerlink" href="#ram-to-device-lower-half" title="Permalink to this heading"></a></h2>
+<p>Since this is an emulation, RAM of the host running the simulator is used
+to create the device. While the speed of operations won’t be even close to
+the original, this being in the RAM, which works multitudes faster than
+actual device, the functionality on the other hand has been kept consistent
+to the utmost.</p>
+<p>First, <code class="docutils literal notranslate"><span class="pre">/include/nuttx/mtd/nand.h</span></code> has a structure <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_dev_s</span></code>
+defining a raw NAND MTD device (lowest level). Its field <code class="docutils literal notranslate"><span class="pre">nand_dev_s-&gt;raw</span></code>
+is of type <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_raw_s</span> <span class="pre">*</span></code> (defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/mtd/nand_raw.h</span></code>), and this is what will hold the methods
+for the raw device. There are primarily 3 methods that need to be looked
+into:</p>
+<ul class="simple">
+<li><p>eraseblock</p></li>
+<li><p>rawread</p></li>
+<li><p>rawwrite</p></li>
+</ul>
+<p>Conforming to the functionality of NAND flashes, these three were implemented
+as <code class="docutils literal notranslate"><span class="pre">nand_ram_*</span></code> in <code class="docutils literal notranslate"><span class="pre">/drivers/mtd/nand_ram.c</span></code> to emulate RAM into a
+virtual NAND flash.</p>
+<p>While in real devices, the spare area follows the data area (in most schemes)
+, since this is virtual, we can get away with keeping the two into two
+separate arrays, namely <code class="docutils literal notranslate"><span class="pre">nand_ram_flash_data</span></code> and <code class="docutils literal notranslate"><span class="pre">nand_ram_flash_spare</span></code>
+for data and spare respectively. Each array has as many elements as number
+of pages in the device.</p>
+<p>As the spare areas has some spare bytes we can use, some space is used as
+counters for the reads/writes/erases each page faces, thus giving a clear
+picture of wear of the virtual device to the tester.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>ECC extension has not been implemented yet, so ECC bits in spare are
+yet to be used or initialized properly.</p>
+</div>
+<p>The method <code class="docutils literal notranslate"><span class="pre">nand_ram_initialize()</span></code> takes in a preallocated space for a
+raw device (of type <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_raw_s</span></code> as defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/mtd/nand_raw.h</span></code>) and attaches these 3 custom methods as well
+as device information like page size, block size, etc. to it. These form
+the lower half of the driver.</p>
+</section>
+<section id="upper-half">
+<h2>Upper Half<a class="headerlink" href="#upper-half" title="Permalink to this heading"></a></h2>
+<p>The method <code class="docutils literal notranslate"><span class="pre">nand_ram_initialize()</span></code> also initializes a
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mtd_dev_s</span> <span class="pre">*</span></code> (defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/mtd/mtd.h</span></code>), which it
+returns. This structure contains a reference to our custom lower half in
+<code class="docutils literal notranslate"><span class="pre">mtd_dev_s-&gt;raw</span></code>, as well as an upper half containing methods <code class="docutils literal notranslate"><span class="pre">nand_*</span></code>
+(defined in <code class="docutils literal notranslate"><span class="pre">drivers/mtd/mtd_nand.c</span></code>).</p>
+</section>
+<section id="wrapper-over-upper-half">
+<h2>Wrapper Over Upper Half<a class="headerlink" href="#wrapper-over-upper-half" title="Permalink to this heading"></a></h2>
+<p>The upper half, along with the lower half attached to it, received from
+<code class="docutils literal notranslate"><span class="pre">nand_ram_initialize()</span></code> contains these 5 methods for the upper half:</p>
+<ul class="simple">
+<li><p>erase</p></li>
+<li><p>bread</p></li>
+<li><p>bwrite</p></li>
+<li><p>ioctl</p></li>
+<li><p>isbad</p></li>
+<li><p>markbad</p></li>
+</ul>
+<p>Each driver’s upper half needs to be registered with NuttX before it can
+appear in the list of devices (in <code class="docutils literal notranslate"><span class="pre">/dev</span></code>). Instead of the previously
+acquired upper-half, we’ll be registering a wrapper over it, to improve
+logging. The wrapper methods are defined as <code class="docutils literal notranslate"><span class="pre">nand_wrapper_*</span></code> in
+<code class="docutils literal notranslate"><span class="pre">drivers/mtd/mtd_nandwrapper.c</span></code>.</p>
+<p>Here’s a complicated bit. The actual upper half is an MTD device, but
+more specifically, it is a NAND MTD device, which is represented by
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_dev_s</span></code>. Due to how it is defined, <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mtd_dev_s</span></code> forms
+the very start of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_dev_s</span></code>, and hence they can be type-casted
+to each other (provided required memory is accessible). Our wrapper, being a
+wrapper over an MTD device, is an MTD device itself as well. MTD device
+methods take in a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mtd_dev_s</span> <span class="pre">*dev</span></code> which describe the device
+itself (which is the actual device that is registered using
+<code class="docutils literal notranslate"><span class="pre">register_mtddriver</span></code>), which includes its methods. Our wrapper methods
+receive such a device as well, which contains the wrapper device including
+the wrapper functions. But, this way, there is no way of accessing the
+methods of the actual upper half itself. Thus, instead of <code class="docutils literal notranslate"><span class="pre">dev</span></code> being
+of type <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_dev_s</span></code>, it is actually of type
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_wrapper_dev_s</span></code> which is a superset of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_dev_s</span></code>,
+who itself is a superset of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mtd_dev_s</span></code>. Similar to previous case,
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mtd_dev_s</span></code> forms the very start of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nand_wrapper_dev_s</span></code>,
+and thus the types are inter-changeable.</p>
+<p>The methods <code class="docutils literal notranslate"><span class="pre">nand_wrapper_*</span></code> in <code class="docutils literal notranslate"><span class="pre">drivers/mtd/mtd_nandwrapper.c</span></code> all
+pass the parameters to corresponding method of the actual upper half
+after logging it. <em>But, the device passed on to the actual upper half
+is still the wrapper, not the actual upper half, as the upper half methods
+may call the other methods as well internally and we might want to log
+them as well</em>.</p>
+</section>
+<section id="registering-device-daemon">
+<h2>Registering Device &amp; Daemon<a class="headerlink" href="#registering-device-daemon" title="Permalink to this heading"></a></h2>
+<p>This wrapper is then registered using <code class="docutils literal notranslate"><span class="pre">register_mtddriver</span></code>, and this
+whole thing is converted to be a daemon, so that the device can keep running
+in the background.</p>
+<p>Making it a daemon is achieved by using <code class="docutils literal notranslate"><span class="pre">fork()</span></code>, killing the parent, and
+using <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> in child.</p>
+</section>
+<section id="known-issues">
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>ECC is not implemented yet.</p></li>
+<li><p>MLC NAND Flash is not implemented yet.</p></li>
+<li><p>Due to the fixed name of the device, there can’t be more than one instance
+of this virtual device.</p></li>
+</ul>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../mm/index.html" class="btn btn-neutral float-left" title="mm Memory management test" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../mtd_config_fs/index.html" class="btn btn-neutral float-right" title="mtd_nvs MTD non-volatile storage Test" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../mtd_config_fs/index.html" class="btn btn-neutral float-left" title="mtd_nvs MTD non-volatile storage Test" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../nist-sts/index.html" class="btn btn-neutral float-right" title="nist-sts NIST Statistical Test Suite" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
