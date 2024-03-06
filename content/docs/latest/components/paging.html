@@ -119,22 +119,29 @@
 <li class="toctree-l2"><a class="reference internal" href="nxflat.html">NXFLAT</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nxgraphics/index.html">NX Graphics Subsystem</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">On-Demand Paging</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kernel-build-implementation">Kernel Build Implementation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#requirements-and-assumptions">Requirements and Assumptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#logic-design-description">Logic Design Description</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#example-risc-v">Example: RISC-V</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#legacy-implementation">Legacy Implementation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#terminology">Terminology</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nuttx-common-logic-design-description">NuttX Common Logic Design Description</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#initialization">Initialization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#page-faults">Page Faults</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#fill-initiation">Fill Initiation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#fill-complete">Fill Complete</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#task-resumption">Task Resumption</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#nuttx-common-logic-design-description">NuttX Common Logic Design Description</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#initialization">Initialization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#page-faults">Page Faults</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#fill-initiation">Fill Initiation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#fill-complete">Fill Complete</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#task-resumption">Task Resumption</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#architecture-specific-support-requirements">Architecture-Specific Support Requirements</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#memory-organization">Memory Organization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#architecture-specific-functions">Architecture-Specific Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#architecture-specific-support-requirements">Architecture-Specific Support Requirements</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#memory-organization">Memory Organization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#architecture-specific-functions">Architecture-Specific Functions</a></li>
 </ul>
 </li>
 </ul>
@@ -190,14 +197,69 @@
              
   <section id="on-demand-paging">
 <span id="ondemandpaging"></span><h1>On-Demand Paging<a class="headerlink" href="#on-demand-paging" title="Permalink to this heading"></a></h1>
-<section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
-<section id="overview">
-<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h3>
-<p>This document summarizes the design of NuttX on-demand paging. This
-feature permits embedded MCUs with some limited RAM space to execute
-large programs from some non-random access media.</p>
-<p>What kind of platforms can support NuttX on-demang paging?</p>
+<section id="kernel-build-implementation">
+<h2>Kernel Build Implementation<a class="headerlink" href="#kernel-build-implementation" title="Permalink to this heading"></a></h2>
+<p>On-demand paging and lazy loading are techniques used to manage physical
+memory. The basic idea is to allow a program to execute even though the
+entire program is not resident in memory. The program is loaded into
+memory on demand. This is a technique that is used in many operating
+systems to allow large programs to execute on small memory systems.
+Commonly, a Memory Management Unit (MMU) is used to map virtual memory
+into physical memory. Applications are then loaded into virtual memory
+address spaces and access to physical memory is managed by the MMU. If
+the virtual memory is not resident in physical memory, then a page fault
+occurs. The operating system then loads the missing page into memory and
+resumes execution.</p>
+<section id="requirements-and-assumptions">
+<h3>Requirements and Assumptions<a class="headerlink" href="#requirements-and-assumptions" title="Permalink to this heading"></a></h3>
+<p>On-demand paging requires <em>Kernel Build</em> (<code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_KERNEL=y</span></code>) mode.
+In this mode, no applications are built within the NuttX kernel. Instead,
+the applications are built as separate programs that are loaded into memory
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_ELF=y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_LOADABLE=y</span></code>). In this mode, each
+process has its own address environment (<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ADDRENV=y</span></code>).</p>
+</section>
+<section id="logic-design-description">
+<h3>Logic Design Description<a class="headerlink" href="#logic-design-description" title="Permalink to this heading"></a></h3>
+<p>When an application is being loaded <code class="docutils literal notranslate"><span class="pre">up_addrenv_create</span></code> is called to create
+the process’s address environment. This includes mapping the commonly used
+<code class="docutils literal notranslate"><span class="pre">text</span></code>, <code class="docutils literal notranslate"><span class="pre">data</span></code> and <code class="docutils literal notranslate"><span class="pre">heap</span></code> sections withing the virtual memory space.
+Without on-demand paging, the physical memory is then allocated and mapped
+accordingly, before the process is started. When on-demand paging is enabled,
+usually only one single page for each section is allocated and mapped.</p>
+<p>The process starts executing within its address environment, accessing the
+virtual memory. Whenever it tries to access a virtual memory address that is
+not mapped in the MMU, a page fault occurs. The MMU then triggers an
+exception that is handled by the kernel. The kernel then checks if there are
+enough free physical pages available and maps the virtual memory address to
+it. Finally, execution is resumed from the same point where the page fault
+first occurred.</p>
+<section id="example-risc-v">
+<h4>Example: RISC-V<a class="headerlink" href="#example-risc-v" title="Permalink to this heading"></a></h4>
+<p>RISC-V’s <code class="docutils literal notranslate"><span class="pre">up_addrenv_create</span></code> calls <code class="docutils literal notranslate"><span class="pre">create_region</span></code> (both defined in
+<code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/riscv_addrenv.c</span></code>). <code class="docutils literal notranslate"><span class="pre">create_region</span></code> maps a single
+region to MMU by allocating physical memory for the page tables. When
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING=y</span></code> is not selected, all the physical page tables are
+allocated from the physical memory space and then mapped to the virtual
+memory space. When <code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING=y</span></code> is selected, only the first page of
+each section is mapped to the virtual memory space. The rest of the pages are
+mapped to the virtual memory space only when a page fault occurs.</p>
+<p>The page fault is handled by the <code class="docutils literal notranslate"><span class="pre">riscv_fillpage</span></code> function in the exception
+handler (defined in <code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/riscv_exception.c</span></code>). Whenever
+a page fault occurs, the <code class="docutils literal notranslate"><span class="pre">riscv_fillpage</span></code> function is called. This function
+allocates a physical page and maps it to the virtual memory space that
+triggered the page fault exception and then resumes execution from the same
+point where the page fault first occurred.</p>
+<p><a class="reference internal" href="../platforms/risc-v/qemu-rv/boards/rv-virt/index.html#knsh32-paging"><span class="std std-ref">knsh32_paging</span></a> simulates a device with 4MiB physical memory with 8MiB
+of virtual heap memory allocated for each process. This is possible by
+enabling on-demand paging.</p>
+</section>
+</section>
+</section>
+<section id="legacy-implementation">
+<h2>Legacy Implementation<a class="headerlink" href="#legacy-implementation" title="Permalink to this heading"></a></h2>
+<p>This legacy implementation runs on <em>Flat Build</em> (<em>Kernel Build</em> did not
+even exist at that time).</p>
+<p>What kind of platforms can support NuttX legacy on-demand paging?</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>The MCU should have some large, probably low-cost non-volatile
@@ -214,11 +276,10 @@ LPC3131) would be sufficient for many applications.</p></li>
 <li><p>The MCU has an MMU (again like the NXP LPC3131).</p></li>
 </ol>
 </div></blockquote>
-<p>If the platform meets these requirement, then NuttX can provide
+<p>If the platform meets these requirements, then NuttX can provide
 on-demand paging: It can copy .text from the large program in
 non-volatile media into RAM as needed to execute a huge program from the
 small RAM.</p>
-</section>
 <section id="terminology">
 <h3>Terminology<a class="headerlink" href="#terminology" title="Permalink to this heading"></a></h3>
 <blockquote>
@@ -242,11 +303,10 @@ a page fault.</p>
 </dl>
 </div></blockquote>
 </section>
-</section>
 <section id="nuttx-common-logic-design-description">
-<h2>NuttX Common Logic Design Description<a class="headerlink" href="#nuttx-common-logic-design-description" title="Permalink to this heading"></a></h2>
+<h3>NuttX Common Logic Design Description<a class="headerlink" href="#nuttx-common-logic-design-description" title="Permalink to this heading"></a></h3>
 <section id="initialization">
-<h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this heading"></a></h3>
+<h4>Initialization<a class="headerlink" href="#initialization" title="Permalink to this heading"></a></h4>
 <p>The following declarations will be added.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">g_waitingforfill</span></code>. A doubly linked list that will be used to
@@ -276,7 +336,7 @@ logic, those architecture specific functions are instead declared in
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/page.h</span></code>.</p>
 </section>
 <section id="page-faults">
-<h3>Page Faults<a class="headerlink" href="#page-faults" title="Permalink to this heading"></a></h3>
+<h4>Page Faults<a class="headerlink" href="#page-faults" title="Permalink to this heading"></a></h4>
 <p><strong>Page fault exception handling</strong>. Page fault handling is performed by
 the function <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code>. This function is called from
 architecture-specific memory segmentation fault handling logic. This
@@ -331,7 +391,7 @@ page fill.</p></li>
 </ul>
 </section>
 <section id="fill-initiation">
-<h3>Fill Initiation<a class="headerlink" href="#fill-initiation" title="Permalink to this heading"></a></h3>
+<h4>Fill Initiation<a class="headerlink" href="#fill-initiation" title="Permalink to this heading"></a></h4>
 <p>The page fill worker thread will be awakened on one of three conditions:</p>
 <ul class="simple">
 <li><p>When signaled by <code class="docutils literal notranslate"><span class="pre">pg_miss()</span></code>, the page fill worker thread will be
@@ -401,7 +461,7 @@ task must still be available to run.</p>
 will be prototyped in <code class="docutils literal notranslate"><span class="pre">include/nuttx/arch.h</span></code></p>
 </section>
 <section id="fill-complete">
-<h3>Fill Complete<a class="headerlink" href="#fill-complete" title="Permalink to this heading"></a></h3>
+<h4>Fill Complete<a class="headerlink" href="#fill-complete" title="Permalink to this heading"></a></h4>
 <p>For the blocking <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>, the result of the fill will be
 returned directly from the call to <code class="docutils literal notranslate"><span class="pre">up_fillpage</span></code>.</p>
 <p>For the non-blocking <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>, the architecture-specific driver
@@ -428,7 +488,7 @@ highest priority task that is waiting for a fill.</p></li>
 </ul>
 </section>
 <section id="task-resumption">
-<h3>Task Resumption<a class="headerlink" href="#task-resumption" title="Permalink to this heading"></a></h3>
+<h4>Task Resumption<a class="headerlink" href="#task-resumption" title="Permalink to this heading"></a></h4>
 <p>For the non-blocking <code class="docutils literal notranslate"><span class="pre">up_fillpage()</span></code>, the page fill worker thread will
 detect that the page fill is complete when it is awakened with
 <code class="docutils literal notranslate"><span class="pre">g_pftcb</span></code> non-NULL and fill completion status from <code class="docutils literal notranslate"><span class="pre">pg_callback</span></code>. In
@@ -464,9 +524,9 @@ described above).</p></li>
 </section>
 </section>
 <section id="architecture-specific-support-requirements">
-<h2>Architecture-Specific Support Requirements<a class="headerlink" href="#architecture-specific-support-requirements" title="Permalink to this heading"></a></h2>
+<h3>Architecture-Specific Support Requirements<a class="headerlink" href="#architecture-specific-support-requirements" title="Permalink to this heading"></a></h3>
 <section id="memory-organization">
-<h3>Memory Organization<a class="headerlink" href="#memory-organization" title="Permalink to this heading"></a></h3>
+<h4>Memory Organization<a class="headerlink" href="#memory-organization" title="Permalink to this heading"></a></h4>
 <p><strong>Memory Regions</strong>. Chip specific logic will map the virtual and
 physical address spaces into three general regions:</p>
 <ol class="arabic simple">
@@ -583,7 +643,7 @@ should position the “special” section so that it lies in a reserved,
 </ul>
 </section>
 <section id="architecture-specific-functions">
-<h3>Architecture-Specific Functions<a class="headerlink" href="#architecture-specific-functions" title="Permalink to this heading"></a></h3>
+<h4>Architecture-Specific Functions<a class="headerlink" href="#architecture-specific-functions" title="Permalink to this heading"></a></h4>
 <p>Most standard, architecture-specific functions are declared in
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/arch.h</span></code>. However, for the case of this paging logic,
 the architecture specific functions are declared in
@@ -627,6 +687,7 @@ callback is assumed to occur from an interrupt level when the device
 driver completes the fill operation.</p>
 </dd></dl>
 
+</section>
 </section>
 </section>
 </section>
