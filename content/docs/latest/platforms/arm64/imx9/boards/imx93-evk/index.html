@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>imx8qm-mek &mdash; NuttX latest documentation</title>
+  <title>imx93-evk &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="NXP i.MX9" href="../../../imx9/index.html" />
-    <link rel="prev" title="NXP i.MX8" href="../../index.html" /> 
+    <link rel="next" title="qemu" href="../../../qemu/index.html" />
+    <link rel="prev" title="NXP i.MX9" href="../../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -117,14 +117,14 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../../../index.html">ARM64</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../../../a64/index.html">Allwinner A64</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../fvp-v8r/index.html">fvp-v8r</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="../../index.html">NXP i.MX8</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../../imx8/index.html">NXP i.MX8</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html">NXP i.MX9</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
-<li class="toctree-l5 current"><a class="current reference internal" href="#">imx8qm-mek</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">imx93-evk</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../imx9/index.html">NXP i.MX9</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../qemu/index.html">qemu</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../rk3399/index.html">Rockchip rk3399</a></li>
 </ul>
@@ -172,10 +172,10 @@
       <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM64</a></li>
-          <li class="breadcrumb-item"><a href="../../index.html">NXP i.MX8</a></li>
-      <li class="breadcrumb-item active">imx8qm-mek</li>
+          <li class="breadcrumb-item"><a href="../../index.html">NXP i.MX9</a></li>
+      <li class="breadcrumb-item active">imx93-evk</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../../../_sources/platforms/arm64/imx8/boards/imx8qm-mek/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../../../_sources/platforms/arm64/imx9/boards/imx93-evk/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -183,13 +183,153 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="imx8qm-mek">
-<h1>imx8qm-mek<a class="headerlink" href="#imx8qm-mek" title="Permalink to this heading"></a></h1>
+  <section id="imx93-evk">
+<h1>imx93-evk<a class="headerlink" href="#imx93-evk" title="Permalink to this heading"></a></h1>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README.txt
 ==========
 
-TODO
+The kit i.MX93 Evaluation Kit has a pre-installed Linux image which contains
+u-boot and the i.MX93 reference Linux installation.
 
+u-boot is required to boot NuttX (for now) as it initializes the hardware for
+us, i.e. DDR, clocks, I/O muxes etc.
+
+==========================================
+
+How to run nuttx on i.MX93 Evaluation Kit.
+
+==========================================
+
+Below is a set of instructions on how to run NuttX on the i.MX93 EVK
+
+==========================================
+
+Pre-requisites
+
+==========================================
+
+- imx93_ca55.JLinkScript which is a custom file, put it wherever you want
+
+==========================================
+
+U-Boot configuration
+
+==========================================
+
+Two things need to be configured on u-boot before NuttX can be loaded:
+
+- u-boot data cache must be turned off
+- u-boot must stop to the u-boot console, i.e. the Linux payload must not be loaded
+
+Manual option:
+
+1. Disable u-boot autostart (needs to be done only once):
+
+    Hit any key to stop autoboot:  0
+    u-boot=&gt; setenv bootdelay -1
+    u-boot=&gt; saveenv
+    Saving Environment to MMC... Writing to MMC(0)... OK
+    u-boot=&gt; reset
+
+2. On every boot, the data cache must be disabled for options 2 and 3 to work
+
+    u-boot=&gt; dcache off
+
+Automated option:
+
+1. Replace the default bootcmd to disable dcache automatically:
+
+    u-boot=&gt; setenv bootcmd dcache off
+    u-boot=&gt; saveenv
+    Saving Environment to MMC... Writing to MMC(0)... OK
+    u-boot=&gt; reset
+
+To restore the default bootcmd which starts Linux automatically:
+
+    u-boot=&gt; setenv bootcmd run distro_bootcmd;run bsp_bootcmd
+    u-boot=&gt; saveenv
+    Saving Environment to MMC... Writing to MMC(0)... OK
+    u-boot=&gt; reset
+
+The default bootcmd is:
+
+u-boot=&gt; env print bootcmd
+bootcmd=run distro_bootcmd;run bsp_bootcmd
+
+==========================================
+
+Loading and running the NuttX image
+
+==========================================
+
+You have three options:
+
+1 - Load via u-boot from SD-card
+2 - Load via gdb
+3 - Load via JLink
+
+==========================================
+
+Option 1: load via u-boot from SD-card:
+
+==========================================
+
+1. Build nuttx, and move nuttx.bin to SD-card
+
+2. Load from SD-card and start nuttx payload
+
+    u-boot=&gt; dcache off; fatload mmc 1 0x80000000 nuttx.bin; go 0x80000000
+
+==========================================
+
+Option 2: start via gdb:
+
+==========================================
+
+1. Start JLinkGDBServer
+
+    JLinkGDBServer -device CORTEX-A55 -JLinkScriptFile &lt;path_to&gt;/imx93_ca55.JLinkScript
+
+2. Start gdb
+
+    $ aarch64-none-elf-gdb
+
+ 2.1 Attach and load nuttx
+
+    (gdb) target remote localhost:2331
+    (gdb) set mem inaccessible-by-default off
+    (gdb) load &lt;path_to&gt;/nuttx
+    (gdb) monitor go
+
+==========================================
+
+Option 3: load with JLink:
+
+==========================================
+
+1. Start JLink 
+
+    $ JLinkExe -device CORTEX-A55 -if JTAG -jtagconf -1,-1 -speed 4000 -JLinkScriptFile &lt;path_to&gt;/imx93_ca55.JLinkScript
+
+ 1.1 Add -AutoConnect 1 to connect automatically
+
+    $ JLinkExe -device CORTEX-A55 -if JTAG -jtagconf -1,-1 -speed 4000 -JLinkScriptFile &lt;path_to&gt;/imx93_ca55.JLinkScript -AutoConnect 1
+
+2. Connect JLink
+    
+ 2.1 Connect to the debugger
+
+    Type &quot;connect&quot; to establish a target connection, &#39;?&#39; for help
+    J-Link&gt;connect
+
+    You should now have a JLink prompt.
+    
+    Cortex-A55 identified.
+    J-Link&gt;
+
+3. Load nuttx. Note that JLink expects the .elf extension, the default build output of nuttx is just &quot;nuttx&quot; without the extension, so it must be added to the file...
+
+    J-Link&gt;LoadFile &lt;path_to&gt;/nuttx.elf
 </pre></div>
 </div>
 </section>
@@ -198,8 +338,8 @@ TODO
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../index.html" class="btn btn-neutral float-left" title="NXP i.MX8" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../../imx9/index.html" class="btn btn-neutral float-right" title="NXP i.MX9" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../index.html" class="btn btn-neutral float-left" title="NXP i.MX9" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../../qemu/index.html" class="btn btn-neutral float-right" title="qemu" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
