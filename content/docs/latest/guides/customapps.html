@@ -230,9 +230,9 @@ ensure it works correctly.</p>
 </div></blockquote>
 <section id="makefile">
 <h3>1.1 Makefile<a class="headerlink" href="#makefile" title="Permalink to this heading"></a></h3>
-<p>The custom application directory must include a Makefile to make all of the targets
-expected by the NuttX build and must generate an archive called libapps.a in the
-top-level of the custom directory structure.</p>
+<p>The custom application directory must include a Makefile to make all of the
+targets expected by the NuttX build and must generate an archive called
+libapps.a in the top-level of the custom directory structure.</p>
 <p>The Makefile has just those minimum required targets:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">APPDIR = ${shell pwd}</span>
@@ -302,9 +302,10 @@ top-level of the custom directory structure.</p>
 </section>
 <section id="kconfig">
 <h3>1.2 Kconfig<a class="headerlink" href="#kconfig" title="Permalink to this heading"></a></h3>
-<p>A Kconfig file must be included but need not be populated with any meaningful options.
-This is a place where you can add settings to generate customized builds of your custom
-application and/or choose which of your apps to include.</p>
+<p>A Kconfig file must be included but need not be populated with any meaningful
+options.
+This is a place where you can add settings to generate customized builds of
+your custom application and/or choose which of your apps to include.</p>
 <p>In the minimum case, Kconfig is only:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
@@ -313,11 +314,37 @@ application and/or choose which of your apps to include.</p>
 </pre></div>
 </div>
 </div></blockquote>
-<p>or</p>
+<p>but it is more usual to include at least the basic information any NuttX app
+requires, as well as anything else your app may need:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
 <span class="gp"># </span>see<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>kconfig-language.txt<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>NuttX<span class="w"> </span>tools<span class="w"> </span>repository.
 <span class="gp">#</span>
+
+<span class="go">config CUSTOM_APPS_MY_APP</span>
+<span class="go">          tristate &quot;My App&quot;</span>
+<span class="go">          default n</span>
+<span class="go">          ---help---</span>
+<span class="go">                Enable My App</span>
+
+<span class="go">if CUSTOM_APPS_MY_APP</span>
+
+<span class="go">config CUSTOM_APPS_MY_APP_PROGNAME</span>
+<span class="go">    string &quot;Program name&quot;</span>
+<span class="go">    default &quot;myapp&quot;</span>
+<span class="go">    ---help---</span>
+<span class="go">              This is the name of the program that will be used when the NSH ELF</span>
+<span class="go">              program is installed.</span>
+
+<span class="go">config CUSTOM_APPS_MY_APP_PRIORITY</span>
+<span class="go">    int &quot;My App task priority&quot;</span>
+<span class="go">    default 100</span>
+
+<span class="go">config CUSTOM_APPS_MY_APP_STACKSIZE</span>
+<span class="go">    int &quot;My App stack size&quot;</span>
+<span class="go">    default DEFAULT_TASK_STACKSIZE</span>
+
+<span class="go">endif</span>
 </pre></div>
 </div>
 </div></blockquote>
