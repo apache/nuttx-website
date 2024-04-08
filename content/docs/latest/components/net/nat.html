@@ -136,6 +136,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="netdev.html">Network Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netdriver.html">Network Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="netguardsize.html">CONFIG_NET_GUARDSIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="slip.html">SLIP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wqueuedeadlocks.html">Work Queue Deadlocks</a></li>
@@ -189,7 +190,7 @@
              
   <section id="network-address-translation-nat">
 <h1>Network Address Translation (NAT)<a class="headerlink" href="#network-address-translation-nat" title="Permalink to this heading"></a></h1>
-<p>NuttX supports full cone NAT logic, which currently supports</p>
+<p>NuttX supports full cone or symmetric NAT logic, which currently supports</p>
 <ul class="simple">
 <li><p>TCP</p></li>
 <li><p>UDP</p></li>
@@ -232,6 +233,12 @@ with <code class="docutils literal notranslate"><span class="pre">local</span> <
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code></dt><dd><p>Enable or disable Network Address Translation (NAT) function.
 Depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_IPFORWARD</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_FULL_CONE</span></code></dt><dd><p>Enable Full Cone NAT logic. Full Cone NAT is easier to traverse than
+Symmetric NAT, and uses less resources than Symmetric NAT.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_SYMMETRIC</span></code></dt><dd><p>Enable Symmetric NAT logic. Symmetric NAT will be safer than Full Cone NAT,
+be more difficult to traverse, and has more entries which may lead to heavier load.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_HASH_BITS</span></code></dt><dd><p>The bits of the hashtable of NAT entries, hashtable has (1 &lt;&lt; bits) buckets.</p>
 </dd>
@@ -303,7 +310,8 @@ CONFIG_SIM_NETDEV_NUMBER=2
 </div>
 </div></blockquote>
 <ol class="arabic simple" start="2">
-<li><p>Call <code class="docutils literal notranslate"><span class="pre">ipv4_nat_enable</span></code> on one dev on startup</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">ipv4_nat_enable</span></code> on one dev on startup, or manually enable NAT
+with <code class="docutils literal notranslate"><span class="pre">iptables</span></code> command (either may work).</p></li>
 </ol>
 <blockquote>
 <div><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* arch/sim/src/sim/up_netdriver.c */</span>
@@ -313,6 +321,9 @@ CONFIG_SIM_NETDEV_NUMBER=2
 <span class="w">  </span><span class="n">ipv4_nat_enable</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_sim_dev</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
 <span class="w">  </span><span class="p">...</span>
 <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
 </pre></div>
 </div>
 </div></blockquote>
