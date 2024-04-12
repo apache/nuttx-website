@@ -234,10 +234,13 @@ with <code class="docutils literal notranslate"><span class="pre">local</span> <
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code></dt><dd><p>Enable or disable Network Address Translation (NAT) function.
 Depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_IPFORWARD</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_FULL_CONE</span></code></dt><dd><p>Enable Full Cone NAT logic. Full Cone NAT is easier to traverse than
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66</span></code></dt><dd><p>Enable or disable NAT on IPv4 / IPv6.
+Depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44_FULL_CONE</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66_FULL_CONE</span></code></dt><dd><p>Enable Full Cone NAT logic. Full Cone NAT is easier to traverse than
 Symmetric NAT, and uses less resources than Symmetric NAT.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_SYMMETRIC</span></code></dt><dd><p>Enable Symmetric NAT logic. Symmetric NAT will be safer than Full Cone NAT,
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44_SYMMETRIC</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66_SYMMETRIC</span></code></dt><dd><p>Enable Symmetric NAT logic. Symmetric NAT will be safer than Full Cone NAT,
 be more difficult to traverse, and has more entries which may lead to heavier load.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_HASH_BITS</span></code></dt><dd><p>The bits of the hashtable of NAT entries, hashtable has (1 &lt;&lt; bits) buckets.</p>
@@ -250,6 +253,8 @@ performance.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_UDP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle UDP entry in NAT.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ICMP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle ICMP entry in NAT.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ICMPv6_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle ICMPv6 entry in NAT.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ENTRY_RECLAIM_SEC</span></code></dt><dd><p>The time to auto reclaim all expired NAT entries. A value of zero will
 disable auto reclaiming.
@@ -265,13 +270,13 @@ only trigger reclaiming on a few chains in hashtable).</p>
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="#c.ipv4_nat_enable" title="ipv4_nat_enable"><code class="xref c c-func docutils literal notranslate"><span class="pre">ipv4_nat_enable()</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.ipv4_nat_disable" title="ipv4_nat_disable"><code class="xref c c-func docutils literal notranslate"><span class="pre">ipv4_nat_disable()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.nat_enable" title="nat_enable"><code class="xref c c-func docutils literal notranslate"><span class="pre">nat_enable()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.nat_disable" title="nat_disable"><code class="xref c c-func docutils literal notranslate"><span class="pre">nat_disable()</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.ipv4_nat_enable">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ipv4_nat_enable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.ipv4_nat_enable" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object c" id="c.nat_enable">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nat_enable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.nat_enable" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Enable NAT function on a network device, on which the outbound packets
 will be masqueraded.</p>
 <dl class="field-list simple">
@@ -283,8 +288,8 @@ the device; A negated errno value is returned if failed.</p>
 </dd></dl>
 
 <dl class="c function">
-<dt class="sig sig-object c" id="c.ipv4_nat_disable">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ipv4_nat_disable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.ipv4_nat_disable" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object c" id="c.nat_disable">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nat_disable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.nat_disable" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Disable NAT function on a network device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -310,7 +315,7 @@ CONFIG_SIM_NETDEV_NUMBER=2
 </div>
 </div></blockquote>
 <ol class="arabic simple" start="2">
-<li><p>Call <code class="docutils literal notranslate"><span class="pre">ipv4_nat_enable</span></code> on one dev on startup, or manually enable NAT
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">nat_enable</span></code> on one dev on startup, or manually enable NAT
 with <code class="docutils literal notranslate"><span class="pre">iptables</span></code> command (either may work).</p></li>
 </ol>
 <blockquote>
@@ -318,7 +323,7 @@ with <code class="docutils literal notranslate"><span class="pre">iptables</span
 <span class="kt">int</span><span class="w"> </span><span class="nf">netdriver_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="p">...</span>
-<span class="w">  </span><span class="n">ipv4_nat_enable</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_sim_dev</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="w">  </span><span class="n">nat_enable</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_sim_dev</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
 <span class="w">  </span><span class="p">...</span>
 <span class="p">}</span>
 </pre></div>
@@ -335,6 +340,10 @@ with <code class="docutils literal notranslate"><span class="pre">iptables</span
 ifup<span class="w"> </span>eth0
 ifconfig<span class="w"> </span>eth1<span class="w"> </span><span class="m">10</span>.0.10.2
 ifup<span class="w"> </span>eth1
+
+<span class="c1"># IPv6 if you need</span>
+ifconfig<span class="w"> </span>eth0<span class="w"> </span>inet6<span class="w"> </span>add<span class="w"> </span>fc00:1::2/64<span class="w"> </span>gw<span class="w"> </span>fc00:1::1
+ifconfig<span class="w"> </span>eth1<span class="w"> </span>inet6<span class="w"> </span>add<span class="w"> </span>fc00:10::2/64
 </pre></div>
 </div>
 </div></blockquote>
@@ -366,6 +375,22 @@ iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </
 iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
 iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
 sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv4.ip_forward<span class="o">=</span><span class="m">1</span>
+
+<span class="c1"># IPv6 if you need</span>
+<span class="nv">IP6_HOST_0</span><span class="o">=</span><span class="s2">&quot;fc00:1::1&quot;</span>
+<span class="nv">IP6_HOST_1</span><span class="o">=</span><span class="s2">&quot;fc00:10::1&quot;</span>
+<span class="nv">IP6_NUTTX_1</span><span class="o">=</span><span class="s2">&quot;fc00:10::2&quot;</span>
+
+<span class="c1"># add address and set default route</span>
+ip<span class="w"> </span>-6<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="nv">$IP6_HOST_0</span>/64<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_0</span>
+ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>-6<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="nv">$IP6_HOST_1</span>/64<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_1</span>
+ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>-6<span class="w"> </span>route<span class="w"> </span>add<span class="w"> </span>default<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_1</span><span class="w"> </span>via<span class="w"> </span><span class="nv">$IP6_NUTTX_1</span>
+
+<span class="c1"># nat to allow NuttX to access the internet</span>
+ip6tables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-j<span class="w"> </span>MASQUERADE
+ip6tables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
+ip6tables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
+sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.forwarding<span class="o">=</span><span class="m">1</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -380,18 +405,24 @@ sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </sp
 </pre></div>
 </div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Host side</span>
-python3<span class="w"> </span>-m<span class="w"> </span>http.server
+python3<span class="w"> </span>-m<span class="w"> </span>http.server<span class="w"> </span>-b<span class="w"> </span>::
 <span class="c1"># LAN side</span>
 <span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">1</span>..20000<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>curl<span class="w"> </span><span class="s1">&#39;http://10.0.1.1:8000/&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="m">2</span>&gt;1<span class="p">;</span><span class="w"> </span><span class="k">done</span>
+<span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">1</span>..20000<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>curl<span class="w"> </span><span class="s1">&#39;http://[fc00:1::1]:8000/&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="m">2</span>&gt;1<span class="p">;</span><span class="w"> </span><span class="k">done</span>
 </pre></div>
 </div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># LAN side</span>
 sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ping<span class="w"> </span><span class="m">8</span>.8.8.8
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ping<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
 </pre></div>
 </div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># LAN side</span>
 sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w">     </span><span class="c1"># ICMP error msg of UDP</span>
 sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-T<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w">  </span><span class="c1"># ICMP error msg of TCP</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-I<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w">  </span><span class="c1"># ICMP error msg of ICMP</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-T<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-I<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
 </pre></div>
 </div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Host side</span>
