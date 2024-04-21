@@ -235,12 +235,20 @@ board or architecture supported by QEMU.</p>
 <blockquote>
 <div><p>These steps show how to connect GDB to QEMU running NuttX:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb-multiarch<span class="w"> </span>-ix<span class="w"> </span>tools/nuttx-gdbinit<span class="w"> </span>nuttx
-<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">target extended-remote localhost:1234</span>
-<span class="go">Remote debugging using localhost:1234</span>
-<span class="go">0x000012ee in up_mdelay (milliseconds=milliseconds@entry=250)</span>
-<span class="go">    at common/arm_mdelay.c:51</span>
-<span class="go">51             for (j = 0; j &lt; CONFIG_BOARD_LOOPSPERMSEC; j++)</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb-multiarch<span class="w"> </span>nuttx<span class="w"> </span>-ex<span class="w"> </span><span class="s2">&quot;source tools/gdb/__init__.py&quot;</span><span class="w"> </span>-ex<span class="w"> </span><span class="s2">&quot;target remote 127.0.0.1:1234&quot;</span>
+<span class="go"> Type &quot;apropos word&quot; to search for commands related to &quot;word&quot;...</span>
+<span class="go"> Reading symbols from nuttx...</span>
+<span class="go"> set pagination off</span>
+<span class="go"> source tools/gdb/lists.py</span>
+<span class="go"> source tools/gdb/utils.py</span>
+<span class="go"> source tools/gdb/memdump.py</span>
+
+<span class="go"> if use thread command, please don&#39;t use &#39;continue&#39;, use &#39;c&#39; instead !!!</span>
+<span class="go"> source tools/gdb/thread.py</span>
+<span class="go"> &quot;handle SIGUSR1 &quot;nostop&quot; &quot;pass&quot; &quot;noprint&quot;</span>
+<span class="go"> Remote debugging using 127.0.0.1:1234</span>
+<span class="go"> 0x0000a45a in up_idle () at chip/common/tiva_idle.c:62</span>
+<span class="go"> 62      }</span>
 <span class="gp gp-VirtualEnv">(gdb)</span>
 </pre></div>
 </div>
@@ -249,30 +257,13 @@ board or architecture supported by QEMU.</p>
 <ol class="arabic">
 <li><p>From (gdb) prompt you can run commands to inpect NuttX:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">info_nxthreads</span>
-<span class="go">target examined</span>
-<span class="go">_target_arch.name=armv7</span>
-<span class="gp">$</span>_target_has_fpu<span class="w"> </span>:<span class="w"> </span><span class="m">1</span>
-<span class="gp">$</span>_target_has_smp<span class="w"> </span>:<span class="w"> </span><span class="m">0</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">*</span>
-<span class="go">0 Thread 0x20001538  (Name: Idle Task, State: Running, Priority: 0, Stack: 464/1000) PC: 0x12fc in up_mdelay()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">1 Thread 0x20005060  (Name: hpwork, State: Waiting,Semaphore, Priority: 224, Stack: 320/1992) PC: 0x47dd in work_thread()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">2 Thread 0x20005c30  (Name: nsh_main, State: Waiting,Semaphore, Priority: 100, Stack: 1016/2000) PC: 0x1 in _vectors()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">3 Thread 0x20006b40  (Name: NTP daemon, State: Waiting,Signal, Priority: 100, Stack: 864/1952) PC: 0x0 in _vectors()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-
-<span class="go">4 Thread 0x20008540  (Name: telnetd, State: Waiting,Semaphore, Priority: 100, Stack: 616/2008) PC: 0x20008fd4 in No()</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">saved current_tcb (pid=0)</span>
-<span class="go">saved current_tcb (pid=0)</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go"> (gdb) info threads</span>
+<span class="go"> Id   Thread                Info                                                                             Frame</span>
+<span class="go"> *0   Thread 0x2000168c     (Name: Idle_Task, State: Running, Priority: 0, Stack: 1008)                      0xa45a up_idle() at chip/common/tiva_idle.c:62</span>
+<span class="go"> 1    Thread 0x20005270     (Name: hpwork, State: Waiting,Semaphore, Priority: 224, Stack: 1984)             0xa68c up_switch_context() at common/arm_switchcontext.c:95</span>
+<span class="go"> 2    Thread 0x20005e30     (Name: nsh_main, State: Waiting,Semaphore, Priority: 100, Stack: 2008)           0xa68c up_switch_context() at common/arm_switchcontext.c:95</span>
+<span class="go"> 3    Thread 0x20006d48     (Name: NTP_daemon, State: Waiting,Signal, Priority: 100, Stack: 1960)            0xa68c up_switch_context() at common/arm_switchcontext.c:95</span>
+<span class="go"> 4    Thread 0x20008b60     (Name: telnetd, State: Waiting,Semaphore, Priority: 100, Stack: 2016)            0xa68c up_switch_context() at common/arm_switchcontext.c:95</span>
 <span class="gp gp-VirtualEnv">(gdb)</span>
 </pre></div>
 </div>
