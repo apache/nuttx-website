@@ -136,7 +136,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#installing">Installing</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#second-stage-bootloader-and-partition-table">Second stage bootloader and partition table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#second-stage-bootloader">Second stage bootloader</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#building-and-flashing">Building and flashing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#debugging-with-openocd">Debugging with OpenOCD</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a></li>
@@ -247,11 +247,11 @@ check for the current compiler version being used. For instance:</p>
 FROM nuttx-toolchain-base AS nuttx-toolchain-riscv
 # Download the latest RISCV GCC toolchain prebuilt by xPack
 RUN mkdir riscv-none-elf-gcc &amp;&amp; \
-curl -s -L &quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-2/xpack-riscv-none-elf-gcc-12.3.0-2-linux-x64.tar.gz&quot; \
+curl -s -L &quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-2/xpack-riscv-none-elf-gcc-13.2.0-2-linux-x64.tar.gz&quot; \
 | tar -C riscv-none-elf-gcc --strip-components 1 -xz
 </pre></div>
 </div>
-<p>It uses the xPack’s prebuilt toolchain based on GCC 12.3.0.</p>
+<p>It uses the xPack’s prebuilt toolchain based on GCC 13.2.0-2.</p>
 <section id="installing">
 <h3>Installing<a class="headerlink" href="#installing" title="Permalink to this heading"></a></h3>
 <p>First, create a directory to hold the toolchain:</p>
@@ -259,7 +259,7 @@ curl -s -L &quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/rel
 </pre></div>
 </div>
 <p>Download and extract toolchain:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>curl<span class="w"> </span>-s<span class="w"> </span>-L<span class="w"> </span><span class="s2">&quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-2/xpack-riscv-none-elf-gcc-12.3.0-2-linux-x64.tar.gz&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>curl<span class="w"> </span>-s<span class="w"> </span>-L<span class="w"> </span><span class="s2">&quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-2/xpack-riscv-none-elf-gcc-13.2.0-2-linux-x64.tar.gz&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="p">|</span><span class="w"> </span>tar<span class="w"> </span>-C<span class="w"> </span>/path/to/your/toolchain/riscv-none-elf-gcc<span class="w"> </span>--strip-components<span class="w"> </span><span class="m">1</span><span class="w"> </span>-xz
 </pre></div>
 </div>
@@ -270,40 +270,39 @@ curl -s -L &quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/rel
 <p>You can edit your shell’s rc files if you don’t use bash.</p>
 </section>
 </section>
-<section id="second-stage-bootloader-and-partition-table">
-<h2>Second stage bootloader and partition table<a class="headerlink" href="#second-stage-bootloader-and-partition-table" title="Permalink to this heading"></a></h2>
-<p>The NuttX port for now relies on IDF’s second stage bootloader to carry on some hardware
-initializations.  The binaries for the bootloader and the partition table can be found in
-this repository: <a class="reference external" href="https://github.com/espressif/esp-nuttx-bootloader">https://github.com/espressif/esp-nuttx-bootloader</a>
-That repository contains a dummy IDF project that’s used to build the bootloader and
-partition table, these are then presented as Github assets and can be downloaded
-from: <a class="reference external" href="https://github.com/espressif/esp-nuttx-bootloader/releases">https://github.com/espressif/esp-nuttx-bootloader/releases</a>
-Download <code class="docutils literal notranslate"><span class="pre">bootloader-esp32c3.bin</span></code> and <code class="docutils literal notranslate"><span class="pre">partition-table-esp32c3.bin</span></code> and place them
-in a folder, the path to this folder will be used later to program them. This
-can be: <code class="docutils literal notranslate"><span class="pre">../esp-bins</span></code></p>
+<section id="second-stage-bootloader">
+<h2>Second stage bootloader<a class="headerlink" href="#second-stage-bootloader" title="Permalink to this heading"></a></h2>
+<p>Nuttx can boot the ESP32-H2 directly using the so-called “Simple Boot”.
+An externally-built 2nd stage bootloader is not required in this case as all
+functions required to boot the device are built within Nuttx. Simple boot does not
+require any specific configuration (it is selectable by default if no other
+2nd stage bootloader is used).</p>
+<p>If other features, like <a class="reference internal" href="#secure-boot-and-flash-encryption">Secure Boot and Flash Encryption</a>, are required, an
+externally-built 2nd stage bootloader is needed. The bootloader is built using
+the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code> command. This command generates the firmware in the
+<code class="docutils literal notranslate"><span class="pre">nuttx</span></code> folder. The <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR</span></code> is used in the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code> command
+to specify the path to the bootloader. For compatibility among other SoCs and
+future options of 2nd stage bootloaders, the commands <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code> and
+the <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR</span></code> option (for the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code>) can be used even if no
+externally-built 2nd stage bootloader is being built (they will be ignored if
+Simple Boot is used, for instance).</p>
 </section>
 <section id="building-and-flashing">
 <h2>Building and flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h2>
-<p>First make sure that <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> is installed.  This tool is used to convert
-the ELF to a compatible ESP32 image and to flash the image into the board.
+<p>First, make sure that <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> is installed.  This tool is used to convert
+the ELF to a compatible ESP32-C3 image and to flash the image into the board.
 It can be installed with: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">esptool</span></code>.</p>
-<p>Configure the NuttX project: <code class="docutils literal notranslate"><span class="pre">./tools/configure.sh</span> <span class="pre">esp32c3-devkit:nsh</span></code>
+<p>Configure the NuttX project: <code class="docutils literal notranslate"><span class="pre">./tools/configure.sh</span> <span class="pre">esp32c3-generic:nsh</span></code>
 Run <code class="docutils literal notranslate"><span class="pre">make</span></code> to build the project.  Note that the conversion mentioned above is
 included in the build process.
-The <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> command to flash all the binaries is:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>esptool.py --chip esp32c3 --port /dev/ttyUSBXX --baud 921600 write_flash 0x0 bootloader.bin 0x8000 partition-table.bin 0x10000 nuttx.bin
+The <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> is used to flash all the binaries. However, this is also
+included in the build process and we can build and flash with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make flash ESPTOOL_PORT=&lt;port&gt; ESPTOOL_BINDIR=./
 </pre></div>
 </div>
-<p>However, this is also included in the build process and we can build and flash with:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make flash ESPTOOL_PORT=&lt;port&gt; ESPTOOL_BINDIR=../esp-bins
-</pre></div>
-</div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;port&gt;</span></code> is typically <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> or similar and <code class="docutils literal notranslate"><span class="pre">../esp-bins</span></code> is
-the path to the folder containing the bootloader and the partition table
-for the ESP32-C3 as explained above.
-Note that this step is required only one time.  Once the bootloader and partition
-table are flashed, we don’t need to flash them again.  So subsequent builds
-would just require: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span> <span class="pre">ESPTOOL_PORT=/dev/ttyUSBXX</span></code></p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;port&gt;</span></code> is typically <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> or similar and <code class="docutils literal notranslate"><span class="pre">./</span></code> is
+the path to the folder containing the externally-built 2nd stage bootloader for
+the ESP32-C3 as explained above.</p>
 </section>
 <section id="debugging-with-openocd">
 <h2>Debugging with OpenOCD<a class="headerlink" href="#debugging-with-openocd" title="Permalink to this heading"></a></h2>
@@ -473,9 +472,9 @@ Re-flashing an encrypted system is complicated and not always possible. You can 
 </section>
 <section id="prerequisites">
 <h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h3>
-<p>First of all, we need to install <code class="docutils literal notranslate"><span class="pre">imgtool</span></code> (a MCUboot utility application to manipulate binary
-images) and <code class="docutils literal notranslate"><span class="pre">esptool</span></code> (the ESP32-C3 toolkit):</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pip install imgtool esptool
+<p>First of all, we need to install <code class="docutils literal notranslate"><span class="pre">imgtool</span></code> (the MCUboot utility application to manipulate binary
+images):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pip install imgtool
 </pre></div>
 </div>
 <p>We also need to make sure that the python modules are added to <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>

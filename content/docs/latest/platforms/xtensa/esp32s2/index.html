@@ -135,7 +135,8 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Xtensa</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../esp32/index.html">Espressif ESP32</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Espressif ESP32-S2</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#toolchain">Toolchain</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esp32-s2-toolchain">ESP32-S2 Toolchain</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#the-prebuilt-toolchain-recommended">The prebuilt Toolchain (Recommended)</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#building-from-source">Building from source</a></li>
 </ul>
 </li>
@@ -220,36 +221,70 @@ architecture Xtensa LX7 CPU and with on-chip support for Wi-Fi.</p>
 <p>All embedded memory, external memory and peripherals are located on the
 data bus and/or the instruction bus of the CPU. Multiple peripherals in
 the system can access embedded memory via DMA.</p>
-<section id="toolchain">
-<h2>Toolchain<a class="headerlink" href="#toolchain" title="Permalink to this heading"></a></h2>
-<p>You can use the prebuilt <a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-guides/tools/idf-tools.html#xtensa-esp32-elf">toolchain</a>
-for Xtensa architecture and <a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-guides/tools/idf-tools.html#openocd-esp32">OpenOCD</a>
-for ESP32-S2 by Espressif.</p>
-<p>For flashing firmware, you will need to install <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> by running:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pip install esptool
+<section id="esp32-s2-toolchain">
+<h2>ESP32-S2 Toolchain<a class="headerlink" href="#esp32-s2-toolchain" title="Permalink to this heading"></a></h2>
+<p>The toolchain used to build ESP32-S2 firmware can be either downloaded or built from the sources.
+It is <strong>highly</strong> recommended to use (download or build) the same toolchain version that is being
+used by the NuttX CI.</p>
+<p>Please refer to the Docker
+<a class="reference external" href="https://github.com/apache/nuttx/tree/master/tools/ci/docker/linux/Dockerfile">container</a> and
+check for the current compiler version being used. For instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>###############################################################################
+# Build image for tool required by ESP32 builds
+###############################################################################
+FROM nuttx-toolchain-base AS nuttx-toolchain-esp32
+# Download the latest ESP32 GCC toolchain prebuilt by Espressif
+RUN mkdir -p xtensa-esp32-elf-gcc &amp;&amp; \
+  curl -s -L &quot;https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz&quot; \
+  | tar -C xtensa-esp32-elf-gcc --strip-components 1 -xJ
+
+RUN mkdir -p xtensa-esp32s2-elf-gcc &amp;&amp; \
+  curl -s -L &quot;https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz&quot; \
+  | tar -C xtensa-esp32s2-elf-gcc --strip-components 1 -xJ
+
+RUN mkdir -p xtensa-esp32s3-elf-gcc &amp;&amp; \
+  curl -s -L &quot;https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz&quot; \
+  | tar -C xtensa-esp32s3-elf-gcc --strip-components 1 -xJ
 </pre></div>
 </div>
+<p>For ESP32-S2, the toolchain version is based on GGC 12.2.0 (<code class="docutils literal notranslate"><span class="pre">xtensa-esp32s2-elf-12.2.0_20230208</span></code>)</p>
+<section id="the-prebuilt-toolchain-recommended">
+<h3>The prebuilt Toolchain (Recommended)<a class="headerlink" href="#the-prebuilt-toolchain-recommended" title="Permalink to this heading"></a></h3>
+<p>First, create a directory to hold the toolchain:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/path/to/your/toolchain/xtensa-esp32s2-elf-gcc
+</pre></div>
+</div>
+<p>Download and extract toolchain:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>curl<span class="w"> </span>-s<span class="w"> </span>-L<span class="w"> </span><span class="s2">&quot;https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>tar<span class="w"> </span>-C<span class="w"> </span>xtensa-esp32s2-elf-gcc<span class="w"> </span>--strip-components<span class="w"> </span><span class="m">1</span><span class="w"> </span>-xJ
+</pre></div>
+</div>
+<p>Add the toolchain to your <cite>PATH</cite>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;export PATH=/path/to/your/toolchain/xtensa-esp32s2-elf-gcc/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</pre></div>
+</div>
+<p>You can edit your shell’s rc files if you don’t use bash.</p>
+</section>
 <section id="building-from-source">
 <h3>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this heading"></a></h3>
 <p>You can also build the toolchain yourself. The steps to
 build the toolchain with crosstool-NG on Linux are as follows</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/espressif/crosstool-NG.git
 <span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>crosstool-NG
-<span class="gp">$ </span>git<span class="w"> </span>checkout<span class="w"> </span>esp-2021r1
 <span class="gp">$ </span>git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init
 
 <span class="gp">$ </span>./bootstrap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>./configure<span class="w"> </span>--enable-local<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make
 
-<span class="gp">$ </span>./ct-ng<span class="w"> </span>xtensa-esp32-elf
+<span class="gp">$ </span>./ct-ng<span class="w"> </span>xtensa-esp32s2-elf
 <span class="gp">$ </span>./ct-ng<span class="w"> </span>build
 
-<span class="gp">$ </span>chmod<span class="w"> </span>-R<span class="w"> </span>u+w<span class="w"> </span>builds/xtensa-esp32-elf
+<span class="gp">$ </span>chmod<span class="w"> </span>-R<span class="w"> </span>u+w<span class="w"> </span>builds/xtensa-esp32s2-elf
 
 <span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;crosstool-NG/builds/xtensa-esp32-elf/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
-<p>Alternatively, you may follow the steps in
-<a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/get-started/linux-macos-setup.html">ESP-IDF documentation</a>.</p>
+<p>These steps are given in the setup guide in
+<a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/get-started/linux-setup-scratch.html">ESP-IDF documentation</a>.</p>
 </section>
 </section>
 <section id="flashing">
