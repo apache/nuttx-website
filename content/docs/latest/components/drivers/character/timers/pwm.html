@@ -122,13 +122,12 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../../index.html">Device Drivers</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../index.html">Character Device Drivers</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../1wire.html">One Wire Drivers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../analog.html">Analog (ADC/DAC) Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../analog/index.html">Analog (ADC/DAC) Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../bch.html">Block Driver to Character Driver</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../can.html">CAN Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../contactless.html">Constactless Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../crypto/index.html">Crypto Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../efuse.html">EFUSE Drivers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../hx711.html">HX711 ADC DESIGNED FOR SCALES</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../i2s.html">I2S Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../input/index.html">Input Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../ipcc.html">IPCC (Inter Processor Communication Controller) Driver</a></li>
@@ -248,6 +247,186 @@ in <code class="docutils literal notranslate"><span class="pre">arch/&lt;archite
 directory for the specific processor <code class="docutils literal notranslate"><span class="pre">&lt;architecture&gt;</span></code> and for
 the specific <code class="docutils literal notranslate"><span class="pre">&lt;chip&gt;</span></code> PWM peripheral devices.</p></li>
 </ul>
+<section id="application-level-interface">
+<h2>Application Level Interface<a class="headerlink" href="#application-level-interface" title="Permalink to this heading"></a></h2>
+<p>The first necessary thing to be done in order to use the PWM driver in an
+application is to include the header file for the NuttX timer driver. It contains
+the Application Level Interface to the PWM driver. To do so, include:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/timers/pwm.h&gt;</span>
+</pre></div>
+</div>
+<p>PWM driver is registered as a POSIX character device file into <code class="docutils literal notranslate"><span class="pre">/dev</span></code>
+namespace. It is necessary to open the device to get a file descriptor for
+further operations.</p>
+<p>The PWM is accessed only through <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> interface, functions <code class="docutils literal notranslate"><span class="pre">read</span></code>
+and <code class="docutils literal notranslate"><span class="pre">write</span></code> does not have any affect. Following <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands are
+available:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#c.PWMIOC_SETCHARACTERISTICS" title="PWMIOC_SETCHARACTERISTICS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PWMIOC_SETCHARACTERISTICS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.PWMIOC_GETCHARACTERISTICS" title="PWMIOC_GETCHARACTERISTICS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PWMIOC_GETCHARACTERISTICS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.PWMIOC_START" title="PWMIOC_START"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PWMIOC_START</span></code></a></p></li>
+<li><p><code class="xref c c-macro docutils literal notranslate"><span class="pre">PWMIOC_STOP</span></code></p></li>
+</ul>
+</div></blockquote>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_SETCHARACTERISTICS">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_SETCHARACTERISTICS</span></span></span><a class="headerlink" href="#c.PWMIOC_SETCHARACTERISTICS" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">PWMIOC_SETCHARACTERISTICS</span></code> command sets PWM characteristics such as
+frequency, duty cycle, dead times and so on. These characteristics are
+set through <code class="docutils literal notranslate"><span class="pre">pwm_info_s</span></code> structure.</p>
+<dl class="c struct">
+<dt class="sig sig-object c" id="c.pwm_info_s">
+<span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pwm_info_s</span></span></span><a class="headerlink" href="#c.pwm_info_s" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_info_s</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="cm">/* Frequency of the pulse train */</span>
+<span class="w">   </span><span class="kt">uint32_t</span><span class="w">           </span><span class="n">frequency</span><span class="p">;</span>
+<span class="cp">#ifdef CONFIG_PWM_MULTICHAN</span>
+<span class="w">   </span><span class="cm">/* Per-channel output state */</span>
+<span class="w">   </span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_chan_s</span><span class="w">  </span><span class="n">channels</span><span class="p">[</span><span class="n">CONFIG_PWM_NCHANNELS</span><span class="p">];</span>
+<span class="cp">#else</span>
+<span class="w">   </span><span class="cm">/* Duty of the pulse train, &quot;1&quot;-to-&quot;0&quot; duration.</span>
+<span class="cm">    * Maximum: 65535/65536 (0x0000ffff)</span>
+<span class="cm">    * Minimum:     1/65536 (0x00000001)</span>
+<span class="cm">    */</span>
+<span class="w">   </span><span class="n">ub16_t</span><span class="w">             </span><span class="n">duty</span><span class="p">;</span>
+<span class="cp">#ifdef CONFIG_PWM_DEADTIME</span>
+<span class="w">   </span><span class="cm">/* Dead time value for main output */</span>
+<span class="w">   </span><span class="n">ub16_t</span><span class="w">             </span><span class="n">dead_time_a</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Dead time value for complementary output */</span>
+<span class="w">   </span><span class="n">ub16_t</span><span class="w">             </span><span class="n">dead_time_b</span><span class="p">;</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef CONFIG_PWM_PULSECOUNT</span>
+<span class="w">   </span><span class="cm">/* The number of pulse to generate.  0 means to</span>
+<span class="cm">    * generate an indefinite number of pulses</span>
+<span class="cm">    */</span>
+<span class="w">   </span><span class="kt">uint32_t</span><span class="w">           </span><span class="n">count</span><span class="p">;</span>
+<span class="cp">#endif</span>
+<span class="w">   </span><span class="cm">/* Channel polarity */</span>
+<span class="w">   </span><span class="kt">uint8_t</span><span class="w">            </span><span class="n">cpol</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Disabled channel polarity */</span>
+<span class="w">   </span><span class="kt">uint8_t</span><span class="w">            </span><span class="n">dcpol</span><span class="p">;</span>
+<span class="cp">#endif </span><span class="cm">/* CONFIG_PWM_MULTICHAN */</span>
+<span class="w">   </span><span class="cm">/* User provided argument to be used in the lower half */</span>
+<span class="w">   </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w">           </span><span class="o">*</span><span class="n">arg</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Structure <code class="docutils literal notranslate"><span class="pre">pwm_chan_s</span></code> holds the representation of one PWM channel
+if multiple channels are used ( <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_MULTICHAN</span></code> is set).</p>
+<dl class="c struct">
+<dt class="sig sig-object c" id="c.pwm_chan_s">
+<span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pwm_chan_s</span></span></span><a class="headerlink" href="#c.pwm_chan_s" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_chan_s</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="cm">/* Duty of the pulse train, &quot;1&quot;-to-&quot;0&quot; duration.</span>
+<span class="cm">    * Maximum: 65535/65536 (0x0000ffff)</span>
+<span class="cm">    * Minimum:     1/65536 (0x00000001)</span>
+<span class="cm">    */</span>
+<span class="w">   </span><span class="n">ub16_t</span><span class="w"> </span><span class="n">duty</span><span class="p">;</span>
+<span class="cp">#ifdef CONFIG_PWM_OVERWRITE</span>
+<span class="w">   </span><span class="cm">/* Channel overwrite */</span>
+<span class="w">   </span><span class="kt">bool</span><span class="w"> </span><span class="n">ch_outp_ovrwr</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Channel overwrite value */</span>
+<span class="w">   </span><span class="kt">bool</span><span class="w"> </span><span class="n">ch_outp_ovrwr_val</span><span class="p">;</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef CONFIG_PWM_DEADTIME</span>
+<span class="w">   </span><span class="cm">/* Dead time value for main output */</span>
+<span class="w">   </span><span class="n">ub16_t</span><span class="w"> </span><span class="n">dead_time_a</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Dead time value for complementary output */</span>
+<span class="w">   </span><span class="n">ub16_t</span><span class="w"> </span><span class="n">dead_time_b</span><span class="p">;</span>
+<span class="cp">#endif</span>
+<span class="w">   </span><span class="cm">/* Channel polarity */</span>
+<span class="w">   </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">cpol</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Disabled channel polarity */</span>
+<span class="w">   </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">dcpol</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Channel number */</span>
+<span class="w">   </span><span class="kt">int8_t</span><span class="w"> </span><span class="n">channel</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Apart from duty cycle and frequency, the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> command allows to
+set many other PWM characteristics. These functionalities might not be
+supported by all PWM controllers and user should always refer to target
+documentation in this case.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_OVERWRITE</span></code> is set and <code class="docutils literal notranslate"><span class="pre">ch_outp_ovrwr</span></code> is true, it is
+possible to overwrite channel output with value set in <code class="docutils literal notranslate"><span class="pre">ch_outp_ovrwr_val</span></code>.
+Configuration option <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_DEADTIME</span></code> and fields <code class="docutils literal notranslate"><span class="pre">dead_time_a</span></code>
+and <code class="docutils literal notranslate"><span class="pre">dead_time_b</span></code> provides an option to set dead time between complementary
+outputs. This instructs the driver to automatically insert output activation
+delay for complementary PWM outputs and is useful for H-bridge motor control
+for example.</p>
+<p>User may also set default channel polarity <code class="docutils literal notranslate"><span class="pre">cpol</span></code> and disabled channel
+polarity <code class="docutils literal notranslate"><span class="pre">dcpol</span></code>. If set to zero, default controller values (or values
+determined in the configuration) are used. Following defines can be used
+to set the polarities:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Not defined, the default output state is arch dependant */</span>
+<span class="cp">#define PWM_CPOL_NDEF             0</span>
+<span class="cm">/* Logical zero */</span>
+<span class="cp">#define PWM_CPOL_LOW              1</span>
+<span class="cm">/* Logical one */</span>
+<span class="cp">#define PWM_CPOL_HIGH             2</span>
+
+<span class="cm">/* Not defined, the default output state is arch dependant */</span>
+<span class="cp">#define PWM_DCPOL_NDEF            0</span>
+<span class="w"> </span><span class="cm">/* Logical zero */</span>
+<span class="cp">#define PWM_DCPOL_LOW             1</span>
+<span class="w"> </span><span class="cm">/* Logical one  */</span>
+<span class="cp">#define PWM_DCPOL_HIGH            2</span>
+</pre></div>
+</div>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_GETCHARACTERISTICS">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_GETCHARACTERISTICS</span></span></span><a class="headerlink" href="#c.PWMIOC_GETCHARACTERISTICS" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Command <code class="docutils literal notranslate"><span class="pre">PWMIOC_GETCHARACTERISTICS</span></code> operates the same way as
+<code class="docutils literal notranslate"><span class="pre">PWMIOC_SETCHARACTERISTICS</span></code> but it obtains currently set values
+instead of setting them.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_START">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_START</span></span></span><a class="headerlink" href="#c.PWMIOC_START" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">PWMIOC_START</span></code> command starts the pulsed output. Characteristics
+of PWM channels should be set before this operation.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_STOPS">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_STOPS</span></span></span><a class="headerlink" href="#c.PWMIOC_STOPS" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">PWMIOC_STOPS</span></code> command stops the pulsed output.</p>
+<section id="application-example">
+<h3>Application Example<a class="headerlink" href="#application-example" title="Permalink to this heading"></a></h3>
+<p>An example application can be found in <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> repository under the
+path <code class="docutils literal notranslate"><span class="pre">examples/pwm</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>pwm
+</pre></div>
+</div>
+</section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>This section describes common PWM configuration in <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code>. The reader
+should refer to target documentation for target specific configuration.</p>
+<p>PWM is enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM</span></code> configuration option. Option
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_MULTICHAN</span></code> selects support for multiple channels for one PWM
+instance. If multiple channels are used, configuration option
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_NCHANNELS</span></code> defines the maximum number of channels per instance.
+Each timer/controller may support fewer output channels than this value.</p>
+<p>Generation of pin overwrite is enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_OVERWRITE</span></code> option.
+This supports generation of a pin overwrite with 0 or 1 without the need to
+wait for an end of cycle.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_DEADTIME</span></code> option brings the possibility to introduce
+dead time values between complementary PWM outputs.</p>
+</section>
 </section>
 
 

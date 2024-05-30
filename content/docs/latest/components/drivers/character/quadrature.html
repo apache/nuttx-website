@@ -122,13 +122,12 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Device Drivers</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="index.html">Character Device Drivers</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="1wire.html">One Wire Drivers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="analog.html">Analog (ADC/DAC) Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="analog/index.html">Analog (ADC/DAC) Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="bch.html">Block Driver to Character Driver</a></li>
 <li class="toctree-l4"><a class="reference internal" href="can.html">CAN Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="contactless.html">Constactless Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="crypto/index.html">Crypto Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="efuse.html">EFUSE Drivers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hx711.html">HX711 ADC DESIGNED FOR SCALES</a></li>
 <li class="toctree-l4"><a class="reference internal" href="i2s.html">I2S Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="input/index.html">Input Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ipcc.html">IPCC (Inter Processor Communication Controller) Driver</a></li>
@@ -139,7 +138,11 @@
 <li class="toctree-l4"><a class="reference internal" href="motor/index.html">Motor Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="note.html">Note Driver Interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nullzero.html"><code class="docutils literal notranslate"><span class="pre">dev_null.c</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_zero.c</span></code></a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Quadrature Encoder Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Quadrature Encoder Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#application-programming-interface">Application Programming Interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="rc.html">Remote Control Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rf.html">RF Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="serial.html">Serial Device Drivers</a></li>
@@ -237,6 +240,110 @@ drivers reside in
 for the specific processor <code class="docutils literal notranslate"><span class="pre">&lt;architecture&gt;</span></code> and for the
 specific <code class="docutils literal notranslate"><span class="pre">&lt;chip&gt;</span></code> Quadrature Encoder peripheral devices.</p></li>
 </ul>
+<section id="application-programming-interface">
+<h2>Application Programming Interface<a class="headerlink" href="#application-programming-interface" title="Permalink to this heading"></a></h2>
+<p>The first thing to be done in order to use the quadrature encoder driver
+from an application is to include the correct header filer. It contains the
+Application Programming Interface to the driver. To do so, include</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/sensors/qencoder.h&gt;</span>
+</pre></div>
+</div>
+<p>Quadrature encoder driver is registered as a POSIX character device file
+into <code class="docutils literal notranslate"><span class="pre">/dev</span></code> namespace. It is necessary to open the device to get a file
+descriptor for further operations. This can be done with standard POSIX
+<code class="docutils literal notranslate"><span class="pre">open()</span></code> call.</p>
+<p>The driver is accessed only through <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> interface, functions <code class="docutils literal notranslate"><span class="pre">read</span></code>
+and <code class="docutils literal notranslate"><span class="pre">write</span></code> does not have any affect. Following <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands are
+available:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#c.QEIOC_POSITION" title="QEIOC_POSITION"><code class="xref c c-macro docutils literal notranslate"><span class="pre">QEIOC_POSITION</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.QEIOC_RESET" title="QEIOC_RESET"><code class="xref c c-macro docutils literal notranslate"><span class="pre">QEIOC_RESET</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.QEIOC_SETPOSMAX" title="QEIOC_SETPOSMAX"><code class="xref c c-macro docutils literal notranslate"><span class="pre">QEIOC_SETPOSMAX</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.QEIOC_SETINDEX" title="QEIOC_SETINDEX"><code class="xref c c-macro docutils literal notranslate"><span class="pre">QEIOC_SETINDEX</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.QEIOC_GETINDEX" title="QEIOC_GETINDEX"><code class="xref c c-macro docutils literal notranslate"><span class="pre">QEIOC_GETINDEX</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.QEIOC_POSITION">
+<span class="sig-name descname"><span class="n"><span class="pre">QEIOC_POSITION</span></span></span><a class="headerlink" href="#c.QEIOC_POSITION" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>This call gets the current position from the encoder driver. Argument
+of the call is a pointer to <code class="docutils literal notranslate"><span class="pre">int32_t</span></code> variable.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.QEIOC_RESET">
+<span class="sig-name descname"><span class="n"><span class="pre">QEIOC_RESET</span></span></span><a class="headerlink" href="#c.QEIOC_RESET" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>This command resets the current encoder positition to zero.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.QEIOC_SETPOSMAX">
+<span class="sig-name descname"><span class="n"><span class="pre">QEIOC_SETPOSMAX</span></span></span><a class="headerlink" href="#c.QEIOC_SETPOSMAX" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">QEIOC_SETPOSMAX</span></code> call sets the maximum position for the encoder.
+An argument is an <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> variable with the maximum position value.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.QEIOC_SETINDEX">
+<span class="sig-name descname"><span class="n"><span class="pre">QEIOC_SETINDEX</span></span></span><a class="headerlink" href="#c.QEIOC_SETINDEX" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>This ioctl sets the index position of the encoder. An argument is an
+<code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> variable with the maximum position value.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.QEIOC_GETINDEX">
+<span class="sig-name descname"><span class="n"><span class="pre">QEIOC_GETINDEX</span></span></span><a class="headerlink" href="#c.QEIOC_GETINDEX" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>This ioctl gets the index position of the encoder. An argument is a
+pointer to <code class="docutils literal notranslate"><span class="pre">qe_index_s</span></code> structure.</p>
+<dl class="c struct">
+<dt class="sig sig-object c" id="c.qe_index_s">
+<span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">qe_index_s</span></span></span><a class="headerlink" href="#c.qe_index_s" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">qe_index_s</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="cm">/* Qencoder actual position */</span>
+<span class="w">   </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">qenc_pos</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Index last position */</span>
+<span class="w">   </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">indx_pos</span><span class="p">;</span>
+<span class="w">   </span><span class="cm">/* Number of index occurances */</span>
+<span class="w">   </span><span class="kt">int16_t</span><span class="w"> </span><span class="n">indx_cnt</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The pointer to this structure is used as an argument to <code class="docutils literal notranslate"><span class="pre">QEIOC_GETINDEX</span></code>
+ioctl command. It gets the current encoder position, the last position of
+index and the number of index occurances.</p>
+<section id="application-example">
+<h3>Application Example<a class="headerlink" href="#application-example" title="Permalink to this heading"></a></h3>
+<p>An example application can be found in <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> repository under
+path <code class="docutils literal notranslate"><span class="pre">examples/qencoder</span></code>. It demonstrates the basic data read
+from an encoder device.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; qe</span>
+<span class="go">1.  0</span>
+<span class="go">2.  0</span>
+<span class="go">3.  0</span>
+<span class="go">4.  1</span>
+<span class="go">5.  1</span>
+<span class="go">6.  1</span>
+<span class="go">7.  2</span>
+<span class="go">8.  2</span>
+<span class="go">9.  3</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>This section describes qencoder driver configuration in <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code>. The
+reader should refer to target documentation for target specific configuration.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS</span></code> option has to be enabled in order to use the qencoder
+peripheral. The peripheral itself is enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_QENCODER</span></code>
+option.</p>
+</section>
 </section>
 
 
