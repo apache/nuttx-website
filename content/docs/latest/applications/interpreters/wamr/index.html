@@ -138,7 +138,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../minibasic/index.html"><code class="docutils literal notranslate"><span class="pre">minibasic</span></code> Mini Basic Interpreter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickjs/index.html"><code class="docutils literal notranslate"><span class="pre">quickjs</span></code> QuickJS JavaScript interpreter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../toywasm/index.html"><code class="docutils literal notranslate"><span class="pre">toywasm</span></code> Toywasm Webassembly Runtime</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">wamr</span></code> Webassembly Micro Runtime</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">wamr</span></code> Webassembly Micro Runtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#install-wasi-sdk">Install WASI SDK</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#building-nuttx">Building NuttX</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#try-wamr-in-nsh">Try WAMR in NSH</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../wasm3/index.html"><code class="docutils literal notranslate"><span class="pre">wasm3</span></code> WASM3 Webassembly Runtime</a></li>
 </ul>
 </li>
@@ -192,6 +197,45 @@
              
   <section id="wamr-webassembly-micro-runtime">
 <h1><code class="docutils literal notranslate"><span class="pre">wamr</span></code> Webassembly Micro Runtime<a class="headerlink" href="#wamr-webassembly-micro-runtime" title="Permalink to this heading"></a></h1>
+<p>This guides explains how to try WAMR on NuttX.</p>
+<section id="install-wasi-sdk">
+<h2>Install WASI SDK<a class="headerlink" href="#install-wasi-sdk" title="Permalink to this heading"></a></h2>
+<p>We need to be able to build WASM programs. This can be done by installing the <code class="docutils literal notranslate"><span class="pre">wasi-sdk</span></code> as shown in the <a class="reference external" href="https://wamr.gitbook.io/document/basics/getting-started/host_prerequsites">WAMR guide</a>.</p>
+<p>Make sure the installation is reachable via <code class="docutils literal notranslate"><span class="pre">/opt/wasi-sdk</span></code> on your host, as this is expected by the build script of the WASM hello world sample below.</p>
+</section>
+<section id="building-nuttx">
+<h2>Building NuttX<a class="headerlink" href="#building-nuttx" title="Permalink to this heading"></a></h2>
+<p>We use the <cite>sim/wamr</cite> config to build WAMR with NuttX. Note that at this writing, the that CMake scripts don’t work for this configuration. For now, please use the makefile build instead:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>sim/wamr
+<span class="gp">$ </span>make<span class="w"> </span>-j4
+<span class="gp">$ </span>ls<span class="w"> </span>-l<span class="w"> </span>nuttx
+<span class="go">-rwxrwxr-x 1 yf yf 4176376 Jun 10 08:11 nuttx</span>
+</pre></div>
+</div>
+<p>This will generate a <code class="docutils literal notranslate"><span class="pre">nutxx</span></code> binary. Also a WASM sample is available in the folder <code class="docutils literal notranslate"><span class="pre">apps/interpreters/wamr/wamr/product-mini/app-samples/hello-world</span></code> folder. We build the sample as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>apps/interpreters/wamr/wamr/product-mini/app-samples/hello-world
+<span class="gp">$ </span>./build.sh
+<span class="gp">$ </span>ls<span class="w"> </span>-l<span class="w"> </span>test.wasm
+<span class="go">-rwxrwxr-x 1 yf yf  413 Jun 10 08:18 test.wasm</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">test.wasm</span></code> program should be accessible from NuttX later.</p>
+</section>
+<section id="try-wamr-in-nsh">
+<h2>Try WAMR in NSH<a class="headerlink" href="#try-wamr-in-nsh" title="Permalink to this heading"></a></h2>
+<p>Copy the <code class="docutils literal notranslate"><span class="pre">test.wasm</span></code> to the folder where the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> program lives, then run <code class="docutils literal notranslate"><span class="pre">./nuttx</span></code> to kick off NuttX and run <code class="docutils literal notranslate"><span class="pre">iwasm</span> <span class="pre">/data/test.wasm</span></code> from NSH:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx
+
+<span class="go">NuttShell (NSH) NuttX-12.4.0</span>
+<span class="go">nsh&gt; iwasm /data/test.wasm</span>
+<span class="go">Hello world!</span>
+<span class="go">buf ptr: 0x1460</span>
+<span class="go">buf: 1234</span>
+<span class="go">nsh&gt;</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
