@@ -137,8 +137,11 @@
 <li class="toctree-l5"><a class="reference internal" href="#installing">Installing</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#second-stage-bootloader">Second stage bootloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#building-and-flashing">Building and flashing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#building-and-flashing-nuttx">Building and flashing NuttX</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bootloader-and-partitions">Bootloader and partitions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#building-and-flashing">Building and flashing</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#debugging-with-openocd">Debugging with OpenOCD</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
@@ -265,18 +268,20 @@ curl -s -L &quot;https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/rel
 <p>You can edit your shell’s rc files if you don’t use bash.</p>
 </section>
 </section>
-<section id="second-stage-bootloader">
-<h2>Second stage bootloader<a class="headerlink" href="#second-stage-bootloader" title="Permalink to this heading"></a></h2>
-<p>Nuttx can boot the ESP32-C6 directly using the so-called “Simple Boot”.
+<section id="building-and-flashing-nuttx">
+<h2>Building and flashing NuttX<a class="headerlink" href="#building-and-flashing-nuttx" title="Permalink to this heading"></a></h2>
+<section id="bootloader-and-partitions">
+<h3>Bootloader and partitions<a class="headerlink" href="#bootloader-and-partitions" title="Permalink to this heading"></a></h3>
+<p>NuttX can boot the ESP32-C6 directly using the so-called “Simple Boot”.
 An externally-built 2nd stage bootloader is not required in this case as all
-functions required to boot the device are built within Nuttx. Simple boot does not
+functions required to boot the device are built within NuttX. Simple boot does not
 require any specific configuration (it is selectable by default if no other
 2nd stage bootloader is used). For compatibility among other SoCs and future options
 of 2nd stage bootloaders, the commands <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code> and the <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR</span></code>
 option (for the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code>) are kept (and ignored if Simple Boot is used).</p>
 </section>
 <section id="building-and-flashing">
-<h2>Building and flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h2>
+<h3>Building and flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h3>
 <p>First, make sure that <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> is installed.  This tool is used to convert
 the ELF to a compatible ESP32-C6 image and to flash the image into the board.
 It can be installed with: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">esptool==4.8.dev4</span></code>.</p>
@@ -292,6 +297,7 @@ included in the build process and we can build and flash with:</p>
 the path to the folder containing the externally-built 2nd stage bootloader for
 the ESP32-C6 as explained above.</p>
 </section>
+</section>
 <section id="debugging-with-openocd">
 <h2>Debugging with OpenOCD<a class="headerlink" href="#debugging-with-openocd" title="Permalink to this heading"></a></h2>
 <p>Download and build OpenOCD from Espressif, that can be found in
@@ -299,7 +305,7 @@ the ESP32-C6 as explained above.</p>
 <p>You do not need an external JTAG to debug, the ESP32-C6 integrates a
 USB-to-JTAG adapter.</p>
 <p>OpenOCD can then be used:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd -c &#39;set ESP_RTOS none&#39; -f board/esp32c6-builtin.cfg
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd -c &#39;set ESP_RTOS hwthread; set ESP_FLASH_SIZE 0&#39; -f board/esp32c6-builtin.cfg
 </pre></div>
 </div>
 <p>If you want to debug with an external JTAG adapter it can
@@ -315,7 +321,7 @@ TDO -&gt; GPIO7
 </pre></div>
 </div>
 <p>OpenOCD can then be used:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd  -c &#39;set ESP_RTOS none&#39; -f board/esp32c6-ftdi.cfg
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd  -c &#39;set ESP_RTOS hwtread; set ESP_FLASH_SIZE 0&#39; -f board/esp32c6-ftdi.cfg
 </pre></div>
 </div>
 </section>
