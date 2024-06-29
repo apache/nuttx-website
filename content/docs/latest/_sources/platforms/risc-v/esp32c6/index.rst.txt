@@ -142,12 +142,12 @@ ADC              No
 AES              No
 Bluetooth        No
 CAN/TWAI         Yes
-DMA              No
+DMA              Yes
 ECC              No
 eFuse            No
 GPIO             Yes
 HMAC             No
-I2C              No
+I2C              Yes
 I2S              No
 Int. Temp.       No
 LED              No

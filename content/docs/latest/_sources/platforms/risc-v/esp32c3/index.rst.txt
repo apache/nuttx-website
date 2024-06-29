@@ -162,10 +162,10 @@ AES          No
 Bluetooth    No
 CAN/TWAI     Yes
 CDC Console  Yes    Rev.3
-DMA          No
+DMA          Yes
 eFuse        No
 GPIO         Yes
-I2C          No
+I2C          Yes
 LED_PWM      Yes
 RNG          No
 RSA          No
