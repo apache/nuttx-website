@@ -139,11 +139,12 @@
 <li class="toctree-l5"><a class="reference internal" href="#building-from-source">Building from source</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#building-and-flashing-nuttx">Building and flashing NuttX</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#debugging-with-openocd">Debugging with OpenOCD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#building-and-flashing-nuttx">Building and flashing NuttX</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#bootloader-and-partitions">Bootloader and partitions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#building-and-flashing">Building and Flashing</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#debugging-with-openocd">Debugging with OpenOCD</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#memory-map">Memory Map</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#address-mapping">Address Mapping</a></li>
@@ -310,14 +311,49 @@ build the toolchain with crosstool-NG on Linux are as follows</p>
 </section>
 <section id="building-and-flashing-nuttx">
 <h2>Building and flashing NuttX<a class="headerlink" href="#building-and-flashing-nuttx" title="Permalink to this heading"></a></h2>
-<p>Firmware for ESP32 is flashed via the USB/UART interface using the <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> tool.
-It’s a two step process where the first converts the ELF file into a ESP32-compatible binary
-and the second flashes it to the board.  These steps are included into the build system and you can
-flash your NuttX firmware simply by running:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make flash ESPTOOL_PORT=&lt;port&gt;
+<section id="bootloader-and-partitions">
+<h3>Bootloader and partitions<a class="headerlink" href="#bootloader-and-partitions" title="Permalink to this heading"></a></h3>
+<p>NuttX can boot the ESP32 directly using the so-called “Simple Boot”. An externally-built
+2nd stage bootloader is not required in this case as all functions required to boot the device
+are built within NuttX. Simple boot does not require any specific configuration (it is selectable
+by default if no other 2nd stage bootloader is used).</p>
+<p>If other features are required, an externally-built 2nd stage bootloader is needed. The bootloader
+is built using the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code> command. This command generates the firmware in the
+<code class="docutils literal notranslate"><span class="pre">nuttx</span></code> folder. The <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR</span></code> is used in the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code> command to specify the path
+to the bootloader. For compatibility among other SoCs and future options of 2nd stage bootloaders,
+the commands <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code> and the <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR</span></code> option (for the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code>) can be
+used even if no externally-built 2nd stage bootloader is being built (they will be ignored if
+Simple Boot is used, for instance):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make bootloader
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">&lt;port&gt;</span></code> is typically <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> or similar. You can change the baudrate by passing <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BAUD</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is recommended that if this is the first time you are using the board with NuttX to
+perform a complete SPI FLASH erase.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>esptool.py<span class="w"> </span>erase_flash
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</section>
+<section id="building-and-flashing">
+<h3>Building and Flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h3>
+<p>First, make sure that <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> is installed.  This tool is used to convert the ELF to a
+compatible ESP32 image and to flash the image into the board.
+It can be installed with: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">esptool==4.8.dev4</span></code>.</p>
+<p>It’s a two-step process where the first converts the ELF file into an ESP32 compatible binary
+and the second flashes it to the board. These steps are included in the build system and it is
+possible to build and flash the NuttX firmware simply by running:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make flash ESPTOOL_PORT=&lt;port&gt; ESPTOOL_BINDIR=./
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;port&gt;</span></code> is typically <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> or similar. <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR=./</span></code> is the path of the
+externally-built 2nd stage bootloader and the partition table (if applicable): when built using the
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code>, these files are placed into <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> folder. <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BAUD</span></code> is able to
+change the flash baud rate if desired.</p>
+</section>
 </section>
 <section id="debugging-with-openocd">
 <h2>Debugging with OpenOCD<a class="headerlink" href="#debugging-with-openocd" title="Permalink to this heading"></a></h2>
@@ -353,23 +389,6 @@ described for the <a class="reference internal" href="boards/esp32-devkitc/index
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd -c &#39;set ESP_RTOS hwthread; set ESP_FLASH_SIZE 0&#39; -f board/esp32-wrover-kit-1.8v.cfg
 </pre></div>
 </div>
-<section id="bootloader-and-partitions">
-<h3>Bootloader and partitions<a class="headerlink" href="#bootloader-and-partitions" title="Permalink to this heading"></a></h3>
-<p>ESP32 requires a bootloader to be flashed as well as a set of FLASH partitions. This is only needed the first time
-(or any time you which to modify either of these). An easy way is to use prebuilt binaries for NuttX <a class="reference external" href="https://github.com/espressif/esp-nuttx-bootloader">from here</a>. In there you will find instructions to rebuild these if necessary.
-Once you downloaded both binaries, you can flash them by adding an <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR</span></code> parameter, pointing to the directory where these binaries were downloaded:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>flash<span class="w"> </span><span class="nv">ESPTOOL_PORT</span><span class="o">=</span>&lt;port&gt;<span class="w"> </span><span class="nv">ESPTOOL_BINDIR</span><span class="o">=</span>&lt;dir&gt;
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>It is recommended that if this is the first time you are using the board with NuttX that you perform a complete
-SPI FLASH erase.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>esptool.py<span class="w"> </span>erase_flash
-</pre></div>
-</div>
-</div>
-</section>
 </section>
 <section id="peripheral-support">
 <h2>Peripheral Support<a class="headerlink" href="#peripheral-support" title="Permalink to this heading"></a></h2>
