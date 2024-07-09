@@ -227,7 +227,7 @@ by the NuttX kernel.</p>
 platform.  The following functions must be declared (or defined) in this
 header file:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">SWI</span></code> with <code class="docutils literal notranslate"><span class="pre">SYS_</span></code> call number and one parameter:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">SWI</span></code> with <code class="docutils literal notranslate"><span class="pre">SYS_</span></code> call number only:</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">uintptr_t</span><span class="w"> </span><span class="nf">sys_call0</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nbr</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -314,24 +314,24 @@ or arbitrary types cannot be represented as system calls.
 <code class="docutils literal notranslate"><span class="pre">syslog()</span></code> is a good example.   Normally you would work around this by
 using the non- variadic form of the OS interface that accepts a <code class="docutils literal notranslate"><span class="pre">va_list</span></code>
 as an argument, <code class="docutils literal notranslate"><span class="pre">vsyslog()</span></code> in this case.</p>
-<p>There there are many functions that have a variadic form but take only
-one or two arguments optional arguments.  There can be handled as system
+<p>There are many functions that have a variadic form but take only
+one or two optional arguments.  There can be handled as system
 calls, but only by treating them as though they had a fixed number of
 arguments.</p>
-<p>These are are handled in <code class="docutils literal notranslate"><span class="pre">syscall.csv</span></code> by appending the number and type of
+<p>These are handled in <code class="docutils literal notranslate"><span class="pre">syscall.csv</span></code> by appending the number and type of
 optional arguments.  For example, consider the <code class="docutils literal notranslate"><span class="pre">open()</span></code> OS interface.  Its
 prototype is:</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">oflag</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
 </pre></div>
 </div>
 <p>In reality, open may take only a single optional argument of type <code class="docutils literal notranslate"><span class="pre">mode_t</span></code>
-and is represented in syscall.cvs like this:</p>
+and is represented in <code class="docutils literal notranslate"><span class="pre">syscall.csv</span></code> like this:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&quot;open&quot;,&quot;fcntl.h&quot;,&quot;&quot;,&quot;int&quot;,&quot;const char*&quot;,&quot;int&quot;,&quot;...&quot;,&quot;mode_t&quot;
 </pre></div>
 </div>
 <p>The existence of the <code class="docutils literal notranslate"><span class="pre">mode_t</span></code> tells <code class="docutils literal notranslate"><span class="pre">tools/mksyscall</span></code> that there is at most
 one optional parameter and, if present, it is of type <code class="docutils literal notranslate"><span class="pre">mode_t</span></code>.</p>
-<p>NOTE: This CSV file is used both to support the generate of trap information,
+<p>NOTE: This CSV file is used not only to support the generate of trap information,
 but also for the generation of symbol tables.  See <code class="docutils literal notranslate"><span class="pre">Documentation/components/tools/</span></code>
 and <code class="docutils literal notranslate"><span class="pre">Documentation/components/libs/</span></code> for further information.</p>
 </section>
@@ -361,7 +361,7 @@ kernel-mode) on behalf of the proxy function.</p></li>
 </section>
 <section id="mksyscall">
 <h2>mksyscall<a class="headerlink" href="#mksyscall" title="Permalink to this heading"></a></h2>
-<p>mksyscall is C program that is used used during the initial NuttX build
+<p>mksyscall is C program that is used during the initial NuttX build
 by the logic in the top-level <code class="docutils literal notranslate"><span class="pre">syscall/</span></code> directory. Information about the
 stubs and proxies is maintained in a comma separated value (CSV) file
 in the <code class="docutils literal notranslate"><span class="pre">syscall/</span></code> directory.  The mksyscall program will accept this CSV
