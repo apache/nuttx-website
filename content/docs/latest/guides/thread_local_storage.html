@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GDB with Python &mdash; NuttX latest documentation</title>
+  <title>Thread Local Storage &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -44,8 +44,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Open Flash Loader" href="ofloader.html" />
-    <link rel="prev" title="minidumpserver" href="minidumpserver.html" /> 
+    <link rel="next" title="Glossary" href="../glossary.html" />
+    <link rel="prev" title="etc romfs" href="etcromfs.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -140,12 +140,7 @@
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="minidumpserver.html">minidumpserver</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">GDB with Python</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#how-to-write-a-gdb-python-script">How to write a GDB python script</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
@@ -153,7 +148,10 @@
 <li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stackrecord.html">Run time stack statistics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Thread Local Storage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -175,9 +173,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">GDB with Python</li>
+      <li class="breadcrumb-item active">Thread Local Storage</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/gdbwithpython.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/thread_local_storage.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -185,29 +183,40 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="gdb-with-python">
-<h1>GDB with Python<a class="headerlink" href="#gdb-with-python" title="Permalink to this heading"></a></h1>
-<section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
-<p>We can better debug the nuttx kernel through GDB’s python extension.
-Some of the most common class usages are implemented under the nuttx/tools/gdb directory.
-Users can write their own python scripts to debug the nuttx kernel according to their needs</p>
-</section>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+  <section id="thread-local-storage">
+<h1>Thread Local Storage<a class="headerlink" href="#thread-local-storage" title="Permalink to this heading"></a></h1>
+<p>Thread local storage (TLS) is a mechanism that allows each thread to have its own
+copy of a variable.  This is useful for variables that are used by multiple
+functions in a thread, but should not be shared with other threads.</p>
+<p>There are some approaches to using TLS in NuttX:</p>
+<p>1. Use the <code class="docutils literal notranslate"><span class="pre">pthread_key_create()</span></code> and <code class="docutils literal notranslate"><span class="pre">pthread_setspecific()</span></code> that from the POSIX standard. This is the most portable approach, but it requires that
+the platform support pthreads.
+2. Use the <code class="docutils literal notranslate"><span class="pre">thread_local</span></code> or <code class="docutils literal notranslate"><span class="pre">__thread</span></code> keyword from the C standard: <a class="reference external" href="https://gcc.gnu.org/onlinedocs/gcc/extensions-to-the-c-language-family/thread-local-storage.html">https://gcc.gnu.org/onlinedocs/gcc/extensions-to-the-c-language-family/thread-local-storage.html</a></p>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">CONFIG_SCHED_THREAD_LOCAL  /* Enable native thread local storage support */</span>
+</pre></div>
+</div>
+<p>Enable it to support native thread local storage, which is required that the compiler configured with <code class="docutils literal notranslate"><span class="pre">--enable-tls</span></code> option, this approach is more efficient if the compiler support it.</p>
+<p>If your compiler support it then you still need further configuration to use it:</p>
 <ol class="arabic simple">
-<li><p>Compile nuttx with CONFIG_DEBUG_SYMBOLS=y</p></li>
-<li><p>Use gdb to debug nuttx elf.(real device, or sim, or coredump)</p></li>
-<li><p>add args to gdb command line: -ix=”nuttx/tools/gdb/__init__.py”</p></li>
-<li><p>Then gdb will load the python script automatically.you can use the custom commands.</p></li>
+<li><p>Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_THREAD_LOCAL</span></code> in menuconfig</p></li>
+<li><p>Handle <code class="docutils literal notranslate"><span class="pre">tbss</span></code> and <code class="docutils literal notranslate"><span class="pre">tdata</span></code> sections in linker script, your can refer to the example in rv-virt</p></li>
 </ol>
-</section>
-<section id="how-to-write-a-gdb-python-script">
-<h2>How to write a GDB python script<a class="headerlink" href="#how-to-write-a-gdb-python-script" title="Permalink to this heading"></a></h2>
-<p>Here is an article to introduce, read it to understand the most basic principles of python,
-<a class="reference external" href="https://interrupt.memfault.com/blog/automate-debugging-with-gdb-python-api">Automate Debugging with GDB Python API</a>.</p>
-<p>For more documentation on gdb python, please refer to the official documentation of gdb
-<a class="reference external" href="https://interrupt.memfault.com/blog/automate-debugging-with-gdb-python-api">GDB with python</a>.</p>
+<p>To confirm that your compiler supports TLS, you can try this command:
+.. code-block:: console</p>
+<blockquote>
+<div><p>arm-none-eabi-gcc –verbose
+COLLECT_GCC=arm-none-eabi-gcc
+COLLECT_LTO_WRAPPER=/home/huang/.local/pkg/arm/bin/../libexec/gcc/arm-none-eabi/13.3.1/lto-wrapper
+Target: arm-none-eabi
+Configured with: /data/jenkins/workspace/GNU-toolchain/arm-13/src/gcc/configure –target=arm-none-eabi –prefix=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install –with-gmp=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools –with-mpfr=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools –with-mpc=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools –with-isl=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/host-tools –disable-shared –disable-nls –disable-threads –disable-tls –enable-checking=release –enable-languages=c,c++,fortran –with-newlib –with-gnu-as –with-headers=yes –with-gnu-ld –with-native-system-header-dir=/include –with-sysroot=/data/jenkins/workspace/GNU-toolchain/arm-13/build-arm-none-eabi/install/arm-none-eabi –with-multilib-list=aprofile,rmprofile –with-pkgversion=’Arm GNU Toolchain 13.3.Rel1 (Build arm-13.24)’ –with-bugurl=https://bugs.linaro.org/
+Thread model: single
+Supported LTO compression algorithms: zlib
+gcc version 13.3.1 20240614 (Arm GNU Toolchain 13.3.Rel1 (Build arm-13.24))</p>
+</div></blockquote>
+<p>Then you can see <code class="docutils literal notranslate"><span class="pre">--disable-tls</span></code> in the output, which means that your compiler does not support TLS.</p>
+<p>In this case, you can still use the thread local relative keyword, but it would be implemented by libgcc’s emutls.</p>
 </section>
 </section>
 
@@ -215,8 +224,8 @@ Users can write their own python scripts to debug the nuttx kernel according to 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="minidumpserver.html" class="btn btn-neutral float-left" title="minidumpserver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="ofloader.html" class="btn btn-neutral float-right" title="Open Flash Loader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="etcromfs.html" class="btn btn-neutral float-left" title="etc romfs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
