@@ -119,6 +119,8 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Compiling with CMake</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#initialize-configuration-with-cmake">Initialize Configuration with CMake</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#build-nuttx-with-cmake">Build NuttX with CMake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#out-of-tree-building">Out-of-tree building</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building-kernel-configs">Building KERNEL configs</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="running.html">Running</a></li>
@@ -216,6 +218,73 @@ file that can be flashed to the board.</p>
 </pre></div>
 </div>
 </div></blockquote>
+</section>
+<section id="out-of-tree-building">
+<h2>Out-of-tree building<a class="headerlink" href="#out-of-tree-building" title="Permalink to this heading"></a></h2>
+<p>Key benefit of CMake is the out-of-tree building, which allows one to have different build folders for different configs, very proper if one need check multiple configs for the same codebase.  Out-of-tree means above <code class="docutils literal notranslate"><span class="pre">build</span></code> folders can be out of Nuttx source tree.</p>
+<p>Suppose <code class="docutils literal notranslate"><span class="pre">$NUTTX_DIR</span></code> is the nuttx source tree, we can use temporary folder for a particular target config as shown below.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$NUTTX_DIR</span>
+<span class="go">/home/user/Projects/Nuttx/nuttx</span>
+<span class="gp">$ </span>mkdir<span class="w"> </span>-p<span class="w"> </span>~/tmp/rv32/nsh
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>~/tmp/rv32/nsh
+<span class="gp"># </span>Make<span class="w"> </span>sure<span class="w"> </span>a<span class="w"> </span>proper<span class="w"> </span>toolchain<span class="w"> </span>is<span class="w"> </span><span class="k">in</span><span class="w"> </span>your<span class="w"> </span><span class="nv">$PATH</span>
+<span class="gp">$ </span>riscv64-unknown-elf-gcc<span class="w"> </span>-v
+<span class="gp">$ </span>cmake<span class="w"> </span><span class="nv">$NUTTX_DIR</span><span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>rv-virt:nsh<span class="w"> </span>-GNinja
+<span class="go">-- Initializing NuttX</span>
+<span class="go">--   Board:  rv-virt</span>
+<span class="go">--   Config: nsh</span>
+<span class="go">--   Appdir: /home/yf/Projects/Nuttx/apps</span>
+<span class="go">-- The C compiler identification is GNU 10.2.0</span>
+<span class="go">-- The CXX compiler identification is GNU 10.2.0</span>
+<span class="go">-- The ASM compiler identification is GNU</span>
+<span class="go">-- Found assembler: /usr/bin/riscv64-unknown-elf-gcc</span>
+<span class="go">-- Configuring done</span>
+<span class="go">-- Generating done</span>
+<span class="go">-- Build files have been written to: /home/yf/tmp/rv32/nsh</span>
+<span class="gp">$ </span>ninja
+<span class="gp">$ </span>size<span class="w"> </span>nuttx
+<span class="go">   text    data      bss      dec      hex  filename</span>
+<span class="go"> 167411      365    11568   179344    2bc90  nuttx</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>This approach works for FLAT configs now and PROTECTED configs soon if needed CMake scripts are available already.</p>
+</section>
+<section id="building-kernel-configs">
+<h2>Building KERNEL configs<a class="headerlink" href="#building-kernel-configs" title="Permalink to this heading"></a></h2>
+<p>We can use CMake to build the kernel image for KERNEL configs now, assuming apps ROMFS is prepared using the makefile system. If the development focus is kernel side and apps don’t change often, then CMake can help us achieve out-of-tree build if your device’s CMake scripts are ready. Let’s take <code class="docutils literal notranslate"><span class="pre">canm230</span></code> device as an example:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$NUTTX_DIR</span>
+<span class="go">/home/user/Projects/Nuttx/nuttx</span>
+<span class="gp">$ </span>mkdir<span class="w"> </span>-p<span class="w"> </span>~/tmp/k230/nsbi
+<span class="gp"># </span>copy<span class="w"> </span>the<span class="w"> </span>romfs_boot.c<span class="w"> </span>to<span class="w"> </span>build<span class="w"> </span>folder
+<span class="gp">$ </span>cp<span class="w"> </span>romfs_boot.c<span class="w"> </span>~/tmp/k230/nsbi
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>~/tmp/k230/nsbi
+<span class="gp">$ </span>ls<span class="w"> </span>-l
+<span class="go">total 976</span>
+<span class="go">-rw-rw-r-- 1 yf yf 997843 Jul 15 06:23 romfs_boot.c</span>
+<span class="gp">$ </span>cmake<span class="w"> </span><span class="nv">$NUTTX_DIR</span><span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>canmv230:nsbi<span class="w"> </span>-GNinja
+<span class="go">-- Initializing NuttX</span>
+<span class="go">--   Board:  canmv230</span>
+<span class="go">--   Config: nsbi</span>
+<span class="go">--   Appdir: /home/yf/Projects/Nuttx/apps</span>
+<span class="go">-- The C compiler identification is GNU 10.2.0</span>
+<span class="go">-- The CXX compiler identification is GNU 10.2.0</span>
+<span class="go">-- The ASM compiler identification is GNU</span>
+<span class="go">-- Found assembler: /usr/bin/riscv64-unknown-elf-gcc</span>
+<span class="go">-- Configuring done</span>
+<span class="go">-- Generating done</span>
+<span class="go">-- Build files have been written to: /home/yf/tmp/k230/nsbi</span>
+<span class="gp">$ </span>ninja
+<span class="gp">$ </span>size<span class="w"> </span>nuttx
+<span class="go">  text     data      bss      dec      hex  filename</span>
+<span class="go">281671      609    37496   319776    4e120  nuttx</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Note that for QEMU targets, we can directly use the apps binary on host folder via <code class="docutils literal notranslate"><span class="pre">hostfs</span></code> in QEMU.</p>
+<p>So even apps side CMake support is not ready, we still can enjoy CMake for kernel build with KERNEL configs.</p>
 </section>
 </section>
 
