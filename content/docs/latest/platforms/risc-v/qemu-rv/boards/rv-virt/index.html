@@ -522,6 +522,24 @@ This configuration is used for 32-bit RISC-V</p>
 <p>Similar to the <a class="reference internal" href="#nsh">nsh</a> configuration, but running in S-mode.
 This configuration is used for 64-bit RISC-V</p>
 </section>
+<section id="virt-nsh">
+<h3>virt_nsh<a class="headerlink" href="#virt-nsh" title="Permalink to this heading"></a></h3>
+<p>Similar to <a class="reference internal" href="#nsh">nsh</a> configuration, but uses virtio serial device as console.
+Use it below with QEMU:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv32 -M virt,aclint=on -nographic \
+-chardev socket,id=aux,path=/tmp/aux,server=on,wait=on \
+-device virtio-serial-device,bus=virtio-mmio-bus.0 \
+-device virtconsole,chardev=aux \
+-bios nuttx
+</pre></div>
+</div>
+<p>Then from another terminal, use below command to access the console:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ socat UNIX-CLIENT:/tmp/aux -
+</pre></div>
+</div>
+<p>We can finish the session with <code class="docutils literal notranslate"><span class="pre">quit</span></code> command in NSH session.</p>
+<p>Note the above command line uses UNIX domain socket so please change the socket parameters on hosts without UNIX domain socket.</p>
+</section>
 </section>
 <section id="risc-v-gdb-debugging">
 <h2>RISC-V GDB Debugging<a class="headerlink" href="#risc-v-gdb-debugging" title="Permalink to this heading"></a></h2>
