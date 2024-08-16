@@ -203,7 +203,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#exchange-data-exch-options-optional-tx-data">Exchange data: <code class="docutils literal notranslate"><span class="pre">exch</span> <span class="pre">[OPTIONS]</span> <span class="pre">&lt;Optional</span> <span class="pre">TX</span> <span class="pre">Data&gt;</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#i2c-build-configuration">I2C Build Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#spi-build-configuration">SPI Build Configuration</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#nuttx-configuration-requirements">NuttX Configuration Requirements</a></li>
 </ul>
 </li>
@@ -270,7 +270,7 @@
              
   <section id="spi-spi-tool">
 <h1><code class="docutils literal notranslate"><span class="pre">spi</span></code> SPI Tool<a class="headerlink" href="#spi-spi-tool" title="Permalink to this heading"></a></h1>
-<p>The I2C tool provides a way to debug SPI related problems. This README file will
+<p>The SPI Tool provides a way to debug SPI related problems. This README file will
 provide usage information for the SPI tools.</p>
 <section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this heading"></a></h2>
@@ -299,10 +299,10 @@ provide usage information for the SPI tools.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">verf</span></code></p></li>
 </ul>
 </li>
-<li><p>I2C Build Configuration</p>
+<li><p>SPI Build Configuration</p>
 <ul>
 <li><p>NuttX Configuration Requirements</p></li>
-<li><p>I2C Tool Configuration Options</p></li>
+<li><p>SPI Tool Configuration Options</p></li>
 </ul>
 </li>
 </ul>
@@ -344,7 +344,7 @@ entering either:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; spi ?
 </pre></div>
 </div>
-<p>Here is an example of the help output. I shows the general form of the command
+<p>Here is an example of the help output. It shows the general form of the command
 line, the various SPI commands supported with their unique command line options,
 and a more detailed summary of the command SPI command options:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; Usage: spi &lt;cmd&gt; [arguments]
@@ -368,8 +368,8 @@ Where common _sticky_ OPTIONS include:
 <p><strong>Notes</strong>:</p>
 <ul class="simple">
 <li><p>An environment variable like $PATH may be used for any argument.</p></li>
-<li><p>Arguments are _sticky_. For example, once the SPI address is specified, that
-address will be re-used until it is changed.</p></li>
+<li><p>Arguments are _sticky_. For example, once the SPI bus is specified, that
+bus will be re-used until it is changed.</p></li>
 </ul>
 <p><strong>Warning</strong>:</p>
 <ul class="simple">
@@ -389,7 +389,7 @@ the tool. <code class="docutils literal notranslate"><span class="pre">[argument
 SPI operation. Those arguments vary from command to command as described below.
 However, there is also a core set of common <code class="docutils literal notranslate"><span class="pre">OPTIONS</span></code> supported by all commands.
 So perhaps a better representation of the general SPI command would be:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>i2c &lt;cmd&gt; [OPTIONS] [arguments]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>spi &lt;cmd&gt; [OPTIONS] [arguments]
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">[OPTIONS]</span></code> represents the common options and and arguments represent the
@@ -415,7 +415,7 @@ value (or until you reset the board).</p>
 variables. Environment variables must be preceded with the special character
 <code class="docutils literal notranslate"><span class="pre">$</span></code>. For example, <code class="docutils literal notranslate"><span class="pre">PWD</span></code> is the variable that holds the current working directory
 and so <code class="docutils literal notranslate"><span class="pre">$PWD</span></code> could be used as a command line argument. The use of environment
-variables on the I2C tools command is really only useful if you wish to write
+variables on the SPI tools command is really only useful if you wish to write
 NSH scripts to execute a longer, more complex series of SPI commands.</p>
 </section>
 <section id="common-option-summary">
@@ -450,7 +450,7 @@ received.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">[-w</span> <span class="pre">width]</span></code> is the data width (varies according to target). Default: <code class="docutils literal notranslate"><span class="pre">8</span></code></p>
 <p>Various SPI devices support different data widths. This option is untested.</p>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">[-f</span> <span class="pre">freq]</span></code> I2C frequency. Default: <code class="docutils literal notranslate"><span class="pre">4000000</span></code> Current: <code class="docutils literal notranslate"><span class="pre">4000000</span></code></p>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-f</span> <span class="pre">freq]</span></code> SPI frequency. Default: <code class="docutils literal notranslate"><span class="pre">4000000</span></code> Current: <code class="docutils literal notranslate"><span class="pre">4000000</span></code></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">[-f</span> <span class="pre">freq]</span></code> sets the frequency of the SPI device. The default is very
 conservative.</p>
 </li>
@@ -473,8 +473,9 @@ Bus 2: NO
 </section>
 <section id="exchange-data-exch-options-optional-tx-data">
 <h3>Exchange data: <code class="docutils literal notranslate"><span class="pre">exch</span> <span class="pre">[OPTIONS]</span> <span class="pre">&lt;Optional</span> <span class="pre">TX</span> <span class="pre">Data&gt;</span></code><a class="headerlink" href="#exchange-data-exch-options-optional-tx-data" title="Permalink to this heading"></a></h3>
-<p>This command triggers an SPI transfer, returning the data back from the far end.
-As an example (with MOSI looped back to MISO):</p>
+<p>This command triggers an SPI transfer, returning the data back from the far end.</p>
+<p>As an example you can exchange (send and receive) 4 bytes (-x 4) on SPI2 (-b 2) using the command below with the <code class="docutils literal notranslate"><span class="pre">loopback</span></code> approach.
+This approach requires that you connect the MOSI pin directly to the MISO pin (NOTE: SCLK and CS are not directly involved, but you still can see the clock and chip select waveforms if you decide to use an oscilloscope or more properly a logic analyzer to analyze these pins):</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; spi exch -b 2 -x 4 aabbccdd
 
 Received: AA BB CC DD
@@ -484,8 +485,8 @@ Received: AA BB CC DD
 each, case insensitive.</p>
 </section>
 </section>
-<section id="i2c-build-configuration">
-<h2>I2C Build Configuration<a class="headerlink" href="#i2c-build-configuration" title="Permalink to this heading"></a></h2>
+<section id="spi-build-configuration">
+<h2>SPI Build Configuration<a class="headerlink" href="#spi-build-configuration" title="Permalink to this heading"></a></h2>
 <section id="nuttx-configuration-requirements">
 <h3>NuttX Configuration Requirements<a class="headerlink" href="#nuttx-configuration-requirements" title="Permalink to this heading"></a></h3>
 <p>The SPI tools requires the following in your NuttX configuration:</p>
@@ -502,7 +503,7 @@ appear in your <code class="docutils literal notranslate"><span class="pre">.con
 </pre></div>
 </div>
 <p>The SPI tool will then use the SPI character driver to access the SPI bus.
-These devices will reside at <code class="docutils literal notranslate"><span class="pre">/dev/spiN</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the I2C bus number.</p>
+These devices will reside at <code class="docutils literal notranslate"><span class="pre">/dev/spiN</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the SPI bus number.</p>
 <p><strong>Note</strong>: The SPI driver <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> interface is defined in
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/spi/spi.h</span></code>.</p>
 </li>
