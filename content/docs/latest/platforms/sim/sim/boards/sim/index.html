@@ -1856,6 +1856,7 @@ Run ./insmod.sh in the raw_gadget and dummy_hcd directory.</p>
 <div><p>sim:usbdev contains two different sets of composite devices:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conn0: adb &amp; rndis
 conn1: cdcacm &amp; cdcecm
+conn2: cdcncm
 </pre></div>
 </div>
 <p>You can use the sim:usbdev configuration:</p>
@@ -1932,7 +1933,7 @@ and host PC.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>  $ cat /dev/ttyACM0
   hello
 
-3&gt; Run CDCECM:
+4&gt; Run CDCECM:
 </pre></div>
 </div>
 <p>NuttX enter command:</p>
@@ -1950,6 +1951,36 @@ eth0    Link encap:Ethernet HWaddr 00:e0:de:ad:be:ef at UP
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ifconfig
 enx020000112233: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 576
         inet 10.0.0.4  netmask 255.255.255.0  broadcast 10.0.0.255
+        ether 02:00:00:11:22:33  txqueuelen 1000  (以太网)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 58  bytes 9143 (9.1 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+</pre></div>
+</div>
+<p>Then you can test the network connection using the ping command or telnet.</p>
+<blockquote>
+<div><p>5&gt; Run CDCNCM:</p>
+</div></blockquote>
+<p>NuttX enter command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ conn 2
+$ ifconfig
+eth0    Link encap:Ethernet HWaddr 42:67:c6:69:73:51 at UP
+        inet addr:10.0.1.2 DRaddr:10.0.1.1 Mask:255.255.255.0
+eth1    Link encap:Ethernet HWaddr 00:e0:de:ad:be:ef at UP
+        inet addr:0.0.0.0 DRaddr:0.0.0.0 Mask:0.0.0.0
+$ dhcpd_start eth1
+$ ifconfig
+eth0    Link encap:Ethernet HWaddr 42:67:c6:69:73:51 at UP
+        inet addr:10.0.1.2 DRaddr:10.0.1.1 Mask:255.255.255.0
+eth1    Link encap:Ethernet HWaddr 00:e0:de:ad:be:ef at UP
+        inet addr:10.0.0.1 DRaddr:10.0.0.1 Mask:255.255.255.0
+</pre></div>
+</div>
+<p>Host PC, you can see the network device named enx020000112233:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ifconfig
+enx020000112233: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 576
+        inet 10.0.0.2  netmask 255.255.255.0  broadcast 10.0.0.255
         ether 02:00:00:11:22:33  txqueuelen 1000  (以太网)
         RX packets 0  bytes 0 (0.0 B)
         RX errors 0  dropped 0  overruns 0  frame 0

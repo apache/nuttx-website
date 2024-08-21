@@ -160,6 +160,12 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#c">C++</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-pre-commit">Using Pre-Commit</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#installing">Installing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using">Using</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hooks">Hooks</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#appendix">Appendix</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#c-source-file-structure">C Source File Structure</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#c-header-file-structure">C Header File Structure</a></li>
@@ -213,7 +219,8 @@
 a contribution to be accepted. Please read this document before working on
 new code so that you can follow the style from the start. To check your code
 for conformance to the coding style, you should use the <a class="reference external" href="#nxstyle">nxstyle</a>
-tool included under <code class="docutils literal notranslate"><span class="pre">tools/</span></code> in the main NuttX repository.</p>
+tool included under <code class="docutils literal notranslate"><span class="pre">tools/</span></code> in the main NuttX repository, or enable the
+pre-commit functionality described in <a class="reference external" href="#precommit">pre-commit</a>.</p>
 <section id="general-conventions">
 <h2>General Conventions<a class="headerlink" href="#general-conventions" title="Permalink to this heading"></a></h2>
 <section id="file-organization">
@@ -2574,6 +2581,52 @@ suffix <code class="docutils literal notranslate"><span class="pre">_t</span></c
 </dd>
 </dl>
 </div></blockquote>
+</section>
+<section id="using-pre-commit">
+<span id="precommit"></span><h2>Using Pre-Commit<a class="headerlink" href="#using-pre-commit" title="Permalink to this heading"></a></h2>
+<p>You can use the <a class="reference external" href="https://pre-commit.com/">pre-commit</a> tool to check
+for style issues automatically. This is a 3rd party, Python based
+tool that simplifies linter checks and runs automatically when you
+commit modifications.</p>
+<p>The tool uses the <cite>.pre-commit-config.yaml</cite> file on the root NuttX
+directory as reference.</p>
+<section id="installing">
+<h3>Installing<a class="headerlink" href="#installing" title="Permalink to this heading"></a></h3>
+<p>Follow the installation guide on <a class="reference external" href="https://pre-commit.com/">pre-commit</a>
+website. If you can’t install directly with pip, consider using
+<a class="reference external" href="https://snapcraft.io/install/pre-commit/ubuntu">snap</a> or <cite>apt</cite>.
+Then, enter the NuttX repository and run: <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">install</span></code>.</p>
+</section>
+<section id="using">
+<h3>Using<a class="headerlink" href="#using" title="Permalink to this heading"></a></h3>
+<p>When committing changes, the tool should run automatically.
+Each check should show “Passed”, otherwise the commit will not happen.
+If any test fails, you should: fix the errors, then <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code> and <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span></code>
+again.</p>
+<p>Example terminal output:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">user@machine:~/nuttxspace/nuttx$ </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Testing pre-commit&quot;</span>
+<span class="go">fix end of files.........................................................Passed</span>
+<span class="go">trim trailing whitespace.................................................Passed</span>
+<span class="go">check for added large files..............................................Passed</span>
+<span class="go">nxstyle..................................................................Passed</span>
+<span class="go">[feature/example_wifi 8394e9f3cf] Testing pre-commit</span>
+<span class="go">1 file changed, 1 insertion(+)</span>
+</pre></div>
+</div>
+<p>It is possible to manually run the tool without a commit, just checking all
+files in a directory. Simply run: <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span> <span class="pre">--files</span> <span class="pre">drivers/i2c/*</span></code></p>
+</section>
+<section id="hooks">
+<h3>Hooks<a class="headerlink" href="#hooks" title="Permalink to this heading"></a></h3>
+<p>The following hooks are enabled in <cite>.pre-commit-config.yaml</cite>:</p>
+<ul class="simple">
+<li><p><strong>end-of-file-fixer:</strong> adds an empty line at the end of the file.</p></li>
+<li><p><strong>trailing-whitespace:</strong> finds and removes white spaces at the end of lines.</p></li>
+<li><p><strong>check-added-large-files:</strong> verifies if large files were added to the commit.</p></li>
+<li><p><strong>cmake-format:</strong> check the style of CMakeLists files.</p></li>
+<li><p><strong>nxstyle:</strong> check for the NuttX style (nxstyle). Currently runs the entire <code class="docutils literal notranslate"><span class="pre">checkpatch.sh</span></code> script.</p></li>
+</ul>
+</section>
 </section>
 <section id="appendix">
 <span id="appndxa"></span><h2>Appendix<a class="headerlink" href="#appendix" title="Permalink to this heading"></a></h2>
