@@ -1857,6 +1857,7 @@ Run ./insmod.sh in the raw_gadget and dummy_hcd directory.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conn0: adb &amp; rndis
 conn1: cdcacm &amp; cdcecm
 conn2: cdcncm
+conn3: cdcmbim
 </pre></div>
 </div>
 <p>You can use the sim:usbdev configuration:</p>
@@ -1986,6 +1987,46 @@ enx020000112233: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 576
         RX errors 0  dropped 0  overruns 0  frame 0
         TX packets 58  bytes 9143 (9.1 KB)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+</pre></div>
+</div>
+<p>Then you can test the network connection using the ping command or telnet.</p>
+<blockquote>
+<div><p>6&gt; Run CDCMBIM:</p>
+</div></blockquote>
+<p>NuttX enter command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ conn 3
+$ ifconfig
+eth0    Link encap:Ethernet HWaddr 42:67:c6:69:73:51 at RUNNING mtu 1500
+        inet addr:10.0.1.2 DRaddr:10.0.1.1 Mask:255.255.255.0
+wwan0   Link encap:UNSPEC at RUNNING mtu 1200
+        inet addr:0.0.0.0 DRaddr:0.0.0.0 Mask:0.0.0.0
+$ ifconfig wwan0 10.0.0.1 netmask 255.255.255.0
+$ ifconfig
+eth0    Link encap:Ethernet HWaddr 42:67:c6:69:73:51 at RUNNING mtu 1500
+        inet addr:10.0.1.2 DRaddr:10.0.1.1 Mask:255.255.255.0
+wwan0   Link encap:UNSPEC at RUNNING mtu 1200
+        inet addr:10.0.0.1 DRaddr:10.0.0.1 Mask:255.255.255.0
+
+$ echo -n &quot;hello from nuttx&quot; &gt; /dev/cdc-wdm2
+$ cat /dev/cdc-wdm2
+hello from linux
+</pre></div>
+</div>
+<p>Host PC, you can see the network device named wwx020000112233:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ sudo ifconfig wwx020000112233
+$ sudo ifconfig wwx020000112233 10.0.0.2 netmask 255.255.255.0
+$ ifconfig
+wwx020000112233: flags=4226&lt;BROADCAST,NOARP,MULTICAST&gt;  mtu 1500
+        inet 10.0.0.2  netmask 255.255.255.0  broadcast 10.0.0.255
+        ether 02:00:00:11:22:33  txqueuelen 1000  (以太网)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 58  bytes 9143 (9.1 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+$ sudo cat /dev/cdc-wdm1
+hello from nuttx
+$ sudo bash -c &quot;echo -n hello from linux &gt; /dev/cdc-wdm1&quot;
 </pre></div>
 </div>
 <p>Then you can test the network connection using the ping command or telnet.</p>
