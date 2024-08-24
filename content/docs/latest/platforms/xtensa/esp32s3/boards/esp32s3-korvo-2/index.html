@@ -1315,6 +1315,38 @@ USB connection by means of CP2102 converter, at 115200 bps).</p>
 <p>This set of tools enables receiving RTP packets and writing the content to a FIFO. <code class="docutils literal notranslate"><span class="pre">nxplayer</span></code> then reads
 from the FIFO, enabling using NuttX as a RTP receiver for audio applications.</p>
 <p>This is particularly useful to stream uncompressed audio through Wi-Fi to remote speakers.</p>
+</section>
+<section id="sdmmc">
+<h3>sdmmc<a class="headerlink" href="#sdmmc" title="Permalink to this heading"></a></h3>
+<p>Based on nsh. Support for sdmmc driver is enabled with following settings:</p>
+<p>Enable sdmmc driver:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_ESP32S3_SDMMC=y
+</pre></div>
+</div>
+<p>GPIO definitions:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_ESP32S3_SDMMC_CMD=7
+CONFIG_ESP32S3_SDMMC_CLK=15
+CONFIG_ESP32S3_SDMMC_D0=4
+</pre></div>
+</div>
+<p>ESP32-S3-Korvo-2’s MicroSD supports only one data port:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SDIO_WIDTH_D1_ONLY=y
+</pre></div>
+</div>
+<p>Multiblock limitation due to hardware:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_MMCSD_MULTIBLOCK_LIMIT=128
+</pre></div>
+</div>
+<p>Use sched_yield instead of usleep due to long tick time:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_MMCSD_CHECK_READY_STATUS_WITHOUT_SLEEP=y
+</pre></div>
+</div>
+<p>Format and mount the SD/MMC device with following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mkfatfs -F 32 -r /mnt /dev/mmcsd1
+mount -t vfat /dev/mmcsd1 /mnt
+</pre></div>
+</div>
+<p>FAT filesystem is enabled in the default configuration. Other filesystems may also work.</p>
 <p><strong>Connect to your Network</strong></p>
 <p>Connect the ESP32-S3-Korvo-2 board to your network to be able to receive RTP packets:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wapi psk wlan0 mypasswd 3

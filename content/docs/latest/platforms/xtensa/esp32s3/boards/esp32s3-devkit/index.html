@@ -738,6 +738,51 @@ nsh&gt; alarm_daemon: alarm 0 received
 </pre></div>
 </div>
 </section>
+<section id="sdmmc">
+<h3>sdmmc<a class="headerlink" href="#sdmmc" title="Permalink to this heading"></a></h3>
+<p>Based on nsh. Support for sdmmc driver is enabled with following settings:</p>
+<p>Enable sdmmc driver:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_ESP32S3_SDMMC=y
+</pre></div>
+</div>
+<p>Default GPIO definitions:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_ESP32S3_SDMMC_CMD=41
+CONFIG_ESP32S3_SDMMC_CLK=39
+CONFIG_ESP32S3_SDMMC_D0=40
+CONFIG_ESP32S3_SDMMC_D1=16
+CONFIG_ESP32S3_SDMMC_D2=8
+CONFIG_ESP32S3_SDMMC_D3=42
+</pre></div>
+</div>
+<p>Multiblock limitation due to hardware:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_MMCSD_MULTIBLOCK_LIMIT=128
+</pre></div>
+</div>
+<p>Use sched_yield instead of usleep due to long tick time:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_MMCSD_CHECK_READY_STATUS_WITHOUT_SLEEP=y
+</pre></div>
+</div>
+<p>This configuration has been verified with an adapter (1.27 to 2.54mm T-type
+adapter, CN10P2) and an <a class="reference external" href="https://semiconductor.samsung.com/jp/estorage/emmc/emmc-5-1/klm8g1getf-b041/">external emmc module</a>.</p>
+<p>Besides the connections to 3v3 and GND of ESP32S3 DevKit, pins of the adapter
+used in the verification are connected to ESP32S3 DevKit as following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>adapter pin           ESP32S3 GPIO
+    11      ===CMD==&gt;       41
+    12      ===CLK==&gt;       39
+    1       ===D0===&gt;       40
+    2       ===D1===&gt;       16
+    3       ===D2===&gt;       8
+    4       ===D3===&gt;       42
+</pre></div>
+</div>
+<p>Format and mount the SD/MMC device with following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mkfatfs -F 32 -r /mnt /dev/mmcsd1
+mount -t vfat /dev/mmcsd1 /mnt
+</pre></div>
+</div>
+<p>FAT filesystem is enabled in the default configuration. Other filesystems may
+also work.</p>
+</section>
 <section id="smp">
 <h3>smp<a class="headerlink" href="#smp" title="Permalink to this heading"></a></h3>
 <p>Another NSH configuration, similar to nsh, but also enables
