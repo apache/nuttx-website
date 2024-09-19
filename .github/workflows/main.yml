@@ -32,37 +32,73 @@ jobs:
         python-version: '3.8'
     - name: Build docs
       run: |
+        echo "======================================================="
+        echo " Install Pipenv"
+        echo "======================================================="
+
         pip3 install pipenv
+
+        echo "======================================================="
+        echo " Setup nuttx/Documentation"
+        echo "======================================================="
+
         cd nuttx/Documentation
-
-        # For now install only dependencies from master for all versions
-        # of documentation so far old versions can use these updated pin
-        # but the old pins in old releases cannot always be used.
-        pipenv install
-
         DOCDIR=../../docs
         rm -rf $DOCDIR
+
+        echo "======================================================="
+        echo " Select nuttx/Documentation version candidates"
+        echo "======================================================="
 
         NUTTX_TAGS=$(git tag -l 'nuttx-1?.*' | fgrep -v RC)
         export NUTTX_VERSIONS=$(echo -n "$NUTTX_TAGS" | sed -r 's|^nuttx-||g' | tr '\n' ',')
         
-        echo "Building documentation for nuttx: $NUTTX_VERSIONS (and master)"
+        echo " ==> BUILD NUTTX DOCUMENTATION FOR: $NUTTX_VERSIONS (and master)."
 
         for nuttx_version in $NUTTX_TAGS master; do
+
+          echo " ===> BUILDING DOCUMENTATION FOR NuttX $nuttx_version."
+
           git checkout -f $nuttx_version
-          
+
+          # NuttX uses Sphinx as documentation generator. Sphinx needs Python.
+          # Sphinx may have different dependencies for different NuttX release.
+          # Manage Python packages with PipEnv per release deinfed in Pipfile.
+          echo " ====> PIPENV INSTALL."
+
+          pipenv install
+
           if [ "$nuttx_version" = "master" ]; then
             OUTDIR="$DOCDIR/latest"
-         else
+          else
             OUTDIR="$DOCDIR/${nuttx_version#nuttx-}"
           fi
 
+          echo " ====> OUTDIR IS: $OUTDIR."
+
+          echo " ====> STARTING SPHINX BUILD."
+
           pipenv run make html BUILDDIR="$OUTDIR"
+
+          echo " ====> COPY RESULTS."
+
           mv $OUTDIR/html/* $OUTDIR
+
+          echo " ====> BUILD LOCATION CLEANUP."
+
           rm -rf $OUTDIR/{html,doctrees}
+
+          echo " ====> PIPENV CLEANUP."
+
+          # Uninstall pipenv packages (cached packages are preserved).
+          pipenv uninstall --all
+
         done
 
         cd ../..
+
+        echo  " ========== DOCUMENTATION BUILD FINISHED ==========="
+
 
     - name: Install Ruby tools
       run: |
