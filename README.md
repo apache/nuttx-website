@@ -17,44 +17,118 @@ limitations under the License.
 {% endcomment %}
 -->
 
-# How to update the project's web site
+# Apache NuttX RTOS Website
 
-## Running locally
+Source code (written in [RubyGems](https://rubygems.org/))
+for [our offical project's website](https://nuttx.apache.org)
+is stored here along with the build-and-publish automation scripts
+(using GitHub CI).
 
-Before opening a pull request, you can preview your contributions by
-running from within the directory:
+[NuttX Technical Documentation](https://nuttx.apache.org/docs/latest/)
+is a sublocation of the project website, therefore is built and bundled here,
+but documentation sources are part of the
+[NuttX source code repository](https://github.com/apache/nuttx/tree/master/Documentation)
+in order to stay in sync with the upstream code.
+Documentation uses [Sphinx](https://www.sphinx-doc.org/) generator tools
+to produce HTML output.
+
+Please keep in mind that Website (this repository) and Documentation (NuttX
+repository) have different source origins and common resulting location.
+
+
+## Providing the Updates
+
+Fork the repository, clone it to a local machine, make changes,
+commit changes onto a dedicated branch, push the branch onto your
+fork repository, GitHub will help you create a Pull Request.
+
+Remember to use signed commits and report single problem per PR.
+
+Make sure to preview local changes before submitting a Pull Request.
+
+If you already submitted a Pull Request, but some changes needs to be made,
+add modified files with `git add <your_file>`, then `git commit --amend`
+to update existing commit, then `git push -f <your_fork> <your_branch>`
+in order to update code under existing Pull Request.
+
+
+## Updating the Website
+
+Website source code resides at top location of this repository.
+
+Before opening a Pull Request, you should preview your contributions.
+
+You first need to install Ruby Gems on a local machine:
 
 ```
-export GEM_HOME=$HOME/.gem # Adjust this path as you want
-export PATH=$PATH:$GEM_HOME/bin
-bundle exec jekyll serve
-Open [http://localhost:4000](http://localhost:4000)
+sudo apt install git ruby ruby-dev bundler
 ```
 
-Note: The Gemfile.lock may contain some platform specific pins
-you may want to regenerate this by deleting `Gemfile.lock`
-and running `bundle update`.  This is currently locked
-for x86_64-linux, darwin, and freebsd by using the
-`bundle lock --add-platform foo` command.
+Then you can build and preview the results with:
+
+```
+git clone https://github.com/apache/nuttx-website
+cd nuttx-website/
+export GEM_HOME=$HOME/.gem       # Adjust this path as you want.
+export PATH=$PATH:$GEM_HOME/bin  # Add Gem binaries to the path.
+bundle install                   # Install required packages.
+bundle exec jekyll serve         # Build and start local web server.
+```
+
+Preview should be visible at [http://localhost:4000](http://localhost:4000).
+
+**Note:** The `Gemfile.lock` may contain some platform specific pins.
+You may want to regenerate it by deleting `Gemfile.lock`
+and running `bundle update`.  Pins can be locked
+for `x86_64-linux`, `Darwin`, `FreeBSD`, and other build hosts with
+`bundle lock --add-platform <your_platform>` command.
 
 
-## Pushing to site
+## Updating the Documentaion
 
-Site is updated by a CI job that runs the `publish.sh` script. Once this
-runs it the results will be visible [here](https://nuttx.apache.org).
+NuttX Technical Documentation is part of the
+[NuttX source code repository](https://github.com/apache/nuttx/tree/master/Documentation).
 
-### Force Deployment
+Before opening a Pull Request, you should preview your contributions.
 
-If a dependency has changed such as the external documentation you may
-need to force the deployment CI to run. This can be done from the [CI
-Actions](https://github.com/apache/nuttx-website/actions?query=workflow%3ACI)
-tab and selecting **Run workflow** -> **Branch: master** --> **Run workflow**
+You first need to install Python3 and PipEnv.
+
+```
+sudo apt install git python3 pipenv
+```
+
+You can setup build tools and create preview with:
+
+```
+git clone https://github.com/apache/nuttx
+cd nuttx/Documentation
+pipenv install
+pipenv run make html
+```
+
+Preview files should be visible at `_build/html/` directory.
+
+
+## Website Publishing
+
+Website is updated by the GitHub CI Action script that builds the RubyGem
+and Shinx part from sources, bundles them together, and then runs the
+`publish.sh` script to update the web hosting at
+[https://nuttx.apache.org](https://nuttx.apache.org).
+
+Website build-and-publish Action can be started by hand with:
+1. [Actions](https://github.com/apache/nuttx-website/actions/workflows/main.yml).
+2. Run workflow.
+3. Branch: master.
+4. Run workflow.
 
 ![Trigger Workflow](ci-workflow.png)
 
-## Adding contributors
 
-To add a contributor to the project, or to modify existing contributors,
-edit `site/_data/contributors.yml`.
-The [project members](http://localhost:4000/community.html#project-members)
-list will re-generate.
+## Important Locations
+
+* Apache NuttX RTOS Project Members, Mentors, PMC/IPMC members, and Committers
+are listed at
+[https://nuttx.apache.org/community-members/](https://nuttx.apache.org/community-members/).
+ Source file for this site is located at [_data/contributors.yml](_data/contributors.yml).
+* Project details and link references are at [_data/project.yml](_data/project.yml).
