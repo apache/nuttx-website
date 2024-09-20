@@ -18,17 +18,19 @@
 -->
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Critical Sections &mdash; NuttX latest documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -150,6 +152,7 @@
 <li class="toctree-l2"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
 <li class="toctree-l2"><a class="reference internal" href="preemption_latency.html">Effects of Disabling Interrupts or Pre-Emption on Response Latency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html">Bottom-Half Interrupt Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">The NuttX Simulation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
@@ -359,12 +362,75 @@ IDLE task will be permitted to run.</p></li>
 a Critical Section Monitor. This is internal instrumentation that records the
 time that a task holds a critical section. It also records the amount of time
 that interrupts are disabled globally. The Critical Section Monitor then retains
-the maximum time that the critical section is in place, both per-task and globally.</p>
+the maximum time that the critical section is in place, both per-task and globally.
+We also extend the critical section monitor to do task sched cost statistics, which
+can high effectively do cpuload statistic. In order to save not necessary cost when
+you only focus on specific feature, we isolate the crtimon features to difference
+configurations. Allow you only open some of the features to minimum the side effect
+of the performance etc.</p>
 <p>The Critical Section Monitor is enabled with the following setting in the
-configuration:</p>
+configurations:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR=y
 </pre></div>
 </div>
+<p>Enable sched critmon globally, all other features need this configuration as a prefix.</p>
+<p><strong>Thread executing</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR_MAXTIME_THREAD=0
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Default 0 to enable executing time statistic, and make it a source to support cpuload.</p></li>
+<li><p>&gt; 0 to also do alert log when executing time above the configuration ticks.</p></li>
+<li><p>-1 to disable thread executing time statistic feature.</p></li>
+</ul>
+<p>This method is <strong>recommend</strong> as a cpuload backend if you don’t have more requirements
+in critmon. When disabled all other statistics in critmon, this method is a high
+efficiency way do cpu load statistic. As we did not add hooks to critical sections
+and preemption operations. Only have instructions when scheduler triggers context switch.</p>
+<p><strong>Workq executing</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR_MAXTIME_WQUEUE=-1
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Default -1 to disable workq queue max execution time</p></li>
+<li><p>&gt; 0 to do alert log when workq executing time above the configuration ticks.</p></li>
+</ul>
+<p><strong>Preemption disabled time</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR_MAXTIME_PREEMPTION=-1
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Default -1 to disable preemption disabled time statistic.</p></li>
+<li><p>&gt;= 0 to enable preemption disabled time statistic, data will be in critmon procfs.</p></li>
+<li><p>&gt; 0 to also do alert log when preemption disabled time above the configuration ticks.</p></li>
+</ul>
+<p><strong>Critical section entered time</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR_MAXTIME_CSECTION=-1
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Default -1 to disable critical section entered time statistic.</p></li>
+<li><p>&gt;= 0 to enable critical section entered time statistic, data will be in critmon procfs.</p></li>
+<li><p>&gt; 0 to also do alert log when critical section entered time above the configuration ticks.</p></li>
+</ul>
+<p><strong>Irq executing time</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR_MAXTIME_IRQ=-1
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Default -1 to disable irq executing time statistic.</p></li>
+<li><p>&gt;= 0 to enable irq executing time statistic, data will be in critmon procfs.</p></li>
+<li><p>&gt; 0 to also do alert log when irq executing time above the configuration ticks.</p></li>
+</ul>
+<p><strong>Wdog executing time</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SCHED_CRITMONITOR_MAXTIME_WDOG=-1
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Default -1 to disable wdog executing time statistic.</p></li>
+<li><p>&gt;= 0 to enable wdog executing time statistic, data will be in critmon procfs.</p></li>
+<li><p>&gt; 0 to also do alert log when wdog executing time above the configuration ticks.</p></li>
+</ul>
 <p><strong>Perf Timers interface</strong></p>
 <div class="admonition-todo admonition" id="id1">
 <p class="admonition-title">Todo</p>

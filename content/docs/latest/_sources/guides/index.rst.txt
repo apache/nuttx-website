@@ -19,9 +19,11 @@ Guides
   customapps.rst
   citests.rst
   zerolatencyinterrupts.rst
+  kasan.rst
   nestedinterrupts.rst
   cortexmhardfaults.rst
   coredump.rst
+  coresight.rst
   gdbserver.rst
   gdbwithpython.rst
   ofloader.rst
