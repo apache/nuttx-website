@@ -132,6 +132,7 @@
 <li class="toctree-l4"><a class="reference internal" href="dma.html">DMA Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="framebuffer.html">Frame Buffer Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="i2c.html">I2C Device Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="i3c.html">I3C Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ioexpander.html">IO Expander Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lcd.html">LCD Character Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mtd.html">Memory Technology Device Drivers</a></li>
@@ -318,13 +319,13 @@ defined in <code class="docutils literal notranslate"><span class="pre">include/
 </pre></div>
 </div>
 <p>The channel interface is instantiated by calling
-<a class="reference internal" href="#c.syslog_channel" title="syslog_channel"><code class="xref c c-func docutils literal notranslate"><span class="pre">syslog_channel()</span></code></a>.</p>
+<a class="reference internal" href="#c.syslog_channel_register" title="syslog_channel_register"><code class="xref c c-func docutils literal notranslate"><span class="pre">syslog_channel_register()</span></code></a>.</p>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.syslog_channel">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">syslog_channel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">syslog_channel_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">channel</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.syslog_channel" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object c" id="c.syslog_channel_register">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">syslog_channel_register</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">syslog_channel_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">channel</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.syslog_channel_register" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Configure the SYSLOG function to use the provided
 channel to generate SYSLOG output.</p>
-<p><code class="docutils literal notranslate"><span class="pre">syslog_channel()</span></code> is a non-standard, internal OS interface and
+<p><code class="docutils literal notranslate"><span class="pre">syslog_channel_register()</span></code> is a non-standard, internal OS interface and
 is not available to applications. It may be called numerous times
 as necessary to change channel interfaces. By default, all system
 log output goes to console (<code class="docutils literal notranslate"><span class="pre">/dev/console</span></code>).</p>
@@ -381,11 +382,11 @@ full SYSLOG capability.</p>
 <p>This function performs these basic operations:</p>
 <ul class="simple">
 <li><p>Initialize the SYSLOG device</p></li>
-<li><p>Call <a class="reference internal" href="#c.syslog_channel" title="syslog_channel"><code class="xref c c-func docutils literal notranslate"><span class="pre">syslog_channel()</span></code></a> to begin using that device.</p></li>
+<li><p>Call <code class="xref c c-func docutils literal notranslate"><span class="pre">syslog_channel()</span></code> to begin using that device.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_SYSLOG</span></code> is selected, then the
 architecture-specific logic will provide its own SYSLOG device
 initialize which must include as a minimum a call to
-<a class="reference internal" href="#c.syslog_channel" title="syslog_channel"><code class="xref c c-func docutils literal notranslate"><span class="pre">syslog_channel()</span></code></a> to use the device.</p></li>
+<code class="xref c c-func docutils literal notranslate"><span class="pre">syslog_channel()</span></code> to use the device.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -530,7 +531,7 @@ file. This is always the case, for example, when a transient
 device is used for a console – such as a USB console or a Telnet
 console. The SYSLOG channel is not redirected as <code class="docutils literal notranslate"><span class="pre">stdout</span></code> is;
 the SYSLOG channel will stayed fixed (unless it is explicitly
-changed via <code class="docutils literal notranslate"><span class="pre">syslog_channel()</span></code>).</p>
+changed via <code class="docutils literal notranslate"><span class="pre">syslog_channel_register()</span></code>).</p>
 </div>
 <p>References: <code class="docutils literal notranslate"><span class="pre">drivers/syslog/syslog_consolechannel.c</span></code> and
 <code class="docutils literal notranslate"><span class="pre">drivers/syslog/syslog_device.c</span></code></p>
@@ -577,9 +578,9 @@ SYSLOG file channel:</p>
 <dd><p>Configure to use a file in a mounted file system
 at <code class="docutils literal notranslate"><span class="pre">devpath</span></code> as the SYSLOG channel.</p>
 <p>This tiny function is simply a wrapper around
-<code class="docutils literal notranslate"><span class="pre">syslog_dev_initialize()</span></code> and <code class="docutils literal notranslate"><span class="pre">syslog_channel()</span></code>. It calls
+<code class="docutils literal notranslate"><span class="pre">syslog_dev_initialize()</span></code> and <code class="docutils literal notranslate"><span class="pre">syslog_channel_register()</span></code>. It calls
 <code class="docutils literal notranslate"><span class="pre">syslog_dev_initialize()</span></code> to configure the character file at
-<code class="docutils literal notranslate"><span class="pre">devpath</span></code> then calls <code class="docutils literal notranslate"><span class="pre">syslog_channel()</span></code> to use that device as
+<code class="docutils literal notranslate"><span class="pre">devpath</span></code> then calls <code class="docutils literal notranslate"><span class="pre">syslog_channel_register()</span></code> to use that device as
 the SYSLOG output channel.</p>
 <p>File SYSLOG channels differ from other SYSLOG channels in that
 they cannot be established until after fully booting and mounting

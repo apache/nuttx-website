@@ -23,7 +23,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FIFO and named pipe drivers &mdash; NuttX latest documentation</title>
+  <title>I3C Device Drivers &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Power-related Drivers" href="power/index.html" />
-    <link rel="prev" title="Pinctrl Device Drivers" href="pinctrl.html" /> 
+    <link rel="next" title="IO Expander Device Drivers" href="ioexpander.html" />
+    <link rel="prev" title="I2C Device Drivers" href="i2c.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -132,7 +132,7 @@
 <li class="toctree-l4"><a class="reference internal" href="dma.html">DMA Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="framebuffer.html">Frame Buffer Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="i2c.html">I2C Device Drivers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="i3c.html">I3C Device Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">I3C Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ioexpander.html">IO Expander Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lcd.html">LCD Character Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mtd.html">Memory Technology Device Drivers</a></li>
@@ -153,7 +153,7 @@
 <li class="toctree-l4"><a class="reference internal" href="mmcsd.html">MMCSD Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="net/index.html">Network interface drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pinctrl.html">Pinctrl Device Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">FIFO and named pipe drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pipes.html">FIFO and named pipe drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="power/index.html">Power-related Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="virtio.html">Virtio Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="video.html">Video Device Drivers</a></li>
@@ -212,9 +212,9 @@
           <li class="breadcrumb-item"><a href="../../index.html">OS Components</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="index.html">Specialized Device Drivers</a></li>
-      <li class="breadcrumb-item active">FIFO and named pipe drivers</li>
+      <li class="breadcrumb-item active">I3C Device Drivers</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/components/drivers/special/pipes.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/components/drivers/special/i3c.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -222,16 +222,86 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fifo-and-named-pipe-drivers">
-<h1>FIFO and named pipe drivers<a class="headerlink" href="#fifo-and-named-pipe-drivers" title="Permalink to this heading"></a></h1>
+  <section id="i3c-device-drivers">
+<h1>I3C Device Drivers<a class="headerlink" href="#i3c-device-drivers" title="Permalink to this heading"></a></h1>
+<p>The I3C (Improved Inter-Integrated Circuit) driver is a comprehensive software framework designed to
+support the advanced features of the I3C protocol. It comprises a system framework and underlying IP
+drivers, both of which are critical components for enabling seamless communication between I3C devices.
+The system framework, provided by vela os, offers user-level device nodes and kernel-level driver
+interfaces. Meanwhile, the underlying IP drivers, developed specifically for the I3C driver framework,
+handle the implementation of IP functionalities and the adaptation of framework-level interfaces.</p>
+<ul class="simple">
+<li><p>Key Components of the I3C Driver Framework:</p></li>
+</ul>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><strong>Dynamic Addressing and Access</strong>: One of the primary advancements of I3C over I2C is its support
+for dynamic addressing. This allows for more flexible device management and addressing schemes.</p></li>
+<li><p><strong>CCC (Common Command Codes) Support</strong>: The I3C driver framework enables the transmission of CCC commands,
+which extend the functionality and capabilities of I3C devices. Dynamic address allocation and
+release commands are mandatory, while other CCC commands are optional and can be implemented as
+needed.</p></li>
+<li><p><strong>Data Transmission</strong>: The framework supports both I3C and I2C device data transmission, ensuring
+compatibility with existing I2C devices while leveraging the enhanced features of I3C.</p></li>
+<li><p><strong>Interface Callbacks</strong>: The I3C driver framework provides a set of callback interfaces that enable
+IP drivers to interact with the framework layer. These include interfaces for dynamic address
+configuration and release, CCC command transmission, I3C device data transmission, and I2C device
+data transmission.</p></li>
+</ol>
+</div></blockquote>
+<ul class="simple">
+<li><p>Data Structures and Interfaces:</p></li>
+</ul>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><strong>I3C Master Controller (struct i3c_master_controller)</strong>: Represents an I3C controller and manages
+basic software information for the I3C bus.</p></li>
+<li><p><strong>I3C Bus Operation Callbacks (struct i3c_master_controller_ops)</strong>: Enables application-level access
+to I3C for data transmission and other operations. Key functions include bus_init for bus initialization,
+attach_i3c_dev and attach_i2c_dev for device attachment, ccc_xfer for CCC command transmission, priv_xfers
+for private data transmission, and i2c_xfers for I2C device data transmission.</p></li>
+<li><p><strong>Data Structures for I2C and I3C Transmissions</strong>: Separate structures (struct i2c_msg_s and struct i3c_priv_xfer)
+are defined for encapsulating data transmitted to I2C and I3C devices, respectively.</p></li>
+<li><p><strong>CCC Command Transmission (struct i3c_ccc_cmd)</strong>: A dedicated structure for encapsulating CCC commands
+transmitted to I3C devices.</p></li>
+</ol>
+</div></blockquote>
+<ul class="simple">
+<li><p>Application Usage of I3C</p></li>
+</ul>
+<p>Applications interact with I3C devices through device nodes (/dev/i3cX for I3C and /dev/i2cX for I2C devices,
+where X represents the specific bus number). Standard file operations such as open, close, read, write, and ioctl are supported.</p>
+<ul class="simple">
+<li><p>IOCTL Commands:</p>
+<ol class="arabic simple">
+<li><p>For I2C devices, IOCTL commands like I2C_TRANSFER and I2C_RESET are available, allowing applications to transmit
+data and reset I2C devices.</p></li>
+<li><p>For I3C devices, a range of IOCTL commands are provided, including I3CIOC_PRIV_XFERS for data transmission,
+I3CIOC_EN_IBI and I3CIOC_DIS_IBI for enabling and disabling IBI (In-Band Interrupt) commands, I3CIOC_REQ_IBI and
+I3CIOC_FREE_IBI for requesting and releasing IBI commands, and I3CIOC_GET_DEVINFO for retrieving device information.</p></li>
+</ol>
+</li>
+<li><p>Data Transmission Format:</p></li>
+</ul>
+<p>When transmitting data to I3C slave devices, applications must encapsulate their data in a struct i3c_transfer_s
+format. This structure includes fields such as target_addr for the slave device address, nxfers for the number of
+data frames to be transmitted, xfers for the data frame format, and additional fields for IBI operation requests and
+device information retrieval.</p>
+<ul class="simple">
+<li><p>Provisional ID Implementation:</p></li>
+</ul>
+<p>Due to the use of dynamic addressing in I3C, devices may be identified using Provisional IDs (PIDs). These PIDs
+are encoded in the reg[3] array of the boardinfo structure, with specific rules for encoding manufacturer ID, part ID,
+instance ID, and extra information. This encoding scheme ensures unique identifiability of I3C devices, even when static
+addressing is not</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pinctrl.html" class="btn btn-neutral float-left" title="Pinctrl Device Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="power/index.html" class="btn btn-neutral float-right" title="Power-related Drivers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="i2c.html" class="btn btn-neutral float-left" title="I2C Device Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ioexpander.html" class="btn btn-neutral float-right" title="IO Expander Device Drivers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
