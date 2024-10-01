@@ -492,7 +492,7 @@ throughout the state change.</p>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.pm_idle">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pm_idle</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">pm_idle_handler_t</span></span><span class="w"> </span><span class="n"><span class="pre">handler</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.pm_idle" title="Permalink to this definition"></a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pm_idle</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.pm_idle_handler_t" title="pm_idle_handler_t"><span class="n"><span class="pre">pm_idle_handler_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">handler</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.pm_idle" title="Permalink to this definition"></a><br /></dt>
 <dd><p>This function provide standard pm idle work flow for up_idle.
 Called from the chip bsp and should only focus on handle the system
 state changed.</p>
@@ -502,15 +502,81 @@ state changed.</p>
 <li><p><strong>handler</strong> – The execution after PM_IDLE_DOMAIN state changed</p></li>
 </ul>
 </dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.pm_idle_unlock">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pm_idle_unlock</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.pm_idle_unlock" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function provide assist of smp pm idle work progress, for pm sequence
+other cores will not release before the core hold cpus lock.
+Call this function to release SMP idle cpus lock.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.pm_idle_lock">
+<span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pm_idle_lock</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">cpu</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.pm_idle_lock" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function provide assist of smp pm idle work progress, for pm sequence
+other cores will not release before the core hold cpus lock.
+Call this function to ensure other core will not run until released.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cpu</strong> – The current CPU, used to update cpu_set_t</p></li>
+</ul>
+</dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p>true, Current CPU is the first one woken from sleep, should handle system domain restore process also.
+false, Current CPU is not the first one woken from sleep, should only handle cpu domain restore process.</p>
 </dd>
 </dl>
+<p><strong>Assumptions:</strong> Restore operation pm_changestate(, PM_RESTORE) will done
+inside pm_idle. Handler don’t have to care about it.</p>
 </dd></dl>
 
 </section>
 <section id="callbacks">
 <h2>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this heading"></a></h2>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.pm_idle_handler_t">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pm_idle_handler_t</span></span></span><a class="headerlink" href="#c.pm_idle_handler_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This type declare is provide for pm_idle interface.
+Handle the pm low power action and execution.
+Possible execution for long time because of WFI inside.</p>
+<ul class="simple">
+<li><p>for not SMP case.</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">pm_idle_handler_t</span><span class="p">)(</span><span class="k">enum</span><span class="w"> </span><span class="n">pm_state_e</span><span class="w"> </span><span class="n">systemstate</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Param systemstate<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Indicate the new system power state.</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>for SMP case.</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">pm_idle_handler_t</span><span class="p">)(</span><span class="kt">int</span><span class="w"> </span><span class="n">cpu</span><span class="p">,</span>
+<span class="w">                                  </span><span class="k">enum</span><span class="w"> </span><span class="n">pm_state_e</span><span class="w"> </span><span class="n">cpustate</span><span class="p">,</span>
+<span class="w">                                  </span><span class="k">enum</span><span class="w"> </span><span class="n">pm_state_e</span><span class="w"> </span><span class="n">systemstate</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Param cpu<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Indicate the current working cpu.</p>
+</dd>
+<dt class="field-even">Param cpustate<span class="colon">:</span></dt>
+<dd class="field-even"><p>Indicate the current cpu power state.</p>
+</dd>
+<dt class="field-odd">Param systemstate<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Indicate the new system power state. If not the lastcore enter idle,
+systemstate always PM_RESTORE. If not PM_RESTORE, handler should
+cover system pm operations.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="c struct">
 <dt class="sig sig-object c" id="c.pm_callback_s">
 <span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pm_callback_s</span></span></span><a class="headerlink" href="#c.pm_callback_s" title="Permalink to this definition"></a><br /></dt>

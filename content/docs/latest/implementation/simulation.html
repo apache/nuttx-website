@@ -209,14 +209,11 @@ Look at <code class="docutils literal notranslate"><span class="pre">arch/sim/sr
 <p>The secret is <code class="docutils literal notranslate"><span class="pre">nuttx.rel</span></code>. That is a blob that contains the entire Nuttx simulation.
 It is built like this:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nuttx.rel : libarch$(LIBEXT) board/libboard$(LIBEXT) $(HOSTOS)-names.dat $(LINKOBJS)</span>
+<span class="gp">    $</span><span class="o">(</span>LD<span class="o">)</span><span class="w"> </span>-r<span class="w"> </span><span class="k">$(</span>LDLINKFLAGS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>RELPATHS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>EXTRA_LIBPATHS<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$@</span><span class="w"> </span><span class="k">$(</span>REQUIREDOBJS<span class="k">)</span><span class="w"> </span>--start-group<span class="w"> </span><span class="k">$(</span>RELLIBS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>EXTRA_LIBS<span class="k">)</span><span class="w"> </span>--end-group
+<span class="gp">    $</span><span class="o">(</span>OBJCOPY<span class="o">)</span><span class="w"> </span>--redefine-syms<span class="o">=</span><span class="k">$(</span>HOSTOS<span class="k">)</span>-names.dat<span class="w"> </span><span class="nv">$@</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>nuttx.rel<span class="classifier">libarch$(LIBEXT) board/libboard$(LIBEXT) $(HOSTOS)-names.dat $(LINKOBJS)</span></dt><dd><p>$(LD) -r $(LDLINKFLAGS) $(RELPATHS) $(EXTRA_LIBPATHS) -o $&#64; $(REQUIREDOBJS) –start-group $(RELLIBS) $(EXTRA_LIBS) –end-group
-$(OBJCOPY) –redefine-syms=$(HOSTOS)-names.dat $&#64;</p>
-</dd>
-</dl>
 </div></blockquote>
 <p>The first <code class="docutils literal notranslate"><span class="pre">$(LD)</span></code> builds a partially linked, relocatable object (hence, the extension <code class="docutils literal notranslate"><span class="pre">.rel</span></code>).  This contains all of the NuttX objects.  So <code class="docutils literal notranslate"><span class="pre">nuttx.rel</span></code> is the entire “fish bowl” that the NuttX simulation lives.</p>
 <p>The second <code class="docutils literal notranslate"><span class="pre">$(OBJCOPY)</span></code> line is the thing the irrevocable severs the NuttX “fish bowl” from the host environment.  It renames most of the symbols in <code class="docutils literal notranslate"><span class="pre">nuttx.rel</span></code> so that they do not collide with the symbols use by the host system.  Look in <code class="docutils literal notranslate"><span class="pre">arch/sim/src/nuttx-names.dat</span></code>.  So <code class="docutils literal notranslate"><span class="pre">open()</span></code> becomes <code class="docutils literal notranslate"><span class="pre">NXopen()</span></code>, <code class="docutils literal notranslate"><span class="pre">close()</span></code> becomes <code class="docutils literal notranslate"><span class="pre">NXclose()</span></code>, read becomes <code class="docutils literal notranslate"><span class="pre">NXread()</span></code>, etc.</p>
@@ -270,11 +267,10 @@ $(OBJCOPY) –redefine-syms=$(HOSTOS)-names.dat $&#64;</p>
 <li><p>In the earliest initialization, simulator could start a host simulation interrupt thread and setup a signal handler to catch signals on the main thread.  One signal, say <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> could indicate a context switch.  This would be a type <code class="docutils literal notranslate"><span class="pre">SA_SIGINFO</span></code> and the context switch information would be provided in the <code class="docutils literal notranslate"><span class="pre">sival_t</span></code> field of the <code class="docutils literal notranslate"><span class="pre">siginfo</span></code>.</p></li>
 <li><p>Interrupt logic could be implemented on a host pthread.  The host pthread, like a hardware interrupt, executes asynchronously outside of the operating system.  The interrupt thread could wait for a host signal or a host message and, upon receipt, perform simulated interrupt logic.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">up_interrupt_context()</span></code> would need to be implemented; it is only a stub now.  I think this could be done with a simple global boolean like:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">bool g_in_interrupt;</span>
+<span class="go">xcpt_reg_t g_context_regs;</span>
 </pre></div>
 </div>
-<p>bool g_in_interrupt;
-xcpt_reg_t g_context_regs;</p>
 </li>
 </ul>
 </div></blockquote>
