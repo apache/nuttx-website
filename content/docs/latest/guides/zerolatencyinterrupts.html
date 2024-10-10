@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>High Performance, Zero Latency Interrupts &mdash; NuttX latest documentation</title>
+  <title>High Performance: Zero Latency Interrupts, Maskable nested interrupts &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -136,10 +136,11 @@
 <li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
 <li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">High Performance, Zero Latency Interrupts</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">High Performance: Zero Latency Interrupts, Maskable nested interrupts</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#generic-interrupt-handling">Generic Interrupt Handling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bypassing-the-generic-interrupt-handling">Bypassing the Generic Interrupt Handling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getting-back-into-the-game">Getting Back into the Game</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maskable-nested-interrupts">Maskable Nested Interrupts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#nested-interrupt-handling">Nested Interrupt Handling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cortex-m3-4-implementation">Cortex-M3/4 Implementation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
@@ -188,7 +189,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">High Performance, Zero Latency Interrupts</li>
+      <li class="breadcrumb-item active">High Performance: Zero Latency Interrupts, Maskable nested interrupts</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/zerolatencyinterrupts.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -198,8 +199,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="high-performance-zero-latency-interrupts">
-<h1>High Performance, Zero Latency Interrupts<a class="headerlink" href="#high-performance-zero-latency-interrupts" title="Permalink to this heading"></a></h1>
+  <section id="high-performance-zero-latency-interrupts-maskable-nested-interrupts">
+<h1>High Performance: Zero Latency Interrupts, Maskable nested interrupts<a class="headerlink" href="#high-performance-zero-latency-interrupts-maskable-nested-interrupts" title="Permalink to this heading"></a></h1>
 <section id="generic-interrupt-handling">
 <h2>Generic Interrupt Handling<a class="headerlink" href="#generic-interrupt-handling" title="Permalink to this heading"></a></h2>
 <p>NuttX includes a generic interrupt handling subsystem that makes it
@@ -292,6 +293,51 @@ same thing.</p>
 between the high priority interrupt handler and <em>PendSV</em> interrupt
 handler. A detailed discussion of that custom logic is beyond the
 scope of this Wiki page.</p>
+<p>The following table shows the priority levels of the Cortex-M family:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>IRQ type               Priority
+Dataabort              0x00
+High prio IRQ1         0x20   (Zero-latency interrupt)
+High prio IRQ2         0x30   (Can&#39;t call OS API in ISR)
+SVC                    0x70
+Disable IRQ            0x80
+(critical-section)
+Low  prio IRQ          0xB0
+PendSV                 0xE0
+</pre></div>
+</div>
+<p>As you can see, the priority levels of the zero-latency interrupts can
+beyond the critical section and SVC.
+But High prio IRQ can’t call OS API.</p>
+</section>
+<section id="maskable-nested-interrupts">
+<h2>Maskable Nested Interrupts<a class="headerlink" href="#maskable-nested-interrupts" title="Permalink to this heading"></a></h2>
+<p>The ARM Cortex-M family supports a feature called <em>BASEPRI</em> that can be
+used to disable interrupts at a priority level below a certain level.
+This feature can be used to support maskable nested interrupts.</p>
+<p>Maskable nested interrupts differ from zero-latency interrupts in
+that they obey the interrupt masking mechanisms of the system.
+For example, setting the BASEPRI register to a specific threshold will
+block all interrupts of a lower or equal priority.
+However, high-priority interrupts (such as Non-Maskable Interrupts
+or zero-latency interrupts) are unaffected by these masks.</p>
+<p>This is useful when you have a high-priority interrupt that needs to
+be able to interrupt the system, but you also have lower-priority
+interrupts that you want to be able to mask.</p>
+<p>The following table shows the priority levels of the Cortex-M family:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>IRQ type                Priority
+Dataabort               0x00
+SVC                     0x70
+Disable IRQ             0x80
+(critical-section)
+High prio IRQ1          0x90    (Maskable nested interrupt)
+High prio IRQ2          0xA0    (Can call OS API in ISR)
+Low  prio IRQ           0xB0
+PendSV                  0xE0
+</pre></div>
+</div>
+<p>As you can see, the priority levels of the maskable nested interrupts
+are between the critical section and the low-priority interrupts.
+And High prio IRQ can call OS API in ISR.</p>
 </section>
 <section id="nested-interrupt-handling">
 <h2>Nested Interrupt Handling<a class="headerlink" href="#nested-interrupt-handling" title="Permalink to this heading"></a></h2>
