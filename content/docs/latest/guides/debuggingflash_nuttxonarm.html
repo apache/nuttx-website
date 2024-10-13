@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Running CI Test Locally &mdash; NuttX latest documentation</title>
+  <title>Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD) &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -43,8 +43,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="High Performance: Zero Latency Interrupts, Maskable nested interrupts" href="zerolatencyinterrupts.html" />
-    <link rel="prev" title="Custom Apps How-to" href="customapps.html" /> 
+    <link rel="next" title="Glossary" href="../glossary.html" />
+    <link rel="prev" title="Device Tree" href="devicetree.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -135,11 +135,7 @@
 <li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Running CI Test Locally</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#configuring-nuttx">Configuring NuttX</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#running-ci-tests">Running CI Tests</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable nested interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="kasan.html">The Kernel Address Sanitizer (KASAN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
@@ -157,7 +153,14 @@
 <li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
-<li class="toctree-l2"><a class="reference internal" href="debuggingflash_nuttxonarm.html">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-s-the-problem">What’s the problem?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#solution">Solution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#work-around">Work-around</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -179,9 +182,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Running CI Test Locally</li>
+      <li class="breadcrumb-item active">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/citests.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/debuggingflash_nuttxonarm.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -189,65 +192,98 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="running-ci-test-locally">
-<span id="citests"></span><h1>Running CI Test Locally<a class="headerlink" href="#running-ci-test-locally" title="Permalink to this heading"></a></h1>
-<p>NuttX automatically runs continuous integration (CI) tests on
-<a class="reference external" href="https://nuttx.apache.org/docs/latest/guides/simulator.html">simulator</a>
-target when new pull request is submitted. To avoid the tests failing you can
-also run them locally on your computer prior to submiting new pull request.
-This page describes the step by step manual to do so.</p>
-<section id="configuring-nuttx">
-<h2>Configuring NuttX<a class="headerlink" href="#configuring-nuttx" title="Permalink to this heading"></a></h2>
-<p>NuttX has a simulator target that allows the user to run NuttX as a regular
-program on a computer. The simulator target with CI test is configured and
-compiled followingly.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
-<span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>sim:citest
-<span class="gp">$ </span>make
+  <section id="debugging-flashing-nuttx-on-arm-with-hardware-debugger-jtag-swd">
+<h1>Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)<a class="headerlink" href="#debugging-flashing-nuttx-on-arm-with-hardware-debugger-jtag-swd" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139629444">https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139629444</a></p>
+</div>
+<p>NOTE: If you experience the issues described on this page, you can enable the
+configuration option below to resolve it.</p>
+<div class="highlight-makefile notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_STM32_DISABLE_IDLE_SLEEP_DURING_DEBUG</span><span class="o">=</span>y
 </pre></div>
 </div>
-</div></blockquote>
-<p>Now you can run the simulator to check the configuration was successful.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx
-<span class="go">login: admin</span>
-<span class="go">password: Administrator</span>
+<section id="what-s-the-problem">
+<h2>What’s the problem?<a class="headerlink" href="#what-s-the-problem" title="Permalink to this heading"></a></h2>
+<p>On some architectures (like ARM Cortex-M3) Idle thread causes the core to stop
+using WFI (Wait For Interrupt) assembly instruction. This effectively stops
+clocking of the core, which is resumed only by some enabled interrupt. This
+causes hardware debuggers to believe that they were disconnected from the
+target, as they lose connection with the now stopped core. For example OpenOCD
+shows errors like these the moment you start the target:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 100ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 300ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 700ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 1500ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 3100ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 6300ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 6300ms</span>
 </pre></div>
 </div>
-</div></blockquote>
-<p>You should see NuttX shell with built in test applications. Now you can exit
-the simulator.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; poweroff</span>
-<span class="gp">$</span>
-<span class="gp">$ </span><span class="c1"># we&#39;re back at the Linux prompt.</span>
-</pre></div>
-</div>
-</div></blockquote>
+<p>This makes debugging the code impossible and flashing the chip is much harder -
+you have to connect to the chip at the right moment (when it’s not disabled
+due to WFI) - the chances of doing that are inverse proportional to the load
+of your system (if your chip spends 99% of time in Idle mode, you have 1%
+chance of connecting and halting it).</p>
 </section>
-<section id="running-ci-tests">
-<h2>Running CI Tests<a class="headerlink" href="#running-ci-tests" title="Permalink to this heading"></a></h2>
-<p>Running CI tests locally requires Minicom and Python 3.6 or newer to be
-installed on the system. Other requirements can be installed with following
-set of commands.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>tools/ci/testrun/env
-<span class="gp">$ </span>pip3<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>..
-<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>script
+<section id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Permalink to this heading"></a></h2>
+<p>Some ARM cores that support disabling of clocking after WFI instruction have
+special configuration options to make debugging possible. One example is STM32
+family - with it’s <code class="docutils literal notranslate"><span class="pre">DBGMCU-&gt;CR</span></code> register it’s possible to keep the core
+clocked during power-down modes. If your chip supports such configuration you
+should put it in some early stage of initialization, like in
+<code class="docutils literal notranslate"><span class="pre">stm32_boardinitialize()</span></code> function. The following code demonstrates the
+change for STM32:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getreg32</span><span class="p">(</span><span class="n">STM32_DBGMCU_CR</span><span class="p">);</span>
+<span class="n">cr</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="n">DBGMCU_CR_STANDBY</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">DBGMCU_CR_STOP</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">DBGMCU_CR_SLEEP</span><span class="p">;</span>
+<span class="n">putreg32</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span><span class="w"> </span><span class="n">STM32_DBGMCU_CR</span><span class="p">);</span>
 </pre></div>
 </div>
-</div></blockquote>
-<p>Now you have everything prepared to run CI tests. The tests themself are run
-by following command.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;common or sim&#39;</span><span class="w"> </span>./<span class="w"> </span>-B<span class="w"> </span>sim<span class="w"> </span>-P<span class="w"> </span>&lt;nuttx-path&gt;<span class="w"> </span>-L<span class="w"> </span>&lt;log-path&gt;<span class="w"> </span>-R<span class="w"> </span>sim<span class="w"> </span>-C<span class="w"> </span>--json<span class="o">=</span>&lt;log-path&gt;/pytest.json
+<p>If your chip doesn’t provide such options there is no other way than not using
+WFI instruction in up_idle() function.</p>
+<p>It should be noted that such modification should be done only for development
+stage, as keeping the core clocked during power-down modes contradicts the
+major purpose of using them - reducing power usage.</p>
+<p>In rare cases that you still have problems with connecting to the target
+(especially after power cycle), you should try connecting and halting the chip
+under reset (this is supported by new versions of OpenOCD), by holding the
+reset button while starting OpenOCD or by configuring OpenOCD to do that for
+you.</p>
+<section id="work-around">
+<h3>Work-around<a class="headerlink" href="#work-around" title="Permalink to this heading"></a></h3>
+<p>If you keep the RESET button pressed and run OpenOCD command to connected to
+it, then it will connect sucessful. After connecting you need to keep the
+reset button pressed until you open the telnet connection
+(telnet 127.0.0.1 4444) and execute “reset halt”:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">&gt; reset halt</span>
+<span class="go">timed out while waiting for target halted</span>
+<span class="go">TARGET: stm32f1x.cpu - Not halted</span>
+
+<span class="go">in procedure &#39;reset&#39;</span>
+<span class="go">target state: halted</span>
+<span class="go">target halted due to debug-request, current mode: Thread</span>
+<span class="go">xPSR: 0x01000000 pc: 0x080003d0 msp: 0x20001278</span>
 </pre></div>
 </div>
-</div></blockquote>
-<p>Where nuttx-path is an absolute path to NuttX root directory and log-path is
-a user defined directory to which tests log are saved.</p>
+<p>Then release the RESET boot and it will reset correctly.</p>
+<p>This work-around was tested on viewtool-stm32f107 board and bypassed the above
+error reported by OpenOCD. The SWD programmer was a STLink-V2 and this was
+the command to connect:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">openocd -f interface/stlink-v2.cfg -f target/stm32f1x_stlink.cfg</span>
+</pre></div>
+</div>
+<p>The OpenOCD version used was: Open On-Chip Debugger 0.8.0-dev-00307-g215c41c
+(git commit 215c41c)</p>
+</section>
 </section>
 </section>
 
@@ -255,8 +291,8 @@ a user defined directory to which tests log are saved.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="customapps.html" class="btn btn-neutral float-left" title="Custom Apps How-to" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="zerolatencyinterrupts.html" class="btn btn-neutral float-right" title="High Performance: Zero Latency Interrupts, Maskable nested interrupts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="devicetree.html" class="btn btn-neutral float-left" title="Device Tree" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
