@@ -166,6 +166,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">ST STM32F0</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#supported-mcus">Supported MCUs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#flashing-and-debugging">Flashing and Debugging</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/nucleo-f072rb/index.html">ST Nucleo F072RB</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/nucleo-f091rc/index.html">ST Nucleo F091RC</a></li>
@@ -399,6 +400,37 @@ they are supported in NuttX</p>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="flashing-and-debugging">
+<h2>Flashing and Debugging<a class="headerlink" href="#flashing-and-debugging" title="Permalink to this heading"></a></h2>
+<p>NuttX firmware Flashing with STLink probe and OpenOCD:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd -f  interface/stlink.cfg -f target/stm32f0x.cfg -c &#39;program nuttx.bin 0x08000000; reset run; exit&#39;
+</pre></div>
+</div>
+<p>Remote target Reset with STLink probe and OpenOCD:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd -f interface/stlink.cfg -f target/stm32f0x.cfg -c &#39;init; reset run; exit&#39;
+</pre></div>
+</div>
+<p>Remote target Debug with STLink probe and OpenOCD:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p>You need to have NuttX built with debug symbols, see <a class="reference internal" href="../../../quickstart/debugging.html#debugging"><span class="std std-ref">Debugging</span></a>.</p></li>
+<li><p>Launch the OpenOCD GDB server:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>openocd -f interface/stlink.cfg -f target/stm32f0x.cfg -c &#39;init; reset halt&#39;
+</pre></div>
+</div>
+</li>
+<li><p>You can now attach to remote OpenOCD GDB server with your favorite debugger,
+for instance gdb:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>arm-none-eabi-gdb --tui nuttx -ex &#39;target extended-remote localhost:3333&#39;
+(gdb) monitor reset halt
+(gdb) breakpoint nsh_main
+(gdb) continue
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
 </section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>
