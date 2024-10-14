@@ -154,6 +154,10 @@
 <li class="toctree-l5"><a class="reference internal" href="#stack-dump-and-backtrace-dump">Stack Dump and Backtrace Dump</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#using-qemu">Using QEMU</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#qemu-networking">QEMU Networking</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#wi-fi">Wi-Fi</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#wi-fi-softap">Wi-Fi SoftAP</a></li>
@@ -505,6 +509,28 @@ Backtrace for task 0:
 <p>The above output shows the backtrace of the tasks. By checking it, it is possible to track the
 functions that were being executed when the crash occurred.</p>
 </section>
+</section>
+</section>
+<section id="using-qemu">
+<h2>Using QEMU<a class="headerlink" href="#using-qemu" title="Permalink to this heading"></a></h2>
+<p>Get or build QEMU from <a class="reference external" href="https://github.com/espressif/qemu/wiki">here</a>. The minimum supported version is 9.0.0.</p>
+<p>Enable the <code class="docutils literal notranslate"><span class="pre">ESP32S3_QEMU_IMAGE</span></code> config found in <span class="menuselection">Board Selection ‣ ESP32S3 binary image for QEMU</span>.</p>
+<p>Enable <code class="docutils literal notranslate"><span class="pre">ESP32S3_APP_FORMAT_LEGACY</span></code>.</p>
+<p>Build and generate the QEMU image:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make bootloader
+$ make ESPTOOL_BINDIR=.
+</pre></div>
+</div>
+<p>A QEMU-compatible <code class="docutils literal notranslate"><span class="pre">nuttx.merged.bin</span></code> binary image will be created. It can be run as:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-xtensa -nographic -machine esp32s3 -drive file=nuttx.merged.bin,if=mtd,format=raw
+</pre></div>
+</div>
+<section id="qemu-networking">
+<h3>QEMU Networking<a class="headerlink" href="#qemu-networking" title="Permalink to this heading"></a></h3>
+<p>Networking is possible using the openeth MAC driver. Enable <code class="docutils literal notranslate"><span class="pre">ESP32S3_OPENETH</span></code> option and set the nic in QEMU:</p>
+<blockquote>
+<div><p>$ qemu-system-xtensa -nographic -machine esp32s3 -drive file=nuttx.merged.bin,if=mtd,format=raw -nic user,model=open_eth</p>
+</div></blockquote>
 </section>
 </section>
 <section id="peripheral-support">

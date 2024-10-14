@@ -1168,24 +1168,29 @@ reception configured at the same time on the same peripheral.</p>
 </section>
 <section id="using-qemu">
 <h2>Using QEMU<a class="headerlink" href="#using-qemu" title="Permalink to this heading"></a></h2>
-<p>First follow the instructions <a class="reference external" href="https://github.com/espressif/qemu/wiki">here</a> to build QEMU.</p>
+<p>Get or build QEMU from <a class="reference external" href="https://github.com/espressif/qemu/wiki">here</a>.</p>
 <p>Enable the <code class="docutils literal notranslate"><span class="pre">ESP32_QEMU_IMAGE</span></code> config found in <span class="menuselection">Board Selection ‣ ESP32 binary image for QEMU</span>.</p>
-<p>Download the bootloader and the partition table from <a class="reference external" href="https://github.com/espressif/esp-nuttx-bootloader/releases">https://github.com/espressif/esp-nuttx-bootloader/releases</a>
-and place them in a directory, say <code class="docutils literal notranslate"><span class="pre">../esp-bins</span></code>.</p>
+<p>Enable <code class="docutils literal notranslate"><span class="pre">ESP32_APP_FORMAT_LEGACY</span></code>.</p>
 <p>Build and generate the QEMU image:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make ESPTOOL_BINDIR=../esp-bins
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make bootloader
+$ make ESPTOOL_BINDIR=.
 </pre></div>
 </div>
 <p>A QEMU-compatible <code class="docutils literal notranslate"><span class="pre">nuttx.merged.bin</span></code> binary image will be created. It can be run as:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-xtensa -nographic -machine esp32 -drive file=nuttx.merged.bin,if=mtd,format=raw
 </pre></div>
 </div>
+<p>QEMU for ESP32 does not correctly define the chip revision as v3.0 so you have two options:</p>
+<ul class="simple">
+<li><p>#define <code class="docutils literal notranslate"><span class="pre">ESP32_IGNORE_CHIP_REVISION_CHECK</span></code> in <code class="docutils literal notranslate"><span class="pre">arch/xtensa/src/esp32/esp32_start.c</span></code></p></li>
+<li><p>Emulate the efuse as described <a class="reference external" href="https://github.com/espressif/esp-toolchain-docs/blob/main/qemu/esp32/README.md#emulating-esp32-eco3">here</a>.</p></li>
+</ul>
 <section id="qemu-networking">
 <h3>QEMU Networking<a class="headerlink" href="#qemu-networking" title="Permalink to this heading"></a></h3>
 <p>Networking is possible using the openeth MAC driver. Enable <code class="docutils literal notranslate"><span class="pre">ESP32_OPENETH</span></code> option and set the nic in QEMU:</p>
-<blockquote>
-<div><p>$ qemu-system-xtensa -nographic -machine esp32 -drive file=nuttx.merged.bin,if=mtd,format=raw -nic user,model=open_eth</p>
-</div></blockquote>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-xtensa -nographic -machine esp32 -drive file=nuttx.merged.bin,if=mtd,format=raw -nic user,model=open_eth
+</pre></div>
+</div>
 </section>
 </section>
 <section id="secure-boot-and-flash-encryption">
