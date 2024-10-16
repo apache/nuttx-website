@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STM32 CCM Allocator &mdash; NuttX latest documentation</title>
+  <title>Versioning and Task Names &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -43,8 +43,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Run time stack statistics" href="stackrecord.html" />
-    <link rel="prev" title="STM32 Null Pointer Detection" href="stm32nullpointer.html" /> 
+    <link rel="next" title="Glossary" href="../glossary.html" />
+    <link rel="prev" title="Kernel Threads with Custom Stacks" href="kernel_threads_with_custom_stacks.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -148,13 +148,7 @@
 <li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">STM32 CCM Allocator</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ccm-memory">CCM Memory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#config-stm32-ccmexclude">CONFIG_STM32_CCMEXCLUDE</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ccm-allocator">CCM Allocator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ccm-stacks">CCM Stacks</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stackrecord.html">Run time stack statistics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
@@ -167,7 +161,15 @@
 <li class="toctree-l2"><a class="reference internal" href="include_files_board_h.html">Including Files in board.h</a></li>
 <li class="toctree-l2"><a class="reference internal" href="specialstuff_in_nuttxheaderfiles.html">Why can’t I put my special stuff in NuttX header files?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="kernel_threads_with_custom_stacks.html">Kernel Threads with Custom Stacks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="versioning_and_task_names.html">Versioning and Task Names</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Versioning and Task Names</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#question">Question</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#answer">Answer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#versioning">Versioning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#task-name-size">Task Name Size</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -189,9 +191,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">STM32 CCM Allocator</li>
+      <li class="breadcrumb-item active">Versioning and Task Names</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/stm32ccm.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/versioning_and_task_names.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -199,98 +201,104 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="stm32-ccm-allocator">
-<h1>STM32 CCM Allocator<a class="headerlink" href="#stm32-ccm-allocator" title="Permalink to this heading"></a></h1>
-<section id="ccm-memory">
-<h2>CCM Memory<a class="headerlink" href="#ccm-memory" title="Permalink to this heading"></a></h2>
-<p>The STM32 F2, F3, and F4 families have a special block of SRAM available called
-CCM (Core Coupled Memory). This memory has the drawback that it cannot be used
-for STM32 DMA operations.</p>
-<p>By default, the CCM memory is lumped in with the rest of memory when the NuttX
-heaps are created. But this can be a problem because it will be a toss of the
-coin if non-DMA-able CCM memory or other DMA-able memory gets returned when
-<code class="docutils literal notranslate"><span class="pre">malloc()</span></code> is called. That usually does not matter but it certainly does make
-a difference if you are allocating memory that will be used for DMA! In that
-case, getting CCM memory for your DMA buffer will cause a failure.</p>
-</section>
-<section id="config-stm32-ccmexclude">
-<h2>CONFIG_STM32_CCMEXCLUDE<a class="headerlink" href="#config-stm32-ccmexclude" title="Permalink to this heading"></a></h2>
-<p>There is a configuration option called <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_CCMEXCLUDE</span></code> that can be
-used to exclude CCM memory from the heap. That solves the problem of getting
-CCM memory when you want to allocate a DMA buffer. But then what do you do
-with the CCM memory? Do you let it go unused?</p>
-</section>
-<section id="ccm-allocator">
-<h2>CCM Allocator<a class="headerlink" href="#ccm-allocator" title="Permalink to this heading"></a></h2>
-<p>In order to make use of the CCM memory, a CCM memory allocator is available.
-This memory allocator is automatically enabled when the following options are set:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_CCMEXCLUDE</span></code> CCM memory is excluded from the normal heap, and</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MM_MULTIHEAP</span></code> Support for multiple heaps is enabled.</p></li>
-</ul>
-<p>Under those conditions, the CCM memory allocator is enabled and the allocator
-interfaces prototyped in the <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/stm32_ccm.h</span></code> are available.</p>
-<p>NOTE: These interfaces are, technically, not prototyped since they are really
-provided via C pre-processor macros.</p>
-<p>NOTE: In order to use the CCM memory allocator functions, you must first call
-<code class="docutils literal notranslate"><span class="pre">ccm_initialize()</span></code> somewhere in your early boot-up logic.</p>
-<p>With these interfaces you have a (nearly) standard way to manage memory from a
-heap that consists of the the CCM SRAM. And, since the CCM memory is no longer
-a part of the normal heap, all allocated I/O buffers will be DMA-able (unless you
-have included other non-DMA-able memory regions in the stack).</p>
-</section>
-<section id="ccm-stacks">
-<h2>CCM Stacks<a class="headerlink" href="#ccm-stacks" title="Permalink to this heading"></a></h2>
-<p>One particular problem that has been reported by Petteri Aimonen requires some
-additional work-arounds. The STM32 SPI driver supports DMA and with SPI it is
-sometimes necessary to do some very small transfers for which there is no real
-gain from using DMA. In this case, Petteri has devised a clever way to both 1) make
-use of the CMM memory and 2) to force fallback to non-DMA transfers for these small
-stack transfers.</p>
-<p>Here is what Petteri has done:</p>
-<ol class="arabic">
-<li><p>First, he has modified <code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/up_createstack.c</span></code> and
-<code class="docutils literal notranslate"><span class="pre">up_releasestack.c</span></code> so that stacks are allocated from CCM memory. That
-allocation is something like the following:</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ccm_zalloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">result</span><span class="p">)</span>
-<span class="w">  </span><span class="p">{</span>
-<span class="w">   </span><span class="cm">/* Fall back to main heap */</span>
-<span class="w">    </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zalloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
-<span class="w">  </span><span class="p">}</span>
+  <section id="versioning-and-task-names">
+<h1>Versioning and Task Names<a class="headerlink" href="#versioning-and-task-names" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Versioning+and+Task+Names">https://cwiki.apache.org/confluence/display/NUTTX/Versioning+and+Task+Names</a></p>
+<p>And also seems outdated.</p>
+</div>
+<section id="question">
+<h2>Question<a class="headerlink" href="#question" title="Permalink to this heading"></a></h2>
+<p>I have strange output from the NSH:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>sysinfo
+System<span class="w"> </span>Information:
+<span class="w">    </span>NuttX<span class="w"> </span>Version:<span class="w">    </span><span class="m">0</span>.0<span class="w"> </span>Build:<span class="w"> </span><span class="m">0</span>
+<span class="w">    </span>System<span class="w"> </span>Time:<span class="w">    </span><span class="m">1325809119</span><span class="w"> </span><span class="o">[</span>s<span class="o">]</span><span class="w"> </span>UTC
+
+nsh&gt;<span class="w"> </span>ps
+PID<span class="w">   </span>PRI<span class="w"> </span>SCHD<span class="w"> </span>TYPE<span class="w">   </span>NP<span class="w"> </span>STATE<span class="w">    </span>NAME
+<span class="w">    </span><span class="m">0</span><span class="w">   </span><span class="m">0</span><span class="w"> </span>FIFO<span class="w"> </span>KTHREAD<span class="w">   </span>READY<span class="w">    </span>&lt;noname&gt;<span class="o">()</span>
+<span class="w">    </span><span class="m">1</span><span class="w">  </span><span class="m">50</span><span class="w"> </span>FIFO<span class="w"> </span>KTHREAD<span class="w">   </span>WAITSIG<span class="w">  </span>&lt;noname&gt;<span class="o">()</span>
+<span class="w">    </span><span class="m">2</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>FIFO<span class="w"> </span>TASK<span class="w">      </span>RUNNING<span class="w">  </span>&lt;noname&gt;<span class="o">()</span>
 </pre></div>
 </div>
-<p>With the matching:</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(((</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">p</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF0000000</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x10000000</span><span class="p">)</span>
-<span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="n">ccm_free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="k">else</span>
-<span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="n">free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-<span class="w">  </span><span class="p">}</span>
+<p>No NAME and no version / build number</p>
+</section>
+<section id="answer">
+<h2>Answer<a class="headerlink" href="#answer" title="Permalink to this heading"></a></h2>
+<p>This is probably normal behavior. There are two separate, unrelated issues here.</p>
+<section id="versioning">
+<h3>Versioning<a class="headerlink" href="#versioning" title="Permalink to this heading"></a></h3>
+<p>There are two different ways to get NuttX: (1) You can download the versioned
+releases at <a class="reference external" href="https://bitbucket.org/nuttx/nuttx/downloads">https://bitbucket.org/nuttx/nuttx/downloads</a>, or you can (2) take
+un-versioned snapshots from the GIT repository at
+<a class="reference external" href="https://github.com/apache/nuttx">https://github.com/apache/nuttx</a>. Since you have no version information,
+I am assuming that you are using a un-versioned copy.</p>
+<p>The version number you are looking at comes from the header file
+<code class="docutils literal notranslate"><span class="pre">nuttx/include/nuttx/version.h</span></code>. That header file was created at build time
+from a hidden file that you can find in the top-level nuttx directory called
+.version. For NuttX-7.10, that file looks like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+
+<span class="nv">CONFIG_VERSION_STRING</span><span class="o">=</span><span class="s2">&quot;7.10&quot;</span>
+<span class="nv">CONFIG_VERSION_MAJOR</span><span class="o">=</span><span class="m">7</span>
+<span class="nv">CONFIG_VERSION_MINOR</span><span class="o">=</span><span class="m">10</span>
+<span class="nv">CONFIG_VERSION_BUILD</span><span class="o">=</span><span class="s2">&quot;85981b37acc215ab795ef4ea4045f3e85a49a7af&quot;</span>
 </pre></div>
 </div>
-</li>
-<li><p>Then Petteri added special DMA support enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_DMACAPABLE</span></code>.
-That option enables an option in all of the DMA logic called:</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">stm32_dmacapable</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">maddr</span><span class="p">);</span>
+<p>The <code class="docutils literal notranslate"><span class="pre">.version</span></code> file does not exist in the GIT repository; it is was added to
+the <code class="docutils literal notranslate"><span class="pre">nuttx-7.10.tar.gz</span></code> tarball when the NuttX-7.10 version was created.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">version.h</span></code> header file is then generated by <code class="docutils literal notranslate"><span class="pre">tools/mkversion</span></code> the
+first time that you build the RTOS. That tool generates this <code class="docutils literal notranslate"><span class="pre">version.h</span></code>
+header file for the above <code class="docutils literal notranslate"><span class="pre">.version</span></code> file:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* version.h -- Autogenerated! Do not edit. */</span>
+
+<span class="cp">#ifndef __INCLUDE_NUTTX_VERSION_H</span>
+<span class="cp">#define __INCLUDE_NUTTX_VERSION_H</span>
+
+<span class="cp">#define CONFIG_VERSION_STRING &quot;7.10&quot;</span>
+<span class="cp">#define CONFIG_VERSION_MAJOR 7</span>
+<span class="cp">#define CONFIG_VERSION_MINOR 10</span>
+<span class="cp">#define CONFIG_VERSION_BUILD &quot;85981b37acc215ab795ef4ea4045f3e85a49a7af&quot;</span>
+
+<span class="cp">#define CONFIG_VERSION ((CONFIG_VERSION_MAJOR &lt;&lt; 8) | (CONFIG_VERSION_MINOR))</span>
+
+<span class="cp">#endif </span><span class="cm">/* __INCLUDE_NUTTX_VERSION_H */</span>
 </pre></div>
 </div>
-<p>That will return true if it is possible to do DMA from the address and false
-if not.</p>
-</li>
-<li><p>Finally, Petteri added logic to the STM32 SPI driver that use <code class="docutils literal notranslate"><span class="pre">stm32_dmacapable()</span></code>:
-If the address is not DMA capable, then the SPI driver will fall back to
-non-DMA operation.</p>
-<p>With Petteri’s changes all of the large I/O buffers will be allocated from
-DMA-able memory. All stacks will be allocated from non-DMA-able CCM memory
-(provided that there is space). Small SPI DMA buffers on the non-DMA-able stack
-will be detected by <code class="docutils literal notranslate"><span class="pre">stm32_dmacapable()</span></code> and in that case, the STM32 SPI driver
-will fall back and use non-DMA-transfers.</p>
-<p>From all reports this works quite well.</p>
-</li>
-</ol>
+<p>And that is where the sysinfo command gets the version information that it
+prints.</p>
+<p>If you are using an un-versioned snapshot of NuttX from the GIT repository,
+then the <code class="docutils literal notranslate"><span class="pre">.version</span></code> file will not exist. The make system will check if there
+is <code class="docutils literal notranslate"><span class="pre">.version</span></code> file every time you build. If there is no <code class="docutils literal notranslate"><span class="pre">.version</span></code> in the
+top-level nuttx directory, then the make system will use the script at
+<code class="docutils literal notranslate"><span class="pre">tools/version.sh</span></code> to create one with version 0.0:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">$(</span>TOPDIR<span class="k">)</span>/.version:
+<span class="w">    </span><span class="k">$(</span>Q<span class="k">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-f<span class="w"> </span>.version<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;No .version file found, creating one&quot;</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>tools/version.sh<span class="w"> </span>-v<span class="w"> </span><span class="m">0</span>.0<span class="w"> </span>-b<span class="w"> </span><span class="m">0</span><span class="w"> </span>.version<span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>.version<span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">fi</span>
+</pre></div>
+</div>
+<p>This is completely appropriate if you are using un-versioned code. You are,
+however, free to edit the top-level <code class="docutils literal notranslate"><span class="pre">.version</span></code> file to generate any kind of
+custom versioning information that you would like. It would, however,
+probably be inappropriate to say you are using a released version when you
+are not.</p>
+</section>
+<section id="task-name-size">
+<h3>Task Name Size<a class="headerlink" href="#task-name-size" title="Permalink to this heading"></a></h3>
+<p>This one is easy. The size of a task name is controlled by the following
+setting in your <code class="docutils literal notranslate"><span class="pre">.config</span></code> file:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_TASK_NAME_SIZE</span><span class="o">=</span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>It provides the maximum length of a task name. Zero, of course, then means no
+task names are supported.</p>
+</section>
 </section>
 </section>
 
@@ -298,8 +306,8 @@ will fall back and use non-DMA-transfers.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="stm32nullpointer.html" class="btn btn-neutral float-left" title="STM32 Null Pointer Detection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="stackrecord.html" class="btn btn-neutral float-right" title="Run time stack statistics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="kernel_threads_with_custom_stacks.html" class="btn btn-neutral float-left" title="Kernel Threads with Custom Stacks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
