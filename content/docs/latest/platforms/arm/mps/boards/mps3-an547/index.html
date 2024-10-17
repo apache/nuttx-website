@@ -276,6 +276,35 @@
 <span class="pre">$</span> <span class="pre">qemu-system-arm</span> <span class="pre">-M</span> <span class="pre">mps3-an547</span> <span class="pre">-nographic</span> <span class="pre">-kernel</span> <span class="pre">nuttx.bin</span>
 <span class="pre">`</span></code></p>
 </li>
+<li><p><strong>Pic ostest:</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
+<span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">mps3-an547:picostest</span>
+<span class="pre">$</span> <span class="pre">make</span> <span class="pre">-j20</span>
+<span class="pre">$</span> <span class="pre">genromfs</span> <span class="pre">-f</span> <span class="pre">romfs.img</span> <span class="pre">-d</span> <span class="pre">../apps/bin/</span>
+<span class="pre">$</span> <span class="pre">qemu-system-arm</span> <span class="pre">-M</span> <span class="pre">mps3-an547</span> <span class="pre">-m</span> <span class="pre">2G</span> <span class="pre">-nographic</span> <span class="pre">\</span>
+<span class="pre">-kernel</span> <span class="pre">nuttx.bin</span> <span class="pre">-gdb</span> <span class="pre">tcp::1127</span> <span class="pre">\</span>
+<span class="pre">-device</span> <span class="pre">loader,file=romfs.img,addr=0x60000000</span>
+<span class="pre">$</span> <span class="pre">nsh&gt;</span> <span class="pre">/pic/hello</span>
+<span class="pre">$</span> <span class="pre">nsh&gt;</span> <span class="pre">/pic/ostest</span>
+<span class="pre">`</span></code></p>
+</li>
+<li><p><strong>Pic bootloader boot to ap, and run ostest:</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
+<span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">mps3-an547:ap</span>
+<span class="pre">$</span> <span class="pre">make</span> <span class="pre">-j20</span>
+<span class="pre">$</span> <span class="pre">mkdir</span> <span class="pre">-p</span> <span class="pre">pic</span>
+<span class="pre">$</span> <span class="pre">arm-none-eabi-strip</span> <span class="pre">--remove-section=.rel.text</span> <span class="pre">--remove-section=.comment</span> <span class="pre">--strip-unneeded</span> <span class="pre">nuttx</span> <span class="pre">-o</span> <span class="pre">pic/boot</span>
+<span class="pre">$</span> <span class="pre">genromfs</span> <span class="pre">-a</span> <span class="pre">-f</span> <span class="pre">128</span> <span class="pre">../romfs.img</span> <span class="pre">-d</span> <span class="pre">pic</span>
+<span class="pre">$</span> <span class="pre">make</span> <span class="pre">distclean</span> <span class="pre">-j20</span>
+<span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">mps3-an547:bl</span>
+<span class="pre">$</span> <span class="pre">make</span> <span class="pre">-j20</span>
+<span class="pre">$</span> <span class="pre">qemu-system-arm</span> <span class="pre">-M</span> <span class="pre">mps3-an547</span> <span class="pre">-m</span> <span class="pre">2G</span> <span class="pre">-nographic</span> <span class="pre">\</span>
+<span class="pre">-kernel</span> <span class="pre">nuttx.bin</span> <span class="pre">-gdb</span> <span class="pre">tcp::1127</span> <span class="pre">\</span>
+<span class="pre">-device</span> <span class="pre">loader,file=../romfs.img,addr=0x60000000</span>
+<span class="pre">$</span> <span class="pre">bl&gt;</span> <span class="pre">boot</span> <span class="pre">/pic/boot</span>
+<span class="pre">$</span> <span class="pre">ap&gt;</span> <span class="pre">ostest</span>
+<span class="pre">`</span></code></p>
+</li>
 </ol>
 </section>
 </section>
