@@ -1,0 +1,384 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logging to a RAM Buffer &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="IPv6" href="ipv6.html" />
+    <link rel="prev" title="Versioning and Task Names" href="versioning_and_task_names.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qemugdb.html">How to debug NuttX using QEMU and GDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasktrace.html">Task Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
+<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable nested interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kasan.html">The Kernel Address Sanitizer (KASAN)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coresight.html">Coresight - HW Assisted Tracing on ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdbserver.html">gdbserver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stackrecord.html">Run time stack statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debuggingflash_nuttxonarm.html">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="disabling_stackdumpdebug.html">Disabling the Stack Dump During Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="include_files_board_h.html">Including Files in board.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specialstuff_in_nuttxheaderfiles.html">Why can’t I put my special stuff in NuttX header files?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_with_custom_stacks.html">Kernel Threads with Custom Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning_and_task_names.html">Versioning and Task Names</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Logging to a RAM Buffer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#default-debug-output">Default Debug Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-syslog-device">The syslog Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-ramlog-device">The RAMLOG Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-the-ramlog-as-the-syslog-device">Using the RAMLOG as the syslog Device</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ipv6.html">IPv6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrate_newlib.html">Integrating with Newlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="protected_build.html">NuttX Protected Build</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">Logging to a RAM Buffer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/logging_rambuffer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="logging-to-a-ram-buffer">
+<h1>Logging to a RAM Buffer<a class="headerlink" href="#logging-to-a-ram-buffer" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Logging+to+a+RAM+Buffer">https://cwiki.apache.org/confluence/display/NUTTX/Logging+to+a+RAM+Buffer</a></p>
+</div>
+<section id="default-debug-output">
+<h2>Default Debug Output<a class="headerlink" href="#default-debug-output" title="Permalink to this heading"></a></h2>
+<p>By default, when you enable debug output, that output goes to the system
+console and is mixed up with the normal console output. Normally, that is
+sufficient. However there are some cases where you might want to do things
+differently. For example, if there is time critical debug output that
+interferes with the operation of the device. Or, if you would like to
+separate the normal console output from the debug output.</p>
+<p>One particularly troublesome case is network debug output to console in a
+Telnet session. Since the telnet session remaps the console output to the
+Telnet connection, the network debug output can generate infinite loops
+because the network operation generates debug output to the console, which
+generates more debug output, … and on and on.</p>
+<p>With some creative configuration of the NuttX SYStem LOGging (SYSLOG) feature,
+these problems can all be eliminated.</p>
+</section>
+<section id="the-syslog-device">
+<h2>The syslog Device<a class="headerlink" href="#the-syslog-device" title="Permalink to this heading"></a></h2>
+<p>Debug output goes to the <cite>syslog</cite> device. As mentioned above, the default syslog
+device device is the system console. However there are many options to control
+the behavior of the syslog – too many in fact. There are so many options that
+you will probably have to perform experiments to get the syslog working as you
+would like it too.</p>
+</section>
+<section id="the-ramlog-device">
+<h2>The RAMLOG Device<a class="headerlink" href="#the-ramlog-device" title="Permalink to this heading"></a></h2>
+<p>The RAMLOG device is a special character device that can really be used for
+most any purpose. However, the RAMLOG device has some special attributes
+that make it ideal for use as a syslogging device.</p>
+<ul class="simple">
+<li><p>It supports the <code class="docutils literal notranslate"><span class="pre">syslog_putc</span></code> interface needed for system logging</p></li>
+<li><p>It behaves much like a pipe: It implements a queue. Writing to the RAMLOG
+device adds data to the head of the queue; reading from the RAMLOG device
+removes data from the tail of the queue.</p></li>
+<li><p>It can be configured to return EOF when you try to read and there is
+nothing available in the RAMLOG.</p></li>
+</ul>
+</section>
+<section id="using-the-ramlog-as-the-syslog-device">
+<h2>Using the RAMLOG as the syslog Device<a class="headerlink" href="#using-the-ramlog-as-the-syslog-device" title="Permalink to this heading"></a></h2>
+<p>This Wiki page addresses the setup for one configuration: Using a <cite>RAMLOG</cite> as
+the syslog device. A RAMLOG is a circular buffer in memory. In this
+configuration, all debugout output goes to this circular buffer and can later
+be retrieved using the NSH <code class="docutils literal notranslate"><span class="pre">dmesg</span></code> command</p>
+<p>Here is the summary of what I had to do to get the RAMLOG working as the
+syslog device. I use a simulation configuration, but for this feature this
+does not matter.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tools/configure.sh<span class="w"> </span>sim:nsh
+make<span class="w"> </span>menuconfig
+</pre></div>
+</div>
+<p>I added the following settings. First, these just give me some debug output
+to test against:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_DEBUG</span><span class="o">=</span><span class="n">y</span>
+<span class="n">CONFIG_DEBUG_FS</span><span class="o">=</span><span class="n">y</span>
+<span class="n">CONFIG_DEBUG_SCHED</span><span class="o">=</span><span class="n">y</span>
+</pre></div>
+</div>
+<p>This configures the virtual file system to support the syslog device and is a
+necessary pre-condition for other settings:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_SYSLOG</span><span class="o">=</span><span class="n">y</span>
+</pre></div>
+</div>
+<p>These enables the RAMLOG and configure it for use as the syslog device</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_RAMLOG</span><span class="o">=</span><span class="n">y</span>
+<span class="n">CONFIG_RAMLOG_CONSOLE_BUFSIZE</span><span class="o">=</span><span class="mi">8192</span>
+<span class="n">CONFIG_RAMLOG_NONBLOCKING</span><span class="o">=</span><span class="n">y</span>
+<span class="n">CONFIG_RAMLOG_SYSLOG</span><span class="o">=</span><span class="n">y</span>
+<span class="cp">#CONFIG_SYSLOG_CHAR undefined, else duplicate output with syslog_putc()</span>
+</pre></div>
+</div>
+<p>Now when I run NuttX, I get output like this. The <code class="docutils literal notranslate"><span class="pre">dmesg</span></code> command now appears
+as an NSH command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>NuttShell<span class="w"> </span><span class="o">(</span>NSH<span class="o">)</span><span class="w"> </span>NuttX-7.1
+nsh&gt;<span class="w"> </span><span class="nb">help</span>
+<span class="nb">help</span><span class="w"> </span>usage:<span class="w">  </span><span class="nb">help</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;cmd&gt;<span class="o">]</span>
+<span class="o">[</span><span class="w">           </span>dd<span class="w">          </span>free<span class="w">        </span>mkdir<span class="w">       </span>mw<span class="w">          </span>sleep
+?<span class="w">           </span>df<span class="w">          </span><span class="nb">help</span><span class="w">        </span>mkfatfs<span class="w">     </span>ps<span class="w">          </span><span class="nb">test</span>
+<span class="k">break</span><span class="w">       </span>dmesg<span class="w">       </span>hexdump<span class="w">     </span>mkfifo<span class="w">      </span><span class="nb">pwd</span><span class="w">         </span><span class="nb">true</span>
+cat<span class="w">         </span><span class="nb">echo</span><span class="w">        </span><span class="nb">kill</span><span class="w">        </span>mkrd<span class="w">        </span>rm<span class="w">          </span>umount
+<span class="nb">cd</span><span class="w">          </span><span class="nb">exec</span><span class="w">        </span>losetup<span class="w">     </span>mh<span class="w">          </span>rmdir<span class="w">       </span><span class="nb">unset</span>
+cp<span class="w">          </span><span class="nb">exit</span><span class="w">        </span>ls<span class="w">          </span>mount<span class="w">       </span><span class="nb">set</span><span class="w">         </span>usleep
+cmp<span class="w">         </span><span class="nb">false</span><span class="w">       </span>mb<span class="w">          </span>mv<span class="w">          </span>sh<span class="w">          </span>xd
+Builtin<span class="w"> </span>Apps:
+hello
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">dmesg</span></code> command dumps the contents and clears the RAMLOG:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>dmesg
+nx_start:<span class="w"> </span>Entry
+up_unblock_task:<span class="w"> </span>Unblocking<span class="w"> </span><span class="nv">TCB</span><span class="o">=</span>52bc70
+up_unblock_task:<span class="w"> </span>New<span class="w"> </span>Active<span class="w"> </span>Task<span class="w"> </span><span class="nv">TCB</span><span class="o">=</span>52bc70
+posix_spawn_exec:<span class="w"> </span>ERROR:<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>failed:<span class="w"> </span><span class="m">22</span>
+cmd_mkrd:<span class="w"> </span>RAMDISK<span class="w"> </span>at<span class="w"> </span>52d4f0
+posix_spawn_exec:<span class="w"> </span>ERROR:<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>failed:<span class="w"> </span><span class="m">22</span>
+mkfatfs_tryfat16:<span class="w"> </span>Too<span class="w"> </span>few<span class="w"> </span>or<span class="w"> </span>too<span class="w"> </span>many<span class="w"> </span>clusters<span class="w"> </span><span class="k">for</span><span class="w"> </span>FAT16:<span class="w"> </span><span class="m">4081</span><span class="w"> </span>&lt;<span class="w"> </span><span class="m">983</span><span class="w"> </span>&lt;<span class="w"> </span><span class="m">1022</span>
+mkfatfs_clustersearch:<span class="w"> </span>Cannot<span class="w"> </span>format<span class="w"> </span>FAT16<span class="w"> </span>at<span class="w"> </span><span class="m">1</span><span class="w"> </span>sectors/cluster
+mkfatfs_configfatfs:<span class="w"> </span>Sector<span class="w"> </span>size:<span class="w">          </span><span class="m">512</span><span class="w"> </span>bytes
+mkfatfs_configfatfs:<span class="w"> </span>Number<span class="w"> </span>of<span class="w"> </span>sectors:<span class="w">    </span><span class="m">1024</span><span class="w"> </span>sectors
+mkfatfs_configfatfs:<span class="w"> </span>FAT<span class="w"> </span>size:<span class="w">             </span><span class="m">12</span><span class="w"> </span>bits
+mkfatfs_configfatfs:<span class="w"> </span>Number<span class="w"> </span>FATs:<span class="w">          </span><span class="m">2</span>
+mkfatfs_configfatfs:<span class="w"> </span>Sectors<span class="w"> </span>per<span class="w"> </span>cluster:<span class="w">  </span><span class="m">1</span><span class="w"> </span>sectors
+mkfatfs_configfatfs:<span class="w"> </span>FS<span class="w"> </span>size:<span class="w">              </span><span class="m">3</span><span class="w"> </span>sectors
+mkfatfs_configfatfs:<span class="w">                       </span><span class="m">985</span><span class="w"> </span>clusters
+mkfatfs_configfatfs:<span class="w"> </span>Root<span class="w"> </span>directory<span class="w"> </span>slots:<span class="w"> </span><span class="m">512</span>
+mkfatfs_configfatfs:<span class="w"> </span>Volume<span class="w"> </span>ID:<span class="w">            </span><span class="m">00000000</span>
+mkfatfs_configfatfs:<span class="w"> </span>Volume<span class="w"> </span>Label:<span class="w">         </span><span class="s2">&quot;           &quot;</span>
+posix_spawn_exec:<span class="w"> </span>ERROR:<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>failed:<span class="w"> </span><span class="m">22</span>
+fat_mount:<span class="w"> </span>FAT12:
+fat_mount:<span class="w">      </span>HW<span class="w">  </span>sector<span class="w"> </span>size:<span class="w">     </span><span class="m">512</span>
+fat_mount:<span class="w">          </span>sectors:<span class="w">         </span><span class="m">1024</span>
+fat_mount:<span class="w">      </span>FAT<span class="w"> </span>reserved:<span class="w">        </span><span class="m">1</span>
+fat_mount:<span class="w">          </span>sectors:<span class="w">         </span><span class="m">1024</span>
+fat_mount:<span class="w">          </span>start<span class="w"> </span>sector:<span class="w">    </span><span class="m">1</span>
+fat_mount:<span class="w">          </span>root<span class="w"> </span>sector:<span class="w">     </span><span class="m">7</span>
+fat_mount:<span class="w">          </span>root<span class="w"> </span>entries:<span class="w">    </span><span class="m">512</span>
+fat_mount:<span class="w">          </span>data<span class="w"> </span>sector:<span class="w">     </span><span class="m">39</span>
+fat_mount:<span class="w">          </span>FSINFO<span class="w"> </span>sector:<span class="w">   </span><span class="m">0</span>
+fat_mount:<span class="w">          </span>Num<span class="w"> </span>FATs:<span class="w">        </span><span class="m">2</span>
+fat_mount:<span class="w">          </span>FAT<span class="w"> </span>sectors:<span class="w">     </span><span class="m">3</span>
+fat_mount:<span class="w">          </span>sectors/cluster:<span class="w"> </span><span class="m">1</span>
+fat_mount:<span class="w">          </span>max<span class="w"> </span>clusters:<span class="w">    </span><span class="m">985</span>
+fat_mount:<span class="w">      </span>FSI<span class="w"> </span>free<span class="w"> </span>count<span class="w">       </span>-1
+fat_mount:<span class="w">          </span>next<span class="w"> </span>free<span class="w">        </span><span class="m">0</span>
+posix_spawn_exec:<span class="w"> </span>ERROR:<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>failed:<span class="w"> </span><span class="m">22</span>
+posix_spawn_exec:<span class="w"> </span>ERROR:<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>failed:<span class="w"> </span><span class="m">22</span>
+nsh&gt;
+</pre></div>
+</div>
+<p>As mentioned, the dmesg command clears the RAMLOG. So when it is used again,
+only new debug output is shown:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>dmesg
+posix_spawn_exec:<span class="w"> </span>ERROR:<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>failed:<span class="w"> </span><span class="m">22</span>
+</pre></div>
+</div>
+<p>As a side note, the <code class="docutils literal notranslate"><span class="pre">posix_spawn_exec</span></code> error will occur on each command in
+this configuration. That is because NSH first tries to execute a command from
+a file found in the file system on the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable. You will not see
+this error in your system unless you have <code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_FILE_APPS=y</span></code>
+defined in your configuration.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="versioning_and_task_names.html" class="btn btn-neutral float-left" title="Versioning and Task Names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ipv6.html" class="btn btn-neutral float-right" title="IPv6" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
