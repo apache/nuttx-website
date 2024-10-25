@@ -44,7 +44,7 @@
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
     <link rel="next" title="Nordic nRF52 IEEE 802.15.4" href="../../../nrf52/ieee802154.html" />
-    <link rel="prev" title="MPS2 AN500 Board" href="../mps2-an500/index.html" /> 
+    <link rel="prev" title="MPS2 AN521 Board" href="../mps2-an512/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -150,6 +150,7 @@
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">MPS</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="../mps2-an500/index.html">MPS2 AN500 Board</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../mps2-an512/index.html">MPS2 AN521 Board</a></li>
 <li class="toctree-l5 current"><a class="current reference internal" href="#">MPS3 AN547 Board</a></li>
 </ul>
 </li>
@@ -252,7 +253,8 @@
              
   <section id="mps3-an547-board">
 <h1>MPS3 AN547 Board<a class="headerlink" href="#mps3-an547-board" title="Permalink to this heading"></a></h1>
-<p>The MPS3 AN547 board configuration uses QEMU to emulate a generic ARM v8-M series hardware platform and provides support for the following devices:</p>
+<p>The MPS3 AN547 board configuration uses QEMU to emulate a generic ARM v8-M
+series hardware platform and provides support for the following devices:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>ARM Generic Timer</p></li>
@@ -261,49 +263,48 @@
 </div></blockquote>
 <section id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
-<section id="configuring-and-running">
-<h3>Configuring and Running<a class="headerlink" href="#configuring-and-running" title="Permalink to this heading"></a></h3>
-<p>### Single Core</p>
+<section id="configuring-and-running-single-core">
+<h3>Configuring and Running (Single Core)<a class="headerlink" href="#configuring-and-running-single-core" title="Permalink to this heading"></a></h3>
 <ol class="arabic">
-<li><p><strong>Configuring NuttX and Compiling:</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
-<span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">-l</span> <span class="pre">mps3-an547:nsh</span>
-<span class="pre">$</span> <span class="pre">make</span>
-<span class="pre">`</span></code></p>
+<li><p>Configuring NuttX and Compiling:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./tools/configure.sh -l mps3-an547:nsh
+make
+</pre></div>
+</div>
 </li>
-<li><p><strong>Running with QEMU:</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
-<span class="pre">$</span> <span class="pre">qemu-system-arm</span> <span class="pre">-M</span> <span class="pre">mps3-an547</span> <span class="pre">-nographic</span> <span class="pre">-kernel</span> <span class="pre">nuttx.bin</span>
-<span class="pre">`</span></code></p>
+<li><p>Running with QEMU:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -M mps3-an547 -nographic -kernel nuttx.bin
+</pre></div>
+</div>
 </li>
-<li><p><strong>Pic ostest:</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
-<span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">mps3-an547:picostest</span>
-<span class="pre">$</span> <span class="pre">make</span> <span class="pre">-j20</span>
-<span class="pre">$</span> <span class="pre">genromfs</span> <span class="pre">-f</span> <span class="pre">romfs.img</span> <span class="pre">-d</span> <span class="pre">../apps/bin/</span>
-<span class="pre">$</span> <span class="pre">qemu-system-arm</span> <span class="pre">-M</span> <span class="pre">mps3-an547</span> <span class="pre">-m</span> <span class="pre">2G</span> <span class="pre">-nographic</span> <span class="pre">\</span>
-<span class="pre">-kernel</span> <span class="pre">nuttx.bin</span> <span class="pre">-gdb</span> <span class="pre">tcp::1127</span> <span class="pre">\</span>
-<span class="pre">-device</span> <span class="pre">loader,file=romfs.img,addr=0x60000000</span>
-<span class="pre">$</span> <span class="pre">nsh&gt;</span> <span class="pre">/pic/hello</span>
-<span class="pre">$</span> <span class="pre">nsh&gt;</span> <span class="pre">/pic/ostest</span>
-<span class="pre">`</span></code></p>
+<li><p>Pic ostest:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./tools/configure.sh mps3-an547:picostest
+make -j20
+genromfs -f romfs.img -d ../apps/bin/
+qemu-system-arm -M mps3-an547 -m 2G -nographic \
+-kernel nuttx.bin -gdb tcp::1127 \
+-device loader,file=romfs.img,addr=0x60000000
+nsh&gt; /pic/hello
+nsh&gt; /pic/ostest
+</pre></div>
+</div>
 </li>
-<li><p><strong>Pic bootloader boot to ap, and run ostest:</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
-<span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">mps3-an547:ap</span>
-<span class="pre">$</span> <span class="pre">make</span> <span class="pre">-j20</span>
-<span class="pre">$</span> <span class="pre">mkdir</span> <span class="pre">-p</span> <span class="pre">pic</span>
-<span class="pre">$</span> <span class="pre">arm-none-eabi-strip</span> <span class="pre">--remove-section=.rel.text</span> <span class="pre">--remove-section=.comment</span> <span class="pre">--strip-unneeded</span> <span class="pre">nuttx</span> <span class="pre">-o</span> <span class="pre">pic/boot</span>
-<span class="pre">$</span> <span class="pre">genromfs</span> <span class="pre">-a</span> <span class="pre">-f</span> <span class="pre">128</span> <span class="pre">../romfs.img</span> <span class="pre">-d</span> <span class="pre">pic</span>
-<span class="pre">$</span> <span class="pre">make</span> <span class="pre">distclean</span> <span class="pre">-j20</span>
-<span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">mps3-an547:bl</span>
-<span class="pre">$</span> <span class="pre">make</span> <span class="pre">-j20</span>
-<span class="pre">$</span> <span class="pre">qemu-system-arm</span> <span class="pre">-M</span> <span class="pre">mps3-an547</span> <span class="pre">-m</span> <span class="pre">2G</span> <span class="pre">-nographic</span> <span class="pre">\</span>
-<span class="pre">-kernel</span> <span class="pre">nuttx.bin</span> <span class="pre">-gdb</span> <span class="pre">tcp::1127</span> <span class="pre">\</span>
-<span class="pre">-device</span> <span class="pre">loader,file=../romfs.img,addr=0x60000000</span>
-<span class="pre">$</span> <span class="pre">bl&gt;</span> <span class="pre">boot</span> <span class="pre">/pic/boot</span>
-<span class="pre">$</span> <span class="pre">ap&gt;</span> <span class="pre">ostest</span>
-<span class="pre">`</span></code></p>
+<li><p>Pic bootloader boot to ap, and run ostest:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./tools/configure.sh mps3-an547:ap
+make -j20
+mkdir -p pic
+arm-none-eabi-strip --remove-section=.rel.text --remove-section=.comment --strip-unneeded nuttx -o pic/boot
+genromfs -a -f 128 ../romfs.img -d pic
+make distclean -j20
+./tools/configure.sh mps3-an547:bl
+make -j20
+qemu-system-arm -M mps3-an547 -m 2G -nographic \
+-kernel nuttx.bin -gdb tcp::1127 \
+-device loader,file=../romfs.img,addr=0x60000000
+bl&gt; boot /pic/boot
+ap&gt; ostest
+</pre></div>
+</div>
 </li>
 </ol>
 </section>
@@ -312,21 +313,21 @@
 <h2>Debugging with QEMU<a class="headerlink" href="#debugging-with-qemu" title="Permalink to this heading"></a></h2>
 <p>The NuttX ELF image can be debugged using QEMU.</p>
 <ol class="arabic">
-<li><p><strong>Enable Debug Symbols:</strong></p>
-<p>Ensure the following change is applied to <cite>defconfig</cite>:</p>
-<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
-<span class="pre">+CONFIG_DEBUG_SYMBOLS=y</span>
-<span class="pre">`</span></code></p>
+<li><p>Enable Debug Symbols.
+Ensure the following change is applied to <code class="docutils literal notranslate"><span class="pre">defconfig</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_DEBUG_SYMBOLS=y
+</pre></div>
+</div>
 </li>
-<li><p><strong>Run QEMU:</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
-<span class="pre">$</span> <span class="pre">qemu-system-arm</span> <span class="pre">-M</span> <span class="pre">mps3-an547</span> <span class="pre">-nographic</span> <span class="pre">-kernel</span> <span class="pre">nuttx.bin</span> <span class="pre">-S</span> <span class="pre">-s</span>
-<span class="pre">`</span></code></p>
+<li><p>Run QEMU:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-arm -M mps3-an547 -nographic -kernel nuttx.bin -S -s
+</pre></div>
+</div>
 </li>
-<li><p><strong>Run GDB with TUI:</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">`bash</span>
-<span class="pre">$</span> <span class="pre">arm-none-eabi-gdb</span> <span class="pre">-tui</span> <span class="pre">--eval-command='target</span> <span class="pre">remote</span> <span class="pre">localhost:1234'</span> <span class="pre">nuttx</span>
-<span class="pre">`</span></code></p>
+<li><p>Run GDB with TUI:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>arm-none-eabi-gdb -tui --eval-command=&#39;target remote localhost:1234&#39; nuttx
+</pre></div>
+</div>
 </li>
 </ol>
 </section>
@@ -336,7 +337,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../mps2-an500/index.html" class="btn btn-neutral float-left" title="MPS2 AN500 Board" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../mps2-an512/index.html" class="btn btn-neutral float-left" title="MPS2 AN521 Board" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../../../nrf52/ieee802154.html" class="btn btn-neutral float-right" title="Nordic nRF52 IEEE 802.15.4" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
