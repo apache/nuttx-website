@@ -256,8 +256,44 @@ runMacro $reset
 </section>
 <section id="nrf52840-dk">
 <h2>nrf52840-dk<a class="headerlink" href="#nrf52840-dk" title="Permalink to this heading"></a></h2>
-<p>Nordic UART peripheral is not supported by Renode, UARTE support
-is required (EasyDMA).</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_USEBASEPRI=y</span></code> must be set.</p>
+<p>At default Renode uses UART with EasyDMA enabled (UARTE) which is not supported
+by Nuttx yet. We can get around this by creating our own machine description
+based on Renode default implementation:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using &quot;platforms/cpus/nrf52840.repl&quot;
+
+uart0:
+  easyDMA: false
+</pre></div>
+</div>
+<p>Renode script:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using sysbus
+
+mach create
+machine LoadPlatformDescription @nrf52840_custom.repl
+
+$bin?=@nuttx
+
+showAnalyzer uart0
+
+macro reset
+&quot;&quot;&quot;
+  sysbus LoadELF $bin
+&quot;&quot;&quot;
+
+runMacro $reset
+</pre></div>
+</div>
+<p>Tested with <code class="docutils literal notranslate"><span class="pre">nrf52840-dk/nsh</span></code>.</p>
+<p>Known issues:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">QSPI</span></code> not implemented in Renode,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PWM</span></code> doesn’t work, missing <code class="docutils literal notranslate"><span class="pre">NRF52_PWM_EVENTS_SEQSTARTED0_OFFSET</span></code>
+implementation in Renode,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ADC</span></code> doesn’t work, missing <code class="docutils literal notranslate"><span class="pre">NRF52_SAADC_EVENTS_CALDONE_OFFSET</span></code>
+implementation in Renode,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SoftDevice</span></code> doesn’t work, crash in <code class="docutils literal notranslate"><span class="pre">mpsl_init()</span></code></p></li>
+</ul>
 </section>
 <section id="stm32f746g-disco">
 <h2>stm32f746g-disco<a class="headerlink" href="#stm32f746g-disco" title="Permalink to this heading"></a></h2>
