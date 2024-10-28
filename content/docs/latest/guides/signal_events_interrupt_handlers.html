@@ -1,0 +1,486 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signaling Events from Interrupt Handlers &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Signaling Semaphores and Priority Inheritance" href="signaling_sem_priority_inheritance.html" />
+    <link rel="prev" title="Run NuttX on Renode" href="renode.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qemugdb.html">How to debug NuttX using QEMU and GDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasktrace.html">Task Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
+<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable nested interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kasan.html">The Kernel Address Sanitizer (KASAN)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coresight.html">Coresight - HW Assisted Tracing on ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdbserver.html">gdbserver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stackrecord.html">Run time stack statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debuggingflash_nuttxonarm.html">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="disabling_stackdumpdebug.html">Disabling the Stack Dump During Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="include_files_board_h.html">Including Files in board.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specialstuff_in_nuttxheaderfiles.html">Why can’t I put my special stuff in NuttX header files?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_with_custom_stacks.html">Kernel Threads with Custom Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning_and_task_names.html">Versioning and Task Names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging_rambuffer.html">Logging to a RAM Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ipv6.html">IPv6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrate_newlib.html">Integrating with Newlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="protected_build.html">NuttX Protected Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="platform_directories.html">Platform Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="port_drivers_to_stm32f7.html">Porting Drivers to the STM32 F7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semihosting.html">Semihosting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="renode.html">Run NuttX on Renode</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Signaling Events from Interrupt Handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#best-way-to-wake-multiple-threads-from-interrupt">Best way to wake multiple threads from interrupt?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#message-queues">Message Queues</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#semaphores">Semaphores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#signals">Signals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poll"><code class="docutils literal notranslate"><span class="pre">poll()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="signaling_sem_priority_inheritance.html">Signaling Semaphores and Priority Inheritance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smaller_vector_tables.html">Smaller Vector Tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">Signaling Events from Interrupt Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/signal_events_interrupt_handlers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="signaling-events-from-interrupt-handlers">
+<h1>Signaling Events from Interrupt Handlers<a class="headerlink" href="#signaling-events-from-interrupt-handlers" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Signaling+Events+from+Interrupt+Handlers">https://cwiki.apache.org/confluence/display/NUTTX/Signaling+Events+from+Interrupt+Handlers</a></p>
+</div>
+<section id="best-way-to-wake-multiple-threads-from-interrupt">
+<h2>Best way to wake multiple threads from interrupt?<a class="headerlink" href="#best-way-to-wake-multiple-threads-from-interrupt" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><p>I want to make a character device driver that passes the same data to
+all tasks that are reading it. It is not so important whether the data
+is queued or if just latest sample is retrieved. Problem is just how to
+wake up the waiting threads.</p>
+</div></blockquote>
+<p>At the most primitive level, a thread can be waiting for a semaphore, a signal,
+or a message queue (not empty or not full). Then there are higher
+level wrappers around these like mutexes, semaphores, poll waits,
+etc. But under the hood those are the three fundamental wait
+mechanisms. Any could be used to accomplish what you want.</p>
+<p>In NuttX, some additional effort was put into the design of the signalling
+side of each of the IPCs so that they could be easily used by interrupts
+handlers. This behavior is unique to NuttX; POSIX says nothing about
+interrupt handlers. As a result, we will be talking about primarily
+non-portable OS interfaces.</p>
+<blockquote>
+<div><p>So far I’ve considered the following options:</p>
+</div></blockquote>
+<p>And you basically have gone through the list of wait mechanisms:</p>
+</section>
+<section id="message-queues">
+<h2>Message Queues<a class="headerlink" href="#message-queues" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><p>1) Open a message queue when the device is opened (a new queue for each
+task) and keep them in a list. Post to a non-blocking endpoint of these
+queues in the ISR. Read from a blocking endpoint in the device <code class="docutils literal notranslate"><span class="pre">read()</span></code>.
+I would need to generate names for the message queues, as there doesn’t
+seem to be anonymous message queues?</p>
+</div></blockquote>
+<p>When you start a project. It is a good idea to decide upon a common IPC
+mechanism to base your design on. POSIX message queues are one good
+choice to do that: Assign each thread a message queue and the <code class="docutils literal notranslate"><span class="pre">main()</span></code>
+of each thread simply waits on the message queue. It is a good
+architecture and used frequently.</p>
+<p>However, I would probably avoid creating a lot of message queues just
+to support the interrupt level signaling. There are other ways to do
+that that do not use so much memory. So, if you have message queues,
+use them. If not, keep it simple.</p>
+<p>In this case, your waiting task will block on a call to <code class="docutils literal notranslate"><span class="pre">mq_receive()</span></code>
+until a message is received. It will then wake up and can process
+the message. In the interrupt handler, it will call <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code> when
+an event of interest occurs which will, in turn, wake up the waiting
+task.</p>
+<p>Advantages of the use of message queues in this case are that 1) you
+can pass quite a lot of data in the message, and 2) it integrates
+well in a message-based application architecture. A disadvantage
+is that there is a limitation on the number of messages that can be
+sent from an interrupt handler so it is possible to get data overrun
+conditions, that is, more interrupt events may be received than can
+be reported with the available messages.</p>
+<p>This limitation is due to the fact that you cannot allocate memory
+dynamically from an interrupt handler. Instead, interrupt handlers
+are limited to the use of pre-allocated messages. The number of
+pre-allocated messages is given by <code class="docutils literal notranslate"><span class="pre">CONFIG_PREALLOC_MQ_MSGS</span></code> + 8.
+The <code class="docutils literal notranslate"><span class="pre">CONFIG_PREALLOC_MQ_MSGS</span></code> can be used either by normal tasking
+logic or by interrupt level logic. The extra eight are an emergency
+pool for interrupt handling logic only (that value is not currently
+configurable).</p>
+<p>If the task logic consumes all of the <code class="docutils literal notranslate"><span class="pre">CONFIG_PREALLOC_MQ_MSGS</span></code> messages, it
+will fall back to dynamically allocating messages at some cost to
+performance and deterministic behavior.</p>
+<p>If the interrupt level consumes all of the <code class="docutils literal notranslate"><span class="pre">CONFIG_PREALLOC_MQ_MSGS</span></code>
+messages, it will fall back and use the emergency pool of 8
+pre-allocated messages. If those are also exhausted, then the message
+will not be sent and an interrupt is effectively lost.</p>
+</section>
+<section id="semaphores">
+<h2>Semaphores<a class="headerlink" href="#semaphores" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><p>2) Allocate a semaphore per each device open and keep them in a list.
+Post the semaphores when new data is available in a shared buffer.
+Read the data inside <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code>.</p>
+</div></blockquote>
+<p>If you don’t have an architecture that uses message queues, and all of
+these threads are waiting only for the interrupt event and nothing else,
+then signaling semaphores would work fine too. You are basically using
+semaphores as condition variables in this case so you do have to be careful.</p>
+<p>NOTE: You do not need multiple semaphores. You can do this with a single
+semaphore. If the semaphore is used for this purpose then you initialize
+it to zero:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">sem_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="n">sem_setprotocol</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem</span><span class="p">,</span><span class="w"> </span><span class="n">SEM_PRIO_NONE</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">sem_setprotocol()</span></code> is a non-standard NuttX function that should be called
+immediately after the <code class="docutils literal notranslate"><span class="pre">sem_init()</span></code>. The effect of this function call is to
+disable priority inheritance for that specific semaphore. There should
+then be no priority inheritance operations on this semaphore that is
+used for signaling. See <a class="reference internal" href="signaling_sem_priority_inheritance.html"><span class="doc">Signaling Semaphores and Priority Inheritance</span></a>
+for further information.</p>
+<p>Since the semaphore is initialized to zero, each time that a thread joins
+the group of waiting threads, the count is decremented. So a simple loop
+like this would wake up all waiting threads:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">svalue</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(;</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sem_getvalue</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">svalue</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">svalue</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">sem_post</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>NOTE: This use of <code class="docutils literal notranslate"><span class="pre">sem_getvalue()</span></code> is not portable. In many environments,
+<code class="docutils literal notranslate"><span class="pre">sem_getvalue()</span></code> will not return negative values if there are waiters on
+the semaphore.</p>
+<p>The above code snippet is essentially what the NuttX
+<code class="docutils literal notranslate"><span class="pre">pthread_cond_broadcast()</span></code> does (see <a class="reference external" href="https://github.com/apache/nuttx/blob/master/sched/pthread/pthread_condbroadcast.c">nuttx/sched/pthread_condbroadcast.c</a>).
+In NuttX condition variables are really just wrappers around semaphores
+that give them a few new properties. You could even call
+<code class="docutils literal notranslate"><span class="pre">pthread_cond_broadcast()</span></code> from an interrupt handler: See
+<a class="reference external" href="http://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cond_signal.html">http://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cond_signal.html</a>
+for usage information.</p>
+<p>Neither of the above mechanisms are portable uses of these interfaces.
+However, there is no portable interface for communicating directly with
+interrupt handlers.</p>
+<p>If you want to signal a single waiting thread, there are simpler things
+you an do. In the waiting task:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">semt_t</span><span class="w"> </span><span class="n">g_mysemaphore</span><span class="p">;</span>
+<span class="k">volatile</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">g_waiting</span><span class="p">;</span>
+<span class="p">...</span>
+
+<span class="n">sem_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_mysemaphore</span><span class="p">);</span>
+<span class="n">sem_setprotocol</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_mysemaphore</span><span class="p">,</span><span class="w"> </span><span class="n">SEM_PRIO_NONE</span><span class="p">);</span>
+<span class="p">...</span>
+
+<span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">enter_critical_section</span><span class="p">();</span>
+<span class="n">g_waiting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">g_waiting</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sem_wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_mysemaphore</span><span class="p">);</span>
+<span class="w">    </span><span class="p">...</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="n">errors</span><span class="w"> </span><span class="p">...</span>
+<span class="p">}</span>
+
+<span class="n">leave_critical_section</span><span class="p">(</span><span class="n">flags</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In the above code snippet, interrupts are disabled to set and test
+<code class="docutils literal notranslate"><span class="pre">g_waiting</span></code>. Interrupts will, of course, be re-enabled automatically
+and atomically while the task is waiting for the interrupt event.</p>
+<p>Then in the interrupt handler</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="n">semt_t</span><span class="w"> </span><span class="n">g_mysemaphore</span><span class="p">;</span>
+<span class="k">extern</span><span class="w"> </span><span class="k">volatile</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">g_waiting</span><span class="p">;</span>
+<span class="p">...</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_waiting</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">g_waiting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="n">sem_post</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_mysemaphore</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>An integer type counter could also be used instead of a type bool to
+support multiple waitings. In that case, this is equivalent to the
+case above using <code class="docutils literal notranslate"><span class="pre">sem_getvalue()</span></code> but does not depend on non-portable
+properties of <code class="docutils literal notranslate"><span class="pre">sem_getvalue()</span></code>.</p>
+<p>NOTE: There is possibility of improper interactions between the
+semaphore when it is used for signaling and priority inheritance.
+In this case, you should disable priority inheritance on the
+signaling semaphore using <code class="docutils literal notranslate"><span class="pre">sem_setprotocol(SEM_PRIO_NONE)</span></code>. See
+<a class="reference internal" href="signaling_sem_priority_inheritance.html"><span class="doc">Signaling Semaphores and Priority Inheritance</span></a>
+for further information.</p>
+</section>
+<section id="signals">
+<h2>Signals<a class="headerlink" href="#signals" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><p>3) Store the thread id’s in a list when <code class="docutils literal notranslate"><span class="pre">read()</span></code> is called. Wake up the
+threads using <code class="docutils literal notranslate"><span class="pre">sigqueue()</span></code>. Read the data from a shared buffer
+inside <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code>.</p>
+</div></blockquote>
+<p>Signals would work fine too. Signals have a side-effect that is sometimes
+helpful and sometimes a pain in the butt: They cause almost all kinds of
+waits (<code class="docutils literal notranslate"><span class="pre">read()</span></code>, <code class="docutils literal notranslate"><span class="pre">sem_wait()</span></code>, etc.) to wake up and return an error with
+<code class="docutils literal notranslate"><span class="pre">errno=EINTR</span></code>.</p>
+<p>That is sometimes helpful because you can wake up a <code class="docutils literal notranslate"><span class="pre">recv()</span></code> or a <code class="docutils literal notranslate"><span class="pre">read()</span></code>
+etc., detect the event that generated the signal, and do something
+about it. It is sometimes a pain because you have to remember to
+handle the <code class="docutils literal notranslate"><span class="pre">EINTR</span></code> return value even when you don’t care about it.</p>
+<p>The POSIX signal definition includes some support that would make this
+easier for you. This support is not currently implemented in NuttX.
+The <code class="docutils literal notranslate"><span class="pre">kill()</span></code> interface for example
+(<a class="reference external" href="http://pubs.opengroup.org/onlinepubs/009695399/functions/kill.html">http://pubs.opengroup.org/onlinepubs/009695399/functions/kill.html</a>)
+supports this behavior:</p>
+<p>“If pid is 0, sig will be sent to all processes (excluding an unspecified
+set of system processes) whose process group ID is equal to the process
+group ID of the sender, and for which the process has permission to send
+a signal.</p>
+<p>“If pid is -1, sig will be sent to all processes (excluding an unspecified
+set of system processes) for which the process has permission to send that
+signal.”</p>
+<p>“If pid is negative, but not -1, sig will be sent to all processes (excluding
+an unspecified set of system processes) whose process group ID is equal to
+the absolute value of pid, and for which the process has permission to send
+a signal.”</p>
+<p>NuttX does not currently support process groups. But that might be a good
+RTOS extension. If you and others think that would be useful I could
+probably add the basics of such a feature in a day or so.</p>
+</section>
+<section id="poll">
+<h2><code class="docutils literal notranslate"><span class="pre">poll()</span></code><a class="headerlink" href="#poll" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><p>Is there some better way that I haven’t discovered?</p>
+</div></blockquote>
+<p>The obvious thing that you did not mention is <code class="docutils literal notranslate"><span class="pre">poll()</span></code>. See
+<a class="reference external" href="http://pubs.opengroup.org/onlinepubs/009695399/functions/poll.html">http://pubs.opengroup.org/onlinepubs/009695399/functions/poll.html</a> .
+Since you are writing a device driver, support for the <code class="docutils literal notranslate"><span class="pre">poll()</span></code> method
+in your driver seems to be the natural solution. See the <code class="docutils literal notranslate"><span class="pre">drivers/</span></code>
+directory for many examples, <code class="docutils literal notranslate"><span class="pre">drivers/pipes/pipe_common.c</span></code> for one.
+Each thread could simply wait on <code class="docutils literal notranslate"><span class="pre">poll()</span></code>; when the event occurs the
+driver could then wake up the set of waiters. Under the hood, this
+is again just a set of <code class="docutils literal notranslate"><span class="pre">sem_post</span></code>’s. But it is also a very standard
+mechanism.</p>
+<p>In your case, the semantics of <code class="docutils literal notranslate"><span class="pre">poll()</span></code> might have to be bent just a
+little. You might have to bend the meaning of some of the event
+flags since they are all focused on data I/O events.</p>
+<p>Another creative use of <code class="docutils literal notranslate"><span class="pre">poll()</span></code> for use in cases like this:</p>
+<blockquote>
+<div><p>That would be something great! PX4 project has that implemented somehow
+(in C++), so maybe - if license permits - it could be ported to NuttX in
+no time?</p>
+<p><a class="reference external" href="https://pixhawk.ethz.ch/px4/dev/shared_object_communication">https://pixhawk.ethz.ch/px4/dev/shared_object_communication</a></p>
+</div></blockquote>
+<p>I don’t know a lot about this, but it might be worth looking into
+if it matches your need.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="renode.html" class="btn btn-neutral float-left" title="Run NuttX on Renode" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="signaling_sem_priority_inheritance.html" class="btn btn-neutral float-right" title="Signaling Semaphores and Priority Inheritance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
