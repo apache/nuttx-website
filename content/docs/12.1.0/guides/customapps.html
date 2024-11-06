@@ -26,6 +26,7 @@
   <title>Custom Apps How-to &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
   <!--[if lt IE 9]>
@@ -104,7 +105,7 @@
   
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -177,9 +178,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Custom Apps How-to</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Guides</a> &raquo;</li>
+      <li>Custom Apps How-to</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/customapps.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -236,54 +237,54 @@ top-level of the custom directory structure.</p>
 
 <span class="go">ROOTDEPPATH = --dep-path .</span>
 
-<span class="gp"># </span>Build<span class="w"> </span>targets
+<span class="gp"># </span>Build targets
 
 <span class="go">all: libapps.a</span>
 <span class="go">.PHONY: dirlinks context preconfig depend clean clean_context distclean</span>
 <span class="go">.PRECIOUS: libapps$(LIBEXT)</span>
 
-<span class="gp"># </span>Compile<span class="w"> </span>C<span class="w"> </span>Files
+<span class="gp"># </span>Compile C Files
 
-<span class="gp">$</span><span class="o">(</span>COBJS<span class="o">)</span>:<span class="w"> </span>%<span class="k">$(</span>OBJEXT<span class="k">)</span>:<span class="w"> </span>%.c
-<span class="gp">$</span><span class="o">(</span>call<span class="w"> </span>COMPILE,<span class="w"> </span>$&lt;,<span class="w"> </span><span class="nv">$@</span><span class="o">)</span>
+<span class="gp">$</span><span class="o">(</span>COBJS<span class="o">)</span>: %<span class="k">$(</span>OBJEXT<span class="k">)</span>: %.c
+<span class="gp">$</span><span class="o">(</span>call COMPILE, $&lt;, <span class="nv">$@</span><span class="o">)</span>
 
-<span class="gp"># </span>Add<span class="w"> </span>object<span class="w"> </span>files<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>apps<span class="w"> </span>archive
+<span class="gp"># </span>Add object files to the apps archive
 
 <span class="go">libapps.a: $(COBJS)</span>
-<span class="gp">  $</span><span class="o">(</span>call<span class="w"> </span>ARCHIVE,<span class="w"> </span>libapps.a,<span class="w"> </span><span class="k">$(</span>COBJS<span class="k">)</span><span class="o">)</span>
+<span class="gp">  $</span><span class="o">(</span>call ARCHIVE, libapps.a, <span class="k">$(</span>COBJS<span class="k">)</span><span class="o">)</span>
 
-<span class="gp"># </span>Create<span class="w"> </span>directory<span class="w"> </span>links
+<span class="gp"># </span>Create directory links
 
 <span class="go">dirlinks:</span>
 
-<span class="gp"># </span>Setup<span class="w"> </span>any<span class="w"> </span>special<span class="w"> </span>pre-build<span class="w"> </span>context
+<span class="gp"># </span>Setup any special pre-build context
 
 <span class="go">context:</span>
 
-<span class="gp"># </span>Setup<span class="w"> </span>any<span class="w"> </span>special<span class="w"> </span>pre-configuration<span class="w"> </span>context
+<span class="gp"># </span>Setup any special pre-configuration context
 
 <span class="go">preconfig:</span>
 
-<span class="gp"># </span>Make<span class="w"> </span>the<span class="w"> </span>dependency<span class="w"> </span>file,<span class="w"> </span>Make.deps
+<span class="gp"># </span>Make the dependency file, Make.deps
 
 <span class="go">depend: Makefile $(CSRCS)</span>
-<span class="gp">  $</span><span class="o">(</span>Q<span class="o">)</span><span class="w"> </span><span class="k">$(</span>MKDEP<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ROOTDEPPATH<span class="k">)</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>CC<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>--<span class="w"> </span><span class="k">$(</span>CFLAGS<span class="k">)</span><span class="w"> </span>--<span class="w"> </span><span class="k">$(</span>SRCS<span class="k">)</span><span class="w"> </span>&gt;<span class="w"> </span>Make.dep
+<span class="gp">  $</span><span class="o">(</span>Q<span class="o">)</span> <span class="k">$(</span>MKDEP<span class="k">)</span> <span class="k">$(</span>ROOTDEPPATH<span class="k">)</span> <span class="s2">&quot;</span><span class="k">$(</span>CC<span class="k">)</span><span class="s2">&quot;</span> -- <span class="k">$(</span>CFLAGS<span class="k">)</span> -- <span class="k">$(</span>SRCS<span class="k">)</span> &gt; Make.dep
 
-<span class="gp"># </span>Clean<span class="w"> </span>the<span class="w"> </span>results<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>last<span class="w"> </span>build
+<span class="gp"># </span>Clean the results of the last build
 
 <span class="go">clean:</span>
-<span class="gp">  $</span><span class="o">(</span>call<span class="w"> </span>CLEAN<span class="o">)</span>
+<span class="gp">  $</span><span class="o">(</span>call CLEAN<span class="o">)</span>
 
-<span class="gp"># </span>Remove<span class="w"> </span>the<span class="w"> </span>build<span class="w"> </span>context<span class="w"> </span>and<span class="w"> </span>directory<span class="w"> </span>links
+<span class="gp"># </span>Remove the build context and directory links
 
 <span class="go">clean_context:</span>
 
-<span class="gp"># </span>Restore<span class="w"> </span>the<span class="w"> </span>directory<span class="w"> </span>to<span class="w"> </span>its<span class="w"> </span>original<span class="w"> </span>state
+<span class="gp"># </span>Restore the directory to its original state
 
 <span class="go">distclean: clean clean_context</span>
-<span class="gp">  $</span><span class="o">(</span>call<span class="w"> </span>DELFILE,<span class="w"> </span>Make.dep<span class="o">)</span>
+<span class="gp">  $</span><span class="o">(</span>call DELFILE, Make.dep<span class="o">)</span>
 
-<span class="gp"># </span>Include<span class="w"> </span>dependencies
+<span class="gp"># </span>Include dependencies
 
 <span class="go">-include Make.dep</span>
 </pre></div>
@@ -297,16 +298,16 @@ This is a place where you can add settings to generate customized builds of your
 application and/or choose which of your apps to include.</p>
 <p>In the minimum case, Kconfig is only:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
-<span class="gp"># </span>see<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>kconfig-language.txt<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>NuttX<span class="w"> </span>tools<span class="w"> </span>repository.
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For a description of the syntax of this configuration file,
+<span class="gp"># </span>see the file kconfig-language.txt <span class="k">in</span> the NuttX tools repository.
 <span class="gp">#</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>or</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
-<span class="gp"># </span>see<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>kconfig-language.txt<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>NuttX<span class="w"> </span>tools<span class="w"> </span>repository.
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>For a description of the syntax of this configuration file,
+<span class="gp"># </span>see the file kconfig-language.txt <span class="k">in</span> the NuttX tools repository.
 <span class="gp">#</span>
 </pre></div>
 </div>
@@ -324,7 +325,7 @@ application, and where the rest of you application code is located is of no conc
 <p>Only this one entry point is needed.</p>
 <p>For this “Hello, Custom World!” application <code class="docutils literal notranslate"><span class="pre">custom_hello()</span></code> is the application entry point:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>include<span class="w"> </span>&lt;stdio.h&gt;
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>include &lt;stdio.h&gt;
 
 <span class="go">int custom_hello(int argc, char *argv[])</span>
 <span class="go">{</span>
@@ -413,14 +414,14 @@ This example uses the directory name <code class="docutils literal notranslate">
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">include $(APPDIR)/Make.defs</span>
 
-<span class="gp"># </span>Custom<span class="w"> </span>Hello<span class="w"> </span>built-in<span class="w"> </span>application<span class="w"> </span>info
+<span class="gp"># </span>Custom Hello built-in application info
 
 <span class="go">PROGNAME = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO_PROGNAME)</span>
 <span class="go">PRIORITY = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO_PRIORITY)</span>
 <span class="go">STACKSIZE = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO_STACKSIZE)</span>
 <span class="go">MODULE = $(CONFIG_CUSTOM_APPS_CUSTOM_HELLO)</span>
 
-<span class="gp"># </span>Custom<span class="w"> </span>Hello
+<span class="gp"># </span>Custom Hello
 
 <span class="go">MAINSRC = CustomHello.c</span>
 
@@ -435,8 +436,8 @@ This example uses the directory name <code class="docutils literal notranslate">
 the purposes of this example, the Kconfig will only cover our single application):</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>
-<span class="gp"># </span>For<span class="w"> </span>a<span class="w"> </span>description<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>syntax<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>configuration<span class="w"> </span>file,
-<span class="gp"># </span>see<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>kconfig-language.txt<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>NuttX<span class="w"> </span>tools<span class="w"> </span>repository.
+<span class="gp"># </span>For a description of the syntax of this configuration file,
+<span class="gp"># </span>see the file kconfig-language.txt <span class="k">in</span> the NuttX tools repository.
 <span class="gp">#</span>
 
 <span class="go">config CUSTOM_APPS_CUSTOM_HELLO</span>
@@ -489,18 +490,18 @@ default <code class="docutils literal notranslate"><span class="pre">apps</span>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">pwd</span>
 <span class="go">/home/nuttx</span>
-<span class="gp">$ </span>ls<span class="w"> </span>-1
+<span class="gp">$ </span>ls -1
 <span class="go">apps</span>
 <span class="go">CustomBoards</span>
 <span class="go">nuttx</span>
-<span class="gp">$ </span>mkdir<span class="w"> </span>CustomApps
-<span class="gp">$ </span>ls<span class="w"> </span>-1
+<span class="gp">$ </span>mkdir CustomApps
+<span class="gp">$ </span>ls -1
 <span class="go">apps</span>
 <span class="go">CustomApps</span>
 <span class="go">CustomBoards</span>
 <span class="go">nuttx</span>
-<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>apps
-<span class="gp">$ </span>ln<span class="w"> </span>-s<span class="w"> </span>../CustomApps<span class="w"> </span>CustomApps
+<span class="gp">$ </span><span class="nb">cd</span> apps
+<span class="gp">$ </span>ln -s ../CustomApps CustomApps
 </pre></div>
 </div>
 </div></blockquote>
