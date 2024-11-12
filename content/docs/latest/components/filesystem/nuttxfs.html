@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>File mapping emulation (mmap) &mdash; NuttX latest documentation</title>
+  <title>Nuttx FS &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
@@ -43,8 +43,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="MNEMOFS" href="mnemofs.html" />
-    <link rel="prev" title="LITTLEFS" href="littlefs.html" /> 
+    <link rel="next" title="NuttX FLAT Binary Format (NXFLAT)" href="nxflat.html" />
+    <link rel="prev" title="Inotify" href="inotify.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -136,7 +136,7 @@
 <li class="toctree-l4"><a class="reference internal" href="fat.html">FAT</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hostfs.html">Host File System</a></li>
 <li class="toctree-l4"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">File mapping emulation (mmap)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mnemofs.html">MNEMOFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nfs.html">NFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
@@ -152,7 +152,7 @@
 <li class="toctree-l4"><a class="reference internal" href="userfs.html">User file system</a></li>
 <li class="toctree-l4"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="inotify.html">Inotify</a></li>
-<li class="toctree-l4"><a class="reference internal" href="nuttxfs.html">Nuttx FS</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Nuttx FS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nxflat.html">NuttX FLAT Binary Format (NXFLAT)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pseudofs.html">Pseudo File System</a></li>
 <li class="toctree-l4"><a class="reference internal" href="special_files_dev_num.html">Special Files and Device Numbers</a></li>
@@ -200,9 +200,9 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
           <li class="breadcrumb-item"><a href="index.html">NuttX File System</a></li>
-      <li class="breadcrumb-item active">File mapping emulation (mmap)</li>
+      <li class="breadcrumb-item active">Nuttx FS</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../_sources/components/filesystem/mmap.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/components/filesystem/nuttxfs.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -210,86 +210,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="file-mapping-emulation-mmap">
-<h1>File mapping emulation (mmap)<a class="headerlink" href="#file-mapping-emulation-mmap" title="Permalink to this heading"></a></h1>
-<p>NuttX operates in a flat open address space and is focused on MCUs that do
-support Memory Management Units (MMUs).  Therefore, NuttX generally does not
-require mmap() functionality and the MCUs generally cannot support true
-memory-mapped files.</p>
-<p>However, memory mapping of files is the mechanism used by NXFLAT, the NuttX
-tiny binary format, to get files into memory in order to execute them.
-mmap() support is therefore required to support NXFLAT.  There are two
-conditions where mmap() can be supported:</p>
-<ol class="arabic">
-<li><p>mmap can be used to support eXecute In Place (XIP) on random access media
-under the following very restrictive conditions:</p>
-<ol class="loweralpha simple">
-<li><p>The filesystem implements the mmap file operation.  Any file
-system that maps files contiguously on the media should support
-this ioctl. (vs. file system that scatter files over the media
-in non-contiguous sectors).  As of this writing, ROMFS is the
-only file system that meets this requirement.</p></li>
-<li><p>The underlying block driver supports the BIOC_XIPBASE ioctl
-command that maps the underlying media to a randomly accessible
-address. At  present, only the RAM/ROM disk driver does this.</p></li>
-</ol>
-<p>Some limitations of this approach are as follows:</p>
-<ol class="loweralpha simple">
-<li><p>Since no real mapping occurs, all of the file contents are “mapped”
-into memory.</p></li>
-<li><p>All mapped files are read-only.</p></li>
-<li><p>There are no access privileges.</p></li>
-</ol>
-</li>
-<li><p>If CONFIG_FS_RAMMAP is defined in the configuration, then mmap() will
-support simulation of memory mapped files by copying files whole
-into RAM.  These copied files have some of the properties of
-standard memory mapped files.  There are many, many exceptions,
-however.  Some of these include:</p>
-<ol class="loweralpha">
-<li><p>The goal is to have a single region of memory that represents a single
-file and can be shared by many threads.  That is, given a filename a
-thread should be able to open the file, get a file descriptor, and
-call mmap() to get a memory region.  Different file descriptors opened
-with the same file path should get the same memory region when mapped.</p>
-<p>The limitation in the current design is that there is insufficient
-knowledge to know that these different file descriptors correspond to
-the same file.  So, for the time being, a new memory region is created
-each time that rammap() is called. Not very useful!</p>
-</li>
-<li><p>The entire mapped portion of the file must be present in memory.
-Since it is assumed that the MCU does not have an MMU, on-demanding
-paging in of file blocks cannot be supported. Since the while mapped
-portion of the file must be present in memory, there are limitations
-in the size of files that may be memory mapped (especially on MCUs
-with no significant RAM resources).</p></li>
-<li><p>All mapped files are read-only.  You can write to the in-memory image,
-but the file contents will not change.</p></li>
-<li><p>There are no access privileges.</p></li>
-<li><p>Since there are no processes in NuttX, all mmap() and munmap()
-operations have immediate, global effects.  Under Linux, for example,
-munmap() would eliminate only the mapping with a process; the mappings
-to the same file in other processes would not be effected.</p></li>
-<li><p>Like true mapped file, the region will persist after closing the file
-descriptor.  However, at present, these ram copied file regions are
-<strong>not</strong> automatically “unmapped” (i.e., freed) when a thread is terminated.
-This is primarily because it is not possible to know how many users
-of the mapped region there are and, therefore, when would be the
-appropriate time to free the region (other than when munmap is called).</p>
-<p>NOTE: Note, if the design limitation of a) were solved, then it would be
-easy to solve exception d) as well.</p>
-</li>
-</ol>
-</li>
-</ol>
+  <section id="nuttx-fs">
+<h1>Nuttx FS<a class="headerlink" href="#nuttx-fs" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/NuttX+File+System">https://cwiki.apache.org/confluence/display/NUTTX/NuttX+File+System</a></p>
+</div>
+<img alt="../../_images/nuttxfs_page_0.png" src="../../_images/nuttxfs_page_0.png" />
+<img alt="../../_images/nuttxfs_page_1.png" src="../../_images/nuttxfs_page_1.png" />
+<img alt="../../_images/nuttxfs_page_2.png" src="../../_images/nuttxfs_page_2.png" />
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="littlefs.html" class="btn btn-neutral float-left" title="LITTLEFS" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="mnemofs.html" class="btn btn-neutral float-right" title="MNEMOFS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="inotify.html" class="btn btn-neutral float-left" title="Inotify" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nxflat.html" class="btn btn-neutral float-right" title="NuttX FLAT Binary Format (NXFLAT)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
