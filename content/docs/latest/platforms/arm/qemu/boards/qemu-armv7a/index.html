@@ -253,99 +253,115 @@
              
   <section id="qemu-armv7a">
 <h1>qemu-armv7a<a class="headerlink" href="#qemu-armv7a" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README.txt
-==========
-
-This board configuration will use QEMU to emulate generic ARM v7-A series
-hardware platform and provides support for these devices:
-
- - GICv2 interrupt controllers
- - ARM Generic Timer
- - PL011 UART controller
-
-Contents
-========
-  - Getting Started
-  - Status
-  - Platform Features
-  - Debugging with QEMU
-  - FPU Support and Performance
-  - SMP Support
-  - References
-
-Getting Started
-===============
-
-1. Configuring and running
-  1.1 Single Core
-   Configuring NuttX and compile:
-   $ ./tools/configure.sh -l qemu-armv7a:nsh
-   $ make
-   Running with qemu
-   $ qemu-system-arm -cpu cortex-a7 -nographic \
-     -machine virt,virtualization=off,gic-version=2 \
-     -net none -chardev stdio,id=con,mux=on -serial chardev:con \
-     -mon chardev=con,mode=readline -kernel ./nuttx
-
-2. knsh
-------
-  This is a configuration of testing the BUILD_KERNEL configuration
-  $ cd nuttx
-  $ ./tools/configure.sh qemu-armv7a:knsh
-  $ make V=1 -j7
-  $ make export V=1
-  $ cd ../apps
-  $ ./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
-  $ make import V=1
-  $ cd ../nuttx
-  $ qemu-system-arm -semihosting -M virt -m 1024 -nographic -kernel ./nuttx
-
-  NuttShell (NSH) NuttX-12.3.0-RC0
-  nsh&gt; uname -a
-  NuttX 12.3.0-RC0 28dee592a3-dirty Oct 12 2023 03:03:07 arm qemu-armv7a
-  nsh&gt; ps
-    PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK           STACK   USED  FILLED COMMAND
-      0     0   0 FIFO     Kthread N-- Ready              0000000000000000 004088 000896  21.9%  Idle_Task
-      1     1 100 RR       Kthread --- Waiting  Semaphore 0000000000000000 004040 000304   7.5%  lpwork 0x40119398 0x401193ac
-      2     2 100 RR       Task    --- Running            0000000000000000 003032 001032  34.0%  /system/bin/init
-  nsh&gt; free
-                     total       used       free    largest  nused  nfree
-          Kmem:  133058556      16644  133041912  133041152     41      3
-          Page:  134217728    1105920  133111808  133111808
-  nsh&gt; /system/bin/hello
-  Hello, World!!
-  nsh&gt;
-
-Debugging with QEMU
-===================
-
-The nuttx ELF image can be debugged with QEMU.
-
-1. To debug the nuttx (ELF) with symbols, make sure the following change have
-   applied to defconfig.
-
-+CONFIG_DEBUG_SYMBOLS=y
-
-2. Run QEMU(at shell terminal 1)
-
-   Single Core
-   $ qemu-system-arm -cpu cortex-a7 -nographic \
-     -machine virt,virtualization=off,gic-version=2 \
-     -net none -chardev stdio,id=con,mux=on -serial chardev:con \
-     -mon chardev=con,mode=readline -kernel ./nuttx -S -s
-
-3. Run gdb with TUI, connect to QEMU, load nuttx and continue (at shell terminal 2)
-
-   $ arm-none-eabi-gdb -tui --eval-command=&#39;target remote localhost:1234&#39; nuttx
-   (gdb) c
-   Continuing.
-   ^C
-   Program received signal SIGINT, Interrupt.
-   nx_start () at armv7-a/arm_head.S:209
-   (gdb)
-
+<p>This board configuration will use QEMU to emulate generic ARM v7-A series
+hardware platform and provides support for these devices:</p>
+<ul class="simple">
+<li><p>GICv2 interrupt controllers</p></li>
+<li><p>ARM Generic Timer</p></li>
+<li><p>PL011 UART controller</p></li>
+<li><p>PCI ECAM</p></li>
+<li><p>VirtIO Device</p></li>
+</ul>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
+<section id="nsh-single-core">
+<h3>NSH (Single Core)<a class="headerlink" href="#nsh-single-core" title="Permalink to this heading"></a></h3>
+<p>Configuring NuttX and compile:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l qemu-armv7a:nsh
+$ make
 </pre></div>
 </div>
+<p>Running with qemu:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic \
+-machine virt,virtualization=off,gic-version=2 \
+-net none -chardev stdio,id=con,mux=on -serial chardev:con \
+-mon chardev=con,mode=readline -kernel ./nuttx
+</pre></div>
+</div>
+</section>
+<section id="knsh-single-core">
+<h3>KNSH (Single Core)<a class="headerlink" href="#knsh-single-core" title="Permalink to this heading"></a></h3>
+<p>This is a configuration of testing the BUILD_KERNEL configuration:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd nuttx
+$ ./tools/configure.sh qemu-armv7a:knsh
+$ make V=1 -j7
+$ make export V=1
+$ cd ../apps
+$ ./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
+$ make import V=1
+$ cd ../nuttx
+$ qemu-system-arm -semihosting -M virt -m 1024 -nographic -kernel ./nuttx
+
+NuttShell (NSH) NuttX-12.3.0-RC0
+nsh&gt; uname -a
+NuttX 12.3.0-RC0 28dee592a3-dirty Oct 12 2023 03:03:07 arm qemu-armv7a
+nsh&gt; ps
+  PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK           STACK   USED  FILLED COMMAND
+    0     0   0 FIFO     Kthread N-- Ready              0000000000000000 004088 000896  21.9%  Idle_Task
+    1     1 100 RR       Kthread --- Waiting  Semaphore 0000000000000000 004040 000304   7.5%  lpwork 0x40119398 0x401193ac
+    2     2 100 RR       Task    --- Running            0000000000000000 003032 001032  34.0%  /system/bin/init
+nsh&gt; free
+                   total       used       free    largest  nused  nfree
+        Kmem:  133058556      16644  133041912  133041152     41      3
+        Page:  134217728    1105920  133111808  133111808
+nsh&gt; /system/bin/hello
+Hello, World!!
+nsh&gt;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="debugging-with-qemu">
+<h2>Debugging with QEMU<a class="headerlink" href="#debugging-with-qemu" title="Permalink to this heading"></a></h2>
+<p>The nuttx ELF image can be debugged with QEMU.</p>
+<ol class="arabic">
+<li><p>To debug the nuttx (ELF) with symbols, make sure the following change have
+applied to defconfig:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>+CONFIG_DEBUG_SYMBOLS=y
+</pre></div>
+</div>
+</li>
+<li><p>Run QEMU (Single Core) at shell terminal 1:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic \
+-machine virt,virtualization=off,gic-version=2 \
+-net none -chardev stdio,id=con,mux=on -serial chardev:con \
+-mon chardev=con,mode=readline -kernel ./nuttx -S -s
+</pre></div>
+</div>
+</li>
+<li><p>Run gdb with TUI, connect to QEMU, load nuttx and continue (at shell terminal 2):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ arm-none-eabi-gdb -tui --eval-command=&#39;target remote localhost:1234&#39; nuttx
+(gdb) c
+Continuing.
+^C
+Program received signal SIGINT, Interrupt.
+nx_start () at armv7-a/arm_head.S:209
+(gdb)
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="pci-support">
+<h2>PCI support<a class="headerlink" href="#pci-support" title="Permalink to this heading"></a></h2>
+<p>To enable PCI support, set the following options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_DEVICE_TREE=y
+CONFIG_PCI=y
+CONFIG_PCI=y
+</pre></div>
+</div>
+<p>Then run qemu with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-machine virt,highmem=off,virtualization=off,gic-version=2
+</pre></div>
+</div>
+<p>The command that starts QEMU and enables the QEMU EDU device looks like this:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-arm -cpu cortex-a7 -nographic \
+-machine virt,highmem=off,virtualization=off,gic-version=2 \
+-chardev stdio,id=con,mux=on -serial chardev:con -mon chardev=con,mode=readline \
+-kernel nuttx -device edu
+</pre></div>
+</div>
+</section>
 </section>
 
 
