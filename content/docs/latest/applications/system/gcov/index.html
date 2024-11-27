@@ -158,7 +158,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../fastboot/index.html"><code class="docutils literal notranslate"><span class="pre">fastboot</span></code> fastbootd</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fdt/index.html"><code class="docutils literal notranslate"><span class="pre">fdt</span></code> fdt utility tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flash_eraseall/index.html"><code class="docutils literal notranslate"><span class="pre">flash_eraseall</span></code> FLASH Erase-all Command</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">gcov</span></code> gcov tool</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">gcov</span></code> gcov tool</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#support">Support</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#app-usage">App-Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples-of-applicable-platforms">Examples of applicable platforms</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../gdbstub/index.html"><code class="docutils literal notranslate"><span class="pre">gdbstub</span></code> GDBSTUB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gprof/index.html"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> GNU Profile tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hex2bin/index.html"><code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> Intel HEX to binary conversion</a></li>
@@ -251,6 +259,228 @@
              
   <section id="gcov-gcov-tool">
 <h1><code class="docutils literal notranslate"><span class="pre">gcov</span></code> gcov tool<a class="headerlink" href="#gcov-gcov-tool" title="Permalink to this heading"></a></h1>
+<p>gcov is a tool for testing code coverage.
+After the program is run, you can view the line coverage, function coverage,
+and branch coverage of each file.</p>
+<section id="support">
+<h2>Support<a class="headerlink" href="#support" title="Permalink to this heading"></a></h2>
+<p>The current system supports four code coverage detection implementations:</p>
+<ol class="arabic simple">
+<li><p>GCC native implementation</p></li>
+<li><p>CLANG native implementation</p></li>
+<li><p>GCC coverage nuttx mini version</p></li>
+<li><p>CLANG coverage nuttx mini version</p></li>
+</ol>
+<p>The following table shows the specific differences between the four implementations
+ends 24.11.26：</p>
+<p>Support            GCC-native  CLANG-native     GCC-nuttx-mini      CLANG-nuttx-mini
+Compiler version:     ALL          ALL        GCC 13.2 and below   CLANG 17.0 and below</p>
+<p>Program coverage statistics support:</p>
+<p>Main Program           √            √                 √                     √
+Interrupt Program      ×            √                 √                     √</p>
+<p>Architecture Support:</p>
+<blockquote>
+<div><p>arm                √            √                 √                     √
+arm64              √            √                 √
+riscv              √            √
+X86_X64            √            √
+xtensa             √            √
+sim                √            √</p>
+</div></blockquote>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h3>
+</section>
+</section>
+<section id="app-usage">
+<h2>App-Usage<a class="headerlink" href="#app-usage" title="Permalink to this heading"></a></h2>
+<p>Usage:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>gcov [-d path] [-t strip] [-r] [-h]
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><p>-d dump the coverage, path is the path to the coverage file, the default output is to stdout
+-t strip the path prefix number
+-r reset the coverage
+-h show this text and exits.</p>
+</div></blockquote>
+</section>
+<section id="examples-of-applicable-platforms">
+<h2>Examples of applicable platforms<a class="headerlink" href="#examples-of-applicable-platforms" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>SIM platform usage</p></li>
+</ol>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Please enable the following config</p></li>
+</ol>
+<blockquote>
+<div><p># Support instrumentation of all codes in sim
+1. CONFIG_COVERAGE_TOOLCHAIN=y</p>
+<p># Enable instrumentation
+2. CONFIG_COVERAGE_ALL=y</p>
+<p># Enable gcov app
+3. CONFIG_SYSTEM_GCOV=y</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Compile and run
+<code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">$</span> <span class="pre">After</span> <span class="pre">the</span> <span class="pre">code</span> <span class="pre">is</span> <span class="pre">compiled,</span> <span class="pre">a</span> <span class="pre">*.gcno</span> <span class="pre">file</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">name</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">generated</span> <span class="pre">next</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">*.o</span> <span class="pre">file.</span>
+<span class="pre">$</span> <span class="pre">After</span> <span class="pre">the</span> <span class="pre">compilation</span> <span class="pre">is</span> <span class="pre">completed,</span> <span class="pre">run</span> <span class="pre">the</span> <span class="pre">code</span> <span class="pre">to</span> <span class="pre">be</span> <span class="pre">tested,</span> <span class="pre">and</span> <span class="pre">exit</span> <span class="pre">the</span> <span class="pre">sim</span> <span class="pre">after</span> <span class="pre">the</span> <span class="pre">execution</span> <span class="pre">is</span> <span class="pre">completed</span>
+<span class="pre">`</span></code></p></li>
+<li><p>Run the gcov app
+<code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">$</span> <span class="pre">gcov</span> <span class="pre">-d</span> <span class="pre">path_to_gcno_file</span>
+<span class="pre">`</span></code></p></li>
+<li><p>Check whether the generation is successful
+<code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">Execute</span> <span class="pre">the</span> <span class="pre">following</span> <span class="pre">command</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">project</span> <span class="pre">root</span> <span class="pre">directory</span> <span class="pre">to</span> <span class="pre">check</span> <span class="pre">whether</span> <span class="pre">there</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">gcda</span> <span class="pre">file</span> <span class="pre">generated</span> <span class="pre">(code</span> <span class="pre">coverage</span> <span class="pre">data)</span>
+<span class="pre">find</span> <span class="pre">./</span> <span class="pre">-name</span> <span class="pre">&quot;*.gcno&quot;</span>
+<span class="pre">find</span> <span class="pre">./</span> <span class="pre">-name</span> <span class="pre">&quot;*.gcda&quot;</span>
+<span class="pre">`</span></code></p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Applicable to device</p></li>
+</ol>
+<blockquote>
+<div><p>Due to differences in implementation methods, the device side is divided into GCC and CLANG</p>
+<ol class="arabic simple">
+<li><p>GCC</p></li>
+</ol>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Please enable the following config</p></li>
+</ol>
+<blockquote>
+<div><p># Recommended to use nuttx mini version
+CONFIG_COVERAGE_MINI=y</p>
+<p># Enable gcov app
+CONFIG_SYSTEM_GCOV=y</p>
+<p># Please add different compilation options in makefile according to the compiler
+CFLAGS += -fprofile-arcs -ftest-coverage -fno-inline</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Run the gcov app
+<code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">$</span> <span class="pre">gcov</span> <span class="pre">-d</span> <span class="pre">path_to_gcno_file</span>
+<span class="pre">`</span></code></p></li>
+<li><p>Export data</p></li>
+</ol>
+<blockquote>
+<div><p>After running the code on the device,
+execute the gcov -d /tmp/gcov command in the nuttx command line
+to save the generated data to the file system.
+You need to use your method to export the file to the host</p>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><p>Generate Report</p></li>
+</ol>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Install the tool</p></li>
+</ol>
+<blockquote>
+<div><p>sudo apt install lcov</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Generate report</p></li>
+</ol>
+<blockquote>
+<div><p>Run the following command to generate coverage report</p>
+<p># By default, it is generated in the root directory of the vela project. Add parameters to specify the report generation location
+# The -t parameter specifies the gcov version, which needs to match the gcc version</p>
+<p># sim
+./tools/gcov.sh -t gcov-13</p>
+<p># arm platform
+./tools/gcov.sh -t arm-none-eabi-gcov</p>
+</div></blockquote>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li><p>Impact and precautions
+<code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">1.</span> <span class="pre">Before</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">.tools/gcov.sh</span> <span class="pre">tool,</span> <span class="pre">you</span> <span class="pre">need</span> <span class="pre">to</span> <span class="pre">ensure</span> <span class="pre">that</span> <span class="pre">*.gcno</span> <span class="pre">and</span> <span class="pre">*.gcda</span> <span class="pre">files</span> <span class="pre">exist</span>
+<span class="pre">2.</span> <span class="pre">If</span> <span class="pre">*.gcno</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">exist,</span> <span class="pre">recompile</span> <span class="pre">the</span> <span class="pre">code</span> <span class="pre">after</span> <span class="pre">distclean.</span>
+<span class="pre">3.</span> <span class="pre">If</span> <span class="pre">*.gcda</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">exist,</span> <span class="pre">please</span> <span class="pre">check</span> <span class="pre">and</span> <span class="pre">use</span> <span class="pre">poweroff</span> <span class="pre">to</span> <span class="pre">exit</span> <span class="pre">Vela</span> <span class="pre">normally</span>
+<span class="pre">`</span></code></p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>CLANG</p></li>
+</ol>
+<blockquote>
+<div><p># There is a ready-made defconfig in NXboards/arm/mps/mps3-an547/configs/gcov
+# which can be used for reference</p>
+<ol class="arabic simple">
+<li><p>Please enable the following config</p></li>
+</ol>
+<blockquote>
+<div><p># Recommended to use nuttx mini version
+CONFIG_COVERAGE_MINI=y</p>
+<p># Enable gcov app
+CONFIG_SYSTEM_GCOV=y</p>
+<p># Please add different compilation options in makefile according to the compiler
+CFLAGS += -fprofile-instr-generate -fcoverage-mapping</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Modify the linker script</p></li>
+</ol>
+<blockquote>
+<div><p>Please find the corresponding storage location in the link
+script for the following data：</p>
+<p>For detailed examples, please refer to boards/arm/mps/mps3-an547/scripts/flash.ld</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>__llvm_prf_names : {
+    __start__llvm_prf_names = .;
+    KEEP (*(__llvm_prf_names))
+    __end__llvm_prf_names = .;
+}
+
+__llvm_prf_data : {
+    __start__llvm_prf_data = .;
+    KEEP (*(__llvm_prf_data))
+    __end__llvm_prf_data = .;
+}
+
+__llvm_prf_vnds : {
+    __start__llvm_prf_vnds = .;
+    KEEP (*(__llvm_prf_vnds))
+    __end__llvm_prf_vnds = .;
+}
+
+__llvm_prf_cnts : {
+    __start__llvm_prf_cnts = .;
+    KEEP (*(__llvm_prf_cnts))
+    __end__llvm_prf_cnts = .;
+}
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Run the gcov app</p></li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">$</span> <span class="pre">gcov</span> <span class="pre">-d</span> <span class="pre">path_to_gcno_file</span>
+<span class="pre">`</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><p>Export data</p></li>
+<li><p>Generate Report</p></li>
+</ol>
+<blockquote>
+<div><p>Please execute the following command, where</p>
+<ol class="arabic simple">
+<li><p>xxxfile: the file for exporting data on the device</p></li>
+<li><p>xxxelf: the ELF file corresponding to the device</p></li>
+</ol>
+<p># Convert the exported coverage data file
+llvm-profdata merge -sparse xxxfile -o result.profdata</p>
+<p># Generate a visualization html file
+llvm-cov show -format=html xxxelf -instr-profile=result.profdata -output-dir=./coverage/html</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</section>
 </section>
 
 
