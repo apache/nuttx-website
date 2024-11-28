@@ -361,6 +361,31 @@ the default console on legacy UART0 port (base=0x3f8)</p>
 </pre></div>
 </div>
 </section>
+<section id="knsh-romfs">
+<h3>knsh_romfs<a class="headerlink" href="#knsh-romfs" title="Permalink to this heading"></a></h3>
+<p>This is similar to the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration except that NuttX
+is built as a kernel-mode, monolithic module, and the user applications
+are built separately. It uses ROMFS to load the user-space applications.
+This is intended to run on QEMU with COM serial port support.</p>
+<p>Steps to build kernel image with user-space apps in ROMFS:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./tools/configure.sh qemu-intel64/knsh_romfs
+make -j
+make export -j
+pushd ../apps
+./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
+make import -j
+./tools/mkromfsimg.sh
+mv boot_romfsimg.h ../nuttx/arch/x86_64/src/board/romfs_boot.c
+popd
+make -j
+</pre></div>
+</div>
+</section>
+<section id="knsh-romfs-pci">
+<h3>knsh_romfs_pci<a class="headerlink" href="#knsh-romfs-pci" title="Permalink to this heading"></a></h3>
+<p>This is similar to the <code class="docutils literal notranslate"><span class="pre">knsh_romfs</span></code> configuration except that it is intended
+to run on a bare metal Intel hardware with PCI serial port support.</p>
+</section>
 <section id="lvgl">
 <h3>lvgl<a class="headerlink" href="#lvgl" title="Permalink to this heading"></a></h3>
 <p>LVGL demo example that demonstrates x86_64 framebufer feature.</p>
