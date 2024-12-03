@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Disabling the Stack Dump During Debugging &mdash; NuttX latest documentation</title>
+  <title>ATM64 MTE extension &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -43,8 +43,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Including Files in board.h" href="include_files_board_h.html" />
-    <link rel="prev" title="ARMv7-M Run Time Stack Checking" href="armv7m_runtimestackcheck.html" /> 
+    <link rel="next" title="IPv6" href="ipv6.html" />
+    <link rel="prev" title="Logging to a RAM Buffer" href="logging_rambuffer.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -159,13 +159,19 @@
 <li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Disabling the Stack Dump During Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="disabling_stackdumpdebug.html">Disabling the Stack Dump During Debugging</a></li>
 <li class="toctree-l2"><a class="reference internal" href="include_files_board_h.html">Including Files in board.h</a></li>
 <li class="toctree-l2"><a class="reference internal" href="specialstuff_in_nuttxheaderfiles.html">Why can’t I put my special stuff in NuttX header files?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="kernel_threads_with_custom_stacks.html">Kernel Threads with Custom Stacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="versioning_and_task_names.html">Versioning and Task Names</a></li>
 <li class="toctree-l2"><a class="reference internal" href="logging_rambuffer.html">Logging to a RAM Buffer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mte.html">ATM64 MTE extension</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ATM64 MTE extension</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#principle">Principle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#architectural-details">Architectural Details</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="ipv6.html">IPv6</a></li>
 <li class="toctree-l2"><a class="reference internal" href="integrate_newlib.html">Integrating with Newlib</a></li>
 <li class="toctree-l2"><a class="reference internal" href="protected_build.html">NuttX Protected Build</a></li>
@@ -197,9 +203,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Disabling the Stack Dump During Debugging</li>
+      <li class="breadcrumb-item active">ATM64 MTE extension</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/disabling_stackdumpdebug.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/mte.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -207,27 +213,93 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="disabling-the-stack-dump-during-debugging">
-<h1>Disabling the Stack Dump During Debugging<a class="headerlink" href="#disabling-the-stack-dump-during-debugging" title="Permalink to this heading"></a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Migrated from:
-<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Disabling+the+Stack+Dump+During+Debugging">https://cwiki.apache.org/confluence/display/NUTTX/Disabling+the+Stack+Dump+During+Debugging</a></p>
-</div>
-<p>The stack dump routine can clutter the output of GDB during debugging.
-To disable it, set this configuration option in the defconfig file of
-the board configuration:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_ARCH_STACKDUMP</span><span class="o">=</span><span class="n">n</span>
+  <section id="atm64-mte-extension">
+<h1>ATM64 MTE extension<a class="headerlink" href="#atm64-mte-extension" title="Permalink to this heading"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<p>Arm v8.5 introduced the Arm Memory Tagging Extension (MTE),
+a hardware implementation of tagged memory.</p>
+<p>Basically, MTE tags every memory allocation/deallocation
+with additional metadata. It assigns a tag to a memory location,
+which can then be associated with a pointer that references
+that memory location. At runtime, the CPU checks that the pointer
+and metadata tags match with every load and store.</p>
+<p>NX OS currently supports deploying MTE on ARM64 QEMU,
+which is supported at the EL1 level of NX OS.</p>
+</section>
+<section id="principle">
+<h2>Principle<a class="headerlink" href="#principle" title="Permalink to this heading"></a></h2>
+<p>The Arm Memory Tagging Extension implements lock and key access to memory.
+Locks can be set on memory and keys provided during memory access. If the key matches
+the lock, the access is permitted. If it does not match, an error is reported.</p>
+<p>Memory locations are tagged by adding four bits of metadata to each 16 bytes
+of physical memory. This is the Tag Granule. Tagging memory implements the lock.
+Pointers, and therefore virtual addresses, are modified to contain the key.
+In order to implement the key bits without requiring larger pointers MTE uses the Top Byte
+Ignore (TBI) feature of the Armv8-A Architecture. When TBI is enabled, the top byte of
+a virtual address is ignored when using it as an input for address translation. This allows the
+top byte to store metadata. In MTE four bits of the top byte are used to provide the key</p>
+</section>
+<section id="architectural-details">
+<h2>Architectural Details<a class="headerlink" href="#architectural-details" title="Permalink to this heading"></a></h2>
+<p>MTE adds instructions to the Armv8-A Architecture that are outlined below and grouped
+into three different categories [6]:
+Instructions for tag manipulation applicable to stack and heap tagging.</p>
+<p>IRG
+In order for the statistical basis of MTE to be valid, a source of random tags is required.
+IRG is defined to provide this in hardware and insert such a tag into a register for use
+by other instructions.</p>
+<p>GMI
+This instruction is for manipulating the excluded set of tags for use with the IRG instruction.
+This is intended for cases where software uses specific tag values for special purposes
+while retaining random tag behavior for normal allocations.</p>
+<p>LDG, STG, and STZG
+These instructions allow getting or setting tags in memory. They are intended for changing
+tags in memory either without modifying the data or zeroing the data.</p>
+<p>ST2G and STZ2G
+These are denser alternatives to STG and STZG which operate on two granules of memory
+when allocation size allows them to be used.</p>
+<p>STGP
+This instruction stores both tag and data to memory.
+Instructions Intended for pointer arithmetic and stack tagging:</p>
+<p>ADDG and SUBG
+These are variants of the ADD and SUB instructions, intended for arithmetic on addresses.
+They allow both the tag and address to be separately modified by an immediate value.
+These instructions are intended for creating the addresses of objects on the stack.</p>
+<p>SUBP(S)
+This instruction provides a 56-bit subtract with optional flag setting which is required
+for pointer arithmetic that ignores the tag in the top byte.</p>
+<p>Instructions intended for system use:
+LDGM, STGM, and STZGM
+These are bulk tag manipulation instructions which are UNDEFINED at EL0. These are
+intended for system software to manipulate tags for the purposes of initialization and
+serialization. For example, they can be used to implement swapping of tagged memory
+to a medium which is not tag-aware. The zeroing form can be used for efficient
+initialization of memory.</p>
+<p>Currently NX OS supports the execution of the above instructions,
+such as irg, ldg, stg instructions.
+Their test programs are stored in “apps/system/mte” to test whether the current system supports</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>If you want to experience the MTE function of NX OS, you can refer to the following：
+To enable ARM64_MTE, configure the kernel with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_ARM64_MTE=y
 </pre></div>
 </div>
+<p>Of course you can also run it with the existing configuration：</p>
+<blockquote>
+<div><p>boards/arm64/qemu/qemu-armv8a/configs/mte</p>
+</div></blockquote>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="armv7m_runtimestackcheck.html" class="btn btn-neutral float-left" title="ARMv7-M Run Time Stack Checking" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="include_files_board_h.html" class="btn btn-neutral float-right" title="Including Files in board.h" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="logging_rambuffer.html" class="btn btn-neutral float-left" title="Logging to a RAM Buffer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ipv6.html" class="btn btn-neutral float-right" title="IPv6" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
