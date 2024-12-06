@@ -274,11 +274,11 @@
 <section id="timer-read">
 <h2>Timer Read<a class="headerlink" href="#timer-read" title="Permalink to this heading"></a></h2>
 <p>To read the current time, the kernel must execute an IO_READ(TIME_LOW), which returns an unsigned 32-bit value, followed by an IO_READ(TIME_HIGH), which returns a signed 32-bit value corresponding to the high half of the complete value.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>static int goldfish_timer_current(FAR struct oneshot_lowerhalf_s *lower_,
-                                  FAR struct timespec *ts)
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>static int goldfish_timer_current(struct oneshot_lowerhalf_s *lower_,
+                                  struct timespec *ts)
 {
-  FAR struct goldfish_timer_lowerhalf_s *lower =
-    (FAR struct goldfish_timer_lowerhalf_s *)lower_;
+  struct goldfish_timer_lowerhalf_s *lower =
+    (struct goldfish_timer_lowerhalf_s *)lower_;
   irqstate_t flags;
   uint32_t l32;
   uint32_t h32;
@@ -310,13 +310,13 @@ IO_WRITE(ALARM_LOW, &lt;low-value&gt;)    // Must be executed second.
 </pre></div>
 </div>
 <p>When the corresponding value is reached, the device will raise its IRQ. Note that if the alarm value is already older than the current time, the IRQ will be triggered immediately after the second IO_WRITE().</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>static int goldfish_timer_start(FAR struct oneshot_lowerhalf_s *lower_,
-                                FAR oneshot_callback_t callback,
-                                FAR void *arg,
-                                FAR const struct timespec *ts)
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>static int goldfish_timer_start(struct oneshot_lowerhalf_s *lower_,
+                                oneshot_callback_t callback,
+                                void *arg,
+                                const struct timespec *ts)
 {
-  FAR struct goldfish_timer_lowerhalf_s *lower =
-    (FAR struct goldfish_timer_lowerhalf_s *)lower_;
+  struct goldfish_timer_lowerhalf_s *lower =
+    (struct goldfish_timer_lowerhalf_s *)lower_;
   irqstate_t flags;
   uint64_t nsec;
   uint32_t l32;
@@ -351,10 +351,10 @@ IO_WRITE(ALARM_LOW, &lt;low-value&gt;)    // Must be executed second.
 IO_WRITE(CLEAR_ALARM, &lt;any&gt;) can be used to disarm the current alarm (if one exists).</p>
 <p>Note: Currently, the alarm is used only on ARM-based systems. On MIPS-based systems, only TIME_LOW / TIME_HIGH are used.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>static int goldfish_timer_interrupt(int irq,
-                                    FAR void *context,
-                                    FAR void *arg)
+                                    void *context,
+                                    void *arg)
 {
-  FAR struct goldfish_timer_lowerhalf_s *lower = arg;
+  struct goldfish_timer_lowerhalf_s *lower = arg;
   oneshot_callback_t callback = NULL;
   irqstate_t flags;
   void *cbarg;
