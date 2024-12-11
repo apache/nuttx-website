@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>High Performance: Zero Latency Interrupts, Maskable nested interrupts &mdash; NuttX latest documentation</title>
+  <title>High Performance: Zero Latency Interrupts, Maskable Nested Interrupts &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -138,7 +138,7 @@
 <li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
 <li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">High Performance: Zero Latency Interrupts, Maskable nested interrupts</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">High Performance: Zero Latency Interrupts, Maskable Nested Interrupts</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#generic-interrupt-handling">Generic Interrupt Handling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bypassing-the-generic-interrupt-handling">Bypassing the Generic Interrupt Handling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getting-back-into-the-game">Getting Back into the Game</a></li>
@@ -212,7 +212,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">High Performance: Zero Latency Interrupts, Maskable nested interrupts</li>
+      <li class="breadcrumb-item active">High Performance: Zero Latency Interrupts, Maskable Nested Interrupts</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/guides/zerolatencyinterrupts.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -223,7 +223,7 @@
            <div itemprop="articleBody">
              
   <section id="high-performance-zero-latency-interrupts-maskable-nested-interrupts">
-<h1>High Performance: Zero Latency Interrupts, Maskable nested interrupts<a class="headerlink" href="#high-performance-zero-latency-interrupts-maskable-nested-interrupts" title="Permalink to this heading"></a></h1>
+<h1>High Performance: Zero Latency Interrupts, Maskable Nested Interrupts<a class="headerlink" href="#high-performance-zero-latency-interrupts-maskable-nested-interrupts" title="Permalink to this heading"></a></h1>
 <section id="generic-interrupt-handling">
 <h2>Generic Interrupt Handling<a class="headerlink" href="#generic-interrupt-handling" title="Permalink to this heading"></a></h2>
 <p>NuttX includes a generic interrupt handling subsystem that makes it
@@ -328,9 +328,10 @@ Low  prio IRQ          0xB0
 PendSV                 0xE0
 </pre></div>
 </div>
-<p>As you can see, the priority levels of the zero-latency interrupts can
-beyond the critical section and SVC.
-But High prio IRQ can’t call OS API.</p>
+<p>Lower priority <em>numbers</em> mean a higher priority on this architecture.</p>
+<p>As you can see, the zero-latency interrupts have higher priority than
+the critical section and SVC, but with the tradeoff that High prio IRQ
+can’t call OS APIs in ISR.</p>
 </section>
 <section id="maskable-nested-interrupts">
 <h2>Maskable Nested Interrupts<a class="headerlink" href="#maskable-nested-interrupts" title="Permalink to this heading"></a></h2>
@@ -358,9 +359,10 @@ Low  prio IRQ           0xB0
 PendSV                  0xE0
 </pre></div>
 </div>
+<p>Lower priority <em>numbers</em> mean a higher priority on this architecture.</p>
 <p>As you can see, the priority levels of the maskable nested interrupts
-are between the critical section and the low-priority interrupts.
-And High prio IRQ can call OS API in ISR.</p>
+are between the critical section and the low-priority interrupts. In
+this case, High prio IRQ can call OS APIs in ISR.</p>
 </section>
 <section id="nested-interrupt-handling">
 <h2>Nested Interrupt Handling<a class="headerlink" href="#nested-interrupt-handling" title="Permalink to this heading"></a></h2>
@@ -401,8 +403,7 @@ the Cortex-M3/4 families.</p>
 <section id="configuration-options">
 <h3>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HIPRI_INTERRUPT</span></code></p>
-<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_USEBASEPRI</span></code> is selected, then interrupts will be
-disabled by setting the <em>BASEPRI</em> register to
+<p>The OS disables interrupts by setting the <em>BASEPRI</em> register to
 <code class="docutils literal notranslate"><span class="pre">NVIC_SYSH_DISABLE_PRIORITY</span></code> so that most interrupts will not have
 execution priority. <em>SVCall</em> must have execution priority in all
 cases.</p>
@@ -435,8 +436,8 @@ priority interrupt response time.</p>
 <p>Hence, if you need to disable the high priority interrupt, you will
 have to disable the interrupt either at the peripheral that generates
 the interrupt or at the interrupt controller, the <em>NVIC</em>. Disabling
-global interrupts via the <em>BASEPRI</em> register cannot affect high
-priority interrupts.</p>
+global interrupts via the <em>BASEPRI</em> register must not be allowed to
+affect high priority interrupts.</p>
 </section>
 <section id="dependencies">
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h3>
@@ -464,7 +465,7 @@ used to attach your C interrupt handler to the vector at run time.</p></li>
 <li><p>Alternatively, you could keep your vectors in FLASH but in order to
 this, you would have to develop your own custom vector table.</p></li>
 </ul>
-<p>Second, you need to set the priority of your interrupt to <em>NVIC</em> to
+<p>Second, you need to set the priority of your interrupt in <em>NVIC</em> to
 <code class="docutils literal notranslate"><span class="pre">NVIC_SYSH_HIGH_PRIORITY</span></code> using the standard interface:
 <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">up_prioritize_irq(int</span> <span class="pre">irq,</span> <span class="pre">int</span> <span class="pre">priority);</span></code></p>
 </section>

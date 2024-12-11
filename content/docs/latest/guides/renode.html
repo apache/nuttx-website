@@ -138,7 +138,7 @@
 <li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
 <li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
 <li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable nested interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable Nested Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="kasan.html">The Kernel Address Sanitizer (KASAN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
@@ -173,7 +173,6 @@
 <li class="toctree-l2"><a class="reference internal" href="port_drivers_to_stm32f7.html">Porting Drivers to the STM32 F7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="semihosting.html">Semihosting</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Run NuttX on Renode</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#arm-v7m">ARM-v7m</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stm32f4discovery">stm32f4discovery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#nucleo-l073rz">nucleo-l073rz</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#nrf52840-dk">nrf52840-dk</a></li>
@@ -220,18 +219,8 @@
 <p>Renode (<a class="reference external" href="https://renode.io/">https://renode.io/</a>) is and open source virutal development
 framework dedicated for complex embedded systems.</p>
 <p>This page contains notes on running some of NuttX boards on Renode.</p>
-<section id="arm-v7m">
-<h2>ARM-v7m<a class="headerlink" href="#arm-v7m" title="Permalink to this heading"></a></h2>
-<p>Renode doesn’t correctly handle <code class="docutils literal notranslate"><span class="pre">SVC</span></code> instruction escalation to HardFault
-when <code class="docutils literal notranslate"><span class="pre">PRIMASK=1</span></code> which crashs NuttX in the first <code class="docutils literal notranslate"><span class="pre">up_exit()</span></code> call.
-We can work around this problem by enabling BASEPRI:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_ARMV7M_USEBASEPRI=y
-</pre></div>
-</div>
-</section>
 <section id="stm32f4discovery">
 <h2>stm32f4discovery<a class="headerlink" href="#stm32f4discovery" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_USEBASEPRI=y</span></code> must be set.</p>
 <p>Renode doesn’t support CCM memory, so we have to disable it
 with <code class="docutils literal notranslate"><span class="pre">CONFIG_MM_REGIONS=1</span></code>.</p>
 <p>Renode script:</p>
@@ -262,7 +251,6 @@ runMacro $reset
 </section>
 <section id="nrf52840-dk">
 <h2>nrf52840-dk<a class="headerlink" href="#nrf52840-dk" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_USEBASEPRI=y</span></code> must be set.</p>
 <p>At default Renode uses UART with EasyDMA enabled (UARTE) which is not supported
 by Nuttx yet. We can get around this by creating our own machine description
 based on Renode default implementation:</p>
@@ -303,7 +291,7 @@ implementation in Renode,</p></li>
 </section>
 <section id="stm32f746g-disco">
 <h2>stm32f746g-disco<a class="headerlink" href="#stm32f746g-disco" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_USEBASEPRI=y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_BASEPRI_WAR=y</span></code> must be set.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_BASEPRI_WAR=y</span></code> must be set.</p>
 <p>Renode script:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using sysbus
 $name?=&quot;STM32F746&quot;
@@ -331,7 +319,6 @@ runMacro $reset
 </section>
 <section id="nucleo-h743zi">
 <h2>nucleo-h743zi<a class="headerlink" href="#nucleo-h743zi" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_USEBASEPRI=y</span></code> must be set.</p>
 <p>Renode doesn’t support <code class="docutils literal notranslate"><span class="pre">PWR_CSR1_ACTVOSRDY</span></code> bit so we have to disable
 it with <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H7_PWR_IGNORE_ACTVOSRDY=y</span></code>.</p>
 <p>Renode script:</p>
