@@ -256,7 +256,8 @@
   <section id="imx95lpd5evk-19">
 <h1>IMX95LPD5EVK-19<a class="headerlink" href="#imx95lpd5evk-19" title="Permalink to this heading"></a></h1>
 <p>The IMX95LPD5EVK-19 board is a platform designed to show the most commonly
-used features of the i.MX 95 automotive applications processor.</p>
+used features of the
+<a class="reference external" href="https://www.nxp.com/products/iMX95">i.MX 95 automotive applications processor</a> .</p>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
 <ul class="simple">
@@ -325,16 +326,60 @@ Arm Cortex-M7 core of the i.MX 95 processor (default option).</p>
 processor. The FT4234H JTAG provides the remote debug option for the i.MX95
 processor.</p>
 </section>
+<section id="firmware-location">
+<h2>Firmware location<a class="headerlink" href="#firmware-location" title="Permalink to this heading"></a></h2>
+<section id="instruction-tightly-coupled-memory-itcm">
+<h3>Instruction Tightly Coupled Memory (ITCM)<a class="headerlink" href="#instruction-tightly-coupled-memory-itcm" title="Permalink to this heading"></a></h3>
+<p>The purpose of the Tightly-Coupled Memory (TCM) is to provide low-latency
+memory that the processor can use without the unpredictability that is a
+feature of caches. By default the firmware will be located in this area
+(256K).</p>
+</section>
+<section id="ddr">
+<h3>DDR<a class="headerlink" href="#ddr" title="Permalink to this heading"></a></h3>
+<p>DDR memory can be used in case the code memory footprint becomes bigger than
+the ITCM size. Using this configuration implies that other cores should be
+aware of this.
+For the default sd-card image from the EVK, these adaptations are needed on
+the software running on the M33 and A55 cores.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://github.com/nxp-imx/imx-sm">System Manager</a> (M33) should give
+the M7 access to the DDR region</p></li>
+<li><p><a class="reference external" href="https://github.com/nxp-imx/linux-imx">linux-imx</a> (A55) should reserve
+the DDR region by specifying it in the device tree so linux won’t make
+use of it</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>All the configurations can be used in combination with the default sd-card
+image that is shipped with the EVK.</p>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
 <p>Configures the NuttShell (nsh) located at examples/nsh.  This NSH
 configuration is focused on low level, command-line driver testing. Built-in
 applications are supported, but none are enabled. This configuration does not
 support a network.</p>
-<p>This configuration can be used in combination with the default sd-card image
-that is shipped with the EVK.</p>
+</section>
+<section id="can">
+<h3>can<a class="headerlink" href="#can" title="Permalink to this heading"></a></h3>
+<p>Configures the NuttShell (nsh) and also adds CAN support. CAN1 is enabled and
+can be accessed at J17 on the EVK. Make sure that SW9[3] (PDM_CAN_SEL) is set
+to ON. The configuration includes CAN utilities as candump and cansend.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference external" href="https://github.com/nxp-imx/imx-sm">System Manager</a> (M33) should give
+the M7 access rights to the PIN_PDM_CLK (CAN1_TX) and
+PIN_PDM_BIT_STREAM0 (CAN1_RX) pins in the mx95evk.cfg.</p>
+<p>Alternatively these can be set manually in the system manager’s console:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">&gt;$ mm 0x443c01e0 0x6</span>
+<span class="go">&gt;$ mm 0x443c01e4 0x6</span>
+</pre></div>
+</div>
+</div>
 </section>
 <section id="rpmsg">
 <h3>rpmsg<a class="headerlink" href="#rpmsg" title="Permalink to this heading"></a></h3>
@@ -344,21 +389,11 @@ communication. A virtual UART (CONFIG_RPMSG_UART) is made available on which
 an OS running on the A55 cores can connect. There is also an option to use
 the filesystem client feature in which a remote directory can be mounted to
 a local directory (CONFIG_FS_RPMSGFS).</p>
-<p>The rpmsg configuration executes the code from DDR since its code memory
-footprint is bigger than the ITCM size. In the case of using the default
-sd-card image from the EVK, adaptations are needed on the software running on
-the M33 and A55 cores.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference external" href="https://github.com/nxp-imx/imx-sm">System Manager</a> (M33) should give
-the M7 access to the DDR region</p></li>
-<li><p><a class="reference external" href="https://github.com/nxp-imx/linux-imx">linux-imx</a> (A55) should reserve
-the DDR region by specifying it in the device tree so linux won’t make
-use of it</p></li>
-<li><p><a class="reference external" href="https://github.com/nxp-imx/linux-imx">linux-imx</a> (A55) needs the
-NuttX compatible rpmsg_tty and rpmsg_fs drivers. See <a class="reference external" href="https://www.mail-archive.com/dev&#64;nuttx.apache.org/msg12112.html">dev mailing list</a></p></li>
-</ul>
-</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference external" href="https://github.com/nxp-imx/linux-imx">linux-imx</a> (A55) needs the
+NuttX compatible rpmsg_tty and rpmsg_fs drivers. See <a class="reference external" href="https://www.mail-archive.com/dev&#64;nuttx.apache.org/msg12112.html">dev mailing list</a></p>
+</div>
 </section>
 </section>
 </section>
