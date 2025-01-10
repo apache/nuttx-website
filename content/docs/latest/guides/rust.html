@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Changing the System Clock Configuration &mdash; NuttX latest documentation</title>
+  <title>Rust in NuttX &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -43,8 +43,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Using Kernel Threads" href="usingkernelthreads.html" />
-    <link rel="prev" title="Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)" href="debuggingflash_nuttxonarm.html" /> 
+    <link rel="next" title="Glossary" href="../glossary.html" />
+    <link rel="prev" title="Removing Device Drivers with NSH" href="remove_device_drivers_nsh.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -158,23 +158,7 @@
 <li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
 <li class="toctree-l2"><a class="reference internal" href="debuggingflash_nuttxonarm.html">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Changing the System Clock Configuration</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#question">Question</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#answer">Answer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#custom-clock-configuration">Custom Clock Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#peripheral-clocks">Peripheral Clocks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#reinitializing-peripherals">Reinitializing Peripherals</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#variable-peripheral-clocking">Variable Peripheral Clocking</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#systick-timer">Systick Timer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#up-mdelay">up_mdelay</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#power-management">Power Management</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../components/drivers/special/power/pm/index.html">Power Management</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="disabling_stackdumpdebug.html">Disabling the Stack Dump During Debugging</a></li>
@@ -207,7 +191,13 @@
 <li class="toctree-l2"><a class="reference internal" href="ram_rom_disks.html">RAM Disks and ROM Disks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reading_can_msgs.html">Reading CAN Messages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="remove_device_drivers_nsh.html">Removing Device Drivers with NSH</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rust.html">Rust in NuttX</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Rust in NuttX</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supported-platforms">Supported Platforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -229,9 +219,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Changing the System Clock Configuration</li>
+      <li class="breadcrumb-item active">Rust in NuttX</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guides/changing_systemclockconfig.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guides/rust.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -239,157 +229,95 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="changing-the-system-clock-configuration">
-<h1>Changing the System Clock Configuration<a class="headerlink" href="#changing-the-system-clock-configuration" title="Permalink to this heading"></a></h1>
+  <section id="rust-in-nuttx">
+<h1>Rust in NuttX<a class="headerlink" href="#rust-in-nuttx" title="Permalink to this heading"></a></h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Migrated from:
-<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Changing+the+System+Clock+Configuration">https://cwiki.apache.org/confluence/display/NUTTX/Changing+the+System+Clock+Configuration</a></p>
+<p>This guide is under development. Rust support in NuttX is experimental.</p>
 </div>
-<section id="question">
-<h2>Question<a class="headerlink" href="#question" title="Permalink to this heading"></a></h2>
-<p><cite>Is an STM32 configuration booting with the internal 16 MHz clock, then
-switching later (on command) to an external 25 MHz xtal doable? I don’t think
-so, but would you mind confirming that?</cite></p>
-</section>
-<section id="answer">
-<h2>Answer<a class="headerlink" href="#answer" title="Permalink to this heading"></a></h2>
-<p>Of course, that is what always happens: The STM32 boots using an internal clock
-and switches to the external crystal source after booting. But I assume that
-you mean MUCH later on, after initialization.</p>
-<p>Yes that can be done too. There are only a few issues and things to be aware of:</p>
-<section id="custom-clock-configuration">
-<h3>Custom Clock Configuration<a class="headerlink" href="#custom-clock-configuration" title="Permalink to this heading"></a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">configs/vsn/</span></code> configuration does something like you say. It skips the
-initial clock configuration by defining
-<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_STM32_CUSTOM_CLOCKCONFIG=y</span></code>. Then the normal clock
-configuration logic in <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/stm32_rcc.c</span></code> is not executed.
-Instead, the “custom” clock initialization at <code class="docutils literal notranslate"><span class="pre">confgs/vsn/src/sysclock.c</span></code>
-is called:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">stm32_clockconfig</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="cm">/* Make sure that we are starting in the reset state */</span>
-
-<span class="w">  </span><span class="n">rcc_reset</span><span class="p">();</span>
-
-<span class="cp">#if defined(CONFIG_ARCH_BOARD_STM32_CUSTOM_CLOCKCONFIG)</span>
-
-<span class="w">  </span><span class="cm">/* Invoke Board Custom Clock Configuration */</span>
-
-<span class="w">  </span><span class="n">stm32_board_clockconfig</span><span class="p">();</span>
-
-<span class="cp">#else</span>
-
-<span class="w">  </span><span class="cm">/* Invoke standard, fixed clock configuration based on definitions in board.h */</span>
-
-<span class="w">  </span><span class="n">stm32_stdclockconfig</span><span class="p">();</span>
-
-<span class="cp">#endif</span>
-
-<span class="w">  </span><span class="cm">/* Enable peripheral clocking */</span>
-
-<span class="w">  </span><span class="n">rcc_enableperipherals</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Doing things that way, you can have complete control over when the crystal
-clock source is used. The initial “custom” clock configuration can use an
-internal source, then other custom clock configuration logic can change the
-clock source later.</p>
-<p>NOTE: Since this original writing, the VSN configuration has been retired and
-is no long in at config/vsn. The retired code can still be found in the
-<a class="reference external" href="https://bitbucket.org/patacongo/obsoleted/src/master/nuttx/configs/vsn">Obsoleted repository</a>.</p>
-</section>
-<section id="peripheral-clocks">
-<h3>Peripheral Clocks<a class="headerlink" href="#peripheral-clocks" title="Permalink to this heading"></a></h3>
-<p>The peripheral clock used by many devices to set up things like the SPI
-frequency and UART bard rates. Currently, those peripheral clock frequencies
-are hardcoded in the board.h header file. So you have two options:</p>
-<ol class="arabic simple">
-<li><p><strong>Fixed Peripheral Clocking</strong>. Ideally, you would like to keep the peripheral
-clock frequencies the same in either case. Then life is simple. You could
-probably use an internal RC clock source as input to a PLL and set up
-dividers so that you get the same peripheral clocks. Then, I think, from
-the standpoint of the peripherals, nothing happened.</p></li>
-<li><p><strong>Variable Peripheral Clocking</strong>. You can make the peripheral clocking
-variable. I had to do this for the SAMA5Dx family. Look at
-<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/sama5d4-ek/include/board_sdram.h</span></code> for example. Notice
-that the frequencies are not constants, but function calls:</p></li>
-</ol>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define BOARD_MAINCK_FREQUENCY     BOARD_MAINOSC_FREQUENCY</span>
-<span class="cp">#define BOARD_PLLA_FREQUENCY       (sam_pllack_frequency(BOARD_MAINOSC_FREQUENCY))</span>
-<span class="cp">#define BOARD_PLLADIV2_FREQUENCY   (sam_plladiv2_frequency(BOARD_MAINOSC_FREQUENCY))</span>
-<span class="cp">#define BOARD_PCK_FREQUENCY        (sam_pck_frequency(BOARD_MAINOSC_FREQUENCY))</span>
-<span class="cp">#define BOARD_MCK_FREQUENCY        (sam_mck_frequency(BOARD_MAINOSC_FREQUENCY))</span>
-</pre></div>
-</div>
-<p>Given that I know that XTAL oscillator frequency I can derive the frequency of
-other clocks. This turns out to be more work than you would think, however,
-because there are probably C pre-processor tests that will now fail. Like:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if BOARD_MCK_FREQUENCY &gt; 16000000</span>
-<span class="p">...</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="n">something</span><span class="w"> </span><span class="p">...</span>
-<span class="cp">#endif</span>
-</pre></div>
-</div>
-<p>Such logic would have to be converted from a compile time decision to a
-run-time decision, perhaps like this:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BOARD_MCK_FREQUENCY</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">16000000</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="p">...</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="n">something</span><span class="w"> </span><span class="p">...</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>The SAMA5D4-EK case was intended for the case where the software is running out
-of SDRAM and the clocking cannot be reconfigured. Rather, it must derive the
-clocking as it was left by the bootloader. But you could do something like what
-was done for the SAMA5D4-EK when you change the frequency too. You could also
-make the peripheral clocks variable.</p>
-</section>
-<section id="reinitializing-peripherals">
-<h3>Reinitializing Peripherals<a class="headerlink" href="#reinitializing-peripherals" title="Permalink to this heading"></a></h3>
-</section>
-<section id="variable-peripheral-clocking">
-<h3>Variable Peripheral Clocking<a class="headerlink" href="#variable-peripheral-clocking" title="Permalink to this heading"></a></h3>
-<p>If you did something like what was done for the SAMA5D4-EK when you change the
-frequency, then the peripheral clocks would be variable. The main problem would
-then be that you would have to re-initialize the peripherals when the
-peripheral clocking changes. If, for example, the UART was initialized at
-the initial peripheral clock, then you would have to recalculate the BAUD
-divisor if the peripheral clock changes.</p>
-<p>But this is not really be a big issue. You can force the UARTs to recalculate
-the BAUD divisor with TERMIOS ioctl calls. You could use the setfrequency()
-methods to recalculate I2C and SPI BAUD divisors. But there are also memory
-card frequencies and more.</p>
-</section>
-<section id="systick-timer">
-<h3>Systick Timer<a class="headerlink" href="#systick-timer" title="Permalink to this heading"></a></h3>
-<p>If the CPU frequency changes, you would have to change the Systick timer
-configuration: It is always driven by the CPU clock</p>
-</section>
-<section id="up-mdelay">
-<h3>up_mdelay<a class="headerlink" href="#up-mdelay" title="Permalink to this heading"></a></h3>
-<p>up_mdelay() provides a low level timing loop and must be re-calibrated for
-anything that causes change in the rate of execution of that timing loop.
-This calibration is not critical and fairly large errors in the calibration
-are tolerable. Hopefully, you could keep the execution rate close enough that
-up_mdelay() would not be grossly in error.</p>
-</section>
-<section id="power-management">
-<h3>Power Management<a class="headerlink" href="#power-management" title="Permalink to this heading"></a></h3>
-<p>This is also the same kind of thing that you would have to do if you wanted to
-switch clocking for power management reasons. NuttX does have a power
-management system and perhaps making use of the power management system
-to manage system clocking changes might be possible. For example, when the
-clocking changes, you could force some power management state change. That
-state change would notify all drivers and, in response, the drivers could
-recalculate their frequency related settings.</p>
-<p>Here is some Power Management documentation:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../components/drivers/special/power/pm/index.html">Power Management</a></li>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<p>NuttX is exploring Rust integration to provide memory safety guarantees and modern
+language features while maintaining its small footprint and real-time capabilities.</p>
+<p>This guide covers:</p>
+<ul class="simple">
+<li><p>Setting up Rust toolchain for NuttX development</p></li>
+<li><p>Building Rust components with NuttX</p></li>
+<li><p>Interoperability between Rust and C</p></li>
+<li><p>Testing Rust components</p></li>
 </ul>
-</div>
 </section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Rust toolchain installed (rustup recommended)</p></li>
+<li><p>NuttX build environment configured</p></li>
+<li><p>Basic knowledge of Rust and NuttX development</p></li>
+</ul>
+</section>
+<section id="supported-platforms">
+<h2>Supported Platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>AArch64 (WIP)</p></li>
+<li><p>ARMv7-A (WIP)</p></li>
+<li><p>ARMv6-M</p></li>
+<li><p>ARMv7-M</p></li>
+<li><p>ARMv8-M</p></li>
+<li><p>RISCV32</p></li>
+<li><p>RISCV64</p></li>
+</ul>
+</section>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Install Rust toolchain and switch to nightly</p></li>
+</ol>
+<p>Please refer to the official Rust installation guide for more details: <a class="reference external" href="https://www.rust-lang.org/tools/install">https://www.rust-lang.org/tools/install</a></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rustup<span class="w"> </span>toolchain<span class="w"> </span>install<span class="w"> </span>nightly
+rustup<span class="w"> </span>default<span class="w"> </span>nightly
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Prepare NuttX build environment</p></li>
+</ol>
+<p>Please ensure that you have a working NuttX build environment, and with the following PR merged or cherry-picked:
+- <a class="reference external" href="https://github.com/apache/nuttx-apps/pull/2487">https://github.com/apache/nuttx-apps/pull/2487</a>
+- <a class="reference external" href="https://github.com/apache/nuttx/pull/15469">https://github.com/apache/nuttx/pull/15469</a></p>
+<ol class="arabic simple" start="3">
+<li><p>Enable essential kernel configurations</p></li>
+</ol>
+<p>Pleae enable the following configurations in your NuttX configuration:
+- CONFIG_SYSTEM_TIME64
+- CONFIG_FS_LARGEFILE
+- CONFIG_TLS_NELEM = 16
+- CONFIG_DEV_URANDOM</p>
+<p>The <cite>rv-virt:nsh</cite> board using make as the build system is recommended for testing Rust applications as it has been verified to work with this configuration.</p>
+<p>For <cite>rv-virt:nsh</cite> board, you should disable <cite>CONFIG_ARCH_FPU</cite> configuration since RISCV32 with FPU is not supported yet.</p>
+<ol class="arabic simple" start="4">
+<li><p>Enable sample application</p></li>
+</ol>
+<p>Please enable the sample application in your NuttX configuration:
+- CONFIG_EXAMPLES_HELLO_RUST_CARGO</p>
+<ol class="arabic simple" start="5">
+<li><p>Build and run the sample application</p></li>
+</ol>
+<p>Build the NuttX image and run it on your target platform:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qemu-system-riscv32<span class="w"> </span>-semihosting<span class="w"> </span>-M<span class="w"> </span>virt,aclint<span class="o">=</span>on<span class="w"> </span>-cpu<span class="w"> </span>rv32<span class="w"> </span>-smp<span class="w"> </span><span class="m">8</span><span class="w"> </span>-bios<span class="w"> </span>nuttx/nuttx<span class="w"> </span>-nographic
+
+NuttShell<span class="w"> </span><span class="o">(</span>NSH<span class="o">)</span><span class="w"> </span>NuttX-12.8.0
+nsh&gt;<span class="w"> </span>hello_rust_cargo
+<span class="o">{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;John&quot;</span>,<span class="s2">&quot;age&quot;</span>:30<span class="o">}</span>
+<span class="o">{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;Jane&quot;</span>,<span class="s2">&quot;age&quot;</span>:25<span class="o">}</span>
+Deserialized:<span class="w"> </span>Alice<span class="w"> </span>is<span class="w"> </span><span class="m">28</span><span class="w"> </span>years<span class="w"> </span>old
+Pretty<span class="w"> </span>JSON:
+<span class="o">{</span>
+<span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;Alice&quot;</span>,
+<span class="s2">&quot;age&quot;</span>:<span class="w"> </span><span class="m">28</span>
+<span class="o">}</span>
+Hello<span class="w"> </span>world<span class="w"> </span>from<span class="w"> </span>tokio!
+</pre></div>
+</div>
+<p>Congratulations! You have successfully built and run a Rust application on NuttX.</p>
 </section>
 </section>
 
@@ -397,8 +325,8 @@ recalculate their frequency related settings.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="debuggingflash_nuttxonarm.html" class="btn btn-neutral float-left" title="Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="usingkernelthreads.html" class="btn btn-neutral float-right" title="Using Kernel Threads" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="remove_device_drivers_nsh.html" class="btn btn-neutral float-left" title="Removing Device Drivers with NSH" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
