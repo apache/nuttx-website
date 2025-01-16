@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SHT4X &mdash; NuttX latest documentation</title>
+  <title>Sensor Legacy Drivers &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
@@ -43,8 +43,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="Segger RTT drivers" href="../segger.html" />
-    <link rel="prev" title="MPL115A" href="mpl115a.html" /> 
+    <link rel="next" title="Sensor Cluster (Obsolote)" href="sensors_cluster.html" />
+    <link rel="prev" title="Sensor “uORB” Drivers" href="sensors_uorb.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -145,7 +145,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../rwbuffer.html"><code class="docutils literal notranslate"><span class="pre">rwbuffer.c</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../sensors.html">Sensor Drivers</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="sensors_uorb.html">Sensor “uORB” Drivers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sensors_legacy.html">Sensor Legacy Drivers</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">Sensor Legacy Drivers</a></li>
 <li class="toctree-l5"><a class="reference internal" href="sensors_cluster.html">Sensor Cluster (Obsolote)</a></li>
 <li class="toctree-l5"><a class="reference internal" href="adt7320.html">ADT7320</a></li>
 <li class="toctree-l5"><a class="reference internal" href="adxl345.html">ADXL345</a></li>
@@ -157,8 +157,8 @@
 <li class="toctree-l5"><a class="reference internal" href="mcp9600.html">MCP9600</a></li>
 <li class="toctree-l5"><a class="reference internal" href="mcp9600.html#application-programming-interface">Application Programming Interface</a></li>
 <li class="toctree-l5"><a class="reference internal" href="mpl115a.html">MPL115A</a></li>
-<li class="toctree-l5 current"><a class="current reference internal" href="#">SHT4X</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#application-programming-interface">Application Programming Interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sht4x.html">SHT4X</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sht4x.html#application-programming-interface">Application Programming Interface</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../segger.html">Segger RTT drivers</a></li>
@@ -234,9 +234,9 @@
           <li class="breadcrumb-item"><a href="../../index.html">Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Specialized Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="../sensors.html">Sensor Drivers</a></li>
-      <li class="breadcrumb-item active">SHT4X</li>
+      <li class="breadcrumb-item active">Sensor Legacy Drivers</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../../_sources/components/drivers/special/sensors/sht4x.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../../_sources/components/drivers/special/sensors/sensors_legacy.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -244,138 +244,92 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="sht4x">
-<h1>SHT4X<a class="headerlink" href="#sht4x" title="Permalink to this heading"></a></h1>
-<p>Contributed by Matteo Golin.</p>
-<p>The SHT4x is a family of temperature and humidity sensors created by Sensirion
-which operates over I2C. They include a small heating element.</p>
-<p>The driver provided allows interfacing with the sensor over I2C. It has been
-tested against the SHT41.</p>
-</section>
-<section id="application-programming-interface">
-<h1>Application Programming Interface<a class="headerlink" href="#application-programming-interface" title="Permalink to this heading"></a></h1>
-<p>The header file for the SHT4X driver interface can be included using:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#</span><span class="w"> </span><span class="cp">include</span><span class="w"> </span><span class="cpf">&lt;nuttx/sensors/sht4x.h&gt;</span>
-</pre></div>
-</div>
-<p>The SHT4x registration function allows the driver to be registered as a POSIX
-character driver.</p>
-<p>The standard POSIX <cite>read()</cite> operation will return the temperature and humidity
-measurements in plain-text, which is useful when debugging/testing the driver
-using <cite>cat</cite> from the shell.</p>
-<p>The <cite>write()</cite> operation is not implemented for this sensor.</p>
-<p>Specific operations the sensor offers can be performed via the POSIX <cite>ioctl</cite>
-operation. The supported commands are:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference internal" href="#c.SNIOC_RESET" title="SNIOC_RESET"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SNIOC_RESET</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.SNIOC_WHO_AM_I" title="SNIOC_WHO_AM_I"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SNIOC_WHO_AM_I</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.SNIOC_READ_RAW_DATA" title="SNIOC_READ_RAW_DATA"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SNIOC_READ_RAW_DATA</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.SNIOC_MEASURE" title="SNIOC_MEASURE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SNIOC_MEASURE</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.SNIOC_READ_CONVERT_DATA" title="SNIOC_READ_CONVERT_DATA"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SNIOC_READ_CONVERT_DATA</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.SNIOC_HEAT" title="SNIOC_HEAT"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SNIOC_HEAT</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.SNIOC_CONFIGURE" title="SNIOC_CONFIGURE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SNIOC_CONFIGURE</span></code></a></p></li>
+  <section id="sensor-legacy-drivers">
+<h1>Sensor Legacy Drivers<a class="headerlink" href="#sensor-legacy-drivers" title="Permalink to this heading"></a></h1>
+<p>The old sensors implementation where the character device interface is not
+standardized in any way.</p>
+<p>This approach is not recommended for new drivers, because without a
+standarized interface, creating portable application is imposible.</p>
+<section id="implemented-drivers">
+<h2>Implemented Drivers<a class="headerlink" href="#implemented-drivers" title="Permalink to this heading"></a></h2>
+<p>Drivers that are available also with the new sensor framework are marked with <code class="docutils literal notranslate"><span class="pre">[*]</span></code>.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="adt7320.html"><span class="doc">ADT7320</span></a></p></li>
+<li><p>adxl345</p></li>
+<li><p><a class="reference internal" href="aht10.html"><span class="doc">AHT10</span></a></p></li>
+<li><p><a class="reference internal" href="ak09912.html"><span class="doc">AK09912</span></a></p></li>
+<li><p>amg88xx</p></li>
+<li><p>apds9922</p></li>
+<li><p>apds9960</p></li>
+<li><p>as5048a</p></li>
+<li><p>as5048b</p></li>
+<li><p>as726x</p></li>
+<li><p>bh1749nuc [*]</p></li>
+<li><p>bh1750fvi</p></li>
+<li><p>bmg160</p></li>
+<li><p>bmi088 [*]</p></li>
+<li><p>bmi160 [*]</p></li>
+<li><p>bmi270 [*]</p></li>
+<li><p>bmp180 [*]</p></li>
+<li><p>dhtxx</p></li>
+<li><p>fxos8700cq</p></li>
+<li><p>hall3ph</p></li>
+<li><p>hc_sr04</p></li>
+<li><p>hdc1008</p></li>
+<li><p>hts221</p></li>
+<li><p>ina219</p></li>
+<li><p>ina226</p></li>
+<li><p>ina3221</p></li>
+<li><p>isl29023</p></li>
+<li><p>kxtj9</p></li>
+<li><p>lis2dh</p></li>
+<li><p>lis331dl</p></li>
+<li><p>lis3dh</p></li>
+<li><p>lis3dsh</p></li>
+<li><p>lis3mdl</p></li>
+<li><p>lm75</p></li>
+<li><p>lm92</p></li>
+<li><p>lps25h</p></li>
+<li><p>lsm303agr</p></li>
+<li><p>lsm6dsl</p></li>
+<li><p>lsm9ds1</p></li>
+<li><p>ltc4151</p></li>
+<li><p>max31855</p></li>
+<li><p>max31865</p></li>
+<li><p>max44009</p></li>
+<li><p>max6675</p></li>
+<li><p>mb7040</p></li>
+<li><p><a class="reference internal" href="mcp9600.html"><span class="doc">MCP9600</span></a></p></li>
+<li><p>mcp9844</p></li>
+<li><p>mlx90393</p></li>
+<li><p>mlx90614</p></li>
+<li><p><a class="reference internal" href="mpl115a.html"><span class="doc">MPL115A</span></a></p></li>
+<li><p>mpu60x0</p></li>
+<li><p>ms58xx</p></li>
+<li><p>msa301</p></li>
+<li><p>qencoder</p></li>
+<li><p>scd30</p></li>
+<li><p>scd41</p></li>
+<li><p>sgp30</p></li>
+<li><p>sht21</p></li>
+<li><p>sht3x</p></li>
+<li><p><a class="reference internal" href="sht4x.html"><span class="doc">SHT4X</span></a></p></li>
+<li><p>sps30</p></li>
+<li><p>t67xx</p></li>
+<li><p>veml6070</p></li>
+<li><p>vl53l1x</p></li>
+<li><p>xen1210</p></li>
+<li><p>zerocross</p></li>
 </ul>
-</div></blockquote>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.SNIOC_RESET">
-<span class="sig-name descname"><span class="n"><span class="pre">SNIOC_RESET</span></span></span><a class="headerlink" href="#c.SNIOC_RESET" title="Permalink to this definition"></a><br /></dt>
-<dd><p>This will perform the SHT4X’s soft reset command.</p>
-</dd></dl>
-
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">sensor</span><span class="p">,</span><span class="w"> </span><span class="n">SNIOC_RESET</span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SNIOC_RESET: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">));</span>
-<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">puts</span><span class="p">(</span><span class="s">&quot;RESET success!&quot;</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.SNIOC_WHO_AM_I">
-<span class="sig-name descname"><span class="n"><span class="pre">SNIOC_WHO_AM_I</span></span></span><a class="headerlink" href="#c.SNIOC_WHO_AM_I" title="Permalink to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<p>This command reads the serial number of the SHT4X sensor. The serial number is
-returned in the argument to the command, which must be a <cite>uint32_t</cite> pointer.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">serialno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">sensor</span><span class="p">,</span><span class="w"> </span><span class="n">SNIOC_WHO_AM_I</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">serialno</span><span class="p">);</span>
-</pre></div>
-</div>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.SNIOC_READ_RAW_DATA">
-<span class="sig-name descname"><span class="n"><span class="pre">SNIOC_READ_RAW_DATA</span></span></span><a class="headerlink" href="#c.SNIOC_READ_RAW_DATA" title="Permalink to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<p>This command allows the caller to read the raw data returned from the sensor,
-without the driver performing any calculation to convert it into familiar units
-(i.e. degrees Celsius for temperature).</p>
-<p>The argument to this command must be a pointer to a <cite>struct sht4x_raw_data_s</cite>
-structure. The raw data will be returned here.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">sht4x_raw_data_s</span><span class="w"> </span><span class="n">raw</span><span class="p">;</span>
-<span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">sensor</span><span class="p">,</span><span class="w"> </span><span class="n">SNIOC_READ_RAW_DATA</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">raw</span><span class="p">);</span>
-</pre></div>
-</div>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.SNIOC_MEASURE">
-<span class="sig-name descname"><span class="n"><span class="pre">SNIOC_MEASURE</span></span></span><a class="headerlink" href="#c.SNIOC_MEASURE" title="Permalink to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<p>This command will measure temperature and humidity, and return it in familiar
-units to the user. Temperature will be in degrees (Fahrenheit or Celsius depends
-on the Kconfig options selected during compilation) and humidity will be %RH.</p>
-<p>The argument to this command must be a pointer to a <cite>struct sht4x_conv_data_s</cite>.
-This is where the converted data will be returned.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">sht4x_conv_data_s</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
-<span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">sensor</span><span class="p">,</span><span class="w"> </span><span class="n">SNIOC_MEASURE</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">data</span><span class="p">);</span>
-</pre></div>
-</div>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.SNIOC_READ_CONVERT_DATA">
-<span class="sig-name descname"><span class="n"><span class="pre">SNIOC_READ_CONVERT_DATA</span></span></span><a class="headerlink" href="#c.SNIOC_READ_CONVERT_DATA" title="Permalink to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<p>Same as <cite>SNIOC_MEASURE</cite>.</p>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.SNIOC_HEAT">
-<span class="sig-name descname"><span class="n"><span class="pre">SNIOC_HEAT</span></span></span><a class="headerlink" href="#c.SNIOC_HEAT" title="Permalink to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<p>This command will instruct the SHT4X to turn on its heater unit for the
-specified time. Afterwards, a measurement of temperature and humidity is taken,
-and the converted data is returned to the caller.</p>
-<p>The argument to this command must be a pointer to a <cite>struct sht4x_conv_data_s</cite>.
-This is where the converted data will be returned. The <cite>temperature</cite> field of
-the struct must contain a value from the <cite>enum sht4x_heater_e</cite>, which will
-indicate the duration the heater is on and the power used.</p>
-<p>Heating commands are not allowed more than once per second to avoid damaging the
-sensor. If a command is issued before this one second cool-down period is over,
-<cite>EAGAIN</cite> is returned.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">sht4x_conv_data_s</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
-<span class="n">data</span><span class="p">.</span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SHT4X_HEATER_200MW_1</span><span class="p">;</span>
-<span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">sensor</span><span class="p">,</span><span class="w"> </span><span class="n">SNIOC_HEAT</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">data</span><span class="p">);</span>
-</pre></div>
-</div>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.SNIOC_CONFIGURE">
-<span class="sig-name descname"><span class="n"><span class="pre">SNIOC_CONFIGURE</span></span></span><a class="headerlink" href="#c.SNIOC_CONFIGURE" title="Permalink to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<p>This command allows the caller to configure the precision of the SHT4X sensor
-used by subsequent measurement commands. By default, the sensor starts at high
-precision.</p>
-<p>The argument to this command is one of the values in <cite>enum sht4x_precision_e</cite>.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">sensor</span><span class="p">,</span><span class="w"> </span><span class="n">SNIOC_CONFIGURE</span><span class="p">,</span><span class="w"> </span><span class="n">SHT4X_PREC_LOW</span><span class="p">);</span>
-</pre></div>
-</div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="mpl115a.html" class="btn btn-neutral float-left" title="MPL115A" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../segger.html" class="btn btn-neutral float-right" title="Segger RTT drivers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sensors_uorb.html" class="btn btn-neutral float-left" title="Sensor “uORB” Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sensors_cluster.html" class="btn btn-neutral float-right" title="Sensor Cluster (Obsolote)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
