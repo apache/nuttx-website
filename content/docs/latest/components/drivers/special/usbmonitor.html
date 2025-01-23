@@ -151,7 +151,10 @@
 <li class="toctree-l4"><a class="reference internal" href="usbdev.html">USB Device-Side Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbhost.html">USB Host-Side Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbmisc.html">USB Miscellaneous Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">USB Monitor support</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">USB Monitor support</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#wireshark">Wireshark</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="usrsock.html">Usrsock Driver</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mmcsd.html">MMCSD Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="net/index.html">Network interface drivers</a></li>
@@ -228,6 +231,70 @@
              
   <section id="usb-monitor-support">
 <h1>USB Monitor support<a class="headerlink" href="#usb-monitor-support" title="Permalink to this heading"></a></h1>
+<section id="wireshark">
+<h2>Wireshark<a class="headerlink" href="#wireshark" title="Permalink to this heading"></a></h2>
+<p>The wireshark software USB capture can capture URBs (USB Request Blocks) rather than raw USB packets when device connect to host directly.
+To capture raw USB packets, a sniffer is needed.</p>
+<section id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this heading"></a></h3>
+<ol class="arabic">
+<li><p>Install Wireshark:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo apt update
+sudo apt install wireshark
+</pre></div>
+</div>
+</li>
+<li><p>(Optional) Configurate Wireshark</p></li>
+</ol>
+<blockquote>
+<div><p>Wireshark offical documentation: <a class="reference external" href="https://wiki.wireshark.org/CaptureSetup/USB">https://wiki.wireshark.org/CaptureSetup/USB</a></p>
+</div></blockquote>
+<ol class="arabic" start="3">
+<li><p>Load the usbmon kernel module and run Wireshark:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo modprobe usbmon
+sudo wireshark
+</pre></div>
+</div>
+</li>
+<li><p>Find bus the device connects:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ adb devices -l
+List of devices attached
+1234                   device usb:1-9.4 product:adb dev model:adb_board device:NuttX device transport_id:1000
+
+$ dmesg
+[3713722.861582] usb 1-9.4: New USB device found, idVendor=18d1, idProduct=4e11, bcdDevice= 1.01
+
+$ lsusb
+Bus 001 Device 035: ID 18d1:4e11 Google Inc. Nexus One
+</pre></div>
+</div>
+</li>
+<li><p>Filter address</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>Select usbmon (Bus 001): usbmon1</p></li>
+<li><p>Wireshark filter (Bus 001 Device 035): usb.addr[0:4] == “1.35”</p></li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="6">
+<li><p>Example</p></li>
+</ol>
+<blockquote>
+<div><p>Capturing ADB packets with filter (usb.addr[0:4] == “1.35”), on board <a class="reference external" href="https://nuttx.apache.org/docs/latest/platforms/xtensa/esp32s3/boards/esp32s3-devkit/index.html#adb">ESP32S3-DevKit:ADB</a>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>adb -s 1234 shell ls /dev/
+</pre></div>
+</div>
+<p>The example PcapNg(Packet CAPture Next Generation) file can be downloaded from <a class="reference download internal" download="" href="../../../_downloads/e20cd83fbf8854043594ed3552977374/usbmonitor_wireshark_linux_example_adb.pcapng"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+</div></blockquote>
+<figure class="align-center" id="id1">
+<img alt="../../../_images/usbmonitor_wireshark_linux_example_adb.png" src="../../../_images/usbmonitor_wireshark_linux_example_adb.png" />
+<figcaption>
+<p><span class="caption-text">Wireshark Capturing</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
 </section>
 
 
