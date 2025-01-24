@@ -20,6 +20,7 @@ Guides
   citests.rst
   zerolatencyinterrupts.rst
   kasan.rst
+  fortify.rst
   nestedinterrupts.rst
   cortexmhardfaults.rst
   coredump.rst
@@ -31,6 +32,7 @@ Guides
   automounter.rst
   stm32nullpointer.rst
   stm32ccm.rst
+  stackcheck.rst
   stackrecord.rst
   etcromfs.rst
   thread_local_storage.rst
