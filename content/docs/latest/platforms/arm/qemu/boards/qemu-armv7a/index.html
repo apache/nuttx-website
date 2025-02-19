@@ -183,6 +183,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32f7/index.html">ST STM32F7</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32g0/index.html">ST STM32G0</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32g4/index.html">ST STM32G4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../stm32h5/index.html">ST STM32H5</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32h7/index.html">ST STM32H7</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32l0/index.html">ST STM32L0</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32l1/index.html">ST STM32L1</a></li>
@@ -313,6 +314,121 @@ Hello, World!!
 nsh&gt;
 </pre></div>
 </div>
+</section>
+<section id="inter-vm-share-memory-device-ivshmem">
+<h3>Inter-VM share memory Device (ivshmem)<a class="headerlink" href="#inter-vm-share-memory-device-ivshmem" title="Permalink to this heading"></a></h3>
+<p>Inter-VM shared memory support support can be found in <code class="docutils literal notranslate"><span class="pre">drivers/pci/pci_ivshmem.c</span></code>.</p>
+<p>This implementation is for <code class="docutils literal notranslate"><span class="pre">ivshmem-v1</span></code> which is compatible with QEMU and
+ACRN hypervisor but won’t work with Jailhouse hypervisor which uses <code class="docutils literal notranslate"><span class="pre">ivshmem-v2</span></code>.</p>
+<p>Please refer to the official <a class="reference external" href="https://www.qemu.org/docs/master/system/devices/ivshmem.html">Qemu ivshmem documentation</a> for more information.</p>
+<p>This is an example implementation for OpenAMP based on the Inter-VM share memory(ivshmem):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rpproxy_ivshmem:  Remote slave(client) proxy process.
+rpserver_ivshmem: Remote master(host) server process.
+</pre></div>
+</div>
+<p>Steps for Using NuttX as IVSHMEM host and guest</p>
+<ol class="arabic simple">
+<li><p>Build images</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha">
+<li><p>Build rpserver_ivshmem:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B server -DBOARD_CONFIG=qemu-armv7a:rpserver_ivshmem -GNinja
+$ cmake --build server
+</pre></div>
+</div>
+</li>
+<li><p>Build rpproxy_ivshmem:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B proxy -DBOARD_CONFIG=qemu-armv7a:rpproxy_ivshmem -GNinja
+$ cmake --build proxy
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Bringup firmware via Qemu:</p></li>
+</ol>
+<blockquote>
+<div><p>The Inter-VM Shared Memory device basic syntax is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
+-object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes
+</pre></div>
+</div>
+<ol class="loweralpha">
+<li><p>Start rpserver_ivshmem:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
+  -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
+  -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
+  -kernel server/nuttx -nographic
+</pre></div>
+</div>
+</li>
+<li><p>Start rpproxy_ivshmem:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
+  -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
+  -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
+  -kernel proxy/nuttx -nographic
+</pre></div>
+</div>
+</li>
+<li><p>Check the RPMSG Syslog in rpserver shell:</p></li>
+</ol>
+<blockquote>
+<div><p>In the current configuration, the proxy syslog will be sent to the server by default.
+You can check whether there is proxy startup log in the server shell.</p>
+<p>RpServer bring up:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
+  -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
+  -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
+  -kernel server/nuttx -nographic
+[    0.000000] [ 0] [  INFO] [server] pci_register_rptun_ivshmem_driver: Register ivshmem driver, id=0, cpuname=proxy, master=0
+...
+[    0.306127] [ 3] [  INFO] [server] rptun_ivshmem_probe: Start the wdog
+</pre></div>
+</div>
+<p>After rpproxy bring up, check the log from rpserver:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>NuttShell (NSH) NuttX-10.4.0
+server&gt;
+[    0.000000] [ 0] [  INFO] [proxy] pci_register_rptun_ivshmem_driver: Register ivshmem driver, id=0, cpuname=server, master=1
+...
+[    0.314039] [ 3] [  INFO] [proxy] ivshmem_probe: shmem addr=0x10400000 size=4194304 reg=0x10008000
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="loweralpha simple" start="4">
+<li><p>IPC test via RPMSG socket:</p></li>
+</ol>
+<blockquote>
+<div><p>Start rpmsg socket server:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>server&gt; rpsock_server stream block test
+server: create socket SOCK_STREAM nonblock 0
+server: bind cpu , name test ...
+server: listen ...
+server: try accept ...
+server: Connection accepted -- 4
+server: try accept ...
+</pre></div>
+</div>
+<p>Switch to proxy shell and start rpmsg socket client, test start:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>proxy&gt; rpsock_client stream block test server
+client: create socket SOCK_STREAM nonblock 0
+client: Connecting to server,test...
+client: Connected
+client send data, cnt 0, total len 64, BUFHEAD process0007, msg0000, name:test
+client recv data process0007, msg0000, name:test
+...
+client recv done, total 4096000, endflags, send total 4096000
+client: Terminating
+</pre></div>
+</div>
+<p>Check the log on rpserver shell:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>server recv data normal exit
+server Complete ret 0, errno 0
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
 </section>
 </section>
 <section id="debugging-with-qemu">

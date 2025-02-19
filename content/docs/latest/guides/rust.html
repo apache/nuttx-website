@@ -198,6 +198,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#supported-platforms">Supported Platforms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#specifying-target-cpu-for-optimization">Specifying Target CPU for Optimization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#editor-integration">Editor Integration</a></li>
 </ul>
 </li>
 </ul>
@@ -267,6 +269,8 @@ language features while maintaining its small footprint and real-time capabiliti
 <li><p>ARMv8-M</p></li>
 <li><p>RISCV32</p></li>
 <li><p>RISCV64</p></li>
+<li><p>X86</p></li>
+<li><p>X86_64</p></li>
 </ul>
 </section>
 <section id="getting-started">
@@ -324,6 +328,65 @@ Hello<span class="w"> </span>world<span class="w"> </span>from<span class="w"> <
 </pre></div>
 </div>
 <p>Congratulations! You have successfully built and run a Rust application on NuttX.</p>
+</section>
+<section id="specifying-target-cpu-for-optimization">
+<h2>Specifying Target CPU for Optimization<a class="headerlink" href="#specifying-target-cpu-for-optimization" title="Permalink to this heading"></a></h2>
+<p>To optimize your Rust application for a specific CPU, you can use the <cite>RUSTFLAGS</cite> environment variable to specify the target CPU. This can significantly improve performance by enabling CPU-specific optimizations.</p>
+<p>The <cite>RUSTFLAGS</cite> environment variable is particularly useful when you are working with CPUs that share the same Instruction Set Architecture (ISA) but have different microarchitectures. For example, both the Cortex-M33 and Cortex-M55 share the <cite>thumbv8m.main</cite> target name, but they have different performance characteristics and features. By specifying the actual CPU core, you can take advantage of the specific optimizations and features of the target CPU, leading to better performance and efficiency.</p>
+<p>For instance, if you are targeting a Cortex-M33, you would set the <cite>RUSTFLAGS</cite> environment variable as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">RUSTFLAGS</span><span class="o">=</span><span class="s2">&quot;-C target-cpu=cortex-m33&quot;</span>
+</pre></div>
+</div>
+<p>And for a Cortex-M55, you would use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">RUSTFLAGS</span><span class="o">=</span><span class="s2">&quot;-C target-cpu=cortex-m55&quot;</span>
+</pre></div>
+</div>
+<p>This ensures that the Rust compiler generates optimized code tailored to the specific CPU core, rather than a generic ISA.</p>
+<ol class="arabic simple">
+<li><p>Set the <cite>RUSTFLAGS</cite> environment variable to include the <cite>–target-cpu</cite> flag:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">RUSTFLAGS</span><span class="o">=</span><span class="s2">&quot;-C target-cpu=your_cpu_model&quot;</span>
+</pre></div>
+</div>
+<p>Replace <cite>your_cpu_model</cite> with the specific CPU model you are targeting. For example, for an ARM Cortex-M4, you would use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">RUSTFLAGS</span><span class="o">=</span><span class="s2">&quot;-C target-cpu=cortex-m4&quot;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Build your NuttX image with the specified target CPU:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make
+</pre></div>
+</div>
+<p>This will ensure that the Rust compiler generates optimized code for the specified CPU.</p>
+</section>
+<section id="editor-integration">
+<h2>Editor Integration<a class="headerlink" href="#editor-integration" title="Permalink to this heading"></a></h2>
+<p>To enable proper IDE support for Rust development in NuttX, you’ll need to configure your editor to recognize the Rust project structure correctly. This section focuses on VS Code with rust-analyzer, which is the most popular setup.</p>
+<ol class="arabic simple">
+<li><p>Create or update <cite>.vscode/settings.json</cite> in your NuttX workspace:</p></li>
+</ol>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;rust-analyzer.linkedProjects&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;nuttx-apps/examples/rust/slint/Cargo.toml&quot;</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>(Optional) If you’re using a custom target specification, you can set the <cite>rust-analyzer.cargo.target</cite> setting:</p></li>
+</ol>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;rust-analyzer.cargo.target&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;thumbv8m.main-nuttx-eabihf&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since NuttX now supports the Rust standard library (std), specifying an exact target triple is usually not necessary. The default host target should work fine for most cases.</p>
+<p>If you’re working with a crate that tightly depends on the NuttX target, you can specify the target triple as shown above to get more accurate code analysis.</p>
+</div>
+<p>This configuration helps rust-analyzer understand your project structure and provide accurate code analysis, auto-completion, and other IDE features while working with Rust code in NuttX.</p>
 </section>
 </section>
 
