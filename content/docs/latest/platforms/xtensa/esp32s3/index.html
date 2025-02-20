@@ -165,6 +165,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#wi-fi">Wi-Fi</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#wi-fi-softap">Wi-Fi SoftAP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#psram">PSRAM</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
@@ -722,6 +723,27 @@ using WPA2.</p>
 for more information.</p>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">dhcpd_start</span></code> is necessary to let your board to associate an IP to your smartphone.</p>
+</section>
+<section id="psram">
+<h3>PSRAM<a class="headerlink" href="#psram" title="Permalink to this heading"></a></h3>
+<p>The external PSRAM is supported in ESP32-S3. The PSRAM is mapped to the data bus during
+the boot process. The PSRAM is used as a heap memory and is available for the application.</p>
+<p>Please check the following examples for more information:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="boards/esp32s3-devkit/index.html#psram-octal"><span class="std std-ref">esp32s3-devkit:psram_octal</span></a></p></li>
+<li><p><a class="reference internal" href="boards/esp32s3-devkit/index.html#psram-quad"><span class="std std-ref">esp32s3-devkit:psram_quad</span></a></p></li>
+</ul>
+<section id="moving-not-initialized-data-to-the-external-psram">
+<h4>Moving not initialized data to the external PSRAM<a class="headerlink" href="#moving-not-initialized-data-to-the-external-psram" title="Permalink to this heading"></a></h4>
+<p>Static or global not-initialized data can be moved to the external PSRAM. Usually allocated at the
+<code class="docutils literal notranslate"><span class="pre">.bss</span></code> memory segment, this data can be set to another section in the external PSRAM.
+Set the attribute <code class="docutils literal notranslate"><span class="pre">__attribute__</span> <span class="pre">((section</span> <span class="pre">(&quot;.ext_ram.bss&quot;)))</span></code> to the variable. For example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>__attribute__ ((section (&quot;.ext_ram.bss&quot;))) static uint8_t my_data[1024];
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">my_data</span></code> will be allocated in the external PSRAM and can be explicitly initialized on runtime.</p>
+<p>This is particularly useful when the internal RAM is not enough to hold all the data.</p>
+</section>
 </section>
 </section>
 <section id="supported-boards">
