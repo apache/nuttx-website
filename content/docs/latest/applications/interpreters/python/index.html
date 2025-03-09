@@ -143,9 +143,9 @@
 <li class="toctree-l3"><a class="reference internal" href="../minibasic/index.html"><code class="docutils literal notranslate"><span class="pre">minibasic</span></code> Mini Basic Interpreter</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">Python</span></code> Python interpreter</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#how-does-it-work">How Does it Work?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#building-python-on-nuttx">Building Python on NuttX</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#try-python-in-nsh">Try Python in NSH</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#demo">Demo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#building-and-running-python-on-nuttx">Building and Running Python on NuttX</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#rv-virt-risc-v-qemu"><code class="docutils literal notranslate"><span class="pre">rv-virt</span></code> (RISC-V QEMU)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#esp32-s3">ESP32-S3</a></li>
 </ul>
 </li>
 </ul>
@@ -219,13 +219,15 @@ Please check this <a class="reference external" href="https://github.com/apache/
 <section id="how-does-it-work">
 <h2>How Does it Work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading"></a></h2>
 <ol class="arabic simple">
-<li><p>Python for NuttX target initially the <code class="docutils literal notranslate"><span class="pre">rv-virt</span></code> (RISC-V QEMU) board.</p></li>
+<li><p>Python for NuttX runs on RISC-V QEMU (emulated) and on Espressif’s ESP32-S3.</p></li>
 <li><p>Python modules are stored in <a class="reference external" href="https://docs.python.org/3/glossary.html#term-bytecode">pyc</a> (byte-code format) and are loaded from a ROMFS image at startup.</p></li>
 <li><p>The Python wrapper application on NuttX mounts the ROMFS partition which contains the Python modules and sets the required environment variables (<code class="docutils literal notranslate"><span class="pre">PYTHONHOME</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHON_BASIC_REPL</span></code>) automatically.</p></li>
 </ol>
 </section>
-<section id="building-python-on-nuttx">
-<h2>Building Python on NuttX<a class="headerlink" href="#building-python-on-nuttx" title="Permalink to this heading"></a></h2>
+<section id="building-and-running-python-on-nuttx">
+<h2>Building and Running Python on NuttX<a class="headerlink" href="#building-and-running-python-on-nuttx" title="Permalink to this heading"></a></h2>
+<section id="rv-virt-risc-v-qemu">
+<h3><code class="docutils literal notranslate"><span class="pre">rv-virt</span></code> (RISC-V QEMU)<a class="headerlink" href="#rv-virt-risc-v-qemu" title="Permalink to this heading"></a></h3>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">rv-virt:python</span></code> config to build Python for NuttX. Note that the CMake scripts don’t work for this configuration. For now, please use the makefile build instead:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
 <span class="gp">$ </span>make<span class="w"> </span>distclean
@@ -234,10 +236,7 @@ Please check this <a class="reference external" href="https://github.com/apache/
 <span class="gp">$ </span>ls<span class="w"> </span>-l<span class="w"> </span>nuttx
 </pre></div>
 </div>
-<p>This will generate a <code class="docutils literal notranslate"><span class="pre">nutxx</span></code> binary. This file can be run using the RISC-V QEMU.</p>
-</section>
-<section id="try-python-in-nsh">
-<h2>Try Python in NSH<a class="headerlink" href="#try-python-in-nsh" title="Permalink to this heading"></a></h2>
+<p>This will generate a <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> binary. This file can be run using the RISC-V QEMU.</p>
 <p>Before running the RISC-V QEMU, create a raw disk image with the following command:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/zero<span class="w"> </span><span class="nv">of</span><span class="o">=</span>./mydisk-1gb.img<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>1M<span class="w"> </span><span class="nv">count</span><span class="o">=</span><span class="m">1024</span>
 </pre></div>
@@ -268,9 +267,31 @@ Please check this <a class="reference external" href="https://github.com/apache/
 </pre></div>
 </div>
 <section id="demo">
-<h3>Demo<a class="headerlink" href="#demo" title="Permalink to this heading"></a></h3>
+<h4>Demo<a class="headerlink" href="#demo" title="Permalink to this heading"></a></h4>
 <p>Check the following <a class="reference external" href="https://asciinema.org/">asciinema</a> demo to see how to run Python on NuttX. You can copy and paste the commands from the demo to try it yourself.</p>
 <a class="reference external image-reference" href="https://asciinema.org/a/bYYy1fyIOQ3hOY4lJ7L3WFcNb"><img alt="https://asciinema.org/a/bYYy1fyIOQ3hOY4lJ7L3WFcNb.svg" src="https://asciinema.org/a/bYYy1fyIOQ3hOY4lJ7L3WFcNb.svg" /></a>
+</section>
+</section>
+<section id="esp32-s3">
+<h3>ESP32-S3<a class="headerlink" href="#esp32-s3" title="Permalink to this heading"></a></h3>
+<p>For this example, we will use the ESP32-S3 board. Use the <code class="docutils literal notranslate"><span class="pre">esp32s3-devkit:python</span></code> config to build
+Python for NuttX. Note that this defconfig uses a board with the ESP32-S3-WROOM-2 module with 32MiB
+of flash and 8MiB of PSRAM.</p>
+<p>Build and flash the ESP32-S3 board with the following commands:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>make<span class="w"> </span>distclean
+<span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>esp32s3-devkit:python
+<span class="gp">$ </span>make<span class="w"> </span>flash<span class="w"> </span><span class="nv">ESPTOOL_BINDIR</span><span class="o">=</span>./<span class="w"> </span><span class="nv">ESPTOOL_PORT</span><span class="o">=</span>/dev/ttyUSB0<span class="w"> </span>-s<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+</pre></div>
+</div>
+<p>To run Python on ESP32-S3, just open a serial terminal and connect to the ESP32-S3 board.
+You will see the NuttShell (NSH) prompt. Run the following commands:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; python</span>
+<span class="go">Python 3.13.0 (main, Dec  4 2024, 17:00:42) [GCC 13.2.0] on nuttx</span>
+<span class="go">Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
 </section>
 </section>
 </section>
