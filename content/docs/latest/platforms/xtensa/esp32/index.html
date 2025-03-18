@@ -147,8 +147,10 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#building-and-flashing-nuttx">Building and flashing NuttX</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#installing-esptool">Installing esptool</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#bootloader-and-partitions">Bootloader and partitions</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#building-and-flashing">Building and Flashing</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#flashing-nsh-example">Flashing NSH Example</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#debugging">Debugging</a><ul>
@@ -185,6 +187,11 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#things-to-do">Things to Do</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Managing esptool on virtual environment</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#using-pipx-recommended">Using pipx (recommended)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#using-venv-alternative">Using venv (alternative)</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/esp32-2432S028/index.html">ESP32-2432S028</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/esp32-audio-kit/index.html">ESP32-AUDIO-KIT</a></li>
@@ -322,6 +329,19 @@ build the toolchain with crosstool-NG on Linux are as follows</p>
 </section>
 <section id="building-and-flashing-nuttx">
 <h2>Building and flashing NuttX<a class="headerlink" href="#building-and-flashing-nuttx" title="Permalink to this heading"></a></h2>
+<section id="installing-esptool">
+<h3>Installing esptool<a class="headerlink" href="#installing-esptool" title="Permalink to this heading"></a></h3>
+<p>First, make sure that <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> is installed and up-to-date.
+This tool is used to convert the ELF to a compatible ESP32 image and to flash the image into the board.</p>
+<p>It can be installed with: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">esptool&gt;=4.8.1</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Installing <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> may required a Python virtual environment on newer systems.
+This will be the case if the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> command throws an error such as:
+<code class="docutils literal notranslate"><span class="pre">error:</span> <span class="pre">externally-managed-environment</span></code>.</p>
+<p>If you are not familiar with virtual environments, refer to <a class="reference internal" href="#managing-esptool-on-virtual-environment">Managing esptool on virtual environment</a> for instructions on how to install <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code>.</p>
+</div>
+</section>
 <section id="bootloader-and-partitions">
 <h3>Bootloader and partitions<a class="headerlink" href="#bootloader-and-partitions" title="Permalink to this heading"></a></h3>
 <p>NuttX can boot the ESP32 directly using the so-called “Simple Boot”. An externally-built
@@ -351,19 +371,66 @@ perform a complete SPI FLASH erase.</p>
 </section>
 <section id="building-and-flashing">
 <h3>Building and Flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h3>
-<p>First, make sure that <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> is installed.  This tool is used to convert the ELF to a
-compatible ESP32 image and to flash the image into the board.
-It can be installed with: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">esptool==4.8.dev4</span></code>.</p>
-<p>It’s a two-step process where the first converts the ELF file into an ESP32 compatible binary
-and the second flashes it to the board. These steps are included in the build system and it is
+<p>This is a two-step process where the first step converts the ELF file into an ESP32 compatible binary
+and the second step flashes it to the board. These steps are included in the build system and it is
 possible to build and flash the NuttX firmware simply by running:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make flash ESPTOOL_PORT=&lt;port&gt; ESPTOOL_BINDIR=./
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">&lt;port&gt;</span></code> is typically <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> or similar. <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR=./</span></code> is the path of the
-externally-built 2nd stage bootloader and the partition table (if applicable): when built using the
-<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code>, these files are placed into <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> folder. <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BAUD</span></code> is able to
-change the flash baud rate if desired.</p>
+<p>where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ESPTOOL_PORT</span></code> is typically <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> or similar.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR=./</span></code> is the path of the externally-built 2nd stage bootloader and the partition table (if applicable): when built using the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bootloader</span></code>, these files are placed into <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> folder.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ESPTOOL_BAUD</span></code> is able to change the flash baud rate if desired.</p></li>
+</ul>
+</section>
+<section id="flashing-nsh-example">
+<h3>Flashing NSH Example<a class="headerlink" href="#flashing-nsh-example" title="Permalink to this heading"></a></h3>
+<p>This example shows how to build and flash the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> defconfig for the ESP32-DevKitC board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd nuttx
+$ make distclean
+$ ./tools/configure.sh esp32-devkitc:nsh
+$ make -j$(nproc)
+</pre></div>
+</div>
+<p>When the build is complete, the firmware can be flashed to the board using the command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make -j$(nproc) flash ESPTOOL_PORT=&lt;port&gt; ESPTOOL_BINDIR=./
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;port&gt;</span></code> is the serial port where the board is connected:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make flash ESPTOOL_PORT=/dev/ttyUSB0 ESPTOOL_BINDIR=./
+ CP: nuttx.hex
+ MKIMAGE: ESP32 binary
+ esptool.py -c esp32 elf2image --ram-only-header -fs 4MB -fm dio -ff 40m -o nuttx.bin nuttx
+ esptool.py v4.8.1
+ Creating esp32 image...
+ Image has only RAM segments visible. ROM segments are hidden and SHA256 digest is not appended.
+ Merged 1 ELF section
+ Successfully created esp32 image.
+ Generated: nuttx.bin
+ esptool.py -c esp32 -p /dev/ttyUSB0 -b 921600  write_flash -fs detect -fm dio -ff 40m 0x1000 nuttx.bin
+ esptool.py v4.8.1
+ Serial port /dev/ttyUSB0
+ Connecting.....
+ Chip is ESP32-D0WD-V3 (revision v3.1)
+ [...]
+ Flash will be erased from 0x00001000 to 0x00032fff...
+ Flash params set to 0x0230
+ Compressed 203816 bytes to 74735...
+ Wrote 203816 bytes (74735 compressed) at 0x00001000 in 2.2 seconds (effective 744.4 kbit/s)...
+ Hash of data verified.
+
+ Leaving...
+ Hard resetting via RTS pin...
+</pre></div>
+</div>
+<p>Now opening the serial port with a terminal emulator should show the NuttX console:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ picocom -b 115200 /dev/ttyUSB0
+NuttShell (NSH) NuttX-12.8.0
+nsh&gt; uname -a
+NuttX 12.8.0 759d37b97c-dirty Mar  5 2025 20:31:15 xtensa esp32-devkitc
+</pre></div>
+</div>
 </section>
 </section>
 <section id="debugging">
@@ -573,39 +640,47 @@ functions that were being executed when the crash occurred.</p>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>CAN/TWAI</p></td>
+<tr class="row-odd"><td><p>Camera</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>CAN/TWAI</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>DMA</p></td>
+<tr class="row-odd"><td><p>DMA</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>DAC</p></td>
+<tr class="row-even"><td><p>DAC</p></td>
 <td><p>Yes</p></td>
 <td><p>One-shot</p></td>
 </tr>
-<tr class="row-even"><td><p>eFuse</p></td>
+<tr class="row-odd"><td><p>eFuse</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Ethernet</p></td>
+<tr class="row-even"><td><p>Ethernet</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>GPIO</p></td>
+<tr class="row-odd"><td><p>GPIO</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>I2C</p></td>
+<tr class="row-even"><td><p>I2C</p></td>
 <td><p>Yes</p></td>
 <td><p>Master and Slave mode supported</p></td>
 </tr>
-<tr class="row-even"><td><p>I2S</p></td>
+<tr class="row-odd"><td><p>I2S</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>LED_PWM</p></td>
+<tr class="row-even"><td><p>LCD</p></td>
+<td><p>No</p></td>
+<td><p>There is support for SPI displays</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED/PWM</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
@@ -673,7 +748,7 @@ functions that were being executed when the crash occurred.</p>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>Wifi</p></td>
+<tr class="row-even"><td><p>Wi-Fi</p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
@@ -1327,6 +1402,65 @@ add some complexity to signal handling and also to up_initialstate().
 But the performance improvement might be worth the effort.</p></li>
 <li><p>See SMP-related issues above</p></li>
 </ol>
+</section>
+<section id="id1">
+<h2><span class="target" id="managing-esptool-on-virtual-environment">Managing esptool on virtual environment</span><a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<p>This section describes how to install <code class="docutils literal notranslate"><span class="pre">esptool</span></code>, <code class="docutils literal notranslate"><span class="pre">imgtool</span></code> or any other Python packages in a
+proper environment.</p>
+<p>Normally, a Linux-based OS would already have Python 3 installed by default. Up to a few years ago,
+you could simply call <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> to install packages globally. However, this is no longer recommended
+as it can lead to conflicts between packages and versions. The recommended way to install Python packages
+is to use a virtual environment.</p>
+<p>A virtual environment is a self-contained directory that contains a Python installation for a particular
+version of Python, plus a number of additional packages. You can create a virtual environment for each
+project you are working on, and install the required packages in that environment.</p>
+<p>Two alternatives are explained below, you can select any one of those.</p>
+<section id="using-pipx-recommended">
+<h3>Using pipx (recommended)<a class="headerlink" href="#using-pipx-recommended" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pipx</span></code> is a tool that makes it easy to install Python packages in a virtual environment. To install
+<code class="docutils literal notranslate"><span class="pre">pipx</span></code>, you can run the following command (using apt as example):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ apt install pipx
+</pre></div>
+</div>
+<p>Once you have installed <code class="docutils literal notranslate"><span class="pre">pipx</span></code>, you can use it to install Python packages in a virtual environment. For
+example, to install the <code class="docutils literal notranslate"><span class="pre">esptool</span></code> package, you can run the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pipx install esptool
+</pre></div>
+</div>
+<p>This will create a new virtual environment in the <code class="docutils literal notranslate"><span class="pre">~/.local/pipx/venvs</span></code> directory, which contains the
+<code class="docutils literal notranslate"><span class="pre">esptool</span></code> package. You can now use the <code class="docutils literal notranslate"><span class="pre">esptool</span></code> command as normal, and so will the build system.</p>
+<p>Make sure to run <code class="docutils literal notranslate"><span class="pre">pipx</span> <span class="pre">ensurepath</span></code> to add the <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code> directory to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. This will
+allow you to run the <code class="docutils literal notranslate"><span class="pre">esptool</span></code> command from any directory.</p>
+</section>
+<section id="using-venv-alternative">
+<h3>Using venv (alternative)<a class="headerlink" href="#using-venv-alternative" title="Permalink to this heading"></a></h3>
+<p>To create a virtual environment, you can use the <code class="docutils literal notranslate"><span class="pre">venv</span></code> module, which is included in the Python standard
+library. To create a virtual environment, you can run the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ python3 -m venv myenv
+</pre></div>
+</div>
+<p>This will create a new directory called <code class="docutils literal notranslate"><span class="pre">myenv</span></code> in the current directory, which contains a Python
+installation and a copy of the Python standard library. To activate the virtual environment, you can run
+the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ source myenv/bin/activate
+</pre></div>
+</div>
+<p>This will change your shell prompt to indicate that you are now working in the virtual environment. You can
+now install packages using <code class="docutils literal notranslate"><span class="pre">pip</span></code>. For example, to install the <code class="docutils literal notranslate"><span class="pre">esptool</span></code> package, you can run the following
+command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pip install esptool
+</pre></div>
+</div>
+<p>This will install the <code class="docutils literal notranslate"><span class="pre">esptool</span></code> package in the virtual environment. You can now use the <code class="docutils literal notranslate"><span class="pre">esptool</span></code> command as
+normal. When you are finished working in the virtual environment, you can deactivate it by running the following
+command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ deactivate
+</pre></div>
+</div>
+<p>This will return your shell prompt to its normal state. You can reactivate the virtual environment at any time by
+running the <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">myenv/bin/activate</span></code> command again. You can also delete the virtual environment by deleting
+the directory that contains it.</p>
+</section>
 </section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>

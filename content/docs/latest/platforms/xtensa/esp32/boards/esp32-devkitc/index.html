@@ -156,6 +156,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#using-qemu">Using QEMU</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#secure-boot-and-flash-encryption">Secure Boot and Flash Encryption</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#things-to-do">Things to Do</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#id1">Managing esptool on virtual environment</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="../esp32-2432S028/index.html">ESP32-2432S028</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../esp32-audio-kit/index.html">ESP32-AUDIO-KIT</a></li>
@@ -661,21 +662,70 @@ It can be tested by executing the <code class="docutils literal notranslate"><sp
 </section>
 <section id="espnow">
 <h3>espnow<a class="headerlink" href="#espnow" title="Permalink to this heading"></a></h3>
+<p>WARNING: espnow and wifi are using the same hardware on the esp32. When a
+connection to a accespoint is made while espnow is operational the espnow
+connection will break if the accesspoint wants to use a different wifi
+channel.</p>
 <p>A <code class="docutils literal notranslate"><span class="pre">espnow</span></code> setup can be used to create a 6lowpan network of esp32 nodes.
 A sample configuration is found in <code class="docutils literal notranslate"><span class="pre">esp32-devkitc:espnow</span></code>. The node
-address can be changed under <code class="docutils literal notranslate"><span class="pre">ESP32</span> <span class="pre">Peripherals</span></code> option <code class="docutils literal notranslate"><span class="pre">Espnow</span></code>. To
-test the communication using <code class="docutils literal notranslate"><span class="pre">udpserver</span></code> and <code class="docutils literal notranslate"><span class="pre">udpclient</span></code> two nodes
-need to be prepared using e.g. node address <code class="docutils literal notranslate"><span class="pre">0x0a</span></code> and <code class="docutils literal notranslate"><span class="pre">0x0b</span></code>.</p>
-<p>On node <code class="docutils literal notranslate"><span class="pre">0x0a</span></code> the server can be started using:</p>
-<p><code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">ifup</span> <span class="pre">wpan0</span></code>
-<code class="docutils literal notranslate"><span class="pre">ifup</span> <span class="pre">wpan0..OK</span></code>
-<code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">udpserver</span> <span class="pre">&amp;</span></code></p>
-<p>On node <code class="docutils literal notranslate"><span class="pre">0x0b</span></code> the client can be started using:</p>
-<p><code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">ifup</span> <span class="pre">wpan0</span></code>
-<code class="docutils literal notranslate"><span class="pre">ifup</span> <span class="pre">wpan0..OK</span></code>
-<code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">udpclient</span> <span class="pre">fe80::ff:fe00:a</span></code></p>
-<p>The client node will show that the messages are sent while the server
-shows that messages are received.</p>
+address can be changed under <code class="docutils literal notranslate"><span class="pre">ESP32</span> <span class="pre">Peripherals</span></code> option <code class="docutils literal notranslate"><span class="pre">Espnow</span></code>. The
+node address is direct related to the ipv6 address of the node. Changing
+the ipv6 address also changes the node address.</p>
+<p>To test the communication using <code class="docutils literal notranslate"><span class="pre">udpserver</span></code> and <code class="docutils literal notranslate"><span class="pre">udpclient</span></code> two nodes
+need to be prepared with different ipv6 address.</p>
+<p>The server node is assigned the node address <code class="docutils literal notranslate"><span class="pre">0x000a</span></code> and the udp server
+is started using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>ifconfig<span class="w"> </span>wpan0<span class="w"> </span>inet6<span class="w"> </span>fe80::ff:fe00:a
+nsh&gt;<span class="w"> </span>ifup<span class="w"> </span>wpan0
+ifup<span class="w"> </span>wpan0..OK
+nsh&gt;<span class="w"> </span>udpserver<span class="w"> </span><span class="p">&amp;</span>
+udpserver<span class="w"> </span><span class="o">[</span><span class="m">6</span>:100<span class="o">]</span>
+</pre></div>
+</div>
+<p>The client node can use the default node address (<code class="docutils literal notranslate"><span class="pre">0xfffe</span></code>) and the
+updclient can be started using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>ifup<span class="w"> </span>wpan0
+ifup<span class="w"> </span>wpan0..OK
+nsh&gt;<span class="w"> </span>udpclient<span class="w"> </span>fe80::ff:fe00:a
+client:<span class="w"> </span><span class="m">0</span>.<span class="w"> </span>Sending<span class="w"> </span><span class="m">96</span><span class="w"> </span>bytes
+client:<span class="w"> </span><span class="m">0</span>.<span class="w"> </span>Sent<span class="w"> </span><span class="m">96</span><span class="w"> </span>bytes
+client:<span class="w"> </span><span class="m">1</span>.<span class="w"> </span>Sending<span class="w"> </span><span class="m">96</span><span class="w"> </span>bytes
+client:<span class="w"> </span><span class="m">1</span>.<span class="w"> </span>Sent<span class="w"> </span><span class="m">96</span><span class="w"> </span>bytes
+</pre></div>
+</div>
+<p>The server node will show the incoming messages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>udpserver<span class="w"> </span><span class="p">&amp;</span>
+udpserver<span class="w"> </span><span class="o">[</span><span class="m">6</span>:100<span class="o">]</span>
+nsh&gt;<span class="w"> </span>server:<span class="w"> </span><span class="m">0</span>.<span class="w"> </span>Receiving<span class="w"> </span>up<span class="w"> </span><span class="m">1024</span><span class="w"> </span>bytes
+server:<span class="w"> </span><span class="m">0</span>.<span class="w"> </span>Received<span class="w"> </span><span class="m">96</span><span class="w"> </span>bytes<span class="w"> </span>from<span class="w"> </span>fe80:0000:0000:0000:0000:00ff:fe00:feff<span class="w"> </span>port<span class="w"> </span><span class="m">5472</span>
+server:<span class="w"> </span><span class="m">1</span>.<span class="w"> </span>Receiving<span class="w"> </span>up<span class="w"> </span><span class="m">1024</span><span class="w"> </span>bytes
+server:<span class="w"> </span><span class="m">1</span>.<span class="w"> </span>Received<span class="w"> </span><span class="m">96</span><span class="w"> </span>bytes<span class="w"> </span>from<span class="w"> </span>fe80:0000:0000:0000:0000:00ff:fe00:feff<span class="w"> </span>port<span class="w"> </span><span class="m">5472</span>
+server:<span class="w"> </span><span class="m">2</span>.<span class="w"> </span>Receiving<span class="w"> </span>up<span class="w"> </span><span class="m">1024</span><span class="w"> </span>bytes
+</pre></div>
+</div>
+<p>The sample configuration also allows a telnet session over espnow:</p>
+<p>On the server (node <code class="docutils literal notranslate"><span class="pre">0x000a</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>ifconfig<span class="w"> </span>wpan0<span class="w"> </span>inet6<span class="w"> </span>fe80::ff:fe00:a
+nsh&gt;<span class="w"> </span>ifup<span class="w"> </span>wpan0
+ifup<span class="w"> </span>wpan0..OK
+nsh&gt;<span class="w"> </span>telnetd<span class="w"> </span>-6<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>On the client (node <code class="docutils literal notranslate"><span class="pre">Oxfffe</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>ifup<span class="w"> </span>wpan0
+ifup<span class="w"> </span>wpan0..OK
+nsh&gt;<span class="w"> </span>telnet<span class="w"> </span>fe80::ff:fe00:a
+
+NuttShell<span class="w"> </span><span class="o">(</span>NSH<span class="o">)</span><span class="w"> </span>NuttX-12.8.0
+nsh&gt;<span class="w"> </span>free
+free
+<span class="w">      </span>total<span class="w">       </span>used<span class="w">       </span>free<span class="w">    </span>maxused<span class="w">    </span>maxfree<span class="w">  </span>nused<span class="w">  </span>nfree<span class="w"> </span>name
+<span class="w">     </span><span class="m">253292</span><span class="w">      </span><span class="m">65996</span><span class="w">     </span><span class="m">187296</span><span class="w">      </span><span class="m">66624</span><span class="w">     </span><span class="m">129952</span><span class="w">    </span><span class="m">185</span><span class="w">      </span><span class="m">3</span><span class="w"> </span>Umem
+nsh&gt;<span class="w"> </span><span class="nb">exit</span>
+<span class="nb">exit</span>
+nsh&gt;
+</pre></div>
+</div>
 </section>
 <section id="i2schar">
 <h3>i2schar<a class="headerlink" href="#i2schar" title="Permalink to this heading"></a></h3>
