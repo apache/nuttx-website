@@ -151,6 +151,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../touchscreen.html">Touchscreen Device Drivers</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">Wireless character drivers</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="lpwan/index.html">LPWAN</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#ioctl-interface">IOCTL Interface</a></li>
 </ul>
 </li>
 </ul>
@@ -226,6 +227,51 @@
 <li class="toctree-l1"><a class="reference internal" href="lpwan/index.html">LPWAN</a></li>
 </ul>
 </div>
+<section id="ioctl-interface">
+<h2>IOCTL Interface<a class="headerlink" href="#ioctl-interface" title="Permalink to this heading"></a></h2>
+<p>Before this interface, the IOCTL API for character-driven RF devices lacked
+a common interface across different modulation technologies,
+such as LoRa, FSK, and OOK. The result was, driver-specific IOCTL commands
+were created even when they could be shared across multiple radios.
+This fragmentation made application portability more difficult to maintain.</p>
+<p>To solve this issue, groups of commands have been created that are “selected”
+by using <code class="docutils literal notranslate"><span class="pre">WLIOC_SETMODU</span></code>.
+See image below for a representation.</p>
+<figure class="align-default">
+<img alt="../../../../_images/wireless_ioctl_white.drawio.png" src="../../../../_images/wireless_ioctl_white.drawio.png" />
+</figure>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This image does not show all features. This is purely a
+representation of command relations under WLIOC_SETMODU.</p>
+</div>
+<section id="read">
+<h3>read()<a class="headerlink" href="#read" title="Permalink to this heading"></a></h3>
+<p>Reading a radio will take a <code class="docutils literal notranslate"><span class="pre">wlioc_rx_hdr_s</span></code>, where information about the
+payload will be read and written to.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">FAR</span> <span class="pre">uint8_t</span> <span class="pre">*payload_buffer</span></code> Pointer to <strong>user buffer</strong>. This is where
+the payload will be written to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size_t</span> <span class="pre">payload_length</span></code> <strong>Initially</strong>: User must set this to the size
+of <code class="docutils literal notranslate"><span class="pre">payload_buffer</span></code>. <strong>After reading</strong>: This will become the amount of
+bytes written to the <code class="docutils literal notranslate"><span class="pre">payload_buffer</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">error</span></code> When greater than 0, there are errors detected in the
+payload. The payload can still be returned, which allows the user to repair
+it if desired.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int32_t</span> <span class="pre">rssi_dbm</span></code> The Received Signal Strength Indicator in
+1/100 decibel-milliwatts of the received signal.
+When unsupported, this returns <code class="docutils literal notranslate"><span class="pre">INT32_MIN</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int32_t</span> <span class="pre">snr_db</span></code> The signal to noise ratio in 1/100 decibels of the
+received signal. When unsupported, this returns <code class="docutils literal notranslate"><span class="pre">INT32_MIN</span></code>.</p></li>
+</ul>
+</section>
+<section id="write">
+<h3>write()<a class="headerlink" href="#write" title="Permalink to this heading"></a></h3>
+<p>Writing to a radio will attempt to send the given bytes. The radio must be
+configured before doing so.
+Unlike <code class="docutils literal notranslate"><span class="pre">read()</span></code>, this will simply take uint8_t bytes as payload.</p>
+</section>
+</section>
 </section>
 
 
