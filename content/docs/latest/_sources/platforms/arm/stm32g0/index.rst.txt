@@ -29,7 +29,7 @@ SYSCFG      Yes
 DMA         Yes
 DMAMUX      Yes
 EXTI        Yes
-CRC         Yes
+CRC         No
 ADC         Yes
 DAC         No
 VREFBUF     ?
