@@ -381,9 +381,15 @@
 <h1><code class="docutils literal notranslate"><span class="pre">elf</span></code> ELF loader<a class="headerlink" href="#elf-elf-loader" title="Permalink to this heading"></a></h1>
 <p>This example builds a small ELF loader test case. This includes several test
 programs under <code class="docutils literal notranslate"><span class="pre">examples/elf</span></code> tests. These tests are build using the relocatable
-ELF format and installed in a ROMFS file system. At run time, each program in
-the ROMFS file system is executed. Requires <code class="docutils literal notranslate"><span class="pre">CONFIG_ELF</span></code>. Other configuration
-options:</p>
+ELF format and installed in a configurable file system. At run time, the file system
+is mounted and each program is executed. Requires <code class="docutils literal notranslate"><span class="pre">CONFIG_ELF</span></code>.
+Two distinct types of file systems are supported: internal (included in the NuttX binary)
+and external (not included in the binary). The external file systems need to be uploaded
+manually. For the internal file systems the sample supports the <code class="docutils literal notranslate"><span class="pre">romfs</span></code> and <code class="docutils literal notranslate"><span class="pre">cromfs</span></code>
+filesystems. For the external file systems any of the provided file systems can be used
+(<code class="docutils literal notranslate"><span class="pre">vfat</span></code>, …), but also the <code class="docutils literal notranslate"><span class="pre">romfs</span></code> filesystem for which the image (<code class="docutils literal notranslate"><span class="pre">romfs.img</span></code>) is
+automatically generated.</p>
+<p>Configuration options:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_ELF_DEVMINOR</span></code> – The minor device number of the ROMFS block
 driver. For example, the <code class="docutils literal notranslate"><span class="pre">N</span></code> in <code class="docutils literal notranslate"><span class="pre">/dev/ramN</span></code>. Used for registering the RAM
@@ -411,10 +417,6 @@ this should include <code class="docutils literal notranslate"><span class="pre"
 </div>
 <p>If you use GCC to link, you make also need to include <code class="docutils literal notranslate"><span class="pre">-nostdlib</span></code>.</p>
 </li>
-<li><p>This example also requires <code class="docutils literal notranslate"><span class="pre">genromfs</span></code>. <code class="docutils literal notranslate"><span class="pre">genromfs</span></code> can be build as part of the
-nuttx toolchain. Or can built from the <code class="docutils literal notranslate"><span class="pre">genromfs</span></code> sources that can be found
-in the NuttX tools repository (<code class="docutils literal notranslate"><span class="pre">genromfs-0.5.2.tar.gz</span></code>). In any event, the
-<code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable must include the path to the genromfs executable.</p></li>
 <li><p>ELF size: The ELF files in this example are, be default, quite large because
 they include a lot of build garbage. You can greatly reduce the size of the
 ELF binaries are using the <code class="docutils literal notranslate"><span class="pre">objcopy</span> <span class="pre">--strip-unneeded</span></code> command to remove
@@ -434,6 +436,9 @@ GNU LD <code class="docutils literal notranslate"><span class="pre">LDELFFLAGS</
 </pre></div>
 </div>
 </li>
+<li><p>When generating the <code class="docutils literal notranslate"><span class="pre">romfs.img</span></code> for external filesystem the image (<code class="docutils literal notranslate"><span class="pre">romfs.img</span></code>)
+needs to be manually copied to the start of the configured <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_ELF_DEVPATH</span></code>
+using <code class="docutils literal notranslate"><span class="pre">openocd</span></code> or your preferred programmer.</p></li>
 </ol>
 </section>
 
