@@ -143,6 +143,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#running">Running</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#running-lvgl">Running LVGL</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#running-vnc-server">Running VNC Server</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#running-simulated-can">Running Simulated CAN</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5 current"><a class="current reference internal" href="#">SIM</a></li>
 </ul>
@@ -2089,6 +2090,70 @@ PASSWORD:  Administrator
 you will find this annoying.  You can disable the password protection
 by de-selecting CONFIG_NSH_CONSOLE_LOGIN=y.</p>
 </div></blockquote>
+</section>
+<section id="can">
+<h3>can<a class="headerlink" href="#can" title="Permalink to this heading"></a></h3>
+<p>This is a configuration with simulated CAN support. Both CAN character driver
+and SocketCAN are enabled and use the host <code class="docutils literal notranslate"><span class="pre">vcan0</span></code> interface.
+The <code class="docutils literal notranslate"><span class="pre">vcan0</span></code> host interface must be available when NuttX is started.</p>
+<p>For the CAN character device, there is <code class="docutils literal notranslate"><span class="pre">examples/can</span></code> application enabled in
+read-only mode.</p>
+<p>Additionally, SocketCAN <code class="docutils literal notranslate"><span class="pre">candump</span></code> and <code class="docutils literal notranslate"><span class="pre">cansend</span></code> utils are enabled.</p>
+<p>Below is an example of receiving CAN frames from host to NuttX.
+Requirement: <code class="docutils literal notranslate"><span class="pre">cansequence</span></code> tool from <code class="docutils literal notranslate"><span class="pre">linux-can/can-utils</span></code></p>
+<ol class="arabic">
+<li><p>Create virtual CAN on host:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ip link add dev can0 type vcan
+ifconfig can0 up
+</pre></div>
+</div>
+</li>
+<li><p>Run NuttX:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./nuttx
+</pre></div>
+</div>
+</li>
+<li><p>Bring up can0 on NuttX:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifup can0
+ifup can0...OK
+</pre></div>
+</div>
+</li>
+<li><p>read CAN messages from SocketCAN on NuttX:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; candump can0
+</pre></div>
+</div>
+</li>
+<li><p>send CAN messages from host to NuttX:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cansequence can0
+</pre></div>
+</div>
+</li>
+<li><p>frames from host should be received on NuttX:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; candump can0
+can0  002   [1]  00
+can0  002   [1]  01
+can0  002   [1]  02
+can0  002   [1]  03
+can0  002   [1]  04
+can0  002   [1]  05
+can0  002   [1]  06
+can0  002   [1]  07
+can0  002   [1]  08
+can0  002   [1]  09
+can0  002   [1]  0A
+can0  002   [1]  0B
+can0  002   [1]  0C
+can0  002   [1]  0D
+can0  002   [1]  0E
+can0  002   [1]  0F
+can0  002   [1]  10
+can0  002   [1]  11
+can0  002   [1]  12
+</pre></div>
+</div>
+</li>
+</ol>
 </section>
 </section>
 <section id="readme-txt">
