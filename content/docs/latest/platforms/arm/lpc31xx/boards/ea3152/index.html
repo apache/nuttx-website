@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ea3152 &mdash; NuttX latest documentation</title>
+  <title>EA3152 &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -45,8 +45,8 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="olimex-lpc-h3131" href="../olimex-lpc-h3131/index.html" />
-    <link rel="prev" title="ea3131" href="../ea3131/index.html" /> 
+    <link rel="next" title="Olimex LPC-H3131" href="../olimex-lpc-h3131/index.html" />
+    <link rel="prev" title="EA3131" href="../ea3131/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -152,9 +152,9 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../lpc2378/index.html">NXP LPC2378</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">NXP LPC31xx</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
-<li class="toctree-l5"><a class="reference internal" href="../ea3131/index.html">ea3131</a></li>
-<li class="toctree-l5 current"><a class="current reference internal" href="#">ea3152</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../olimex-lpc-h3131/index.html">olimex-lpc-h3131</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../ea3131/index.html">EA3131</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">EA3152</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../olimex-lpc-h3131/index.html">Olimex LPC-H3131</a></li>
 </ul>
 </li>
 </ul>
@@ -207,6 +207,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm64/index.html">ARM64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../avr/context-switch-notes.html">Notes on AVR context switch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../avr/index.html">Microchip AVR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../ceva/index.html">CEVA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../hc/index.html">HC</a></li>
@@ -256,7 +257,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">NXP LPC31xx</a></li>
-      <li class="breadcrumb-item active">ea3152</li>
+      <li class="breadcrumb-item active">EA3152</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../../_sources/platforms/arm/lpc31xx/boards/ea3152/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -267,368 +268,328 @@
            <div itemprop="articleBody">
              
   <section id="ea3152">
-<h1>ea3152<a class="headerlink" href="#ea3152" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-^^^^^^
-
-  This README file discusses the port of NuttX to the Embedded Artists
-  EA3152 board.
-
-Contents
-^^^^^^^^
-
-  o Development Environment
-  o GNU Toolchain Options
-  o IDEs
-  o NuttX buildroot Toolchain
-  o Boot Sequence
-  o Image Format
-  o Image Download to ISRAM
-  o Using OpenOCD and GDB
-  o ARM/EA3152-specific Configuration Options
-  o Configurations
-
-Development Environment
-^^^^^^^^^^^^^^^^^^^^^^^
-
-  Either Linux or Cygwin on Windows can be used for the development environment.
-  The source has been built only using the GNU toolchain (see below).  Other
-  toolchains will likely cause problems.
-
-GNU Toolchain Options
-^^^^^^^^^^^^^^^^^^^^^
-
-  The NuttX make system has been modified to support the following different
-  toolchain options.
-
-  1. The NuttX buildroot Toolchain (see below), or
-  2. Any generic arm-none-eabi GNU toolchain.
-
-  All testing has been conducted using the NuttX buildroot toolchain.  To use
-  a different toolchain, you simply need to modify the configuration.  As an
-  example:
-
-    CONFIG_ARM_TOOLCHAIN_GNU_EABI : Generic arm-none-eabi toolchain
-
-  Generic arm-none-eabi GNU Toolchain
-  -----------------------------------
-  There are a number of toolchain projects providing support for ARMv4/v5
-  class processors, including:
-
-    GCC ARM Embedded
-      https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
-
-  Others exist for various Linux distributions, MacPorts, etc.  Any version
-  based on GCC 4.6.3 or later should work.
-
-IDEs
-^^^^
-
-  NuttX is built using command-line make.  It can be used with an IDE, but some
-  effort will be required to create the project
-
-  Makefile Build
-  --------------
-  Under Eclipse, it is pretty easy to set up an &quot;empty makefile project&quot; and
-  simply use the NuttX makefile to build the system.  That is almost for free
-  under Linux.  Under Windows, you will need to set up the &quot;Cygwin GCC&quot; empty
-  makefile project in order to work with Windows (Google for &quot;Eclipse Cygwin&quot; -
-  there is a lot of help on the internet).
-
-  Native Build
-  ------------
-  Here are a few tips before you start that effort:
-
-  1) Select the toolchain that you will be using in your .config file
-  2) Start the NuttX build at least one time from the Cygwin command line
-     before trying to create your project.  This is necessary to create
-     certain auto-generated files and directories that will be needed.
-  3) Set up include paths:  You will need include/, arch/arm/src/lpc31xx,
-     arch/arm/src/common, arch/arm/src/arm, and sched/.
-  4) All assembly files need to have the definition option -D __ASSEMBLY__
-     on the command line.
-
-  Startup files will probably cause you some headaches.  The NuttX startup file
-  is arch/arm/src/lpc31xx/lpc31_vectors.S.  You may have to build NuttX
-  one time from the Cygwin command line in order to obtain the pre-built
-  startup object needed by an IDE.
-
-NuttX buildroot Toolchain
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-  A GNU GCC-based toolchain is assumed.  The PATH environment variable should
-  be modified to point to the correct path to the Cortex-M3 GCC toolchain (if
-  different from the default in your PATH variable).
-
-  If you have no Cortex-M3 toolchain, one can be downloaded from the NuttX
-  Bitbucket download site (https://bitbucket.org/nuttx/buildroot/downloads/).
-  This GNU toolchain builds and executes in the Linux or Cygwin environment.
-
-  1. You must have already configured NuttX in &lt;some-dir&gt;/nuttx.
-
-     tools/configure.sh ea3152:&lt;sub-dir&gt;
-
-  2. Download the latest buildroot package into &lt;some-dir&gt;
-
-  3. unpack the buildroot tarball.  The resulting directory may
-     have versioning information on it like buildroot-x.y.z.  If so,
-     rename &lt;some-dir&gt;/buildroot-x.y.z to &lt;some-dir&gt;/buildroot.
-
-  4. cd &lt;some-dir&gt;/buildroot
-
-  5. cp boards/arm926t-defconfig-4.2.4 .config
-
-  6. make oldconfig
-
-  7. make
-
-  8. Make sure that the PATH variable includes the path to the newly built
-     binaries.
-
-  See the file boards/README.txt in the buildroot source tree.  That has more
-  detailed PLUS some special instructions that you will need to follow if you are
-  building a Cortex-M3 toolchain for Cygwin under Windows.
-
-Boot Sequence
-^^^^^^^^^^^^^
-  LPC315x has on chip bootrom which loads properly formatted images from multiple
-  sources into SRAM.  These sources include including SPI Flash, NOR Flash, UART,
-  USB, SD Card, and NAND Flash.
-
-  In all configurations, NuttX is loaded directly into ISRAM.  NuttX is linked
-  to execute from ISRAM, regardless of the boot source.
-
-Image Format
-^^^^^^^^^^^^
-
-  In order to use the bootrom bootloader, a special header must be added to the
-  beginning of the binary image that includes information about the binary (things
-  like the entry point, the size, and CRC&#39;s to verify the image.
-
-  NXP provides a Windows program to append such a header to the binary image.
-  However, (1) that program won&#39;t run under Linux, and (2) when I try it under
-  WinXP, Symantec immediately claims that the program is misbehaving and deletes
-  it!
-
-  To work around both of these issues, I have created a small program under
-  boards/arm/lpc31xx/ea3152/tools to add the header.  This program can be built under
-  either Linux or Cygwin (and probably other tool environments as well).  That
-  tool can be built as follows:
-
-  - cd boards/arm/lpc31xx/ea3152/tools
-  - make
-
-  Then, to build the NuttX binary ready to load with the bootloader, just
-  following these steps:
-
-  - tools/configure.sh ea3152:ostest # (using the ostest configuration for this example)
-  - cd ..                            # Set up environment
-  - make                             # Make NuttX.  This will produce nuttx.bin
-  - mklpc.sh                         # Make the bootloader binary (nuttx.lpc)
-
-  NOTES:
-
-    1. You will need to set your PATH variable appropriately or use the full path
-       to mklpc.sh in the final step.
-    2. You can instruct Symantec to ignore the errors and it will stop quarantining
-       the NXP program.
-    3. The CRC32 logic in boards/arm/lpc31xx/ea3152/tools doesn&#39;t seem to work.  As a result,
-       the CRC is currently disabled in the header:
-
-       RCS file: /cvsroot/nuttx/nuttx/boards/arm/lpc31xx/ea3152/tools/lpchdr.c,v
-       retrieving revision 1.2
-       diff -r1.2 lpchdr.c
-       264c264
-       &lt;   g_hdr.imagetype       = 0x0000000b;
-       ---
-       &gt;   g_hdr.imagetype       = 0x0000000a;
-
-Image Download to ISRAM
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Assuming that you already have the FTDI driver installed*, then here is the
-are the steps that I use for loading new code into the EA3152:
-
-- Create the bootloader binary, nuttx.lpc, as described above.
-- Connected the EA3152 using the FTDI USB port (not the lpc3152 USB port)
-  This will power up the EA3152 and start the bootloader.
-- Start a terminal emulator (such as TeraTerm) at 115200 8NI.
-- Reset the EA3152 and you should see:
-  LPC31xx READY FOR PLAIN IMAGE&gt;
-- Send the nuttx.lpc file and you should see:
-  Download finished
-
-That will load the NuttX binary into ISRAM and attempt to execute it.
-
-*See the LPC315x documentation if you do not have the FTDI driver installed.
-
-Using OpenOCD and GDB
-^^^^^^^^^^^^^^^^^^^^^
-
-  I have been using the Olimex ARM-USB-OCD JTAG debugger with the EA3152
-  (http://www.olimex.com).  The OpenOCD configuration file is here:
-  tools/armusbocb.cfg.  There is also a script on the tools directory that
-  I used to start the OpenOCD daemon on my system called oocd.sh.  That
-  script would probably require some modifications to work in another
-  environment:
-
-    - possibly the value of OPENOCD_PATH
-    - If you are working under Linux you will need to change any
-      occurrences of `cygpath -w blablabla` to just blablabla
-
-  Then you should be able to start the OpenOCD daemon like:
-
-    boards/arm/lpc31xx/ea3152/tools/oocd.sh $PWD
-
-  Where it is assumed that you are executing oocd.sh from the top level
-  directory where NuttX is installed.
-
-  Once the OpenOCD daemon has been started, you can connect to it via
-  GDB using the following GDB command:
-
-   arm-nuttx-elf-gdb
-   (gdb) target remote localhost:3333
-
-  And you can load the NuttX ELF file:
-
-   (gdb) symbol-file nuttx
-   (gdb) load nuttx
-
-ARM/EA3152-specific Configuration Options
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    CONFIG_ARCH - Identifies the arch/ subdirectory.  This should
-       be set to:
-
-       CONFIG_ARCH=arm
-
-    CONFIG_ARCH_family - For use in C code:
-
-       CONFIG_ARCH_ARM=y
-
-    CONFIG_ARCH_architecture - For use in C code:
-
-       CONFIG_ARCH_ARM926EJS=y
-
-    CONFIG_ARCH_CHIP - Identifies the arch/*/chip subdirectory
-
-       CONFIG_ARCH_CHIP=lpc31xx
-
-    CONFIG_ARCH_CHIP_name - For use in C code
-
-       CONFIG_ARCH_CHIP_LPC3152
-
-    CONFIG_ARCH_BOARD - Identifies the boards/ subdirectory and
-       hence, the board that supports the particular chip or SoC.
-
-       CONFIG_ARCH_BOARD=ea3152
-
-    CONFIG_ARCH_BOARD_name - For use in C code
-
-       CONFIG_ARCH_BOARD_EA3152
-
-    CONFIG_ARCH_LOOPSPERMSEC - Must be calibrated for correct operation
-       of delay loops
-
-    CONFIG_ENDIAN_BIG - define if big endian (default is little
-       endian)
-
-    CONFIG_RAM_SIZE - For most ARM9 architectures, this describes the
-      size of installed DRAM.  For the LPC315X, it is used only to
-      determine how to map the executable regions.  It is SDRAM size
-      only if you are executing out of the external SDRAM; or it could
-      be NOR FLASH size, external SRAM size, or internal SRAM size.
-
-    CONFIG_RAM_START - The start address of installed DRAM (physical)
-
-    CONFIG_RAM_VSTART - The startaddress of DRAM (virtual)
-
-    CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
-       have LEDs
-
-    CONFIG_ARCH_INTERRUPTSTACK - This architecture supports an interrupt
-       stack. If defined, this symbol is the size of the interrupt
-       stack in bytes.  If not defined, the user task stacks will be
-      used during interrupt handling.
-
-    CONFIG_ARCH_STACKDUMP - Do stack dumps after assertions
-
-    CONFIG_ARCH_LEDS -  Use LEDs to show state. Unique to board architecture.
-
-    CONFIG_ARCH_BUTTONS -  Enable support for buttons. Unique to board architecture.
-
-    CONFIG_ARCH_DMA - Support DMA initialization
-
-    CONFIG_ARCH_LOWVECTORS - define if vectors reside at address 0x0000:00000
-      Undefine if vectors reside at address 0xffff:0000
-
-    CONFIG_ARCH_ROMPGTABLE - A pre-initialized, read-only page table is available.
-      If defined, then board-specific logic must also define PGTABLE_BASE_PADDR,
-      PGTABLE_BASE_VADDR, and all memory section mapping in a file named
-      board_memorymap.h.
-
-  Individual subsystems can be enabled:
-
-    CONFIG_LPC31_MCI, CONFIG_LPC31_SPI, CONFIG_LPC31_UART
-
-  External memory available on the board (see also CONFIG_MM_REGIONS)
-
-    CONFIG_LPC31_EXTSRAM0 - Select if external SRAM0 is present
-    CONFIG_LPC31_EXTSRAM0HEAP - Select if external SRAM0 should be
-      configured as part of the NuttX heap.
-    CONFIG_LPC31_EXTSRAM0SIZE - Size (in bytes) of the installed
-      external SRAM0 memory
-    CONFIG_LPC31_EXTSRAM1 - Select if external SRAM1 is present
-    CONFIG_LPC31_EXTSRAM1HEAP - Select if external SRAM1 should be
-      configured as part of the NuttX heap.
-    CONFIG_LPC31_EXTSRAM1SIZE - Size (in bytes) of the installed
-      external SRAM1 memory
-    CONFIG_LPC31_EXTDRAM - Select if external SDRAM is present
-    CONFIG_LPC31_EXTDRAMHEAP - Select if external SDRAM should be
-      configured as part of the NuttX heap.
-    CONFIG_LPC31_EXTDRAMSIZE - Size (in bytes) of the installed
-      external SDRAM memory
-    CONFIG_LPC31_EXTNAND - Select if external NAND is present
-    CONFIG_LPC31_EXTNANDSIZE - Size (in bytes) of the installed
-      external NAND memory
-
-  LPC315X specific device driver settings
-
-    CONFIG_UART_SERIAL_CONSOLE - selects the UART for the
-      console and ttys0
-    CONFIG_UART_RXBUFSIZE - Characters are buffered as received.
-      This specific the size of the receive buffer
-    CONFIG_UART_TXBUFSIZE - Characters are buffered before
-      being sent.  This specific the size of the transmit buffer
-    CONFIG_UART_BAUD - The configure BAUD of the UART.  Must be
-    CONFIG_UART_BITS - The number of bits.  Must be either 7 or 8.
-    CONFIG_UART_PARTIY - 0=no parity, 1=odd parity, 2=even parity
-    CONFIG_UART_2STOP - Two stop bits
-
-Configurations
-^^^^^^^^^^^^^^
-
-Each EA3152 configuration is maintained in a sub-directory and can be
-selected as follow:
-
-    tools/configure.sh ea3152:&lt;subdir&gt;
-
-Where &lt;subdir&gt; is one of the following:
-
-  ostest:
-    This configuration directory, performs a simple OS test using
-    examples/ostest.  By default, this project assumes that you are
-    using the DFU bootloader.
+<h1>EA3152<a class="headerlink" href="#ea3152" title="Permalink to this heading"></a></h1>
+<p>This documentation discusses the port of NuttX to the Embedded Artists EA3152
+board.</p>
+<section id="development-environment">
+<h2>Development Environment<a class="headerlink" href="#development-environment" title="Permalink to this heading"></a></h2>
+<p>Either Linux or Cygwin on Windows can be used for the development environment.
+The source has been built only using the GNU toolchain (see below).  Other
+toolchains will likely cause problems.</p>
+</section>
+<section id="gnu-toolchain-options">
+<h2>GNU Toolchain Options<a class="headerlink" href="#gnu-toolchain-options" title="Permalink to this heading"></a></h2>
+<p>The NuttX make system has been modified to support the following different
+toolchain options.</p>
+<ol class="arabic simple">
+<li><p>The NuttX buildroot Toolchain (see below), or</p></li>
+<li><p>Any generic arm-none-eabi GNU toolchain.</p></li>
+</ol>
+<p>All testing has been conducted using the NuttX buildroot toolchain. To use a
+different toolchain, you simply need to modify the configuration. As an example:</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_GNU_EABI</span> <span class="pre">:</span> <span class="pre">Generic</span> <span class="pre">arm-none-eabi</span> <span class="pre">toolchain</span></code></p>
+<section id="generic-arm-none-eabi-gnu-toolchain">
+<h3>Generic arm-none-eabi GNU Toolchain<a class="headerlink" href="#generic-arm-none-eabi-gnu-toolchain" title="Permalink to this heading"></a></h3>
+<p>There are a number of toolchain projects providing support for ARMv4/v5 class
+processors, including <a class="reference external" href="https://developer.arm.com/open-source/gnu-toolchain/gnu-rm">GCC ARM Embedded</a>.</p>
+<p>Others exist for various Linux distributions, MacPorts, etc. Any version based
+on GCC 4.6.3 or later should work.</p>
+</section>
+</section>
+<section id="ides">
+<h2>IDEs<a class="headerlink" href="#ides" title="Permalink to this heading"></a></h2>
+<p>NuttX is built using command-line make.  It can be used with an IDE, but some
+effort will be required to create the project</p>
+<section id="makefile-build">
+<h3>Makefile Build<a class="headerlink" href="#makefile-build" title="Permalink to this heading"></a></h3>
+<p>Under Eclipse, it is pretty easy to set up an “empty makefile project” and
+simply use the NuttX makefile to build the system.  That is almost for free
+under Linux.  Under Windows, you will need to set up the “Cygwin GCC” empty
+makefile project in order to work with Windows (Google for “Eclipse Cygwin” -
+there is a lot of help on the internet).</p>
+</section>
+<section id="native-build">
+<h3>Native Build<a class="headerlink" href="#native-build" title="Permalink to this heading"></a></h3>
+<p>Here are a few tips before you start that effort:</p>
+<ol class="arabic simple">
+<li><p>Select the toolchain that you will be using in your .config file</p></li>
+<li><p>Start the NuttX build at least one time from the Cygwin command line
+before trying to create your project.  This is necessary to create
+certain auto-generated files and directories that will be needed.</p></li>
+<li><p>Set up include paths: You will need <code class="docutils literal notranslate"><span class="pre">include/</span></code>, <code class="docutils literal notranslate"><span class="pre">arch/arm/src/lpc31xx</span></code>,
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common</span></code>, <code class="docutils literal notranslate"><span class="pre">arch/arm/src/arm</span></code>, and <code class="docutils literal notranslate"><span class="pre">sched/</span></code>.</p></li>
+</ol>
+<ol class="arabic simple" start="4">
+<li><p>All assembly files need to have the definition option <code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">__ASSEMBLY__</span></code>
+on the command line.</p></li>
+</ol>
+<p>Startup files will probably cause you some headaches. The NuttX startup file is
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/lpc31xx/lpc31_vectors.S</span></code>. You may have to build NuttX one time
+from the Cygwin command line in order to obtain the pre-built startup object
+needed by an IDE.</p>
+</section>
+</section>
+<section id="nuttx-buildroot-toolchain">
+<h2>NuttX buildroot Toolchain<a class="headerlink" href="#nuttx-buildroot-toolchain" title="Permalink to this heading"></a></h2>
+<p>A GNU GCC-based toolchain is assumed. The PATH environment variable should
+be modified to point to the correct path to the Cortex-M3 GCC toolchain (if
+different from the default in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable).</p>
+<p>If you have no Cortex-M3 toolchain, one can be downloaded from the NuttX
+Bitbucket download site (<a class="reference external" href="https://bitbucket.org/nuttx/buildroot/downloads/">https://bitbucket.org/nuttx/buildroot/downloads/</a>).
+This GNU toolchain builds and executes in the Linux or Cygwin environment.</p>
+<ol class="arabic simple">
+<li><p>You must have already configured NuttX in <code class="docutils literal notranslate"><span class="pre">&lt;some-dir&gt;/nuttx</span></code>.</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>tools/configure.sh<span class="w"> </span>ea3152:&lt;sub-dir&gt;
 </pre></div>
 </div>
+<ol class="arabic simple" start="2">
+<li><p>Download the latest buildroot package into <code class="docutils literal notranslate"><span class="pre">&lt;some-dir&gt;</span></code></p></li>
+<li><p>Unpack the buildroot tarball.  The resulting directory may have versioning
+information on it like <code class="docutils literal notranslate"><span class="pre">buildroot-x.y.z</span></code>.  If so, rename
+<code class="docutils literal notranslate"><span class="pre">&lt;some-dir&gt;/buildroot-x.y.z</span></code> to <code class="docutils literal notranslate"><span class="pre">&lt;some-dir&gt;/buildroot</span></code>.</p></li>
+<li></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>&lt;some-dir&gt;/buildroot
+<span class="gp">$ </span>cp<span class="w"> </span>boards/arm926t-defconfig-4.2.4<span class="w"> </span>.config
+<span class="gp">$ </span>make<span class="w"> </span>oldconfig
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Make sure that the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable includes the path to the newly built
+binaries.</p></li>
+</ol>
+<p>See the file <code class="docutils literal notranslate"><span class="pre">boards/README.txt</span></code> in the buildroot source tree.  That has more
+detailed PLUS some special instructions that you will need to follow if you are
+building a Cortex-M3 toolchain for Cygwin under Windows.</p>
+</section>
+<section id="boot-sequence">
+<h2>Boot Sequence<a class="headerlink" href="#boot-sequence" title="Permalink to this heading"></a></h2>
+<p>LPC315x has on chip bootrom which loads properly formatted images from multiple
+sources into SRAM.  These sources include including SPI Flash, NOR Flash, UART,
+USB, SD Card, and NAND Flash.</p>
+<p>In all configurations, NuttX is loaded directly into ISRAM.  NuttX is linked
+to execute from ISRAM, regardless of the boot source.</p>
+</section>
+<section id="image-format">
+<h2>Image Format<a class="headerlink" href="#image-format" title="Permalink to this heading"></a></h2>
+<p>In order to use the bootrom bootloader, a special header must be added to the
+beginning of the binary image that includes information about the binary (things
+like the entry point, the size, and CRC’s to verify the image.</p>
+<p>NXP provides a Windows program to append such a header to the binary image.
+However, (1) that program won’t run under Linux, and (2) when I try it under
+WinXP, Symantec immediately claims that the program is misbehaving and deletes
+it!</p>
+<p>To work around both of these issues, I have created a small program under
+<code class="docutils literal notranslate"><span class="pre">boards/arm/lpc31xx/ea3152/tools</span></code> to add the header.  This program can be
+built under either Linux or Cygwin (and probably other tool environments as
+well).  That tool can be built as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>boards/arm/lpc31xx/ea3152/tools
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>Then, to build the NuttX binary ready to load with the bootloader, just
+following these steps:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>tools/configure.sh<span class="w"> </span>ea3152:ostest<span class="w"> </span><span class="c1"># (using the ostest configuration for this example)</span>
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>..<span class="w">                            </span><span class="c1"># Set up environment</span>
+<span class="gp">$ </span>make<span class="w">                             </span><span class="c1"># Make NuttX.  This will produce nuttx.bin</span>
+<span class="gp">$ </span>mklpc.sh<span class="w">                         </span><span class="c1"># Make the bootloader binary (nuttx.lpc)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>You will need to set your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable appropriately or use the full path
+to mklpc.sh in the final step.</p></li>
+<li><p>You can instruct Symantec to ignore the errors and it will stop quarantining
+the NXP program.</p></li>
+<li><p>The CRC32 logic in <code class="docutils literal notranslate"><span class="pre">boards/arm/lpc31xx/ea3152/tools</span></code> doesn’t seem to work. As a result,
+the CRC is currently disabled in the header:</p></li>
+</ol>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span>RCS file: /cvsroot/nuttx/nuttx/boards/arm/lpc31xx/ea3152/tools/lpchdr.c,v
+retrieving revision 1.2
+<span class="gh">diff -r1.2 lpchdr.c</span>
+264c264
+<span class="gd">&lt;   g_hdr.imagetype       = 0x0000000b;</span>
+<span class="gs">---</span>
+<span class="gi">&gt;   g_hdr.imagetype       = 0x0000000a;</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="image-download-to-isram">
+<h2>Image Download to ISRAM<a class="headerlink" href="#image-download-to-isram" title="Permalink to this heading"></a></h2>
+<p>Assuming that you already have the FTDI driver installed*, then here is the
+are the steps that I use for loading new code into the EA3152:</p>
+<ul class="simple">
+<li><p>Create the bootloader binary, <code class="docutils literal notranslate"><span class="pre">nuttx.lpc</span></code>, as described above.</p></li>
+<li><p>Connected the EA3152 using the FTDI USB port (not the lpc3152 USB port). This
+will power up the EA3152 and start the bootloader.</p></li>
+<li><p>Start a terminal emulator (such as TeraTerm) at 115200 8NI.</p></li>
+<li><p>Reset the EA3152 and you should see: <code class="docutils literal notranslate"><span class="pre">LPC31xx</span> <span class="pre">READY</span> <span class="pre">FOR</span> <span class="pre">PLAIN</span> <span class="pre">IMAGE&gt;</span></code></p></li>
+<li><p>Send the <code class="docutils literal notranslate"><span class="pre">nuttx.lpc</span></code> file and you should see: “Download finished”</p></li>
+</ul>
+<p>That will load the NuttX binary into ISRAM and attempt to execute it.</p>
+<p><cite>See the LPC315x documentation if you do not have the FTDI driver installed.</cite></p>
+</section>
+<section id="using-openocd-and-gdb">
+<h2>Using OpenOCD and GDB<a class="headerlink" href="#using-openocd-and-gdb" title="Permalink to this heading"></a></h2>
+<p>I have been using the Olimex ARM-USB-OCD JTAG debugger with the EA3152
+(<a class="reference external" href="http://www.olimex.com">http://www.olimex.com</a>). The OpenOCD configuration file is here:
+<code class="docutils literal notranslate"><span class="pre">tools/armusbocb.cfg</span></code>. There is also a script on the tools directory that I
+used to start the OpenOCD daemon on my system called <code class="docutils literal notranslate"><span class="pre">oocd.sh</span></code>. That script
+would probably require some modifications to work in another environment:</p>
+<ul class="simple">
+<li><p>Possibly the value of <code class="docutils literal notranslate"><span class="pre">OPENOCD_PATH</span></code></p></li>
+<li><p>If you are working under Linux you will need to change any
+occurrences of <code class="docutils literal notranslate"><span class="pre">cygpath</span> <span class="pre">-w</span> <span class="pre">blablabla</span></code> to just blablabla</p></li>
+</ul>
+<p>Then you should be able to start the OpenOCD daemon like:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>boards/arm/lpc31xx/ea3152/tools/oocd.sh<span class="w"> </span><span class="nv">$PWD</span>
+</pre></div>
+</div>
+<p>Where it is assumed that you are executing oocd.sh from the top level
+directory where NuttX is installed.</p>
+<p>Once the OpenOCD daemon has been started, you can connect to it via
+GDB using the following GDB command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">arm-nuttx-elf-gdb</span>
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">target remote localhost:3333</span>
+</pre></div>
+</div>
+<p>And you can load the NuttX ELF file:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">symbol-file nuttx</span>
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">load nuttx</span>
+</pre></div>
+</div>
+</section>
+<section id="arm-ea3152-specific-configuration-options">
+<h2>ARM/EA3152-specific Configuration Options<a class="headerlink" href="#arm-ea3152-specific-configuration-options" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">arch/</span></code> subdirectory.  This should be set to:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH=arm</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_family</span></code>: For use in C code:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ARM=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_architecture</span></code>: For use in C code:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ARM926EJS=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">arch/*/chip</span></code> subdirectory</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP=lpc31xx</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_name</span></code>: For use in C code</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_LPC3152</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">boards/</span></code> subdirectory and hence, the
+board that supports the particular chip or SoC.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD=ea3152</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_name</span></code>: For use in C code</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_EA3152</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LOOPSPERMSEC</span></code>: Must be calibrated for correct operation of delay loops</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ENDIAN_BIG</span></code>: define if big endian (default is little endian)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE</span></code>: For most ARM9 architectures, this describes the size of
+installed DRAM.  For the LPC315X, it is used only to determine how to map the
+executable regions.  It is SDRAM size only if you are executing out of the
+external SDRAM; or it could be NOR FLASH size, external SRAM size, or internal
+SRAM size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_START</span></code>: The start address of installed DRAM (physical)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_VSTART</span></code>: The startaddress of DRAM (virtual)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code>: Use LEDs to show state. Unique to boards that have LEDs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_INTERRUPTSTACK</span></code>: This architecture supports an interrupt stack.
+If defined, this symbol is the size of the interrupt stack in bytes.  If not
+defined, the user task stacks will be used during interrupt handling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_STACKDUMP</span></code>: Do stack dumps after assertions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code>: Use LEDs to show state. Unique to board architecture.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BUTTONS</span></code>: Enable support for buttons. Unique to board architecture.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_DMA</span></code>: Support DMA initialization</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LOWVECTORS</span></code>: Define if vectors reside at address
+<code class="docutils literal notranslate"><span class="pre">0x0000:00000</span></code>. Undefine if vectors reside at address <code class="docutils literal notranslate"><span class="pre">0xffff:0000</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ROMPGTABLE</span></code>: A pre-initialized, read-only page table is
+available. If defined, then board-specific logic must also define
+<code class="docutils literal notranslate"><span class="pre">PGTABLE_BASE_PADDR</span></code>, <code class="docutils literal notranslate"><span class="pre">PGTABLE_BASE_VADDR</span></code>, and all memory section mapping
+in a file named <code class="docutils literal notranslate"><span class="pre">board_memorymap.h</span></code>.</p></li>
+</ul>
+<p>Individual subsystems can be enabled:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_MCI</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_SPI</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_UART</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>External memory available on the board (see also <code class="docutils literal notranslate"><span class="pre">CONFIG_MM_REGIONS</span></code>)</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTSRAM0</span></code>: Select if external SRAM0 is present</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTSRAM0HEAP</span></code>: Select if external SRAM0 should be
+configured as part of the NuttX heap.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTSRAM0SIZE</span></code>: Size (in bytes) of the installed external
+SRAM0 memory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTSRAM1</span></code>: Select if external SRAM1 is present</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTSRAM1HEAP</span></code>: Select if external SRAM1 should be
+configured as part of the NuttX heap.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTSRAM1SIZE</span></code>: Size (in bytes) of the installed external
+SRAM1 memory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTDRAM</span></code>: Select if external SDRAM is present</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTDRAMHEAP</span></code>: Select if external SDRAM should be
+configured as part of the NuttX heap.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTDRAMSIZE</span></code>: Size (in bytes) of the installed external
+SDRAM memory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTNAND</span></code>: Select if external NAND is present</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPC31_EXTNANDSIZE</span></code>: Size (in bytes) of the installed external
+NAND memory</p></li>
+</ul>
+<p>LPC315X specific device driver settings</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UART_SERIAL_CONSOLE</span></code>: selects the UART for the console and ttys0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UART_RXBUFSIZE</span></code>: Characters are buffered as received. This specific
+the size of the receive buffer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UART_TXBUFSIZE</span></code> - Characters are buffered before being sent. This
+specific the size of the transmit buffer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UART_BAUD</span></code>: The configure BAUD of the UART. Must be</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UART_BITS</span></code>: The number of bits. Must be either 7 or 8.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UART_PARTIY</span></code>: 0=no parity, 1=odd parity, 2=even parity</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UART_2STOP</span></code>: Two stop bits</p></li>
+</ul>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>Each EA3152 configuration is maintained in a sub-directory and can be
+selected as follow:</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;subdir&gt;</span></code> is one of the following:</p>
+<section id="ostest">
+<h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this heading"></a></h3>
+<p>This configuration directory, performs a simple OS test using examples/ostest.
+By default, this project assumes that you are using the DFU bootloader.</p>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../ea3131/index.html" class="btn btn-neutral float-left" title="ea3131" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../olimex-lpc-h3131/index.html" class="btn btn-neutral float-right" title="olimex-lpc-h3131" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../ea3131/index.html" class="btn btn-neutral float-left" title="EA3131" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../olimex-lpc-h3131/index.html" class="btn btn-neutral float-right" title="Olimex LPC-H3131" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

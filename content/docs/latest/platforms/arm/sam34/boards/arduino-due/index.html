@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>arduino-due &mdash; NuttX latest documentation</title>
+  <title>Arduino Due &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -45,7 +45,7 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="flipnclick-sam3x" href="../flipnclick-sam3x/index.html" />
+    <link rel="next" title="Flip&amp;Click SAM3X" href="../flipnclick-sam3x/index.html" />
     <link rel="prev" title="Microchip SAM34" href="../../index.html" /> 
 </head>
 
@@ -210,6 +210,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm64/index.html">ARM64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../avr/context-switch-notes.html">Notes on AVR context switch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../avr/index.html">Microchip AVR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../ceva/index.html">CEVA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../hc/index.html">HC</a></li>
@@ -259,7 +260,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Microchip SAM34</a></li>
-      <li class="breadcrumb-item active">arduino-due</li>
+      <li class="breadcrumb-item active">Arduino Due</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../../_sources/platforms/arm/sam34/boards/arduino-due/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -270,887 +271,2518 @@
            <div itemprop="articleBody">
              
   <section id="arduino-due">
-<h1>arduino-due<a class="headerlink" href="#arduino-due" title="Permalink to this heading"></a></h1>
-<p>This sub-directory holds board support for the Arduino DUE board featuring
-the Atmel ATSAM3X8E MCU running at 84 MHz.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-======
-
-  This README discusses issues unique to NuttX configurations for the
-  Arduino DUE board featuring the Atmel ATSAM3X8E MCU running at 84 MHz.
-
-  NOTE:  If found that newer Arduino Due board differ from the older boards
-  mine:  Mine has the 32.768 slow clock crystal and associated caps installed.
-  the newer boards do not.  This can cause a hang in the SAM startup code
-  where it waits for the slow crystal input to lock on.
-
-  Options:  (1) Solder a 32.768 KHz crystal and associated caps on board or,
-  (2) disable the function sam_setupsupc() in sam_clockconfig.c
-
-  Supported Shields
-  -----------------
-  - ITEAD 2.4&quot; TFT with Touch, Arduino Shield 1.0
-
-Contents
-========
-
-  - PIO Pin Usage
-  - Rev 2 vs. Rev 3
-  - ITEAD 2.4&quot; TFT with Touch
-  - Buttons and LEDs
-  - Serial Consoles
-  - Loading Code
-  - Arduino Due-specific Configuration Options
-  - Configurations
-
-PIO Pin Usage
-=============
-
-  PORTA                          PORTB                          PORTC
-  ------------------------------ ------------------------------ --------------------------------
-  PIO   SIGNAL     CONN PIN      PIO   SIGNAL       CONN PIN    PIO   SIGNAL      CONN PIN
-  ----- ---------- ---- -------- ----- ------------ ---- ------ ----- ----------- ---- ---------
-  PA0   CANTX0     ADCH 8        PB0   ETX_CLK      ETH  1      PC0   ERASE       N/A
-  PA1   CANRX0     ACDH 7        PB1   ETX_EN       ETH  3      PC1   PIN33       XIO  14
-  PA2   AD7        ADCL 8        PB2   ETXD0        ETH  5      PC2   PIN34       XIO  15
-  PA3   AD6        ADCL 7        PB3   ETXD1        ETH  7      PC3   PIN35       XIO  16
-  PA4   AD5        ADCL 6        PB4   ERX_DV       ETH  10     PC4   PIN36       XIO  17
-  PA5   EEXTINT    ETH  8        PB5   ERXD0        ETH  9      PC5   PIN37       XIO  18
-  PA6   AD4        ADCL 5        PB6   ERXD1        ETH  11     PC6   PIN38       XIO  19
-  PA7   PIN31      XIO  12       PB7   ERX_ER       ETH  13     PC7   PIN39       XIO  20
-  PA8   [U]RX      PWML 1        PB8   EMDC         ETH  14     PC8   PIN40       XIO  21
-  PA9   [U]TX      PWML 2        PB9   EMDIO        ETH  12     PC9   PIN41       XIO  22
-  PA10  RXD2       COMM 6        PB10  UOTGVBOF     Vbus power  PC10  N/C         N/A
-  PA11  TXD2       COMM 5        PB11  UOTGID       USB1 4      PC11  N/C         N/A
-  PA12  RXD1       COMM 4        PB12  SDA0-3       COMM 7      PC12  PIN51       XIO  32
-  PA13  TXD1       COMM 3        PB13  SCL0-3       COMM 8      PC13  PIN50       XIO  31
-  PA14  PIN23      XIO  4        PB14  CANTX1/IO    XIO  34     PC14  PIN49       XIO  30
-  PA15  PIN24      XIO  5        PB15  DAC0(CANRX1) ADCH 5      PC15  PIN48       XIO  29
-  PA16  AD0        ADCL 1        PB16  DAC1         ADCH 6      PC16  PIN47       XIO  28
-  PA17  SDA1       PWMH 9        PB17  AD8          ADCH 1      PC17  PIN46       XIO  27
-  PA18  SCL1       PWMH 10       PB18  AD9          ADCH 2      PC18  PIN45       XIO  26
-  PA19  PIN42      XIO  23       PB19  AD10         ADCH 3      PC19  PIN44       XIO  25
-  PA20  PIN43      XIO  24       PB20  AD11(TXD3)   ADCH 4      PC20  N/C         N/A
-  PA21  TXL        TX YELLOW LED PB21  AD14(RXD3)   XIO  33     PC21  PWM9        PWMH 2
-  PA22  AD3        ADCL 4        PB22  N/C          N/A         PC22  PWM8        PWMH 1
-  PA23  AD2        ADCL 3        PB23  SS3          ???         PC23  PWM7        PWML 8
-  PA24  AD1        ADCL 2        PB24  N/C          N/A         PC24  PWM6        PWML 7
-  PA25  MISO       SPI  1        PB25  PWM2         PWML 3      PC25  PWM5        PWML 6
-  PA26  MOSI       SPI  4        PB26  PIN22        ???         PC26  SS1/PWM4    PWML 10 (there are two)
-  PA27  SPCK       SPI  3        PB27  PWM13        PWMH 6      PC27  N/C         N/A
-  PA28  SS0/PWM10  (ETH) PWML 10 PB28  JTAG_TCK     JTAG 4      PC28  PWM3        PWML 4
-  PA29  SS1/PWM4   (SD)          PB29  JTAG_TDI     JTAG 8      PC29  SS0/PWM10   ??? (there are two)
-  PA30  N/A         N/A          PB30  JTAG_TDO     JTAG 6      PC30  RXL         RX YELLOW LED
-  PA31  N/A         N/A          PB31  JTAG_TMS     JTAG 2      PC31  N/A         N/A
-  ----- ---------- ---- -------- ----- ------------ ---- ------ ----- ----------- ---- ---------
-
-  PORTA                          PORTB                          PORTC
-  ------------------------------ ------------------------------ --------------------------------
-  PIO   SIGNAL     CONN PIN      PIO   SIGNAL       CONN PIN    PIO   SIGNAL      CONN PIN
-  ----- ---------- ---- -------- ----- ------------ ---- ------ ----- ----------- ---- ---------
-  PA0   PIN25       XIO  6       PE0   N/A          N/A         PF0   N/A         N/A
-  PD1   PIN26       XIO  7       PE1   N/A          N/A         PF1   N/A         N/A
-  PD2   PIN27       XIO  8       PE2   N/A          N/A         PF2   N/A         N/A
-  PD3   PIN28       XIO  9       PE3   N/A          N/A         PF3   N/A         N/A
-  PD4   TXD0        COMM 1       PE4   N/A          N/A         PF4   N/A         N/A
-  PD5   RXD0        COMM 2       PE5   N/A          N/A         PF5   N/A         N/A
-  PD6   PIN29       XIO  10      PE6   N/A          N/A         PF6   N/A         N/A
-  PD7   PWM11       PWMH 4       PE7   N/A          N/A         PF7   N/A         N/A
-  PD8   PWM12       PWMH 5       PE8   N/A          N/A         PF8   N/A         N/A
-  PD9   PIN30       XIO  11      PE9   N/A          N/A         PF9   N/A         N/A
-  PD10  PIN32       XIO  13      PE10  N/A          N/A         PF10  N/A         N/A
-  PD11  N/A         N/A          PE11  N/A          N/A         PF11  N/A         N/A
-  PD12  N/A         N/A          PE12  N/A          N/A         PF12  N/A         N/A
-  PD13  N/A         N/A          PE13  N/A          N/A         PF13  N/A         N/A
-  PD14  N/A         N/A          PE14  N/A          N/A         PF14  N/A         N/A
-  PD15  N/A         N/A          PE15  N/A          N/A         PF15  N/A         N/A
-  PD16  N/A         N/A          PE16  N/A          N/A         PF16  N/A         N/A
-  PD17  N/A         N/A          PE17  N/A          N/A         PF17  N/A         N/A
-  PD18  N/A         N/A          PE18  N/A          N/A         PF18  N/A         N/A
-  PD19  N/A         N/A          PE19  N/A          N/A         PF19  N/A         N/A
-  PD20  N/A         N/A          PE20  N/A          N/A         PF20  N/A         N/A
-  PD21  N/A         N/A          PE21  N/A          N/A         PF21  N/A         N/A
-  PD22  N/A         N/A          PE22  N/A          N/A         PF22  N/A         N/A
-  PD23  N/A         N/A          PE23  N/A          N/A         PF23  N/A         N/A
-  PD24  N/A         N/A          PE24  N/A          N/A         PF24  N/A         N/A
-  PD25  N/A         N/A          PE25  N/A          N/A         PF25  N/A         N/A
-  PD26  N/A         N/A          PE26  N/A          N/A         PF26  N/A         N/A
-  PD27  N/A         N/A          PE27  N/A          N/A         PF27  N/A         N/A
-  PD28  N/A         N/A          PE28  N/A          N/A         PF28  N/A         N/A
-  PD29  N/A         N/A          PE29  N/A          N/A         PF29  N/A         N/A
-  PD30  N/A         N/A          PE30  N/A          N/A         PF30  N/A         N/A
-  PD31  N/A5        N/A          PE31  N/A          N/A         PF31  N/A         N/A
-  ----- ---------- ---- -------- ----- ------------ ---- ------ ----- ----------- ---- ---------
-
-Rev 2 vs. Rev 3
-===============
-
-  This port was performed on the Arduino Due Rev 2 board.  NuttX users
-  have reported issues with the serial port on his Arduino Due Rev 3 board.
-  That problem was resolved as by configuring the UART0 RXD with a pull-up
-  (see include/board.h).  That fix as well as any others that we may find
-  will be enabled by selecting
-
-    CONFIG_ARDUINO_DUE_REV3=y
-
-ITEAD 2.4&quot; TFT with Touch
-=========================
-
-  The Arduino 2.4&quot; TFT Touch Shield is designed for all the Arduino
-  compatible boards. It works in 3.3V voltage level. It can be directly
-  plugged on the Arduino and other compatible boards. It will offer
-  display, touch and storage functions for the Arduino board
-
-  Features:
-
-    1. Compatible with 3.3/5V operation voltage level
-    2. Compatible with UTFT library
-    3. With SD Card Socket
-
-  The Arduino 2.4&quot; TFT Touch shield uses the S6D1121 controller , it
-  supports 8-bit data interface. The touch IC is XPT2046.
-
-  NOTE:  When used with the ITEAD shield, the power from the USB connector
-  seems to be inefficient (for example, I lose the USB connection when I
-  insert an SD card).  I recommend using a 7-12V power supply with the
-  Arduino in this case.
-
-  Connector:
-
-  ---------- --------------------------- ----------- --------------------------- ------------------
-  Arduino            ATSAM3X                 Due             ITHEAD
-  Due PIN    GPIO FUNCTION               SIGNAL      PIN              SIGNAL     NOTES
-  ---------- ---- ---------------------- ----------- ---------------- ---------- ------------------
-  PWMH
-  10  SCL1   PA18 TWCK0/A20/WKUP9        SCL1         ---      ---    ---        SCL not available
-   9  SDA1   PA17 TWD0SPCK0              SDA1         ---      ---    ---        SDA not available
-   8  Aref   ---  ---                    AREF         J2 pin 8 Vref   N/C        ---
-   7  GND    ---  ---                    GND          J2 pin 7 GND    ---        ---
-   6  PWM13  PB27 SPI0_SPCK/A20/WKUP10   PWM13        J2 pin 6 D13    SD_SCK     SCK, also LED &quot;L&quot;, Pulled low
-   5  PWM12  PD8  A21/NANDALE/TIOB8      PWM12        J2 pin 5 D12    SD_MISO    MISO not available
-   4  PWM11  PD7  A17/BA1/TIOA8          PWM11        J2 pin 4 D11    SD_MOSI    MOSI not available, Pulled low
-   3  PWM10  PA28 SPI0_NPCS0/PCK2/WKUP11 SS0/PWM10    J2 pin 3 D10    SD_CS      Pulled low on-board
-   2  PWM9   PC21 A0/NBS0/PWML4          PWM9         J2 pin 2 D9     Touch_Dout ---
-   1  PWM8   PC22 A1/PWML5               PWM8         J2 pin 1 D8     Touch_IRQ  ---
-
-  PWML
-   8  PWM7   PC23 A2/PWML6               PWM7         J3 pin 8 D7     DB15       ---
-   7  PWM6   PC24 A3/PWML7               PWM6         J3 pin 7 D6     DB14       ---
-   6  PWM5   PC25 A4/TIOA6               PWM5         J3 pin 6 D5     DB13       ---
-   5  PWM4   PC26 A5/TIOB6               SS1/PWM4     J3 pin 5 D4     DB12       ---
-   4  PWM3   PC28 A7/TIOA7               PWM3         J3 pin 4 D3     DB11       ---
-   3  PWM2   PB25 RTS0/TIOA0             PWM2         J3 pin 3 D2     DB10       ---
-   2  PWM1   PA9  UTXD/PWMH3             TX           J3 pin 2 D1     DB9        UART0 TX
-   1  PWM0   PA8  URXD/PWMH0/WKUP4       RX           J3 pin 1 D0     DB8        UART0 RX
-  ---------- ---- ---------------------- ----------- ---------------- ---------- ------------------
-  POWER
-   1  ---    ---  ---                    ---          ---      ---    ---        ---
-   2  IOref  ---  ---                    IOREF +3V3   ---      ---    ---        ---
-   3  RESET  ---  ---                    MASTER_RESET J4 pin 1 RST    ---        ---
-   5  5V     ---  ---                    +5V          J4 pin 2 3.3V   ---        ---
-   4  3.3V   ---  ---                    +3V3         J4 pin 3 5V     ---        ---
-   6  GND    ---  ---                    GND          J4 pin 4 GND    ---        ---
-   7  GND    ---  ---                    GND          J4 pin 5 GND    ---        ---
-   8  Vin    ---  ---                    VIN          J4 pin 6 Vin    ---        ---
-  ADCL
-   1  A0     PA16 SPCK1/TD/AD7           AD0          J1 pin 1 A0/D14 Touch_Din  ---
-   2  A1     PA24 MCDA3/PCK1/AD6         AD1          J1 pin 2 A1/D15 Touch_CLK  ---
-   3  A2     PA23 MCDA2/TCLK4/AD5        AD2          J1 pin 3 A2/D16 ---        ---
-   4  A3     PA22 MCDA1/TCLK3/AD4        AD3          J1 pin 4 A3/D17 TFT_CS     ---
-   5  A4     PA6  TIOB2/NCS0/AD3         AD4          J1 pin 5 A4/D18 TFT_WR     ---
-   6  A5     PA4  TCLK1/NWAIT/AD2        AD5          J1 pin 6 A5/D19 TFT_RS     ---
-   7  A6     PA3  TIOB1/PWMFI1/AD1/WKUP1 AD6          ---      ---    ---        ---
-   8  A7     PA2  TIOA1/NANDRDY/AD0      AD7          ---      ---    ---        ---
-  ---------- ---- ---------------------- ----------- ---------------- ---------- ------------------
-
-  NOTES:
-
-  1. It is not possible to use any of the SPI devices on the Shield unless
-     a bit-bang SPI interface is used.  This includes the touch controller
-     a bit-bang SPI interface is used.  This includes the touch controller
-     and the SD card.
-  2. UART0 cannot be used.  USARTs on the COMM connector should be available.
-  3. Parallel data is not contiguous in the PIO register
-  4. Touchcontroller /CS pin is connected to ground (always selected).
-  5. Either PA28 or PC29 may drive PWM10
-  6. The schematics I have do not agree with the documentation.  The Touch IRQ
-     and Dout pins are reversed in the Documentation (D9 an D8, respectively).
-     I am assuming that the schematic is correct (and the schematic does seem
-     to match up with what little I can see on the single visible side of the
-     board).
-
-  SD Interface:
-
-  ------------ ------------------ ------- ------------- ------------------ -------
-  SD CONNECTOR ARDUINO CONNECTORS AT91SAM SD CONNECTOR  ARDUINO CONNECTORS AT91SAM
-  PIN SIGNAL   PIN      SIGNAL    GPIO    PIN  SIGNAL   PIN      SIGNAL    GPIO
-  --- -------- -------- --------- -------- ---- -------- -------- --------- -------
-   1  /CS      J2 pin 3 D10       PA28     2    DI       J2 pin 4 D11       PD7
-   3  GND      ---      ---       ---      4    VCC      ---      ---       ---
-   5  CLK      J2 pin 6 D13       PB27     6    GND      ---      ---       ---
-   7  DO       J2 pin 5 D12       PD8      8    IRQ      N/C      ---       ---
-   9  N/C      ---      ---       ---      10   SW       N/C      ---       ---
-   11 WP       N/C      ---       ---      12   CD       N/C      ---       ---
-   13 CD       N/C      ---       ---      14   GND      ---      ---       ---
-   15 GND      ---      ---       ---      16   GND      ---      ---       ---
-  --- -------- -------- --------- -------- ---- -------- -------- --------- -------
-
-  NOTES:
-  -  The SD slot shares the pin with LED &quot;L&quot; so LED support must be disabled to
-     use the MMC/SD card on the ITEAD shield.
-  - Either PA28 or PC29 may drive D10
-
-  Touch Controller Interface:
-
-  ----------- ------------------ -------- ------------- ------------------ -------
-    XPT2046   ARDUINO CONNECTORS AT91SAM   XPT2046     ARDUINO CONNECTORS AT91SAM
-  PIN SIGNAL  PIN      SIGNAL    GPIO     PIN  SIGNAL   PIN      SIGNAL    GPIO
-  --- ------- -------- --------- -------- ---- -------- -------- --------- -------
-   1  VCC     ---      ---       ---      2    X+       ---      ---       ---
-   3  Y+      ---      ---       ---      4    X-       ---      ---       ---
-   5  Y-      ---      ---       ---      6    GND      ---      ---       ---
-   7  IN3     N/C      ---       ---      8    IN4      N/C      ---       ---
-   9  VREF    ---      ---       ---      10   VCC      ---      ---       ---
-   11 IRQ     J2 pin 2 D9        PC21     12   DOUT     J2 pin 1 D8        PC22
-   13 BUSY    N/C      ---       ---      14   DIN      J1 pin 1 A0/D15    PA16
-   15 /CS     ---      ---       ---      16   DCLK     J1 pin 2 A1/D15    PA24
-  --- ------- -------- --------- -------- ---- -------- -------- --------- -------
-
-  NOTES:
-  - /CS is connected to ground (XPT2046 is always selected)
-
-Buttons and LEDs
-================
-
-  Buttons
-  -------
-  There are no buttons on the Arduino Due board.
-
-  LEDs
-  ----
-  There are three user-controllable LEDs on board the Arduino Due board:
-
-      LED              GPIO
-      ---------------- -----
-      L   Amber LED    PB27
-      TX  Yellow LED   PA21
-      RX  Yellow LED   PC30
-
-  LED L is connected to ground and can be illuminated by driving the PB27
-  output high. The TX and RX LEDs are pulled high and can be illuminated by
-  driving the corresponding
-  GPIO output to low.
-
-  These LEDs are not used by the board port unless CONFIG_ARCH_LEDS is
-  defined.  In that case, the usage by the board port is defined in
-  include/board.h and src/sam_leds.c. The LEDs are used to encode OS-related
-  events as follows:
-
-    SYMBOL                MEANING                         LED STATE
-                                                    L         TX       RX
-    -------------------  -----------------------  -------- -------- --------
-    LED_STARTED          NuttX has been started     OFF      OFF      OFF
-    LED_HEAPALLOCATE     Heap has been allocated    OFF      OFF      OFF
-    LED_IRQSENABLED      Interrupts enabled         OFF      OFF      OFF
-    LED_STACKCREATED     Idle stack created         ON       OFF      OFF
-    LED_INIRQ            In an interrupt            N/C      GLOW     OFF
-    LED_SIGNAL           In a signal handler        N/C      GLOW     OFF
-    LED_ASSERTION        An assertion failed        N/C      GLOW     OFF
-    LED_PANIC            The system has crashed     N/C      N/C      Blinking
-    LED_IDLE             MCU is is sleep mode       ------ Not used --------
-
-  Thus if LED L is statically on, NuttX has successfully booted and is,
-  apparently, running normally.  If LED RX is glowing, then NuttX is
-  handling interrupts (and also signals and assertions).  If TX is flashing
-  at approximately 2Hz, then a fatal error has been detected and the system
-  has halted.
-
-Serial Consoles
-===============
-
-  The SAM3X has a UART and 4 USARTS.  The Programming port uses a USB-to-
-  serial chip connected to the first UART0 of the MCU (RX0 and TX0).  The
-  output from that port is visible using the Arduino tool.
-
-  Any of UART and USART0-3 may be used as a serial console.  By default,
-  the UART is used as the serial console in all configurations.  But that is
-  easily changed by modifying the configuration as described under
-  &quot;Configurations&quot; below.
-
-  Here are the UART signals available on pins.  Under signal name, the first
-  column is the name on the schematic associated with the GPIO, the second
-  comes from: http://arduino.cc/en/Hacking/PinMappingSAM3X, and the third
-  is the name of the multiplexed SAM3X UART function from the data sheet.
-  This is more than a little confusing.
-
-    ------------------------------------------------------------------
-    PIO              SIGNAL NAME                    CONNECTOR PIN
-          DUE SCHEM. PIN MAPPING    SAM3X       DUE SCHEM. BOARD LABEL
-    ----- ---------- -------------- ----------- ---------- -----------
-    PA8   [U]RX      RX0            UART0  URXD  PWML 1    RX0&lt;-0
-    PA9   [U]TX      TX0            UART0  UTXD  PWML 2    TX0-&gt;1
-    PD5   RXD0       RX3            USART3 RXD3  COMM 2    RX3
-    PD4   TXD0       TX3            USART3 TXD3  COMM 1    TX3
-    PA12  RXD1       RX2            USART1 RXD1  COMM 4    TX2
-    PA13  TXD1       TX2            USART1 TXD1  COMM 3    RX2
-    PA10  RXD2       RX1            USART0 RXD0  COMM 6    RX1
-    PA11  TXD2       TX1            USART0 TXD0  COMM 5    TX1
-    PB21  AD14(RXD3) Digital Pin 52 USART2 RXD2  XIO  33   33
-    PB20  AD11(TXD3) Analog In 11   USART2 TXD2  ADCH 4    A11
-
-  The outputs from these pins is 3.3V.  You will need to connect RS232
-  transceiver to get the signals to RS232 levels (or connect to the
-  USB virtual COM port in the case of UART0).
-
-Loading Code
-============
-
-  [NOTE: I believe that there have been significant changes to the more
-   recent tool environment such that Bossac may no longer be usable.  I
-   don&#39;t know that for certain and perhaps someone with more knowledge of
-   the tools than I could make this work.  See the Flip&#39;n&#39;Clip SAM3X README
-   file for additional information.]
-
-  Installing the Arduino USB Driver under Windows:
-  ------------------------------------------------
-
-  1. Download the Windows version of the Arduino software, not the 1.0.x
-     release but the latest (1.5.x or later) that supports the Due. When
-     the download finishes, unzip the downloaded file.
-
-     In the current 1.8.x release, the Arduino Due support is not included
-     in the base package but can be added by selecting the &quot;Boards Manager&quot;
-     from the &quot;Tools&quot; menu.
-
-  2. Connect the Due to your computer with a USB cable via the Programming
-     port.
-
-  3. The Windows driver installation should fail.
-
-  4. Open the Device Manager
-
-  5. Look for the listing named &quot;Ports (COM &amp; LPT)&quot;. You should see an open
-     port named &quot;Arduino Due Prog. Port&quot;.  Right click and select &quot;Update
-     driver&quot;.
-
-  6. Select the &quot;Browse my computer for Driver software&quot; option.
-
-  7. Right click on the &quot;Arduino Due Prog. Port&quot; and choose &quot;Update Driver
-     Software&quot;.
-
-  8. Navigate to the folder with the Arduino IDE you downloaded and unzipped
-     earlier. Locate and select the &quot;Drivers&quot; folder in the main Arduino folder
-     (not the &quot;FTDI USB Drivers&quot; sub-directory).
-
-  Loading NuttX to the Due Using Bossa:
-  -------------------------------------
-
-  Arduino uses BOSSA under the hood to load code and you can use BOSSA
-  outside of Arduino.
-
-  Where do you get it?
-
-    Generic BOSSA installation files are available here:
-    https://github.com/shumatech/BOSSA (formerly at
-    http://sourceforge.net/projects/b-o-s-s-a/?source=dlp)
-
-    Pre-built binaries are available: https://github.com/shumatech/BOSSA/releases
-
-    The original Arduino DUE used a patched version of BOSSA available
-    as source code here: https://github.com/shumatech/BOSSA/tree/arduino
-    But that has most likely been incorporated into the main github
-    repository.
-
-    But, fortunately, since you already installed Arduino, you already have
-    BOSSA installed.  In my installation, it is here:
-
-    C:\Program Files (x86)\Arduino\arduino-1.5.2\hardware\tools\bossac.exe
-
-    On Debian like distribution, BOSSA can be install through repository:
-    sudo apt install bossa-cli
-
-  General Procedure
-
-    1) Erase the FLASH and put the Due in bootloader mode
-    2) Write the file to FLASH
-    3) Configure to boot from FLASH
-    4) Reset the DUE
-
-  Erase FLASH and Put the Due in Bootloader Mode
-
-    This is accomplished by simply configuring the programming port in 1200
-    baud and sending something on the programming port.  Here is some sample
-    output from a Windows CMD.exe shell.  NOTE that my Arduino programming
-    port shows up as COM26.  It may be different on your system.
-
-    To enter boot mode, set the baud to 1200 and send anything to the
-    programming port:
-
-      C:\Program Files (x86)\Arduino\arduino-1.5.2\hardware\tools&gt;mode com26:1200,n,8,1
-
-      Status for device COM26:
-
-          Baud:            1200
-          Parity:          None
-          Data Bits:       8
-          Stop Bits:       1
-          Timeout:         ON
-          XON/XOFF:        OFF
-          CTS handshaking: OFF
-          DSR handshaking: OFF
-          DSR sensitivity: OFF
-          DTR circuit:     ON
-          RTS circuit:     ON
-
-      C:\Program Files (x86)\Arduino\arduino-1.5.2\hardware\tools&gt;bossac.exe --port=COM26 --usb-port=false -i
-      Device       : ATSAM3X8
-      Chip ID      : 285e0a60
-      Version      : v1.1 Dec 15 2010 19:25:04
-      Address      : 524288
-      Pages        : 2048
-      Page Size    : 256 bytes
-      Total Size   : 512KB
-      Planes       : 2
-      Lock Regions : 32
-      Locked       : none
-      Security     : false
-      Boot Flash   : false
-
-  Writing FLASH and Setting FLASH Boot Mode
-  -----------------------------------------
-    In a Cygwin BaSH shell:
-
-      export PATH=&quot;/cygdrive/c/Program Files (x86)/Arduino/arduino-1.5.2/hardware/tools&quot;:$PATH
-
-    Erasing, writing, and verifying FLASH with bossac:
-
-      $ bossac.exe --port=COM26 --usb-port=false -e -w -v -b nuttx.bin -R
-      Erase flash
-      Write 86588 bytes to flash
-      [==============================] 100% (339/339 pages)
-      Verify 86588 bytes of flash
-      [==============================] 100% (339/339 pages)
-      Verify successful
-      Set boot flash true
-      CPU reset.
-
-    Some things that can go wrong:
-
-      $ bossac.exe --port=COM26 --usb-port=false -e -w -v -b nuttx.bin -R
-      No device found on COM26
-
-    This error means that there is code running on the Due already so the
-    bootloader cannot connect. Press reset and try again
-
-      $ bossac.exe --port=COM26 --usb-port=false -e -w -v -b nuttx.bin -R
-      No device found on COM26
-
-    Sill No connection because Duo does not jump to bootloader after reset.
-    Press ERASE button and try again
-
-      $ bossac.exe --port=COM26 --usb-port=false -e -w -v -b nuttx.bin -R
-      Erase flash
-      Write 86588 bytes to flash
-      [==============================] 100% (339/339 pages)
-      Verify 86588 bytes of flash
-      [==============================] 100% (339/339 pages)
-      Verify successful
-      Set boot flash true
-      CPU reset.
-
-    In Linux shell:
-
-      bossac -i --port=ttyACM0 -U false -e -w -v -b nuttx.bin -R
-
-  Other useful bossac operations.
-
-    a) Write code to FLASH don&#39;t change boot mode and don&#39;t reset.  This lets
-       you examine the FLASH contents that you just loaded while the bootloader
-       is still active.
-
-       $ bossac.exe --port=COM26 --usb-port=false -e -w -v --boot=0 nuttx.bin
-       Write 64628 bytes to flash
-       [==============================] 100% (253/253 pages)
-       Verify 64628 bytes of flash
-       [==============================] 100% (253/253 pages)
-       Verify successful
-
-    b) Verify the FLASH contents (the bootloader must be running)
-
-       $ bossac.exe --port=COM26 --usb-port=false -v nuttx.bin
-       Verify 64628 bytes of flash
-       [==============================] 100% (253/253 pages)
-       Verify successful
-
-    c) Read from FLASH to a file  (the bootloader must be running):
-
-       $ bossac.exe --port=COM26 --usb-port=false --read=4096 nuttx.dump
-       Read 4096 bytes from flash
-       [==============================] 100% (16/16 pages)
-
-    d) Change to boot from FLASH
-
-       $ bossac.exe --port=COM26 --usb-port=false --boot=1
-       Set boot flash true
-
-  Uploading NuttX to the Due Using JTAG
-  -------------------------------------
-
-  The JTAG/SWD signals are brought out to a 10-pin header JTAG connector:
-
-    PIN SIGNAL         JTAG STANDARD     NOTES
-    --- -------------- ----------------- --------------------------------
-     1  3.3V           VTref
-     2  JTAG_TMS       SWDIO/TMS         SAM3X pin 31, Pulled up on board
-     3  GND            GND
-     4  JTAG_TCK       SWDCLK/TCK        SAM3X pin 28, Pulled up on board
-     5  GND            GND
-     6  JTAG_TDO       SWO/EXta/TRACECTL SAM3X pin 30, ulled up on board
-     7  N/C            Key
-     8  JTAG_TDI       NC/EXTb/TDI       SAM3X pin 29, Pulled up on board
-     9  GND            GNDDetect
-     10 MASTER-RESET   nReset
-
-   You should be able to use a 10- to 20-pin adapter to connect a SAM-ICE
-   debugger to the Arduino Due.  I have this Olimex adapter:
-   https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/ . But so far I
-   have been unable to get the get the SAM-ICE to communicate with the Due.
-
-Arduino DUE-specific Configuration Options
-==========================================
-
-  CONFIG_ARCH - Identifies the arch/ subdirectory.  This should
-  be set to:
-
-    CONFIG_ARCH=arm
-
-  CONFIG_ARCH_family - For use in C code:
-
-    CONFIG_ARCH_ARM=y
-
-  CONFIG_ARCH_architecture - For use in C code:
-
-    CONFIG_ARCH_CORTEXM3=y
-
-  CONFIG_ARCH_CHIP - Identifies the arch/*/chip subdirectory
-
-    CONFIG_ARCH_CHIP=&quot;sam34&quot;
-
-  CONFIG_ARCH_CHIP_name - For use in C code to identify the exact
-  chip:
-
-    CONFIG_ARCH_CHIP_SAM34
-    CONFIG_ARCH_CHIP_SAM3X
-    CONFIG_ARCH_CHIP_ATSAM3X8E
-
-  CONFIG_ARCH_BOARD - Identifies the boards/ subdirectory and
-  hence, the board that supports the particular chip or SoC.
-
-    CONFIG_ARCH_BOARD=arduino-due (for the Arduino Due development board)
-
-  CONFIG_ARCH_BOARD_name - For use in C code
-
-    CONFIG_ARCH_BOARD_ARDUINO_DUE=y
-
-  CONFIG_ARCH_LOOPSPERMSEC - Must be calibrated for correct operation
-  of delay loops
-
-  CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
-
-    CONFIG_RAM_SIZE=65536 (64Kb)
-
-  CONFIG_RAM_START - The start address of installed DRAM
-
-    CONFIG_RAM_START=0x20000000
-
-  CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
-  have LEDs
-
-  Individual subsystems can be enabled:
-
-    CONFIG_SAM34_ADC12B      - 12-bit Analog To Digital Converter
-    CONFIG_SAM34_CAN0        - CAN Controller 0
-    CONFIG_SAM34_CAN1        - CAN Controller 1
-    CONFIG_SAM34_DACC        - Digital To Analog Converter
-    CONFIG_SAM34_DMAC0       - DMA Controller
-    CONFIG_SAM34_EMAC        - Ethernet MAC
-    CONFIG_SAM34_HSMCI       - High Speed Multimedia Card Interface
-    CONFIG_SAM34_PWM         - Pulse Width Modulation
-    CONFIG_SAM34_RTC         - Real Time Clock
-    CONFIG_SAM34_RTT         - Real Time Timer
-    CONFIG_SAM34_SDRAMC      - SDRAM Controller
-    CONFIG_SAM34_SMC         - Static Memory Controller
-    CONFIG_SAM34_SPI0        - Serial Peripheral Interface 0
-    CONFIG_SAM34_SPI1        - Serial Peripheral Interface 1
-    CONFIG_SAM34_SSC         - Synchronous Serial Controller
-    CONFIG_SAM34_TC0         - Timer Counter 0
-    CONFIG_SAM34_TC1         - Timer Counter 1
-    CONFIG_SAM34_TC2         - Timer Counter 2
-    CONFIG_SAM34_TC3         - Timer Counter 3
-    CONFIG_SAM34_TC4         - Timer Counter 4
-    CONFIG_SAM34_TC5         - Timer Counter 5
-    CONFIG_SAM34_TC6         - Timer Counter 6
-    CONFIG_SAM34_TC7         - Timer Counter 7
-    CONFIG_SAM34_TC8         - Timer Counter 8
-    CONFIG_SAM34_TRNG        - True Random Number Generator
-    CONFIG_SAM34_TWIM/S0     - Two-Wire Interface 0 (master/slave)
-    CONFIG_SAM34_TWIM/S1     - Two-Wire Interface 1 (master/slave)
-    CONFIG_SAM34_UART0       - UART 0
-    CONFIG_SAM34_UOTGHS      - USB OTG High Speed
-    CONFIG_SAM34_USART0      - USART 0
-    CONFIG_SAM34_USART1      - USART 1
-    CONFIG_SAM34_USART2      - USART 2
-    CONFIG_SAM34_USART3      - USART 3
-    CONFIG_SAM34_WDT         - Watchdog Timer
-
-  Some subsystems can be configured to operate in different ways. The drivers
-  need to know how to configure the subsystem.
-
-    CONFIG_SAM34_GPIOA_IRQ
-    CONFIG_SAM34_GPIOB_IRQ
-    CONFIG_SAM34_GPIOC_IRQ
-    CONFIG_SAM34_GPIOD_IRQ
-    CONFIG_SAM34_GPIOE_IRQ
-    CONFIG_SAM34_GPIOF_IRQ
-
-Configurations
-==============
-
-  Each Arduino Due configuration is maintained in a sub-directory and
-  can be selected as follow:
-
-    tools/configure.sh [OPTIONS] arduino-due:&lt;subdir&gt;
-
-  Where typical options are -l to configure to build on Linux or -c to
-  configure for Cygwin under Linux.  &#39;tools/configure.sh -h&#39; will show
-  you all of the options.
-
-  Before building, make sure the PATH environment variable includes the
-  correct path to the directory than holds your toolchain binaries.
-
-  And then build NuttX by simply typing the following.  At the conclusion of
-  the make, the nuttx binary will reside in an ELF file called, simply, nuttx.
-
-    make
-
-  The &lt;subdir&gt; that is provided above as an argument to the tools/configure.sh
-  must be is one of the following.
-
-  NOTES:
-
-  1. These configurations use the mconf-based configuration tool.  To
-    change any of these configurations using that tool, you should:
-
-    a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-       see additional README.txt files in the NuttX tools repository.
-
-    b. Execute &#39;make menuconfig&#39; in nuttx/ in order to start the
-       reconfiguration process.
-
-  2. Unless stated otherwise, all configurations generate console
-     output on UART0 which is available both on the USB virtual COM port
-     and on the PWML connector (see the section &quot;Serial Consoles&quot; above).
-
-     However, the pin usage by the ITEAD TFT shield conflict with the pin
-     usage for UART0.  In this case you need to switch to USART0 by
-     modifying the configuration as follows:
-
-       Board Selection -&gt; Peripheral
-         CONFIG_SAM34_UART0=n              : Disable UART0.  Can&#39;t use with this shield
-         CONFIG_SAM34_USART0=y             : Enable USART0
-         CONFIG_USART0_SERIALDRIVER=y
-
-       Device Drivers -&gt; Serial
-         CONFIG_USART0_SERIAL_CONSOLE=y    : Configure the console on USART0
-         CONFIG_USART0_RXBUFSIZE=256
-         CONFIG_USART0_TXBUFSIZE=256
-         CONFIG_USART0_BAUD=115200
-         CONFIG_USART0_BITS=8
-         CONFIG_USART0_PARITY=0
-         CONFIG_USART0_2STOP=0
-
-     NOTE: USART0 TTL levels are available on COMM 5 (TXD0) and COMM 6 (RXD0).
-
-  3. Unless otherwise stated, the configurations are setup for
-     Linux (or any other POSIX environment like Cygwin under Windows):
-
-     Build Setup:
-       CONFIG_HOST_LINUX=y   : Linux or other POSIX environment
-
-  4. These configurations use the older, OABI, buildroot toolchain.  But
-     that is easily reconfigured:
-
-     System Type -&gt; Toolchain:
-       CONFIG_ARM_TOOLCHAIN_BUILDROOT=y : Buildroot toolchain
-       CONFIG_ARM_TOOLCHAIN_BUILDROOT_OABI=y      : Older, OABI toolchain
-
-     If you want to use the Atmel GCC toolchain, here are the steps to
-     do so:
-
-     Build Setup:
-       CONFIG_HOST_WINDOWS=y   : Windows
-       CONFIG_HOST_CYGWIN=y    : Using Cygwin or other POSIX environment
-
-     System Type -&gt; Toolchain:
-       CONFIG_ARM_TOOLCHAIN_GNU_EABI=y  : General GCC EABI toolchain under windows
-
-     This re-configuration should be done before making NuttX or else the
-     subsequent &#39;make&#39; will fail.  If you have already attempted building
-     NuttX then you will have to 1) &#39;make distclean&#39; to remove the old
-     configuration, 2) &#39;tools/configure.sh sam3u-ek/ksnh&#39; to start
-     with a fresh configuration, and 3) perform the configuration changes
-     above.
-
-     Also, make sure that your PATH variable has the new path to your
-     Atmel tools.  Try &#39;which arm-none-eabi-gcc&#39; to make sure that you
-     are selecting the right tool.
-
-Configuration sub-directories
------------------------------
-
-  nsh:
-    This configuration directory will build the NuttShell.  See NOTES above.
-
-    NOTES:
-    1. NSH built-in applications are supported.  However, there are
-       no built-in applications built with the default configuration.
-
-       Binary Formats:
-         CONFIG_BUILTIN=y                    : Enable support for built-in programs
-
-       Application Configuration:
-         CONFIG_NSH_BUILTIN_APPS=y           : Enable starting apps from NSH command line
-
-    2. By default, this configuration uses UART0 and has support LEDs
-       enabled.  UART0 output is available on the USB debugging port or
-       on pins 0-1 of the PWML connector.
-
-       This configuration can be modified to use peripherals on the ITEAD
-       TFT shield as described below.  However, in that case the UART0 and
-       LED &quot;L&quot; GPIO pins conflict with the pin usage by the ITEAD TFT
-       Shield.  In this case you need to switch to USART0 and disable LEDs
-       by modifying the configuration as follows:
-
-       Board Selection -&gt; Peripheral
-         CONFIG_SAM34_UART0=n              : Disable UART0.  Can&#39;t use with this shield
-         CONFIG_SAM34_USART0=y             : Enable USART0
-         CONFIG_USART0_SERIALDRIVER=y
-
-       Device Drivers -&gt; Serial
-         CONFIG_USART0_SERIAL_CONSOLE=y    : Configure the console on USART0
-         CONFIG_USART0_RXBUFSIZE=256
-         CONFIG_USART0_TXBUFSIZE=256
-         CONFIG_USART0_BAUD=115200
-         CONFIG_USART0_BITS=8
-         CONFIG_USART0_PARITY=0
-         CONFIG_USART0_2STOP=0
-
-         NOTE: USART0 TTL levels are available on COMM 5 (TXD0) and
-         COMM 6 (RXD0)
-
-       Board Selection -&gt; Board-Specific Options:
-         CONFIG_ARCH_LEDS=n                : Can&#39;t support LEDs with this shield installed
-         CONFIG_ARDUINO_ITHEAD_TFT=y       : Enable support for the Shield
-
-    3. If the ITEAD TFT shield is connected to the Arduino Due, then
-       support for the SD card slot can be enabled by making the following
-       changes to the configuration:
-
-       NOTE: You cannot use UART0 or LEDs with this ITEAD module.  You must
-       switch to USART0 and disable LED support as described above.
-
-       Board Selection -&gt; Board-Specific Options:
-         CONFIG_ARDUINO_ITHEAD_TFT=y       : Enable support for the Shield
-
-       File Systems:
-         CONFIG_DISABLE_MOUNTPOINT=n       : Mountpoint support is needed
-         CONFIG_FS_FAT=y                   : Enable the FAT file system
-         CONFIG_FAT_LCNAMES=y              : Enable upper/lower case 8.3 file names (Optional, see below)
-         CONFIG_FAT_LFN=y                  : Enable long file named (Optional, see below)
-         CONFIG_FAT_MAXFNAME=32            : Maximum supported file name length
-
-         There are issues related to patents that Microsoft holds on FAT long
-         file name technologies.  See the top level NOTICE file for further
-         details.
-
-       Device Drivers
-         CONFIG_SPI=y                      : Enable SPI support
-         CONFIG_SPI_EXCHANGE=y             : The exchange() method is supported
-         CONFIG_SPI_BITBANG=y              : Enable SPI bit-bang support
-
-         CONFIG_MMCSD=y                    : Enable MMC/SD support
-         CONFIG_MMCSD_NSLOTS=1             : Only one MMC/SD card slot
-         CONFIG_MMCSD_MULTIBLOCK_LIMIT=0   : Should not need to disable multi-block transfers
-         CONFIG_MMCSD_HAVE_CARDDETECT=y    : I/O1 module as a card detect GPIO
-         CONFIG_MMCSD_SPI=y                : Use the SPI interface to the MMC/SD card
-         CONFIG_MMCSD_SPICLOCK=20000000    : This is a guess for the optimal MMC/SD frequency
-         CONFIG_MMCSD_SPIMODE=0            : Mode 0 is required
-
-       Board Selection -&gt; Common Board Options
-         CONFIG_NSH_ARCHINIT=y             : Initialize the MMC/SD slot when NSH starts
-         CONFIG_NSH_MMCSDSLOTNO=0          : Only one MMC/SD slot, slot 0
-         CONFIG_NSH_MMCSDSPIPORTNO=0       : (does not really matter in this case)
-
-       Application Configuration -&gt; NSH Library
-         CONFIG_NSH_ARCHINIT=y             : Board has architecture-specific initialization
-
-       STATUS:
-       2013-7-2:  SD card is not responding.  All 0&#39;s received on SPI.
-
-    3. This configuration has been used for verifying the touchscreen on
-       on the ITEAD TFT Shield.  With the modifications below, you can
-       include the touchscreen test program at apps/examples/touchscreen as
-       an NSH built-in application.  You can enable the touchscreen and test
-       by modifying the  default configuration in the following ways:
-
-       NOTE: You cannot use UART0 or LEDs with this ITEAD module.  You must
-       switch to USART0 and disable LED support as described above.
-
-       Board Selection -&gt; Board-Specific Options:
-         CONFIG_ARDUINO_ITHEAD_TFT=y       : Enable support for the Shield
-
-       Device Drivers
-         CONFIG_SPI=y                      : Enable SPI support
-         CONFIG_SPI_EXCHANGE=y             : The exchange() method is supported
-         CONFIG_SPI_BITBANG=y              : Enable SPI bit-bang support
-
-         CONFIG_INPUT=y                    : Enable support for input devices
-         CONFIG_INPUT_ADS7843E=y           : Enable support for the XPT2046
-         CONFIG_ADS7843E_SPIDEV=0          : (Doesn&#39;t matter)
-         CONFIG_ADS7843E_SPIMODE=0         : Use SPI mode 0
-         CONFIG_ADS7843E_FREQUENCY=1000000 : SPI BAUD 1MHz
-         CONFIG_ADS7843E_SWAPXY=y          : If landscape orientation
-         CONFIG_ADS7843E_THRESHX=51        : These will probably need to be tuned
-         CONFIG_ADS7843E_THRESHY=39
-
-       System Type:
-         CONFIG_SAM34_GPIO_IRQ=y           : GPIO interrupt support
-         CONFIG_SAM34_GPIOC_IRQ=y          : Enable GPIO interrupts from port C
-
-       Library Support:
-         CONFIG_SCHED_WORKQUEUE=y          : Work queue support required
-
-       Application Configuration:
-         CONFIG_EXAMPLES_TOUCHSCREEN=y     : Enable the touchscreen built-int test
-
-       Defaults should be okay for related touchscreen settings.  Touchscreen
-       debug output on USART0 can be enabled with:
-
-       Build Setup:
-         CONFIG_DEBUG_FEATURES=y           : Enable debug features
-         CONFIG_DEBUG_INFO=y               : Enable verbose debug output
-         CONFIG_DEBUG_INPUT=y              : Enable debug output from input devices
-
-       STATUS:
-       2013-7-2:  TSC is not responding.  All 0&#39;s received on SPI.
-
-  nsh-leds:
-    This configuration directory will build the NuttX Shell and enable the user
-    LEDS (/dev/userleds). It will also enable the LED example program (leds).
-    Running the leds command will start up an LED daemon which will light up the
-    L (user), TX, and RX LEDs in a binary sequence.
+<h1>Arduino Due<a class="headerlink" href="#arduino-due" title="Permalink to this heading"></a></h1>
+<p>This documentation discusses issues unique to NuttX configurations for the
+Arduino DUE board featuring the Atmel ATSAM3X8E MCU running at 84 MHz.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If found that newer Arduino Due board differ from the older boards mine:
+Mine has the 32.768 slow clock crystal and associated caps installed. The newer
+boards do not. This can cause a hang in the SAM startup code where it waits for
+the slow crystal input to lock on.</p>
+<p>Options:</p>
+<ol class="arabic simple">
+<li><p>Solder a 32.768 KHz crystal and associated caps on board or,</p></li>
+<li><p>Disable the function <code class="docutils literal notranslate"><span class="pre">sam_setupsupc()</span></code> in <code class="docutils literal notranslate"><span class="pre">sam_clockconfig.c</span></code></p></li>
+</ol>
+</div>
+<section id="supported-shields">
+<h2>Supported Shields<a class="headerlink" href="#supported-shields" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>ITEAD 2.4” TFT with Touch, Arduino Shield 1.0</p></li>
+</ul>
+</section>
+<section id="pio-pin-usage">
+<h2>PIO Pin Usage<a class="headerlink" href="#pio-pin-usage" title="Permalink to this heading"></a></h2>
+<section id="porta">
+<h3>PORTA<a class="headerlink" href="#porta" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIO</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>CONN</p></th>
+<th class="head"><p>PIN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PA0</p></td>
+<td><p>CANTX0</p></td>
+<td><p>ADCH</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA1</p></td>
+<td><p>CANRX0</p></td>
+<td><p>ACDH</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-even"><td><p>PA2</p></td>
+<td><p>AD7</p></td>
+<td><p>ADCL</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA3</p></td>
+<td><p>AD6</p></td>
+<td><p>ADCL</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-even"><td><p>PA4</p></td>
+<td><p>AD5</p></td>
+<td><p>ADCL</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA5</p></td>
+<td><p>EEXTINT</p></td>
+<td><p>ETH</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-even"><td><p>PA6</p></td>
+<td><p>AD4</p></td>
+<td><p>ADCL</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA7</p></td>
+<td><p>PIN31</p></td>
+<td><p>XIO</p></td>
+<td><p>12</p></td>
+</tr>
+<tr class="row-even"><td><p>PA8</p></td>
+<td><p>[U]RX</p></td>
+<td><p>PWML</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA9</p></td>
+<td><p>[U]TX</p></td>
+<td><p>PWML</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>PA10</p></td>
+<td><p>RXD2</p></td>
+<td><p>COMM</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA11</p></td>
+<td><p>TXD2</p></td>
+<td><p>COMM</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-even"><td><p>PA12</p></td>
+<td><p>RXD1</p></td>
+<td><p>COMM</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA13</p></td>
+<td><p>TXD1</p></td>
+<td><p>COMM</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>PA14</p></td>
+<td><p>PIN23</p></td>
+<td><p>XIO</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA15</p></td>
+<td><p>PIN24</p></td>
+<td><p>XIO</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-even"><td><p>PA16</p></td>
+<td><p>AD0</p></td>
+<td><p>ADCL</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA17</p></td>
+<td><p>SDA1</p></td>
+<td><p>PWMH</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-even"><td><p>PA18</p></td>
+<td><p>SCL1</p></td>
+<td><p>PWMH</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA19</p></td>
+<td><p>PIN42</p></td>
+<td><p>XIO</p></td>
+<td><p>23</p></td>
+</tr>
+<tr class="row-even"><td><p>PA20</p></td>
+<td><p>PIN43</p></td>
+<td><p>XIO</p></td>
+<td><p>24</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA21</p></td>
+<td><p>TXL</p></td>
+<td><p>TX</p></td>
+<td><p>YELLOW LED</p></td>
+</tr>
+<tr class="row-even"><td><p>PA22</p></td>
+<td><p>AD3</p></td>
+<td><p>ADCL</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA23</p></td>
+<td><p>AD2</p></td>
+<td><p>ADCL</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>PA24</p></td>
+<td><p>AD1</p></td>
+<td><p>ADCL</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA25</p></td>
+<td><p>MISO</p></td>
+<td><p>SPI</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>PA26</p></td>
+<td><p>MOSI</p></td>
+<td><p>SPI</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA27</p></td>
+<td><p>SPCK</p></td>
+<td><p>SPI</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>PA28</p></td>
+<td><p>SS0/PWM10</p></td>
+<td><p>(ETH) PWML</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA29</p></td>
+<td><p>SS1/PWM4</p></td>
+<td><p>(SD)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PA30</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PA31</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="portb">
+<h3>PORTB<a class="headerlink" href="#portb" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIO</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>CONN</p></th>
+<th class="head"><p>PIN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PB0</p></td>
+<td><p>ETX_CLK</p></td>
+<td><p>ETH</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB1</p></td>
+<td><p>ETX_EN</p></td>
+<td><p>ETH</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>PB2</p></td>
+<td><p>ETXD0</p></td>
+<td><p>ETH</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB3</p></td>
+<td><p>ETXD1</p></td>
+<td><p>ETH</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-even"><td><p>PB4</p></td>
+<td><p>ERX_DV</p></td>
+<td><p>ETH</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB5</p></td>
+<td><p>ERXD0</p></td>
+<td><p>ETH</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-even"><td><p>PB6</p></td>
+<td><p>ERXD1</p></td>
+<td><p>ETH</p></td>
+<td><p>11</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB7</p></td>
+<td><p>ERX_ER</p></td>
+<td><p>ETH</p></td>
+<td><p>13</p></td>
+</tr>
+<tr class="row-even"><td><p>PB8</p></td>
+<td><p>EMDC</p></td>
+<td><p>ETH</p></td>
+<td><p>14</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB9</p></td>
+<td><p>EMDIO</p></td>
+<td><p>ETH</p></td>
+<td><p>12</p></td>
+</tr>
+<tr class="row-even"><td><p>PB10</p></td>
+<td><p>UOTGVBO</p></td>
+<td><p>Vbus power</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PB11</p></td>
+<td><p>UOTGID</p></td>
+<td><p>USB1</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td><p>PB12</p></td>
+<td><p>SDA0-3</p></td>
+<td><p>COMM</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB13</p></td>
+<td><p>SCL0-3</p></td>
+<td><p>COMM</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-even"><td><p>PB14</p></td>
+<td><p>CANTX1/IO</p></td>
+<td><p>XIO</p></td>
+<td><p>34</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB15</p></td>
+<td><p>DAC0(CANRX1)</p></td>
+<td><p>ADCH</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-even"><td><p>PB16</p></td>
+<td><p>DAC1</p></td>
+<td><p>ADCH</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB17</p></td>
+<td><p>AD8</p></td>
+<td><p>ADCH</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>PB18</p></td>
+<td><p>AD9</p></td>
+<td><p>ADCH</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB19</p></td>
+<td><p>AD10</p></td>
+<td><p>ADCH</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>PB20</p></td>
+<td><p>AD11(TXD3)</p></td>
+<td><p>ADCH</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB21</p></td>
+<td><p>AD14(RXD3)</p></td>
+<td><p>XIO</p></td>
+<td><p>33</p></td>
+</tr>
+<tr class="row-even"><td><p>PB22</p></td>
+<td><p>N/C</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PB23</p></td>
+<td><p>SS3</p></td>
+<td><p>???</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PB24</p></td>
+<td><p>N/C</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PB25</p></td>
+<td><p>PWM2</p></td>
+<td><p>PWML</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>PB26</p></td>
+<td><p>PIN22</p></td>
+<td><p>???</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PB27</p></td>
+<td><p>PWM13</p></td>
+<td><p>PWMH</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-even"><td><p>PB28</p></td>
+<td><p>JTAG_TCK</p></td>
+<td><p>JTAG</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB29</p></td>
+<td><p>JTAG_TDI</p></td>
+<td><p>JTAG</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-even"><td><p>PB30</p></td>
+<td><p>JTAG_TDO</p></td>
+<td><p>JTAG</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB31</p></td>
+<td><p>JTAG_TMS</p></td>
+<td><p>JTAG</p></td>
+<td><p>2</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="portc">
+<h3>PORTC<a class="headerlink" href="#portc" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIO</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>CONN</p></th>
+<th class="head"><p>PIN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PC0</p></td>
+<td><p>ERASE</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PC1</p></td>
+<td><p>PIN33</p></td>
+<td><p>XIO</p></td>
+<td><p>14</p></td>
+</tr>
+<tr class="row-even"><td><p>PC2</p></td>
+<td><p>PIN34</p></td>
+<td><p>XIO</p></td>
+<td><p>15</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC3</p></td>
+<td><p>PIN35</p></td>
+<td><p>XIO</p></td>
+<td><p>16</p></td>
+</tr>
+<tr class="row-even"><td><p>PC4</p></td>
+<td><p>PIN36</p></td>
+<td><p>XIO</p></td>
+<td><p>17</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC5</p></td>
+<td><p>PIN37</p></td>
+<td><p>XIO</p></td>
+<td><p>18</p></td>
+</tr>
+<tr class="row-even"><td><p>PC6</p></td>
+<td><p>PIN38</p></td>
+<td><p>XIO</p></td>
+<td><p>19</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC7</p></td>
+<td><p>PIN39</p></td>
+<td><p>XIO</p></td>
+<td><p>20</p></td>
+</tr>
+<tr class="row-even"><td><p>PC8</p></td>
+<td><p>PIN40</p></td>
+<td><p>XIO</p></td>
+<td><p>21</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC9</p></td>
+<td><p>PIN41</p></td>
+<td><p>XIO</p></td>
+<td><p>22</p></td>
+</tr>
+<tr class="row-even"><td><p>PC10</p></td>
+<td><p>N/C</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PC11</p></td>
+<td><p>N/C</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PC12</p></td>
+<td><p>PIN51</p></td>
+<td><p>XIO</p></td>
+<td><p>32</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC13</p></td>
+<td><p>PIN50</p></td>
+<td><p>XIO</p></td>
+<td><p>31</p></td>
+</tr>
+<tr class="row-even"><td><p>PC14</p></td>
+<td><p>PIN49</p></td>
+<td><p>XIO</p></td>
+<td><p>30</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC15</p></td>
+<td><p>PIN48</p></td>
+<td><p>XIO</p></td>
+<td><p>29</p></td>
+</tr>
+<tr class="row-even"><td><p>PC16</p></td>
+<td><p>PIN47</p></td>
+<td><p>XIO</p></td>
+<td><p>28</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC17</p></td>
+<td><p>PIN46</p></td>
+<td><p>XIO</p></td>
+<td><p>27</p></td>
+</tr>
+<tr class="row-even"><td><p>PC18</p></td>
+<td><p>PIN45</p></td>
+<td><p>XIO</p></td>
+<td><p>26</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC19</p></td>
+<td><p>PIN44</p></td>
+<td><p>XIO</p></td>
+<td><p>25</p></td>
+</tr>
+<tr class="row-even"><td><p>PC20</p></td>
+<td><p>N/C</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PC21</p></td>
+<td><p>PWM9</p></td>
+<td><p>PWM</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>PC22</p></td>
+<td><p>PWM8</p></td>
+<td><p>PWM</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC23</p></td>
+<td><p>PWM7</p></td>
+<td><p>PWM</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-even"><td><p>PC24</p></td>
+<td><p>PWM6</p></td>
+<td><p>PWM</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC25</p></td>
+<td><p>PWM5</p></td>
+<td><p>PWM</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-even"><td><p>PC26</p></td>
+<td><p>SS1/PWM4</p></td>
+<td><p>PWM</p></td>
+<td><p>10 (there are two)</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC27</p></td>
+<td><p>N/C</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PC28</p></td>
+<td><p>PWM3</p></td>
+<td><p>PWML</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC29</p></td>
+<td><p>SS0/PWM10</p></td>
+<td><p>???</p></td>
+<td><p>(there are two)</p></td>
+</tr>
+<tr class="row-even"><td><p>PC30</p></td>
+<td><p>RXL</p></td>
+<td><p>RX</p></td>
+<td><p>YELLOW LED</p></td>
+</tr>
+<tr class="row-odd"><td><p>PC31</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="portd">
+<h3>PORTD<a class="headerlink" href="#portd" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIO</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>CONN</p></th>
+<th class="head"><p>PIN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PD0</p></td>
+<td><p>PIN25</p></td>
+<td><p>XIO</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-odd"><td><p>PD1</p></td>
+<td><p>PIN26</p></td>
+<td><p>XIO</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-even"><td><p>PD2</p></td>
+<td><p>PIN27</p></td>
+<td><p>XIO</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><p>PD3</p></td>
+<td><p>PIN28</p></td>
+<td><p>XIO</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-even"><td><p>PD4</p></td>
+<td><p>TXD0</p></td>
+<td><p>COMM</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PD5</p></td>
+<td><p>RXD0</p></td>
+<td><p>COMM</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>PD6</p></td>
+<td><p>PIN29</p></td>
+<td><p>XIO</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td><p>PD7</p></td>
+<td><p>PWM11</p></td>
+<td><p>PWMH</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td><p>PD8</p></td>
+<td><p>PWM12</p></td>
+<td><p>PWMH</p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-odd"><td><p>PD9</p></td>
+<td><p>PIN30</p></td>
+<td><p>XIO</p></td>
+<td><p>11</p></td>
+</tr>
+<tr class="row-even"><td><p>PD10</p></td>
+<td><p>PIN32</p></td>
+<td><p>XIO</p></td>
+<td><p>13</p></td>
+</tr>
+<tr class="row-odd"><td><p>PD11</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD12</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD13</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD14</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD15</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD16</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD17</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD18</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD19</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD20</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD21</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD22</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD23</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD24</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD25</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD26</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD27</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD28</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD29</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PD30</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PD31</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="porte">
+<h3>PORTE<a class="headerlink" href="#porte" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIO</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>CONN</p></th>
+<th class="head"><p>PIN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PE0</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE1</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE2</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE3</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE4</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE5</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE6</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE7</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE8</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE9</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE10</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE11</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE12</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE13</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE14</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE15</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE16</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE17</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE18</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE19</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE20</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE21</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE22</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE23</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE24</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE25</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE26</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE27</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE28</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE29</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PE30</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PE31</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="portf">
+<h3>PORTF<a class="headerlink" href="#portf" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIO</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>CONN</p></th>
+<th class="head"><p>PIN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PF0</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF1</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF2</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF3</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF4</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF5</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF6</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF7</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF8</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF9</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF10</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF11</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF12</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF13</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF14</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF15</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF16</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF17</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF18</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF19</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF20</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF21</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF22</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF23</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF24</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF25</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF26</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF27</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF28</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF29</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>PF30</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PF31</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="rev-2-vs-rev-3">
+<h2>Rev 2 vs. Rev 3<a class="headerlink" href="#rev-2-vs-rev-3" title="Permalink to this heading"></a></h2>
+<p>This port was performed on the Arduino Due Rev 2 board. NuttX users have
+reported issues with the serial port on his Arduino Due Rev 3 board. That
+problem was resolved as by configuring the UART0 RXD with a pull-up (see
+<code class="docutils literal notranslate"><span class="pre">include/board.h</span></code>). That fix as well as any others that we may find will be
+enabled by selecting: <code class="docutils literal notranslate"><span class="pre">CONFIG_ARDUINO_DUE_REV3=y</span></code></p>
+</section>
+<section id="itead-2-4-tft-with-touch">
+<h2>ITEAD 2.4” TFT with Touch<a class="headerlink" href="#itead-2-4-tft-with-touch" title="Permalink to this heading"></a></h2>
+<p>The Arduino 2.4” TFT Touch Shield is designed for all the Arduino compatible
+boards. It works in 3.3V voltage level. It can be directly plugged on the
+Arduino and other compatible boards. It will offer display, touch and storage
+functions for the Arduino board</p>
+<p>Features:</p>
+<ol class="arabic simple">
+<li><p>Compatible with 3.3/5V operation voltage level</p></li>
+<li><p>Compatible with UTFT library</p></li>
+<li><p>With SD Card Socket</p></li>
+</ol>
+<p>The Arduino 2.4” TFT Touch shield uses the S6D1121 controller , it supports
+8-bit data interface. The touch IC is XPT2046.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When used with the ITEAD shield, the power from the USB connector seems to be
+inefficient (for example, I lose the USB connection when I insert an SD
+card). I recommend using a 7-12V power supply with the Arduino in this case.</p>
+</div>
+<section id="connector">
+<h3>Connector<a class="headerlink" href="#connector" title="Permalink to this heading"></a></h3>
+<p><strong>PWMH</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Due PIN</p></th>
+<th class="head"><p>GPIO</p></th>
+<th class="head"><p>FUNCTION</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>ITHEAD PIN</p></th>
+<th class="head"><p>ITHEAD SIGNAL</p></th>
+<th class="head"><p>NOTES</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>10  SCL1</p></td>
+<td><p>PA18</p></td>
+<td><p>TWCK0/A20/WKUP9</p></td>
+<td><p>SCL1</p></td>
+<td><p>—      —</p></td>
+<td><p>—</p></td>
+<td><p>SCL not available</p></td>
+</tr>
+<tr class="row-odd"><td><p>9   SDA1</p></td>
+<td><p>PA17</p></td>
+<td><p>TWD0SPCK0</p></td>
+<td><p>SDA1</p></td>
+<td><p>—      —</p></td>
+<td><p>—</p></td>
+<td><p>SDA not available</p></td>
+</tr>
+<tr class="row-even"><td><p>8   Aref</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>AREF</p></td>
+<td><p>J2 pin 8 Vref</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>7   GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>GND</p></td>
+<td><p>J2 pin 7 GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>6   PWM13</p></td>
+<td><p>PB27</p></td>
+<td><p>SPI0_SPCK/A20/WKUP10</p></td>
+<td><p>PWM13</p></td>
+<td><p>J2 pin 6 D13</p></td>
+<td><p>SD_SCK</p></td>
+<td><p>SCK, also LED “L”, Pulled low</p></td>
+</tr>
+<tr class="row-odd"><td><p>5   PWM12</p></td>
+<td><p>PD8</p></td>
+<td><p>A21/NANDALE/TIOB8</p></td>
+<td><p>PWM12</p></td>
+<td><p>J2 pin 5 D12</p></td>
+<td><p>SD_MISO</p></td>
+<td><p>MISO not available</p></td>
+</tr>
+<tr class="row-even"><td><p>4   PWM11</p></td>
+<td><p>PD7</p></td>
+<td><p>A17/BA1/TIOA8</p></td>
+<td><p>PWM11</p></td>
+<td><p>J2 pin 4 D11</p></td>
+<td><p>SD_MOSI</p></td>
+<td><p>MOSI not available, Pulled low</p></td>
+</tr>
+<tr class="row-odd"><td><p>3   PWM10</p></td>
+<td><p>PA28</p></td>
+<td><p>SPI0_NPCS0/PCK2/WKUP11</p></td>
+<td><p>SS0/PWM10</p></td>
+<td><p>J2 pin 3 D10</p></td>
+<td><p>SD_CS</p></td>
+<td><p>Pulled low on-board</p></td>
+</tr>
+<tr class="row-even"><td><p>2   PWM9</p></td>
+<td><p>PC21</p></td>
+<td><p>A0/NBS0/PWML4</p></td>
+<td><p>PWM9</p></td>
+<td><p>J2 pin 2 D9</p></td>
+<td><p>Touch_Dout</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>1   PWM8</p></td>
+<td><p>PC22</p></td>
+<td><p>A1/PWML5</p></td>
+<td><p>PWM8</p></td>
+<td><p>J2 pin 1 D8</p></td>
+<td><p>Touch_IRQ</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>PWML</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Due PIN</p></th>
+<th class="head"><p>GPIO</p></th>
+<th class="head"><p>FUNCTION</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>ITHEAD PIN</p></th>
+<th class="head"><p>ITHEAD SIGNAL</p></th>
+<th class="head"><p>NOTES</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>8  PWM7</p></td>
+<td><p>PC23</p></td>
+<td><p>A2/PWML6</p></td>
+<td><p>PWM7</p></td>
+<td><p>J3 pin 8 D7</p></td>
+<td><p>DB15</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>7  PWM6</p></td>
+<td><p>PC24</p></td>
+<td><p>A3/PWML7</p></td>
+<td><p>PWM6</p></td>
+<td><p>J3 pin 7 D6</p></td>
+<td><p>DB14</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>6  PWM5</p></td>
+<td><p>PC25</p></td>
+<td><p>A4/TIOA6</p></td>
+<td><p>PWM5</p></td>
+<td><p>J3 pin 6 D5</p></td>
+<td><p>DB13</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>5  PWM4</p></td>
+<td><p>PC26</p></td>
+<td><p>A5/TIOB6</p></td>
+<td><p>SS1/PWM4</p></td>
+<td><p>J3 pin 5 D4</p></td>
+<td><p>DB12</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>4  PWM3</p></td>
+<td><p>PC28</p></td>
+<td><p>A7/TIOA7</p></td>
+<td><p>PWM3</p></td>
+<td><p>J3 pin 4 D3</p></td>
+<td><p>DB11</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>3  PWM2</p></td>
+<td><p>PB25</p></td>
+<td><p>RTS0/TIOA0</p></td>
+<td><p>PWM2</p></td>
+<td><p>J3 pin 3 D2</p></td>
+<td><p>DB10</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>2  PWM1</p></td>
+<td><p>PA9</p></td>
+<td><p>UTXD/PWMH3</p></td>
+<td><p>TX</p></td>
+<td><p>J3 pin 2 D1</p></td>
+<td><p>DB9</p></td>
+<td><p>UART0 TX</p></td>
+</tr>
+<tr class="row-odd"><td><p>1  PWM0</p></td>
+<td><p>PA8</p></td>
+<td><p>URXD/PWMH0/WKUP4</p></td>
+<td><p>RX</p></td>
+<td><p>J3 pin 1 D0</p></td>
+<td><p>DB8</p></td>
+<td><p>UART0 RX</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>POWER</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Due PIN</p></th>
+<th class="head"><p>GPIO</p></th>
+<th class="head"><p>FUNCTION</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>ITHEAD PIN</p></th>
+<th class="head"><p>ITHEAD SIGNAL</p></th>
+<th class="head"><p>NOTES</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1  —</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—      —</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>2  IOref</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>IOREF +3V3</p></td>
+<td><p>—      —</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>3  RESET</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MASTER_RESET</p></td>
+<td><p>J4 pin 1 RST</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>5  5V</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>+5V</p></td>
+<td><p>J4 pin 2 3.3V</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>4  3.3V</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>+3V3</p></td>
+<td><p>J4 pin 3 5V</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>6  GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>GND</p></td>
+<td><p>J4 pin 4 GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>7  GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>GND</p></td>
+<td><p>J4 pin 5 GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>8  Vin</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>VIN</p></td>
+<td><p>J4 pin 6 Vin</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>ADCL</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Due PIN</p></th>
+<th class="head"><p>GPIO</p></th>
+<th class="head"><p>FUNCTION</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>ITHEAD PIN</p></th>
+<th class="head"><p>ITHEAD SIGNAL</p></th>
+<th class="head"><p>NOTES</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1  A0</p></td>
+<td><p>PA16</p></td>
+<td><p>SPCK1/TD/AD7</p></td>
+<td><p>AD0</p></td>
+<td><p>J1 pin 1 A0/D14</p></td>
+<td><p>Touch_Din</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>2  A1</p></td>
+<td><p>PA24</p></td>
+<td><p>MCDA3/PCK1/AD6</p></td>
+<td><p>AD1</p></td>
+<td><p>J1 pin 2 A1/D15</p></td>
+<td><p>Touch_CLK</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>3  A2</p></td>
+<td><p>PA23</p></td>
+<td><p>MCDA2/TCLK4/AD5</p></td>
+<td><p>AD2</p></td>
+<td><p>J1 pin 3 A2/D16</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>4  A3</p></td>
+<td><p>PA22</p></td>
+<td><p>MCDA1/TCLK3/AD4</p></td>
+<td><p>AD3</p></td>
+<td><p>J1 pin 4 A3/D17</p></td>
+<td><p>TFT_CS</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>5  A4</p></td>
+<td><p>PA6</p></td>
+<td><p>TIOB2/NCS0/AD3</p></td>
+<td><p>AD4</p></td>
+<td><p>J1 pin 5 A4/D18</p></td>
+<td><p>TFT_WR</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>6  A5</p></td>
+<td><p>PA4</p></td>
+<td><p>TCLK1/NWAIT/AD2</p></td>
+<td><p>AD5</p></td>
+<td><p>J1 pin 6 A5/D19</p></td>
+<td><p>TFT_RS</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>7  A6</p></td>
+<td><p>PA3</p></td>
+<td><p>TIOB1/PWMFI1/AD1/WKUP1</p></td>
+<td><p>AD6</p></td>
+<td><p>—      —</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>8  A7</p></td>
+<td><p>PA2</p></td>
+<td><p>TIOA1/NANDRDY/AD0</p></td>
+<td><p>AD7</p></td>
+<td><p>—      —</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>It is not possible to use any of the SPI devices on the Shield unless
+a bit-bang SPI interface is used.  This includes the touch controller
+a bit-bang SPI interface is used.  This includes the touch controller
+and the SD card.</p></li>
+<li><p>UART0 cannot be used.  USARTs on the COMM connector should be available.</p></li>
+<li><p>Parallel data is not contiguous in the PIO register</p></li>
+<li><p>Touchcontroller /CS pin is connected to ground (always selected).</p></li>
+<li><p>Either PA28 or PC29 may drive PWM10</p></li>
+<li><p>The schematics I have do not agree with the documentation. The Touch IRQ
+and Dout pins are reversed in the Documentation (D9 an D8, respectively).
+I am assuming that the schematic is correct (and the schematic does seem
+to match up with what little I can see on the single visible side of the
+board).</p></li>
+</ol>
+</div>
+</section>
+<section id="sd-interface">
+<h3>SD Interface<a class="headerlink" href="#sd-interface" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>SD PIN</p></th>
+<th class="head"><p>SD SIGNAL</p></th>
+<th class="head"><p>PIN</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>/CS</p></td>
+<td><p>J2 pin 3</p></td>
+<td><p>D10</p></td>
+<td><p>PA28</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>DI</p></td>
+<td><p>J2 pin 4</p></td>
+<td><p>D11</p></td>
+<td><p>PD7</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>VCC</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>CLK</p></td>
+<td><p>J2 pin 6</p></td>
+<td><p>D13</p></td>
+<td><p>PB27</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>DO</p></td>
+<td><p>J2 pin 5</p></td>
+<td><p>D12</p></td>
+<td><p>PD8</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>IRQ</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>SW</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>WP</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>CD</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p>CD</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p>GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>16</p></td>
+<td><p>GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The SD slot shares the pin with LED “L” so LED support must be disabled to
+use the MMC/SD card on the ITEAD shield.</p></li>
+<li><p>Either PA28 or PC29 may drive D10</p></li>
+</ul>
+</div>
+</section>
+<section id="touch-controller-interface">
+<h3>Touch Controller Interface<a class="headerlink" href="#touch-controller-interface" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>XPT2046 PIN</p></th>
+<th class="head"><p>XPT2046 SIGNAL</p></th>
+<th class="head"><p>PIN</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>VCC</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>X+</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>Y+</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>X-</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>Y-</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>GND</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>IN3</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>IN4</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>VREF</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>VCC</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>IRQ</p></td>
+<td><p>J2 pin 2</p></td>
+<td><p>D9</p></td>
+<td><p>PC21</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>DOUT</p></td>
+<td><p>J2 pin 1</p></td>
+<td><p>D8</p></td>
+<td><p>PC22</p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p>BUSY</p></td>
+<td><p>N/C</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p>DIN</p></td>
+<td><p>J1 pin 1</p></td>
+<td><p>A0/D15</p></td>
+<td><p>PA16</p></td>
+</tr>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>/CS</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>16</p></td>
+<td><p>DCLK</p></td>
+<td><p>J1 pin 2</p></td>
+<td><p>A1/D15</p></td>
+<td><p>PA24</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>CS is connected to ground (XPT2046 is always selected)</p>
+</div>
+</section>
+</section>
+<section id="buttons-and-leds">
+<h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
+<section id="buttons">
+<h3>Buttons<a class="headerlink" href="#buttons" title="Permalink to this heading"></a></h3>
+<p>There are no buttons on the Arduino Due board.</p>
+</section>
+<section id="leds">
+<h3>LEDs<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h3>
+<p>There are three user-controllable LEDs on board the Arduino Due board:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>LED</p></th>
+<th class="head"><p>COLOUR</p></th>
+<th class="head"><p>GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>L</p></td>
+<td><p>Amber LED</p></td>
+<td><p>PB27</p></td>
+</tr>
+<tr class="row-odd"><td><p>TX</p></td>
+<td><p>Yellow LED</p></td>
+<td><p>PA21</p></td>
+</tr>
+<tr class="row-even"><td><p>RX</p></td>
+<td><p>Yellow LED</p></td>
+<td><p>PC30</p></td>
+</tr>
+</tbody>
+</table>
+<p>LED L is connected to ground and can be illuminated by driving the PB27 output
+high. The TX and RX LEDs are pulled high and can be illuminated by driving the
+corresponding GPIO output to low.</p>
+<p>These LEDs are not used by the board port unless <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> is
+defined. In that case, the usage by the board port is defined in
+<code class="docutils literal notranslate"><span class="pre">include/board.h</span></code> and <code class="docutils literal notranslate"><span class="pre">src/sam_leds.c</span></code>. The LEDs are used to encode
+OS-related events as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>SYMBOL</p></th>
+<th class="head"><p>MEANING</p></th>
+<th class="head"><p>L</p></th>
+<th class="head"><p>TX</p></th>
+<th class="head"><p>RX</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_STARTED</span></code></p></td>
+<td><p>NuttX has been started</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_HEAPALLOCATE</span></code></p></td>
+<td><p>Heap has been allocated</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_IRQSENABLED</span></code></p></td>
+<td><p>Interrupts enabled</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_STACKCREATED</span></code></p></td>
+<td><p>Idle stack created</p></td>
+<td><p>ON</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_INIRQ</span></code></p></td>
+<td><p>In an interrupt</p></td>
+<td><p>N/C</p></td>
+<td><p>GLOW</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_SIGNAL</span></code></p></td>
+<td><p>In a signal handler</p></td>
+<td><p>N/C</p></td>
+<td><p>GLOW</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_ASSERTION</span></code></p></td>
+<td><p>An assertion failed</p></td>
+<td><p>N/C</p></td>
+<td><p>GLOW</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_PANIC</span></code></p></td>
+<td><p>The system has crashed</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>Blinking</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_IDLE</span></code></p></td>
+<td><p>MCU is is sleep mode</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+<p>Thus if LED L is statically on, NuttX has successfully booted and is,
+apparently, running normally. If LED RX is glowing, then NuttX is handling
+interrupts (and also signals and assertions). If TX is flashing at approximately
+2Hz, then a fatal error has been detected and the system has halted.</p>
+</section>
+</section>
+<section id="serial-consoles">
+<h2>Serial Consoles<a class="headerlink" href="#serial-consoles" title="Permalink to this heading"></a></h2>
+<p>The SAM3X has a UART and 4 USARTS. The Programming port uses a USB-to- serial
+chip connected to the first UART0 of the MCU (RX0 and TX0). The output from
+that port is visible using the Arduino tool.</p>
+<p>Any of UART and USART0-3 may be used as a serial console. By default,
+the UART is used as the serial console in all configurations. But that is
+easily changed by modifying the configuration as described under
+“Configurations” below.</p>
+<p>Here are the UART signals available on pins. Under signal name, the first
+column is the name on the schematic associated with the GPIO, the second
+comes from: <a class="reference external" href="http://arduino.cc/en/Hacking/PinMappingSAM3X">http://arduino.cc/en/Hacking/PinMappingSAM3X</a>, and the third
+is the name of the multiplexed SAM3X UART function from the data sheet.
+This is more than a little confusing.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIO</p></th>
+<th class="head"><p>DUE SCHEM.</p></th>
+<th class="head"><p>PIN MAPPING</p></th>
+<th class="head"><p>SAM3X</p></th>
+<th class="head"><p>DUE SCHEM.</p></th>
+<th class="head"><p>BOARD LABEL</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PA8</p></td>
+<td><p>[U]RX</p></td>
+<td><p>RX0</p></td>
+<td><p>UART0  URXD</p></td>
+<td><p>PWML 1</p></td>
+<td><p>RX0&lt;-0</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA9</p></td>
+<td><p>[U]TX</p></td>
+<td><p>TX0</p></td>
+<td><p>UART0  UTXD</p></td>
+<td><p>PWML 2</p></td>
+<td><p>TX0-&gt;1</p></td>
+</tr>
+<tr class="row-even"><td><p>PD5</p></td>
+<td><p>RXD0</p></td>
+<td><p>RX3</p></td>
+<td><p>USART3 RXD3</p></td>
+<td><p>COMM 2</p></td>
+<td><p>RX3</p></td>
+</tr>
+<tr class="row-odd"><td><p>PD4</p></td>
+<td><p>TXD0</p></td>
+<td><p>TX3</p></td>
+<td><p>USART3 TXD3</p></td>
+<td><p>COMM 1</p></td>
+<td><p>TX3</p></td>
+</tr>
+<tr class="row-even"><td><p>PA12</p></td>
+<td><p>RXD1</p></td>
+<td><p>RX2</p></td>
+<td><p>USART1 RXD1</p></td>
+<td><p>COMM 4</p></td>
+<td><p>TX2</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA13</p></td>
+<td><p>TXD1</p></td>
+<td><p>TX2</p></td>
+<td><p>USART1 TXD1</p></td>
+<td><p>COMM 3</p></td>
+<td><p>RX2</p></td>
+</tr>
+<tr class="row-even"><td><p>PA10</p></td>
+<td><p>RXD2</p></td>
+<td><p>RX1</p></td>
+<td><p>USART0 RXD0</p></td>
+<td><p>COMM 6</p></td>
+<td><p>RX1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA11</p></td>
+<td><p>TXD2</p></td>
+<td><p>TX1</p></td>
+<td><p>USART0 TXD0</p></td>
+<td><p>COMM 5</p></td>
+<td><p>TX1</p></td>
+</tr>
+<tr class="row-even"><td><p>PB21</p></td>
+<td><p>AD14(RXD3)</p></td>
+<td><p>Digital Pin 52</p></td>
+<td><p>USART2 RXD2</p></td>
+<td><p>XIO  33</p></td>
+<td><p>33</p></td>
+</tr>
+<tr class="row-odd"><td><p>PB20</p></td>
+<td><p>AD11(TXD3)</p></td>
+<td><p>Analog In 11</p></td>
+<td><p>USART2 TXD2</p></td>
+<td><p>ADCH 4</p></td>
+<td><p>A11</p></td>
+</tr>
+</tbody>
+</table>
+<p>The outputs from these pins is 3.3V. You will need to connect RS232 transceiver
+to get the signals to RS232 levels (or connect to the USB virtual COM port in
+the case of UART0).</p>
+</section>
+<section id="loading-code">
+<h2>Loading Code<a class="headerlink" href="#loading-code" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>I believe that there have been significant changes to the more recent tool
+environment such that Bossac may no longer be usable.  I don’t know that for
+certain and perhaps someone with more knowledge of the tools than I could make
+this work.  See the Flip’n’Clip SAM3X README file for additional information.</p>
+</div>
+<section id="installing-the-arduino-usb-driver-under-windows">
+<h3>Installing the Arduino USB Driver under Windows:<a class="headerlink" href="#installing-the-arduino-usb-driver-under-windows" title="Permalink to this heading"></a></h3>
+<ol class="arabic">
+<li><p>Download the Windows version of the Arduino software, not the 1.0.x release
+but the latest (1.5.x or later) that supports the Due. When the download
+finishes, unzip the downloaded file.</p>
+<p>In the current 1.8.x release, the Arduino Due support is not included in the
+base package but can be added by selecting the “Boards Manager” from the
+“Tools” menu.</p>
+</li>
+<li><p>Connect the Due to your computer with a USB cable via the Programming port.</p></li>
+<li><p>The Windows driver installation should fail.</p></li>
+<li><p>Open the Device Manager</p></li>
+<li><p>Look for the listing named “Ports (COM &amp; LPT)”. You should see an open port
+named “Arduino Due Prog. Port”.  Right click and select “Update driver”.</p></li>
+<li><p>Select the “Browse my computer for Driver software” option.</p></li>
+<li><p>Right click on the “Arduino Due Prog. Port” and choose “Update Driver
+Software”.</p></li>
+<li><p>Navigate to the folder with the Arduino IDE you downloaded and unzipped
+earlier. Locate and select the “Drivers” folder in the main Arduino folder
+(not the “FTDI USB Drivers” sub-directory).</p></li>
+</ol>
+</section>
+<section id="loading-nuttx-to-the-due-using-bossa">
+<h3>Loading NuttX to the Due Using Bossa<a class="headerlink" href="#loading-nuttx-to-the-due-using-bossa" title="Permalink to this heading"></a></h3>
+<p>Arduino uses BOSSA under the hood to load code and you can use BOSSA outside of
+Arduino. Where do you get it?</p>
+<p>Generic BOSSA installation files are available here:
+<a class="reference external" href="https://github.com/shumatech/BOSSA">https://github.com/shumatech/BOSSA</a> (formerly at
+<a class="reference external" href="http://sourceforge.net/projects/b-o-s-s-a/?source=dlp">http://sourceforge.net/projects/b-o-s-s-a/?source=dlp</a>)</p>
+<p>Pre-built binaries are available: <a class="reference external" href="https://github.com/shumatech/BOSSA/releases">https://github.com/shumatech/BOSSA/releases</a></p>
+<p>The original Arduino DUE used a patched version of BOSSA available as source
+code here: <a class="reference external" href="https://github.com/shumatech/BOSSA/tree/arduino">https://github.com/shumatech/BOSSA/tree/arduino</a> But that has most
+likely been incorporated into the main github repository.</p>
+<p>But, fortunately, since you already installed Arduino, you already have BOSSA
+installed. In my installation, it is here:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">C:\Program Files (x86)\Arduino\arduino-1.5.2\hardware\tools\bossac.exe</span>
 </pre></div>
 </div>
+<p>On Debian like distribution, BOSSA can be install through repository:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo apt install bossa-cli</span>
+</pre></div>
+</div>
+<p><strong>General Procedure</strong></p>
+<ol class="arabic simple">
+<li><p>Erase the FLASH and put the Due in bootloader mode</p></li>
+<li><p>Write the file to FLASH</p></li>
+<li><p>Configure to boot from FLASH</p></li>
+<li><p>Reset the DUE</p></li>
+</ol>
+<p>Erase FLASH and Put the Due in Bootloader Mode</p>
+<p>This is accomplished by simply configuring the programming port in 1200 baud and
+sending something on the programming port. Here is some sample output from a
+Windows CMD.exe shell. NOTE that my Arduino programming port shows up as COM26.
+It may be different on your system.</p>
+<p>To enter boot mode, set the baud to 1200 and send anything to the programming
+port:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>C:<span class="se">\P</span>rogram<span class="w"> </span>Files<span class="w"> </span><span class="o">(</span>x86<span class="o">)</span><span class="se">\A</span>rduino<span class="se">\a</span>rduino-1.5.2<span class="se">\h</span>ardware<span class="se">\t</span>ools&gt;mode<span class="w"> </span>com26:1200,n,8,1
+
+<span class="go">Status for device COM26:</span>
+
+<span class="go">    Baud:            1200</span>
+<span class="go">    Parity:          None</span>
+<span class="go">    Data Bits:       8</span>
+<span class="go">    Stop Bits:       1</span>
+<span class="go">    Timeout:         ON</span>
+<span class="go">    XON/XOFF:        OFF</span>
+<span class="go">    CTS handshaking: OFF</span>
+<span class="go">    DSR handshaking: OFF</span>
+<span class="go">    DSR sensitivity: OFF</span>
+<span class="go">    DTR circuit:     ON</span>
+<span class="go">    RTS circuit:     ON</span>
+
+<span class="gp">$ </span>C:<span class="se">\P</span>rogram<span class="w"> </span>Files<span class="w"> </span><span class="o">(</span>x86<span class="o">)</span><span class="se">\A</span>rduino<span class="se">\a</span>rduino-1.5.2<span class="se">\h</span>ardware<span class="se">\t</span>ools&gt;bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-i
+<span class="go">Device       : ATSAM3X8</span>
+<span class="go">Chip ID      : 285e0a60</span>
+<span class="go">Version      : v1.1 Dec 15 2010 19:25:04</span>
+<span class="go">Address      : 524288</span>
+<span class="go">Pages        : 2048</span>
+<span class="go">Page Size    : 256 bytes</span>
+<span class="go">Total Size   : 512KB</span>
+<span class="go">Planes       : 2</span>
+<span class="go">Lock Regions : 32</span>
+<span class="go">Locked       : none</span>
+<span class="go">Security     : false</span>
+<span class="go">Boot Flash   : false</span>
+</pre></div>
+</div>
+</section>
+<section id="writing-flash-and-setting-flash-boot-mode">
+<h3>Writing FLASH and Setting FLASH Boot Mode<a class="headerlink" href="#writing-flash-and-setting-flash-boot-mode" title="Permalink to this heading"></a></h3>
+<p>In a Cygwin BaSH shell:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/cygdrive/c/Program Files (x86)/Arduino/arduino-1.5.2/hardware/tools&quot;</span>:<span class="nv">$PATH</span>
+
+<span class="go">Erasing, writing, and verifying FLASH with bossac:</span>
+
+<span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">Erase flash</span>
+<span class="go">Write 86588 bytes to flash</span>
+<span class="go">[==============================] 100% (339/339 pages)</span>
+<span class="go">Verify 86588 bytes of flash</span>
+<span class="go">[==============================] 100% (339/339 pages)</span>
+<span class="go">Verify successful</span>
+<span class="go">Set boot flash true</span>
+<span class="go">CPU reset.</span>
+</pre></div>
+</div>
+<p>Some things that can go wrong:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">No device found on COM26</span>
+</pre></div>
+</div>
+<p>This error means that there is code running on the Due already so the bootloader
+cannot connect. Press reset and try again:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">No device found on COM26</span>
+</pre></div>
+</div>
+<p>Still no connection because Duo does not jump to bootloader after reset. Press
+ERASE button and try again:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">Erase flash</span>
+<span class="go">Write 86588 bytes to flash</span>
+<span class="go">[==============================] 100% (339/339 pages)</span>
+<span class="go">Verify 86588 bytes of flash</span>
+<span class="go">[==============================] 100% (339/339 pages)</span>
+<span class="go">Verify successful</span>
+<span class="go">Set boot flash true</span>
+<span class="go">CPU reset.</span>
+</pre></div>
+</div>
+<p>In Linux shell:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac<span class="w"> </span>-i<span class="w"> </span>--port<span class="o">=</span>ttyACM0<span class="w"> </span>-U<span class="w"> </span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+</pre></div>
+</div>
+<p>Other useful <code class="docutils literal notranslate"><span class="pre">bossac</span></code> operations:</p>
+<ol class="loweralpha">
+<li><p>Write code to FLASH don’t change boot mode and don’t reset. This lets you
+examine the FLASH contents that you just loaded while the bootloader is still
+active.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>--boot<span class="o">=</span><span class="m">0</span><span class="w"> </span>nuttx.bin
+<span class="go">Write 64628 bytes to flash</span>
+<span class="go">[==============================] 100% (253/253 pages)</span>
+<span class="go">Verify 64628 bytes of flash</span>
+<span class="go">[==============================] 100% (253/253 pages)</span>
+<span class="go">Verify successful</span>
+</pre></div>
+</div>
+</li>
+<li><p>Verify the FLASH contents (the bootloader must be running)</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-v<span class="w"> </span>nuttx.bin
+<span class="go">Verify 64628 bytes of flash</span>
+<span class="go">[==============================] 100% (253/253 pages)</span>
+<span class="go">Verify successful</span>
+</pre></div>
+</div>
+</li>
+<li><p>Read from FLASH to a file  (the bootloader must be running):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--read<span class="o">=</span><span class="m">4096</span><span class="w"> </span>nuttx.dump
+<span class="go">Read 4096 bytes from flash</span>
+<span class="go">[==============================] 100% (16/16 pages)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Change to boot from FLASH</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM26<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--boot<span class="o">=</span><span class="m">1</span>
+<span class="go">Set boot flash true</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="uploading-nuttx-to-the-due-using-jtag">
+<h3>Uploading NuttX to the Due Using JTAG<a class="headerlink" href="#uploading-nuttx-to-the-due-using-jtag" title="Permalink to this heading"></a></h3>
+<p>The JTAG/SWD signals are brought out to a 10-pin header JTAG connector:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIN</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>JTAG STANDARD</p></th>
+<th class="head"><p>NOTES</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>3.3V</p></td>
+<td><p>VTref</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>JTAG_TMS</p></td>
+<td><p>SWDIO/TMS</p></td>
+<td><p>SAM3X pin 31, Pulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>GND</p></td>
+<td><p>GND</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>JTAG_TCK</p></td>
+<td><p>SWDCLK/TCK</p></td>
+<td><p>SAM3X pin 28, Pulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>GND</p></td>
+<td><p>GND</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>JTAG_TDO</p></td>
+<td><p>SWO/EXta/TRACECTL</p></td>
+<td><p>SAM3X pin 30, ulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>N/C</p></td>
+<td><p>Key</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>JTAG_TDI</p></td>
+<td><p>NC/EXTb/TDI</p></td>
+<td><p>SAM3X pin 29, Pulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>GND</p></td>
+<td><p>GNDDetect</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>MASTER-RESET</p></td>
+<td><p>nReset</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>You should be able to use a 10 to 20-pin adapter to connect a SAM-ICE debugger
+to the Arduino Due. I have this Olimex adapter:
+<a class="reference external" href="https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/">https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/</a>. But so far I have been
+unable to get the get the SAM-ICE to communicate with the Due.</p>
+</section>
+</section>
+<section id="arduino-due-specific-configuration-options">
+<h2>Arduino DUE-specific Configuration Options<a class="headerlink" href="#arduino-due-specific-configuration-options" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">arch/</span></code> subdirectory.  This should be set
+to:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH=arm</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_family</span></code>: For use in C code:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ARM=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_architecture</span></code>: For use in C code:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CORTEXM3=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">arch/*/chip</span></code> subdirectory</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP=&quot;sam34&quot;</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_name</span></code>: For use in C code to identify the exact chip:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_SAM34</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_SAM3X</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_ATSAM3X8E</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">boards/</span></code> subdirectory and hence, the
+board that supports the particular chip or SoC.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD=arduino-due</span> <span class="pre">(for</span> <span class="pre">the</span> <span class="pre">Arduino</span> <span class="pre">Due</span> <span class="pre">development</span> <span class="pre">board)</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_name</span></code>: For use in C code</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_ARDUINO_DUE=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LOOPSPERMSEC</span></code>: Must be calibrated for correct operation of
+delay loops</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE</span></code>: Describes the installed DRAM (SRAM in this case):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE=65536</span> <span class="pre">(64Kb)</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_START</span></code>: The start address of installed DRAM</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_START=0x20000000</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code>: Use LEDs to show state. Unique to boards that have LEDs</p></li>
+</ul>
+<p>Individual subsystems can be enabled:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_ADC12B</span></code>: 12-bit Analog To Digital Converter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_CAN0</span></code>: CAN Controller 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_CAN1</span></code>: CAN Controller 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_DACC</span></code>: Digital To Analog Converter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_DMAC0</span></code>: DMA Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_EMAC</span></code>: Ethernet MAC</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_HSMCI</span></code>: High Speed Multimedia Card Interface</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_PWM</span></code>: Pulse Width Modulation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_RTC</span></code>: Real Time Clock</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_RTT</span></code>: Real Time Timer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SDRAMC</span></code>: SDRAM Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SMC</span></code>: Static Memory Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SPI0</span></code>: Serial Peripheral Interface 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SPI1</span></code>: Serial Peripheral Interface 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SSC</span></code>: Synchronous Serial Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC0</span></code>: Timer Counter 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC1</span></code>: Timer Counter 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC2</span></code>: Timer Counter 2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC3</span></code>: Timer Counter 3</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC4</span></code>: Timer Counter 4</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC5</span></code>: Timer Counter 5</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC6</span></code>: Timer Counter 6</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC7</span></code>: Timer Counter 7</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC8</span></code>: Timer Counter 8</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TRNG</span></code>: True Random Number Generator</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM</span></code>/<code class="docutils literal notranslate"><span class="pre">S0</span></code>: Two-Wire Interface 0 (master/slave)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM</span></code>/<code class="docutils literal notranslate"><span class="pre">S1</span></code>: Two-Wire Interface 1 (master/slave)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_UART0</span></code>: UART 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_UOTGHS</span></code>: USB OTG High Speed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART0</span></code>: USART 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART1</span></code>: USART 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART2</span></code>: USART 2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART3</span></code>: USART 3</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_WDT</span></code>: Watchdog Timer</p></li>
+</ul>
+<p>Some subsystems can be configured to operate in different ways. The drivers
+need to know how to configure the subsystem.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOA_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOB_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOC_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOD_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOE_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOF_IRQ</span></code></p></li>
+</ul>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>Each Arduino Due configuration is maintained in a sub-directory and
+can be selected as follow:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>tools/configure.sh<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>arduino-due:&lt;subdir&gt;
+</pre></div>
+</div>
+<p>Where typical options are <code class="docutils literal notranslate"><span class="pre">-l</span></code> to configure to build on Linux or <code class="docutils literal notranslate"><span class="pre">-c</span></code> to
+configure for Cygwin under Linux. <code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span> <span class="pre">-h</span></code> will show you all of
+the options.</p>
+<p>Before building, make sure the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable includes the
+correct path to the directory than holds your toolchain binaries.</p>
+<p>And then build NuttX by simply typing the following. At the conclusion of the
+make, the nuttx binary will reside in an ELF file called, simply, <code class="docutils literal notranslate"><span class="pre">nuttx</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;subdir&gt;</span></code> that is provided above as an argument to the
+<code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span></code> must be one of the following.</p>
+<ol class="arabic simple">
+<li><p>These configurations use the mconf-based configuration tool.  To
+change any of these configurations using that tool, you should:</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Build and install the kconfig-mconf tool.  See nuttx/README.txt
+see additional README.txt files in the NuttX tools repository.</p></li>
+<li><p>Execute ‘make menuconfig’ in nuttx/ in order to start the
+reconfiguration process.</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic" start="2">
+<li><p>Unless stated otherwise, all configurations generate console
+output on UART0 which is available both on the USB virtual COM port
+and on the PWML connector (see the section “Serial Consoles” above).</p>
+<p>However, the pin usage by the ITEAD TFT shield conflict with the pin
+usage for UART0.  In this case you need to switch to USART0 by
+modifying the configuration as follows:</p>
+<p>Board Selection -&gt; Peripheral</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_UART0=n</span></code>: Disable UART0.  Can’t use with this shield</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART0=y</span></code>: Enable USART0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_SERIALDRIVER=y</span></code></p></li>
+</ul>
+<p>Device Drivers -&gt; Serial</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_SERIAL_CONSOLE=y</span></code>: Configure the console on USART0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_RXBUFSIZE=256</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_TXBUFSIZE=256</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_BAUD=115200</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_BITS=8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_PARITY=0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_2STOP=0</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>USART0 TTL levels are available on COMM 5 (TXD0) and COMM 6 (RXD0).</p>
+</div>
+</li>
+<li><p>Unless otherwise stated, the configurations are setup for
+Linux (or any other POSIX environment like Cygwin under Windows):</p>
+<p>Build Setup:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HOST_LINUX=y</span></code>: Linux or other POSIX environment</p></li>
+</ul>
+</li>
+<li><p>These configurations use the older, OABI, buildroot toolchain.  But
+that is easily reconfigured:</p>
+<p>System Type -&gt; Toolchain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_BUILDROOT=y</span></code>: Buildroot toolchain</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_BUILDROOT_OABI=y</span></code>: Older, OABI toolchain</p></li>
+</ul>
+<p>If you want to use the Atmel GCC toolchain, here are the steps to
+do so:</p>
+<p>Build Setup:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HOST_WINDOWS=y</span></code>: Windows</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HOST_CYGWIN=y</span></code>: Using Cygwin or other POSIX environment</p></li>
+</ul>
+<p>System Type -&gt; Toolchain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_GNU_EABI=y</span></code>: General GCC EABI toolchain under windows</p></li>
+</ul>
+<p>This re-configuration should be done before making NuttX or else the
+subsequent <code class="docutils literal notranslate"><span class="pre">make</span></code> will fail. If you have already attempted building
+NuttX then you will have to:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">distclean</span></code> to remove the old configuration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span> <span class="pre">sam3u-ek/ksnh</span></code> to start with a fresh configuration</p></li>
+<li><p>Perform the configuration changes above.</p></li>
+</ol>
+<p>Also, make sure that your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable has the new path to your
+Atmel tools. Try <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">arm-none-eabi-gcc</span></code> to make sure that you
+are selecting the right tool.</p>
+</li>
+</ol>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>This configuration directory will build the NuttShell.</p>
+<ol class="arabic">
+<li><p>NSH built-in applications are supported.  However, there are
+no built-in applications built with the default configuration.</p>
+<p>Binary Formats:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BUILTIN=y</span></code>: Enable support for built-in programs</p></li>
+</ul>
+<p>Application Configuration:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_BUILTIN_APPS=y</span></code>: Enable starting apps from NSH command line</p></li>
+</ul>
+</li>
+<li><p>By default, this configuration uses UART0 and has support LEDs enabled.
+UART0 output is available on the USB debugging port or on pins 0-1 of
+the PWML connector.</p>
+<p>This configuration can be modified to use peripherals on the ITEAD
+TFT shield as described below. However, in that case the UART0 and
+LED “L” GPIO pins conflict with the pin usage by the ITEAD TFT
+Shield. In this case you need to switch to USART0 and disable LEDs
+by modifying the configuration as follows:</p>
+<p>Board Selection -&gt; Peripheral</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_UART0=n</span></code>: Disable UART0.  Can’t use with this shield</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART0=y</span></code>: Enable USART0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_SERIALDRIVER=y</span></code></p></li>
+</ul>
+<p>Device Drivers -&gt; Serial</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_SERIAL_CONSOLE=y</span></code>: Configure the console on USART0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_RXBUFSIZE=256</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_TXBUFSIZE=256</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_BAUD=115200</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_BITS=8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_PARITY=0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_2STOP=0</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>USART0 TTL levels are available on COMM 5 (TXD0) and COMM 6 (RXD0)</p>
+</div>
+<p>Board Selection -&gt; Board-Specific Options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS=n</span></code>: Can’t support LEDs with this shield installed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARDUINO_ITHEAD_TFT=y</span></code>: Enable support for the Shield</p></li>
+</ul>
+</li>
+<li><p>If the ITEAD TFT shield is connected to the Arduino Due, then
+support for the SD card slot can be enabled by making the following
+changes to the configuration:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You cannot use UART0 or LEDs with this ITEAD module. You must switch
+to USART0 and disable LED support as described above.</p>
+</div>
+<p>Board Selection -&gt; Board-Specific Options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARDUINO_ITHEAD_TFT=y</span></code>: Enable support for the Shield</p></li>
+</ul>
+<p>File Systems:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_MOUNTPOINT=n</span></code>: Mountpoint support is needed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_FAT=y</span></code>: Enable the FAT file system</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FAT_LCNAMES=y</span></code>: Enable upper/lower case 8.3 file names (Optional, see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FAT_LFN=y</span></code>: Enable long file named (Optional, see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FAT_MAXFNAME=32</span></code>: Maximum supported file name length</p></li>
+</ul>
+<p>There are issues related to patents that Microsoft holds on FAT long file
+name technologies. See the top level NOTICE file for further details.</p>
+<p>Device Drivers</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI=y</span></code>: Enable SPI support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_EXCHANGE=y</span></code>: The exchange() method is supported</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_BITBANG=y</span></code>: Enable SPI bit-bang support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD=y</span></code>: Enable MMC/SD support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_NSLOTS=1</span></code>: Only one MMC/SD card slot</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_MULTIBLOCK_LIMIT=0</span></code>: Should not need to disable multi-block transfers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_HAVE_CARDDETECT=y</span></code>: I/O1 module as a card detect GPIO</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_SPI=y</span></code>: Use the SPI interface to the MMC/SD card</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_SPICLOCK=20000000</span></code>: This is a guess for the optimal MMC/SD frequency</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_SPIMODE=0</span></code>: Mode 0 is required</p></li>
+</ul>
+<p>Board Selection -&gt; Common Board Options</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_ARCHINIT=y</span></code>: Initialize the MMC/SD slot when NSH starts</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_MMCSDSLOTNO=0</span></code>: Only one MMC/SD slot, slot 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_MMCSDSPIPORTNO=0</span></code>: (does not really matter in this case)</p></li>
+</ul>
+<p>Application Configuration -&gt; NSH Library</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_ARCHINIT=y</span></code>: Board has architecture-specific initialization</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>2013-7-2: SD card is not responding. All 0’s received on SPI.</p>
+</div>
+</li>
+</ol>
+<ol class="arabic" start="3">
+<li><p>This configuration has been used for verifying the touchscreen on
+on the ITEAD TFT Shield.  With the modifications below, you can
+include the touchscreen test program at apps/examples/touchscreen as
+an NSH built-in application.  You can enable the touchscreen and test
+by modifying the  default configuration in the following ways:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You cannot use UART0 or LEDs with this ITEAD module.  You must switch
+to USART0 and disable LED support as described above.</p>
+</div>
+<p>Board Selection -&gt; Board-Specific Options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARDUINO_ITHEAD_TFT=y</span></code>: Enable support for the Shield</p></li>
+</ul>
+<p>Device Drivers</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI=y</span></code>: Enable SPI support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_EXCHANGE=y</span></code>: The exchange() method is supported</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_BITBANG=y</span></code>: Enable SPI bit-bang support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT=y</span></code>: Enable support for input devices</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT_ADS7843E=y</span></code>: Enable support for the XPT2046</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ADS7843E_SPIDEV=0</span></code>: (Doesn’t matter)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ADS7843E_SPIMODE=0</span></code>: Use SPI mode 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ADS7843E_FREQUENCY=1000000</span></code>: SPI BAUD 1MHz</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ADS7843E_SWAPXY=y</span></code>: If landscape orientation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ADS7843E_THRESHX=51</span></code>: These will probably need to be tuned</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ADS7843E_THRESHY=39</span></code></p></li>
+</ul>
+<p>System Type:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIO_IRQ=y</span></code>: GPIO interrupt support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOC_IRQ=y</span></code>: Enable GPIO interrupts from port C</p></li>
+</ul>
+<p>Library Support:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_WORKQUEUE=y</span></code>: Work queue support required</p></li>
+</ul>
+<p>Application Configuration:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_TOUCHSCREEN=y</span></code>: Enable the touchscreen built-int test</p></li>
+</ul>
+<p>Defaults should be okay for related touchscreen settings. Touchscreen
+debug output on USART0 can be enabled with:</p>
+<p>Build Setup:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_FEATURES=y</span></code>: Enable debug features</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_INFO=y</span></code>: Enable verbose debug output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_INPUT=y</span></code>: Enable debug output from input devices</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>2013-7-2:  TSC is not responding.  All 0’s received on SPI.</p>
+</div>
+</li>
+</ol>
+</section>
+<section id="nsh-leds">
+<h3>nsh-leds<a class="headerlink" href="#nsh-leds" title="Permalink to this heading"></a></h3>
+<p>This configuration directory will build the NuttX Shell and enable the user LEDS
+(<code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code>). It will also enable the LED example program (<code class="docutils literal notranslate"><span class="pre">leds</span></code>).
+Running the leds command will start up an LED daemon which will light up the L
+(user), TX, and RX LEDs in a binary sequence.</p>
+</section>
+</section>
 </section>
 
 
@@ -1158,7 +2790,7 @@ Configuration sub-directories
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../../index.html" class="btn btn-neutral float-left" title="Microchip SAM34" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../flipnclick-sam3x/index.html" class="btn btn-neutral float-right" title="flipnclick-sam3x" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../flipnclick-sam3x/index.html" class="btn btn-neutral float-right" title="Flip&amp;Click SAM3X" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

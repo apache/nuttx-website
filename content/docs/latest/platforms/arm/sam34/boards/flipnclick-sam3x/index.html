@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>flipnclick-sam3x &mdash; NuttX latest documentation</title>
+  <title>Flip&amp;Click SAM3X &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -45,8 +45,8 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="sam3u-ek" href="../sam3u-ek/index.html" />
-    <link rel="prev" title="arduino-due" href="../arduino-due/index.html" /> 
+    <link rel="next" title="SAM3U-EK" href="../sam3u-ek/index.html" />
+    <link rel="prev" title="Arduino Due" href="../arduino-due/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -210,6 +210,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm64/index.html">ARM64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../avr/context-switch-notes.html">Notes on AVR context switch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../avr/index.html">Microchip AVR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../ceva/index.html">CEVA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../hc/index.html">HC</a></li>
@@ -259,7 +260,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Microchip SAM34</a></li>
-      <li class="breadcrumb-item active">flipnclick-sam3x</li>
+      <li class="breadcrumb-item active">Flip&amp;Click SAM3X</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../../_sources/platforms/arm/sam34/boards/flipnclick-sam3x/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -269,652 +270,952 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="flipnclick-sam3x">
-<h1>flipnclick-sam3x<a class="headerlink" href="#flipnclick-sam3x" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-======
-
-  This README discusses issues unique to NuttX configurations for the
-  Mikroe Flip&amp;Click SAM3X board.  This board is an Arduino-Due work-alike
-  with four Mikroe Click bus interfaces.  Like the Arduino-Due, this board
-  features the Atmel ATSAM3X8E MCU running at 84 MHz.
-
-  Thanks to John Legg for contributing the Flip&amp;Click SAM3X board!
-
-Contents
-========
-
-  - STATUS
-  - Buttons and LEDs
-  - Serial Consoles
-  - SPI
-  - I2C
-  - SSD1306 OLED
-  - Loading Code
-  - Flip&amp;Click SAM3X-specific Configuration Options
-  - Configurations
-
-STATUS
-======
-
-  2018-01-07:  Created the configuration.  At present it does not work; I
-    believe because of tool-related issues.  See discussion under &quot;Loading
-    Code&quot; below.
-  2018-01-24:  I ordered a JTAG connector and soldered that to the Flip&#39;n&#39;Click
-    and I am now successfully able to load code.  The NSH configuration appears
-    to be fully functional.
-  2018-02-11:  Added the nxlines configuration to test the custom HiletGo
-    OLED on a Click proto board.  This is the same logic from the Flip&amp;Click
-    PIC32MZ and the result is the same:  No complaints from the software, but
-    nothing appears on the OLED.  There is, most likely, an error in my custom
-    HiletGo Click.  Damn!
-
-Buttons and LEDs
-================
-
-  Buttons
-  -------
-  There are no buttons on the Flip&amp;Click SAM3X board.
-
-  LEDs
-  ----
-  There are four LEDs on the top, blue side of the board.  Only
-  one can be controlled by software:
-
-    LED L - PB27 (PWM13)
-
-  There are also four LEDs on the back, white side of the board:
-
-    LED A - PC6
-    LED B - PC5
-    LED C - PC7
-    LED D - PC8
-
-  A high output value illuminates the LEDs.
-
-  These LEDs are available to the application and are all available to the
-  application unless CONFIG_ARCH_LEDS is defined.  In that case, the usage
-  by the board port is defined in include/board.h and src/sam_autoleds.c.
-  The LEDs are used to encode OS-related events as follows:
-
-    SYMBOL           MEANING                        LED STATE
-                                              L   A   B   C   D
-    ---------------- ----------------------- --- --- --- --- ---
-    LED_STARTED      NuttX has been started  OFF ON  OFF OFF OFF
-    LED_HEAPALLOCATE Heap has been allocated OFF OFF ON  OFF OFF
-    LED_IRQSENABLED  Interrupts enabled      OFF OFF OFF ON  OFF
-    LED_STACKCREATED Idle stack created      OFF OFF OFF OFF ON
-    LED_INIRQ        In an interrupt         GLO N/C N/C N/C N/C
-    LED_SIGNAL       In a signal handler     GLO N/C N/C N/C N/C
-    LED_ASSERTION    An assertion failed     GLO N/C N/C N/C N/C
-    LED_PANIC        The system has crashed  2Hz N/C N/C N/C N/C
-    LED_IDLE         MCU is is sleep mode    ---- Not used -----
-
-  Thus if LED L is glowing faintly and all other LEDs are off (except LED D
-  which was left on but is no longer controlled by NuttX and so may be in any
-  state), NuttX has successfully booted and is, apparently, running normally
-  and taking interrupts.  If any of LEDs A-D are statically set, then NuttX
-  failed to boot and the LED indicates the initialization phase where the
-  failure occurred.  If LED L is flashing at approximately 2Hz, then a fatal
-  error has been detected and the system has halted.
-
-  NOTE: After booting, LEDs A-D are no longer used by the system and may
-  be controlled the application.
-
-Serial Consoles
-===============
-
-  The SAM3X has a UART and 4 USARTS.  The Programming port uses a USB-to-
-  serial chip connected to the first of the MCU (RX0 and TX0 on PA8 and PA9,
-  respectively).  The output from that port is visible using the Arduino tool.
-
-  [NOTE: My experience so far:  I get serial output on the virtual COM port
-   via the UART, but I receive no serial input for keyboard data entered in
-   the PC serial terminal.  I have not investigated this problem.  It may
-   be something as simple as the Rx pin configuration.  Instead, I just
-   switched to USART0.]
-
-  Other convenient U[S]ARTs that may be used as the Serial console include:
-
-  1) An Arduino Serial Shield.  The RX and TX pins are available on the
-     Arduino connector D0 and D1 pins, respectively.  These are connected
-     to USART0, RXD0 and TXD0 which are PA10 and PA11, respectively.
-
-  2) Mikroe Click Serial Shield.  There are four Click bus connectors with
-     serial ports available as follows:
-
-     Click A:  USART0 RXD0 and TXD0 which are, again, PA10 and PA11.
-     Click B:  USART1 RXD1 and TXD1 which are PA12 and PA13, respectively.
-     Click C:  USART3 RXD3 and TXD3 which are PD5 and PD4, respectively.
-     Click D:  USART3 RXD3 and TXD3 which are, again, PD5 and PD4.
-
-  Other serial ports are probably available on the Arduino connector.  I
-  will leave that as an exercise for the interested reader.
-
-  The outputs from these pins is 3.3V.  You will need to connect RS232
-  transceiver to get the signals to RS232 levels (or connect to the
-  USB virtual COM port in the case of UART0).
-
-  Any of UART and USART0-3 may be used as a serial console.  UART0 would
-  be the preferred default console setting. However, due to the communication
-  problems mentioned above, USART0 is used as the default serial console
-  in all configurations.  But that is easily changed by modifying the
-  configuration as described under &quot;Configurations&quot; below.
-
-SPI
-===
-
-   SPI0 is available on the Arduino compatible SPI connector (but no SPI is
-   available on pins D10-D13 of the main Arduino Shield connectors where
-   you might expect them).  The SPI connector is configured as follows:
-
-     Pin Board Signal SAM3X  Pin Board Signal SAM3X
-     --- ------------ -----  --- ------------ -----
-      1  SPI0_MISO    PA25    2  VCC-5V       N/A
-      3  SPI0_SCK     PA27    4  SPI0_MOSI    PA26
-      5  MRST         NRSTB   6  GND          N/A
-
-   SPI0 is also available on each of the mikroBUS Click connectors (in
-   addition to 5V and GND).  The connectivity differs only in the chip
-   select pin:
-
-     MikroBUS A:              MikroBUS B:
-     Pin  Board Signal SAM3X  Pin  Board Signal SAM3X
-     ---- ------------ -----  ---- ------------ -----
-     CS   SPI0_CS0     PA28   CS   PA29         PA29
-     SCK  SPI0_SCK     PA27   SCK  SPI0_SCK     PA27
-     MISO SPI0_MISO    PA25   MISO SPI0_MISO    PA25
-     MOSI SPI0_MOSI    PA26   MOSI SPI0_MOSI    PA26
-
-     MikroBUS C:              MikroBUS D:
-     Pin  Board Signal SAM3X  Pin  Board Signal SAM3X
-     ---- ------------ -----  ---- ------------ -----
-     CS   SPI0_CS2     PB21   CS   SPI0_CS3     PB23
-     SCK  SPI0_SCK     PA27   SCK  SPI0_SCK     PA27
-     MISO SPI0_MISO    PA25   MISO SPI0_MISO    PA25
-     MOSI SPI0_MOSI    PA26   MOSI SPI0_MOSI    PA26
-
-I2C
-===
-
-   I2C0 is available on pins D16-D17 of the Arduino Shield connectors where
-   you would expect them.  The SPI connector is configured as follows:
-
-     Pin Label J1 Board Signal SAM3X
-     --- ----- -- ------------ -----
-     D16 SCL1  8  I2C0_SCL     PA17
-     D17 SDA1  7  I2C0_SDA     PA18
-
-   I2C0 and I2C1 are also available on the mikroBUS Click connectors (in
-   addition to 5V and GND).  The connectors A and B share I2C0 with the
-   Arduino shield connector.  Connectors C and D both connect to I2C1:
-
-     MikroBUS A:              MikroBUS B:
-     Pin  Board Signal SAM3X  Pin  Board Signal SAM3X
-     ---- ------------ -----  ---- ------------ -------
-     SCL  I2C0_SCL     PA17   SCL  I2C0_SCL    PA17
-     SDA  I2C0_SDA     PA1    SDA  I2C0_SDA    PA18
-
-     MikroBUS C:              MikroBUS D:
-     Pin  Board Signal SAM3X  Pin  Board Signal SAM3X
-     ---- ------------ -----  ---- ------------ -------
-     SCL  I2C1_SCL     PB13   SCL  I2C1_SCL     PB13
-     SDA  I2C1_SDA     PB12   SDA  I2C1_SDA     PB12
-
-SSD1306 OLED
-============
-
-  Hardware
-  --------
-  The HiletGo is a 128x64 OLED that can be driven either via SPI or I2C (SPI
-  is the default and is what is used here).  I have mounted the OLED on a
-  proto click board.  The OLED is connected as follows:
-
-  OLED  ALIAS       DESCRIPTION   PROTO CLICK
-  ----- ----------- ------------- -----------------
-   GND              Ground        GND
-   VCC              Power Supply  5V  (3-5V)
-   D0   SCL,CLK,SCK Clock         SCK
-   D1   SDA,MOSI    Data          MOSI,SDI
-   RES  RST,RESET   Reset         RST (GPIO OUTPUT)
-   DC   AO          Data/Command  INT (GPIO OUTPUT)
-   CS               Chip Select   CS  (GPIO OUTPUT)
-
-   NOTE that this is a write-only display (MOSI only)!
-
-Loading Code
-============
-
-  [NOTE: This text was mostly copied from the Arduino Due README.txt.  I
-   believe, however, that there have been significant changes to the
-   tool environment such that Bossac may no longer be usable.  I don&#39;t
-   know that for certain and perhaps someone with more knowledge of
-   the tools than I could make this work.  See STATUS below for the
-   current issues that I see.]
-
-  Installing the Arduino USB Driver under Windows
-  -----------------------------------------------
-
-  1. Download the Windows version of the Arduino software, not the 1.0.x
-     release but the latest (1.5.x or later) that supports the Arduino
-     Due.  When the download finishes, unzip the downloaded file.
-
-     In the current 1.8.x release, the Arduino Due support is not included
-     in the base package but can be added by selecting the &quot;Boards Manager&quot;
-     from the &quot;Tools&quot; menu.
-
-  2. Connect the Flip&amp;Click to your computer with a USB cable via the
-     Programming port.
-
-  3. The Windows driver installation should fail.
-
-  4. Open the Device Manager
-
-  5. Look for the listing named &quot;Ports (COM &amp; LPT)&quot;. You should see an open
-     port named &quot;Arduino Due Prog. Port&quot;.  Right click and select &quot;Update
-     driver&quot;.
-
-  6. Select the &quot;Browse my computer for Driver software&quot; option.
-
-  7. Right click on the &quot;Arduino Due Prog. Port&quot; and choose &quot;Update Driver
-     Software&quot;.
-
-  8. Navigate to the folder with the Arduino IDE you downloaded and unzipped
-     earlier. Locate and select the &quot;Drivers&quot; folder in the main Arduino
-     folder (not the &quot;FTDI USB Drivers&quot; sub-directory).
-
-  Loading NuttX to the Flip&amp;Click Using Bossa
-  -------------------------------------------
-
-  Arduino uses BOSSA under the hood to load code and you can use BOSSA
-  outside of Arduino.
-
-  Where do you get it?
-
-    Generic BOSSA installation files are available here:
-    https://github.com/shumatech/BOSSA (formerly at
-    http://sourceforge.net/projects/b-o-s-s-a/?source=dlp)
-
-    Pre-built binaries are available: https://github.com/shumatech/BOSSA/releases
-
-    The original Arduino DUE used a patched version of BOSSA available
-    as source code here: https://github.com/shumatech/BOSSA/tree/arduino
-    But that has most likely been incorporated into the main github
-    repository.
-
-    But, fortunately, since you already installed Arduino, you already have
-    BOSSA installed.  In my installation, it is here:
-
-    C:\Program Files (x86)\Arduino\arduino-1.5.2\hardware\tools\bossac.exe
-
-  General Procedure
-
-    1) Erase the FLASH and put the Flip&amp;Click in bootloader mode
-    2) Write the file to FLASH
-    3) Configure to boot from FLASH
-    4) Reset the Flip&amp;Click
-
-  Erase FLASH and Put the Flip&amp;Click in Bootloader Mode
-
-    This is accomplished by simply configuring the programming port in 1200
-    baud and sending something on the programming port.  Here is some sample
-    output from a Windows CMD.exe shell.  NOTE that my Arduino programming
-    port shows up as COM7.  It may be different on your system.
-
-    To enter boot mode, set the baud to 1200 and send anything to the
-    programming port:
-
-      C:\Program Files (x86)\Arduino\arduino-1.5.2\hardware\tools&gt;mode com26:1200,n,8,1
-
-      Status for device COM7:
-      ------------------------
-          Baud:            1200
-          Parity:          None
-          Data Bits:       8
-          Stop Bits:       1
-          Timeout:         ON
-          XON/XOFF:        OFF
-          CTS handshaking: OFF
-          DSR handshaking: OFF
-          DSR sensitivity: OFF
-          DTR circuit:     ON
-          RTS circuit:     ON
-
-      C:\Program Files (x86)\Arduino\arduino-1.5.2\hardware\tools&gt;bossac.exe --port=COM7 --usb-port=false -i
-          Device       : ATSAM3X8
-          Version      : v1.1 Dec 15 2010 19:25:04
-          Address      : 0x80000
-          Pages        : 2048
-          Page Size    : 256 bytes
-          Total Size   : 512KB
-          Planes       : 2
-          Lock Regions : 32
-          Locked       : none
-          Security     : false
-          Boot Flash   : false
-
-  Writing FLASH and Setting FLASH Boot Mode
-
-    In a Cygwin BaSH shell:
-
-      export PATH=&quot;/cygdrive/c/Program Files (x86)/Arduino/arduino-1.5.2/hardware/tools&quot;:$PATH
-
-    Erasing, writing, and verifying FLASH with bossac:
-
-      $ bossac.exe --port=COM7 --usb-port=false -e -w -v -b nuttx.bin -R
-      Erase flash
-      Write 86588 bytes to flash
-      [==============================] 100% (339/339 pages)
-      Verify 86588 bytes of flash
-      [==============================] 100% (339/339 pages)
-      Verify successful
-      Set boot flash true
-      CPU reset.
-
-    Some things that can go wrong:
-
-      $ bossac.exe --port=COM7 --usb-port=false -e -w -v -b nuttx.bin -R
-      No device found on COM7
-
-    This error means that there is code running on the Flip&amp;Click already
-    so the bootloader cannot connect. Press reset and try again
-
-      $ bossac.exe --port=COM7 --usb-port=false -e -w -v -b nuttx.bin -R
-      No device found on COM7
-
-    Sill No connection because the board does not jump to bootloader after
-    reset.  Set the baud to 1200 and send something then try again
-
-      $ bossac.exe --port=COM7 --usb-port=false -e -w -v -b nuttx.bin -R
-      Erase flash
-      Write 86588 bytes to flash
-      [==============================] 100% (339/339 pages)
-      Verify 86588 bytes of flash
-      [==============================] 100% (339/339 pages)
-      Verify successful
-      Set boot flash true
-      CPU reset.
-
-  Other useful bossac operations.
-
-    a) Write code to FLASH don&#39;t change boot mode and don&#39;t reset.  This lets
-       you examine the FLASH contents that you just loaded while the bootloader
-       is still active.
-
-       $ bossac.exe --port=COM7 --usb-port=false -e -w -v --boot=0 nuttx.bin
-       Write 64628 bytes to flash
-       [==============================] 100% (253/253 pages)
-       Verify 64628 bytes of flash
-       [==============================] 100% (253/253 pages)
-       Verify successful
-
-    b) Verify the FLASH contents (the bootloader must be running)
-
-       $ bossac.exe --port=COM7 --usb-port=false -v nuttx.bin
-       Verify 64628 bytes of flash
-       [==============================] 100% (253/253 pages)
-       Verify successful
-
-    c) Read from FLASH to a file  (the bootloader must be running):
-
-       $ bossac.exe --port=COM7 --usb-port=false --read=4096 nuttx.dump
-       Read 4096 bytes from flash
-       [==============================] 100% (16/16 pages)
-
-    d) Change to boot from FLASH
-
-       $ bossac.exe --port=COM7 --usb-port=false --boot=1
-       Set boot flash true
-
-  STATUS:
-    At present this procedure does not work.  I do the following:
-
-    a) Open TeraTerm, select COM7 at 1200 baud, type a few ENTERs, and
-       close teraterm.
-
-    b) Execute the following command which claims to have successfully
-       written to FLASH.
-
-       bossac.exe --info --debug --port COM7 --usb-port=0 --erase --write --verify -b nuttx.bin -R
-
-       But the code does not boot.  There is no indication of life.
-
-    c) Repeat a) then
-
-       bossac.exe --info --debug --port COM7 --usb-port=0 --verify -b nuttx.bin
-
-       And it says that the content of the FLASH is not good.
-
-  Uploading NuttX to the Flip&amp;Click Using JTAG
-  --------------------------------------------
-
-  The JTAG/SWD signals are brought out to a 10-pin header JTAG connector:
-
-    PIN SIGNAL         JTAG STANDARD     NOTES
-    --- -------------- ----------------- --------------------------------
-     1  VCC-3.3V       VTref
-     2  JTAG_TMS       SWDIO/TMS         SAM3X pin 31, Pulled up on board
-     3  GND            GND
-     4  JTAG_TCK       SWDCLK/TCK        SAM3X pin 28, Pulled up on board
-     5  GND            GND
-     6  JTAG_TDO       SWO/EXta/TRACECTL SAM3X pin 30, Pulled up on board
-     7  N/C            Key
-     8  JTAG_TDI       NC/EXTb/TDI       SAM3X pin 29, Pulled up on board
-     9  GND            GNDDetect
-    10  MRST           nReset
-
-   NOTE:  The 10-pin JTAG connector is not populated on the Flip&amp;Click
-   SAM3X.  This is the part number for the SMD connector recommended by
-   ARM.com:  Samtec FTSH-105-01-L-DV-K. For example:
-
-   https://www.digikey.com/product-detail/en/samtec-inc/FTSH-105-01-L-DV-K/SAM8799-ND/1875039
-
-   You should be able to use a 10- to 20-pin adapter to connect a SAM-ICE
-   or J-Link debugger to the Flip&amp;Click SAM3X.  I have this Olimex adapter:
-   https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/ .  I have been
-   loading code and debugging with no problems using JTAG.
-
-Flip&amp;Click SAM3X-specific Configuration Options
-===============================================
-
-  CONFIG_ARCH - Identifies the arch/ subdirectory.  This should
-  be set to:
-
-    CONFIG_ARCH=arm
-
-  CONFIG_ARCH_family - For use in C code:
-
-    CONFIG_ARCH_ARM=y
-
-  CONFIG_ARCH_architecture - For use in C code:
-
-    CONFIG_ARCH_CORTEXM3=y
-
-  CONFIG_ARCH_CHIP - Identifies the arch/*/chip subdirectory
-
-    CONFIG_ARCH_CHIP=&quot;sam34&quot;
-
-  CONFIG_ARCH_CHIP_name - For use in C code to identify the exact
-  chip:
-
-    CONFIG_ARCH_CHIP_SAM34
-    CONFIG_ARCH_CHIP_SAM3X
-    CONFIG_ARCH_CHIP_ATSAM3X8E
-
-  CONFIG_ARCH_BOARD - Identifies the boards/ subdirectory and
-  hence, the board that supports the particular chip or SoC.
-
-    CONFIG_ARCH_BOARD=flipnclick-sam3x (for the Flip&amp;Click SAM3X development board)
-
-  CONFIG_ARCH_BOARD_name - For use in C code
-
-    CONFIG_ARCH_BOARD_FLIPNCLICK_SAM3X=y
-
-  CONFIG_ARCH_LOOPSPERMSEC - Must be calibrated for correct operation
-  of delay loops
-
-  CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
-
-    CONFIG_RAM_SIZE=65536 (64Kb)
-
-  CONFIG_RAM_START - The start address of installed DRAM
-
-    CONFIG_RAM_START=0x20000000
-
-  CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
-  have LEDs
-
-  Individual subsystems can be enabled:
-
-    CONFIG_SAM34_ADC12B      - 12-bit Analog To Digital Converter
-    CONFIG_SAM34_CAN0        - CAN Controller 0
-    CONFIG_SAM34_CAN1        - CAN Controller 1
-    CONFIG_SAM34_DACC        - Digital To Analog Converter
-    CONFIG_SAM34_DMAC0       - DMA Controller
-    CONFIG_SAM34_EMAC        - Ethernet MAC
-    CONFIG_SAM34_HSMCI       - High Speed Multimedia Card Interface
-    CONFIG_SAM34_PWM         - Pulse Width Modulation
-    CONFIG_SAM34_RTC         - Real Time Clock
-    CONFIG_SAM34_RTT         - Real Time Timer
-    CONFIG_SAM34_SDRAMC      - SDRAM Controller
-    CONFIG_SAM34_SMC         - Static Memory Controller
-    CONFIG_SAM34_SPI0        - Serial Peripheral Interface 0
-    CONFIG_SAM34_SPI1        - Serial Peripheral Interface 1
-    CONFIG_SAM34_SSC         - Synchronous Serial Controller
-    CONFIG_SAM34_TC0         - Timer Counter 0
-    CONFIG_SAM34_TC1         - Timer Counter 1
-    CONFIG_SAM34_TC2         - Timer Counter 2
-    CONFIG_SAM34_TC3         - Timer Counter 3
-    CONFIG_SAM34_TC4         - Timer Counter 4
-    CONFIG_SAM34_TC5         - Timer Counter 5
-    CONFIG_SAM34_TC6         - Timer Counter 6
-    CONFIG_SAM34_TC7         - Timer Counter 7
-    CONFIG_SAM34_TC8         - Timer Counter 8
-    CONFIG_SAM34_TRNG        - True Random Number Generator
-    CONFIG_SAM34_TWIM/S0     - Two-Wire Interface 0 (master/slave)
-    CONFIG_SAM34_TWIM/S1     - Two-Wire Interface 1 (master/slave)
-    CONFIG_SAM34_UART0       - UART 0
-    CONFIG_SAM34_UOTGHS      - USB OTG High Speed
-    CONFIG_SAM34_USART0      - USART 0
-    CONFIG_SAM34_USART1      - USART 1
-    CONFIG_SAM34_USART2      - USART 2
-    CONFIG_SAM34_USART3      - USART 3
-    CONFIG_SAM34_WDT         - Watchdog Timer
-
-  Some subsystems can be configured to operate in different ways. The drivers
-  need to know how to configure the subsystem.
-
-    CONFIG_SAM34_GPIOA_IRQ
-    CONFIG_SAM34_GPIOB_IRQ
-    CONFIG_SAM34_GPIOC_IRQ
-    CONFIG_SAM34_GPIOD_IRQ
-    CONFIG_SAM34_GPIOE_IRQ
-    CONFIG_SAM34_GPIOF_IRQ
-
-Configurations
-==============
-
-  Each Flip&amp;Click SAM3X configuration is maintained in a sub-directory and
-  can be selected as follow:
-
-    tools/configure.sh [OPTIONS] flipnclick-sam3x:&lt;subdir&gt;
-
-  Where typical options are -l to configure to build on Linux or -c to
-  configure for Cygwin under Linux.  &#39;tools/configure.sh -h&#39; will show
-  you all of the options.
-
-  Before building, make sure the PATH environment variable includes the
-  correct path to the directory than holds your toolchain binaries.
-
-  And then build NuttX by simply typing the following.  At the conclusion of
-  the make, the nuttx binary will reside in an ELF file called, simply,
-  nuttx.
-
-    make
-
-  The &lt;subdir&gt; that is provided above as an argument to the tools/configure.sh
-  must be is one of the following.
-
-  NOTES:
-
-  1. These configurations use the mconf-based configuration tool.  To
-    change any of these configurations using that tool, you should:
-
-    a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-       see additional README.txt files in the NuttX tools repository.
-
-    b. Execute &#39;make menuconfig&#39; in nuttx/ in order to start the
-       reconfiguration process.
-
-  2. Unless stated otherwise, all configurations generate console
-     output on USART0 which is available either on the Arduion Shield
-     connector or on mikroBUS A as described above in the section entitled
-     &quot;Serial Consoles&quot;.
-
-  3. Unless otherwise stated, the configurations are setup for
-     Cygwin under Windows:
-
-     Build Setup:
-       CONFIG_HOST_WINDOWS=y   : Microsoft Windows
-       CONFIG_WINDIWS_CYGWIN=y : Cygwin under Windows
-
-  3. All of these configurations are set up to build under Windows using the
-     &quot;GNU Tools for ARM Embedded Processors&quot; that is maintained by ARM
-     (unless stated otherwise in the description of the configuration).
-
-       https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
-
-     That toolchain selection can easily be reconfigured using
-     &#39;make menuconfig&#39;.  Here are the relevant current settings:
-
-     System Type -&gt; Toolchain:
-       CONFIG_ARM_TOOLCHAIN_GNU_EABI=y  : GNU ARM EABI toolchain for Windows
-
-Configuration sub-directories
------------------------------
-
-  nsh:
-    This configuration directory will build the NuttShell.  See NOTES above.
-
-    NOTES:
-    1. NSH built-in applications are supported.  However, there are
-       no built-in applications built with the default configuration.
-
-       Binary Formats:
-         CONFIG_BUILTIN=y                    : Enable support for built-in programs
-
-       Application Configuration:
-         CONFIG_NSH_BUILTIN_APPS=y           : Enable starting apps from NSH command line
-
-  nxlines
-
-    This is an NSH configuration that supports the NX graphics example at
-    apps/examples/nxlines as a built-in application.
-
-    NOTES:
-
-    1. This configuration derives from the nsh configuration.  All of the
-       notes there apply here as well.
-
-    2. The default configuration assumes there is the custom HiletGo OLED
-       in the mikroBUS B slot (and a Mikroe RS-232 Click card in the
-       mikroBUS A slot).  That is easily changed by reconfiguring, however.
-       See the section entitled &quot;HiletGo OLED&quot; for information about this
-       custom click card.
-
-  STATUS:
-    2018-02-11:  No complaints from the software, but nothing appears on the
-      OLED.  There is, most likely, an error in my custom HiletGo Click.  Damn!
+  <section id="flip-click-sam3x">
+<h1>Flip&amp;Click SAM3X<a class="headerlink" href="#flip-click-sam3x" title="Permalink to this heading"></a></h1>
+<p>This documentation discusses issues unique to NuttX configurations for the
+Mikroe Flip&amp;Click SAM3X board. This board is an Arduino-Due work-alike with four
+Mikroe Click bus interfaces. Like the Arduino-Due, this board features the Atmel
+ATSAM3X8E MCU running at 84 MHz.</p>
+<p>Thanks to John Legg for contributing the Flip&amp;Click SAM3X board!</p>
+<section id="buttons-and-leds">
+<h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
+<section id="buttons">
+<h3>Buttons<a class="headerlink" href="#buttons" title="Permalink to this heading"></a></h3>
+<p>There are no buttons on the Flip&amp;Click SAM3X board.</p>
+</section>
+<section id="leds">
+<h3>LEDs<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h3>
+<p>There are four LEDs on the top, blue side of the board.  Only
+one can be controlled by software:</p>
+<ul class="simple">
+<li><p>LED L - PB27 (PWM13)</p></li>
+</ul>
+<p>There are also four LEDs on the back, white side of the board:</p>
+<ul class="simple">
+<li><p>LED A - PC6</p></li>
+<li><p>LED B - PC5</p></li>
+<li><p>LED C - PC7</p></li>
+<li><p>LED D - PC8</p></li>
+</ul>
+<p>A high output value illuminates the LEDs.</p>
+<p>These LEDs are available to the application and are all available to the
+application unless <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> is defined.  In that case, the usage by
+the board port is defined in <code class="docutils literal notranslate"><span class="pre">include/board.h</span></code> and <code class="docutils literal notranslate"><span class="pre">src/sam_autoleds.c</span></code>. The
+LEDs are used to encode OS-related events as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>SYMBOL</p></th>
+<th class="head"><p>MEANING</p></th>
+<th class="head"><p>L</p></th>
+<th class="head"><p>A</p></th>
+<th class="head"><p>B</p></th>
+<th class="head"><p>C</p></th>
+<th class="head"><p>D</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>LED_STARTED</p></td>
+<td><p>NuttX has been started</p></td>
+<td><p>OFF</p></td>
+<td><p>ON</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_HEAPALLOCATE</p></td>
+<td><p>Heap has been allocated</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>ON</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_IRQSENABLED</p></td>
+<td><p>Interrupts enabled</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>ON</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_STACKCREATED</p></td>
+<td><p>Idle stack created</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>ON</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_INIRQ</p></td>
+<td><p>In an interrupt</p></td>
+<td><p>GLO</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_SIGNAL</p></td>
+<td><p>In a signal handler</p></td>
+<td><p>GLO</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_ASSERTION</p></td>
+<td><p>An assertion failed</p></td>
+<td><p>GLO</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_PANIC</p></td>
+<td><p>The system has crashed</p></td>
+<td><p>2Hz</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+<td><p>N/C</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_IDLE</p></td>
+<td><p>MCU is is sleep mode</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+<p>Thus if LED L is glowing faintly and all other LEDs are off (except LED D
+which was left on but is no longer controlled by NuttX and so may be in any
+state), NuttX has successfully booted and is, apparently, running normally
+and taking interrupts. If any of LEDs A-D are statically set, then NuttX
+failed to boot and the LED indicates the initialization phase where the
+failure occurred. If LED L is flashing at approximately 2Hz, then a fatal
+error has been detected and the system has halted.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>After booting, LEDs A-D are no longer used by the system and may
+be controlled the application.</p>
+</div>
+</section>
+</section>
+<section id="serial-consoles">
+<h2>Serial Consoles<a class="headerlink" href="#serial-consoles" title="Permalink to this heading"></a></h2>
+<p>The SAM3X has a UART and 4 USARTS. The Programming port uses a USB-to-
+serial chip connected to the first of the MCU (RX0 and TX0 on PA8 and PA9,
+respectively). The output from that port is visible using the Arduino tool.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>My experience so far: I get serial output on the virtual COM port via the
+UART, but I receive no serial input for keyboard data entered in the PC
+serial terminal. I have not investigated this problem. It may be something as
+simple as the Rx pin configuration. Instead, I just switched to USART0.</p>
+</div>
+<p>Other convenient U[S]ARTs that may be used as the Serial console include:</p>
+<ol class="arabic simple">
+<li><p>An Arduino Serial Shield. The RX and TX pins are available on the Arduino
+connector D0 and D1 pins, respectively. These are connected to USART0, RXD0
+and TXD0 which are PA10 and PA11, respectively.</p></li>
+<li><p>Mikroe Click Serial Shield. There are four Click bus connectors with serial
+ports available as follows:</p>
+<ul class="simple">
+<li><p>Click A:  USART0 RXD0 and TXD0 which are, again, PA10 and PA11.</p></li>
+<li><p>Click B:  USART1 RXD1 and TXD1 which are PA12 and PA13, respectively.</p></li>
+<li><p>Click C:  USART3 RXD3 and TXD3 which are PD5 and PD4, respectively.</p></li>
+<li><p>Click D:  USART3 RXD3 and TXD3 which are, again, PD5 and PD4.</p></li>
+</ul>
+</li>
+</ol>
+<p>Other serial ports are probably available on the Arduino connector. I will leave
+that as an exercise for the interested reader.</p>
+<p>The outputs from these pins is 3.3V. You will need to connect RS232 transceiver
+to get the signals to RS232 levels (or connect to the USB virtual COM port in
+the case of UART0).</p>
+<p>Any of UART and USART0-3 may be used as a serial console. UART0 would be the
+preferred default console setting. However, due to the communication problems
+mentioned above, USART0 is used as the default serial console in all
+configurations. But that is easily changed by modifying the configuration as
+described under “Configurations” below.</p>
+</section>
+<section id="spi">
+<h2>SPI<a class="headerlink" href="#spi" title="Permalink to this heading"></a></h2>
+<p>SPI0 is available on the Arduino compatible SPI connector (but no SPI is
+available on pins D10-D13 of the main Arduino Shield connectors where
+you might expect them). The SPI connector is configured as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>SPI0_MISO</p></td>
+<td><p>PA25</p></td>
+<td><p>2</p></td>
+<td><p>VCC-5V</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>SPI0_SCK</p></td>
+<td><p>PA27</p></td>
+<td><p>4</p></td>
+<td><p>SPI0_MOSI</p></td>
+<td><p>PA26</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>MRST</p></td>
+<td><p>NRSTB</p></td>
+<td><p>6</p></td>
+<td><p>GND</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+<p>SPI0 is also available on each of the mikroBUS Click connectors (in addition to
+5V and GND).  The connectivity differs only in the chip select pin:</p>
+<p><strong>MikroBUS A</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CS</p></td>
+<td><p>SPI0_CS0</p></td>
+<td><p>PA28</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCK</p></td>
+<td><p>SPI0_SCK</p></td>
+<td><p>PA27</p></td>
+</tr>
+<tr class="row-even"><td><p>MISO</p></td>
+<td><p>SPI0_MISO</p></td>
+<td><p>PA25</p></td>
+</tr>
+<tr class="row-odd"><td><p>MOSI</p></td>
+<td><p>SPI0_MOSI</p></td>
+<td><p>PA26</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MikroBUS B:</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CS</p></td>
+<td><p>PA29</p></td>
+<td><p>PA29</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCK</p></td>
+<td><p>SPI0_SCK</p></td>
+<td><p>PA27</p></td>
+</tr>
+<tr class="row-even"><td><p>MISO</p></td>
+<td><p>SPI0_MISO</p></td>
+<td><p>PA25</p></td>
+</tr>
+<tr class="row-odd"><td><p>MOSI</p></td>
+<td><p>SPI0_MOSI</p></td>
+<td><p>PA26</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MikroBUS C</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CS</p></td>
+<td><p>SPI0_CS2</p></td>
+<td><p>PB21</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCK</p></td>
+<td><p>SPI0_SCK</p></td>
+<td><p>PA27</p></td>
+</tr>
+<tr class="row-even"><td><p>MISO</p></td>
+<td><p>SPI0_MISO</p></td>
+<td><p>PA25</p></td>
+</tr>
+<tr class="row-odd"><td><p>MOSI</p></td>
+<td><p>SPI0_MOSI</p></td>
+<td><p>PA26</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MikroBUS D</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CS</p></td>
+<td><p>SPI0_CS3</p></td>
+<td><p>PB23</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCK</p></td>
+<td><p>SPI0_SCK</p></td>
+<td><p>PA27</p></td>
+</tr>
+<tr class="row-even"><td><p>MISO</p></td>
+<td><p>SPI0_MISO</p></td>
+<td><p>PA25</p></td>
+</tr>
+<tr class="row-odd"><td><p>MOSI</p></td>
+<td><p>SPI0_MOSI</p></td>
+<td><p>PA26</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="i2c">
+<h2>I2C<a class="headerlink" href="#i2c" title="Permalink to this heading"></a></h2>
+<p>I2C0 is available on pins D16-D17 of the Arduino Shield connectors where you
+would expect them. The SPI connector is configured as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Label</p></th>
+<th class="head"><p>J1</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>D16</p></td>
+<td><p>SCL1</p></td>
+<td><p>8</p></td>
+<td><p>I2C0_SCL</p></td>
+<td><p>PA17</p></td>
+</tr>
+<tr class="row-odd"><td><p>D17</p></td>
+<td><p>SDA1</p></td>
+<td><p>7</p></td>
+<td><p>I2C0_SDA</p></td>
+<td><p>PA18</p></td>
+</tr>
+</tbody>
+</table>
+<p>I2C0 and I2C1 are also available on the mikroBUS Click connectors (in addition
+to 5V and GND). The connectors A and B share I2C0 with the Arduino shield
+connector. Connectors C and D both connect to I2C1:</p>
+<p><strong>MikroBUS A</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCL</p></td>
+<td><p>I2C0_SCL</p></td>
+<td><p>PA17</p></td>
+</tr>
+<tr class="row-odd"><td><p>SDA</p></td>
+<td><p>I2C0_SDA</p></td>
+<td><p>PA1</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MikroBUS B</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCL</p></td>
+<td><p>I2C0_SCL</p></td>
+<td><p>PA17</p></td>
+</tr>
+<tr class="row-odd"><td><p>SDA</p></td>
+<td><p>I2C0_SDA</p></td>
+<td><p>PA18</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MikroBUS C</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCL</p></td>
+<td><p>I2C1_SCL</p></td>
+<td><p>PB13</p></td>
+</tr>
+<tr class="row-odd"><td><p>SDA</p></td>
+<td><p>I2C1_SDA</p></td>
+<td><p>PB12</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MikroBUS D</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>Board Signal</p></th>
+<th class="head"><p>SAM3X</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCL</p></td>
+<td><p>I2C1_SCL</p></td>
+<td><p>PB13</p></td>
+</tr>
+<tr class="row-odd"><td><p>SDA</p></td>
+<td><p>I2C1_SDA</p></td>
+<td><p>PB12</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ssd1306-oled">
+<h2>SSD1306 OLED<a class="headerlink" href="#ssd1306-oled" title="Permalink to this heading"></a></h2>
+<section id="hardware">
+<h3>Hardware<a class="headerlink" href="#hardware" title="Permalink to this heading"></a></h3>
+<p>The HiletGo is a 128x64 OLED that can be driven either via SPI or I2C (SPI is
+the default and is what is used here). I have mounted the OLED on a proto click
+board. The OLED is connected as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>OLED</p></th>
+<th class="head"><p>ALIAS</p></th>
+<th class="head"><p>DESCRIPTION</p></th>
+<th class="head"><p>PROTO CLICK</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GND</p></td>
+<td></td>
+<td><p>Ground</p></td>
+<td><p>GND</p></td>
+</tr>
+<tr class="row-odd"><td><p>VCC</p></td>
+<td></td>
+<td><p>Power Supply</p></td>
+<td><p>5V  (3-5V)</p></td>
+</tr>
+<tr class="row-even"><td><p>D0</p></td>
+<td><p>SCL,CLK,SCK</p></td>
+<td><p>Clock</p></td>
+<td><p>SCK</p></td>
+</tr>
+<tr class="row-odd"><td><p>D1</p></td>
+<td><p>SDA,MOSI</p></td>
+<td><p>Data</p></td>
+<td><p>MOSI,SDI</p></td>
+</tr>
+<tr class="row-even"><td><p>RES</p></td>
+<td><p>RST,RESET</p></td>
+<td><p>Reset</p></td>
+<td><p>RST (GPIO OUTPUT)</p></td>
+</tr>
+<tr class="row-odd"><td><p>DC</p></td>
+<td><p>AO</p></td>
+<td><p>Data/Command</p></td>
+<td><p>INT (GPIO OUTPUT)</p></td>
+</tr>
+<tr class="row-even"><td><p>CS</p></td>
+<td></td>
+<td><p>Chip Select</p></td>
+<td><p>CS  (GPIO OUTPUT)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is a write-only display (MOSI only)!</p>
+</div>
+</section>
+</section>
+<section id="loading-code">
+<h2>Loading Code<a class="headerlink" href="#loading-code" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This text was mostly copied from the Arduino Due README.txt. I believe,
+however, that there have been significant changes to the tool environment
+such that Bossac may no longer be usable. I don’t know that for certain and
+perhaps someone with more knowledge of the tools than I could make this work.
+See STATUS below for the current issues that I see.</p>
+</div>
+<section id="installing-the-arduino-usb-driver-under-windows">
+<h3>Installing the Arduino USB Driver under Windows<a class="headerlink" href="#installing-the-arduino-usb-driver-under-windows" title="Permalink to this heading"></a></h3>
+<ol class="arabic">
+<li><p>Download the Windows version of the Arduino software, not the 1.0.x release
+but the latest (1.5.x or later) that supports the Arduino Due. When the
+download finishes, unzip the downloaded file.</p>
+<p>In the current 1.8.x release, the Arduino Due support is not included in the
+base package but can be added by selecting the “Boards Manager” from the
+“Tools” menu.</p>
+</li>
+<li><p>Connect the Flip&amp;Click to your computer with a USB cable via the Programming
+port.</p></li>
+<li><p>The Windows driver installation should fail.</p></li>
+<li><p>Open the Device Manager</p></li>
+<li><p>Look for the listing named “Ports (COM &amp; LPT)”. You should see an open port
+named “Arduino Due Prog. Port”.  Right click and select “Update driver”.</p></li>
+<li><p>Select the “Browse my computer for Driver software” option.</p></li>
+<li><p>Right click on the “Arduino Due Prog. Port” and choose “Update Driver
+Software”.</p></li>
+<li><p>Navigate to the folder with the Arduino IDE you downloaded and unzipped
+earlier. Locate and select the “Drivers” folder in the main Arduino folder
+(not the “FTDI USB Drivers” sub-directory).</p></li>
+</ol>
+</section>
+<section id="loading-nuttx-to-the-flip-click-using-bossa">
+<h3>Loading NuttX to the Flip&amp;Click Using Bossa<a class="headerlink" href="#loading-nuttx-to-the-flip-click-using-bossa" title="Permalink to this heading"></a></h3>
+<p>Arduino uses BOSSA under the hood to load code and you can use BOSSA
+outside of Arduino.</p>
+<p>Where do you get it?</p>
+<p>Generic BOSSA installation files are available here:
+<a class="reference external" href="https://github.com/shumatech/BOSSA">https://github.com/shumatech/BOSSA</a> (formerly at
+<a class="reference external" href="http://sourceforge.net/projects/b-o-s-s-a/?source=dlp">http://sourceforge.net/projects/b-o-s-s-a/?source=dlp</a>)</p>
+<p>Pre-built binaries are available: <a class="reference external" href="https://github.com/shumatech/BOSSA/releases">https://github.com/shumatech/BOSSA/releases</a></p>
+<p>The original Arduino DUE used a patched version of BOSSA available as source
+code here: <a class="reference external" href="https://github.com/shumatech/BOSSA/tree/arduino">https://github.com/shumatech/BOSSA/tree/arduino</a> But that has most
+likely been incorporated into the main github repository.</p>
+<p>But, fortunately, since you already installed Arduino, you already have BOSSA
+installed. In my installation, it is here:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>C:<span class="se">\P</span>rogram<span class="w"> </span>Files<span class="w"> </span><span class="o">(</span>x86<span class="o">)</span><span class="se">\A</span>rduino<span class="se">\a</span>rduino-1.5.2<span class="se">\h</span>ardware<span class="se">\t</span>ools<span class="se">\b</span>ossac.exe
 </pre></div>
 </div>
+<p>General Procedure</p>
+<ol class="arabic simple">
+<li><p>Erase the FLASH and put the Flip&amp;Click in bootloader mode</p></li>
+<li><p>Write the file to FLASH</p></li>
+<li><p>Configure to boot from FLASH</p></li>
+<li><p>Reset the Flip&amp;Click</p></li>
+</ol>
+<p>Erase FLASH and Put the Flip&amp;Click in Bootloader Mode</p>
+<p>This is accomplished by simply configuring the programming port in 1200 baud and
+sending something on the programming port. Here is some sample output from a
+Windows CMD.exe shell. NOTE that my Arduino programming port shows up as COM7.
+It may be different on your system.</p>
+<p>To enter boot mode, set the baud to 1200 and send anything to the
+programming port:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>C:<span class="se">\P</span>rogram<span class="w"> </span>Files<span class="w"> </span><span class="o">(</span>x86<span class="o">)</span><span class="se">\A</span>rduino<span class="se">\a</span>rduino-1.5.2<span class="se">\h</span>ardware<span class="se">\t</span>ools&gt;mode<span class="w"> </span>com26:1200,n,8,1
+
+<span class="go">Status for device COM7:</span>
+<span class="go">------------------------</span>
+<span class="go">    Baud:            1200</span>
+<span class="go">    Parity:          None</span>
+<span class="go">    Data Bits:       8</span>
+<span class="go">    Stop Bits:       1</span>
+<span class="go">    Timeout:         ON</span>
+<span class="go">    XON/XOFF:        OFF</span>
+<span class="go">    CTS handshaking: OFF</span>
+<span class="go">    DSR handshaking: OFF</span>
+<span class="go">    DSR sensitivity: OFF</span>
+<span class="go">    DTR circuit:     ON</span>
+<span class="go">    RTS circuit:     ON</span>
+
+<span class="gp">$ </span>C:<span class="se">\P</span>rogram<span class="w"> </span>Files<span class="w"> </span><span class="o">(</span>x86<span class="o">)</span><span class="se">\A</span>rduino<span class="se">\a</span>rduino-1.5.2<span class="se">\h</span>ardware<span class="se">\t</span>ools&gt;bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-i
+<span class="go">    Device       : ATSAM3X8</span>
+<span class="go">    Version      : v1.1 Dec 15 2010 19:25:04</span>
+<span class="go">    Address      : 0x80000</span>
+<span class="go">    Pages        : 2048</span>
+<span class="go">    Page Size    : 256 bytes</span>
+<span class="go">    Total Size   : 512KB</span>
+<span class="go">    Planes       : 2</span>
+<span class="go">    Lock Regions : 32</span>
+<span class="go">    Locked       : none</span>
+<span class="go">    Security     : false</span>
+<span class="go">    Boot Flash   : false</span>
+</pre></div>
+</div>
+<p>Writing FLASH and Setting FLASH Boot Mode</p>
+<p>In a Cygwin BaSH shell:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/cygdrive/c/Program Files (x86)/Arduino/arduino-1.5.2/hardware/tools&quot;</span>:<span class="nv">$PATH</span>
+
+<span class="go">  Erasing, writing, and verifying FLASH with bossac:</span>
+
+<span class="gp">    $ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">    Erase flash</span>
+<span class="go">    Write 86588 bytes to flash</span>
+<span class="go">    [==============================] 100% (339/339 pages)</span>
+<span class="go">    Verify 86588 bytes of flash</span>
+<span class="go">    [==============================] 100% (339/339 pages)</span>
+<span class="go">    Verify successful</span>
+<span class="go">    Set boot flash true</span>
+<span class="go">    CPU reset.</span>
+</pre></div>
+</div>
+<p>Some things that can go wrong:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">No device found on COM7</span>
+</pre></div>
+</div>
+<p>This error means that there is code running on the Flip&amp;Click already so the
+bootloader cannot connect. Press reset and try again</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">No device found on COM7</span>
+</pre></div>
+</div>
+<p>Still No connection because the board does not jump to bootloader after reset.
+Set the baud to 1200 and send something then try again</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+<span class="go">Erase flash</span>
+<span class="go">Write 86588 bytes to flash</span>
+<span class="go">[==============================] 100% (339/339 pages)</span>
+<span class="go">Verify 86588 bytes of flash</span>
+<span class="go">[==============================] 100% (339/339 pages)</span>
+<span class="go">Verify successful</span>
+<span class="go">Set boot flash true</span>
+<span class="go">CPU reset.</span>
+</pre></div>
+</div>
+<p>Other useful bossac operations.</p>
+<ol class="arabic">
+<li><p>Write code to FLASH don’t change boot mode and don’t reset. This lets you
+examine the FLASH contents that you just loaded while the bootloader is still
+active.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-e<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>--boot<span class="o">=</span><span class="m">0</span><span class="w"> </span>nuttx.bin
+<span class="go">Write 64628 bytes to flash</span>
+<span class="go">[==============================] 100% (253/253 pages)</span>
+<span class="go">Verify 64628 bytes of flash</span>
+<span class="go">[==============================] 100% (253/253 pages)</span>
+<span class="go">Verify successful</span>
+</pre></div>
+</div>
+</li>
+<li><p>Verify the FLASH contents (the bootloader must be running)</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-v<span class="w"> </span>nuttx.bin
+<span class="go">Verify 64628 bytes of flash</span>
+<span class="go">[==============================] 100% (253/253 pages)</span>
+<span class="go">Verify successful</span>
+</pre></div>
+</div>
+</li>
+<li><p>Read from FLASH to a file (the bootloader must be running):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--read<span class="o">=</span><span class="m">4096</span><span class="w"> </span>nuttx.dump
+<span class="go">Read 4096 bytes from flash</span>
+<span class="go">[==============================] 100% (16/16 pages)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Change to boot from FLASH</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--port<span class="o">=</span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="nb">false</span><span class="w"> </span>--boot<span class="o">=</span><span class="m">1</span>
+<span class="go">Set boot flash true</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>At present this procedure does not work.  I do the following:</p>
+<ol class="arabic">
+<li><p>Open TeraTerm, select COM7 at 1200 baud, type a few ENTERs, and close
+teraterm.</p></li>
+<li><p>Execute the following command which claims to have successfully written to
+FLASH.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--info<span class="w"> </span>--debug<span class="w"> </span>--port<span class="w"> </span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="m">0</span><span class="w"> </span>--erase<span class="w"> </span>--write<span class="w"> </span>--verify<span class="w"> </span>-b<span class="w"> </span>nuttx.bin<span class="w"> </span>-R
+</pre></div>
+</div>
+<p>But the code does not boot.  There is no indication of life.</p>
+</li>
+<li><p>Repeat 1. then</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>bossac.exe<span class="w"> </span>--info<span class="w"> </span>--debug<span class="w"> </span>--port<span class="w"> </span>COM7<span class="w"> </span>--usb-port<span class="o">=</span><span class="m">0</span><span class="w"> </span>--verify<span class="w"> </span>-b<span class="w"> </span>nuttx.bin
+</pre></div>
+</div>
+<p>And it says that the content of the FLASH is not good.</p>
+</li>
+</ol>
+</div>
+</section>
+<section id="uploading-nuttx-to-the-flip-click-using-jtag">
+<h3>Uploading NuttX to the Flip&amp;Click Using JTAG<a class="headerlink" href="#uploading-nuttx-to-the-flip-click-using-jtag" title="Permalink to this heading"></a></h3>
+<p>The JTAG/SWD signals are brought out to a 10-pin header JTAG connector:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIN</p></th>
+<th class="head"><p>SIGNAL</p></th>
+<th class="head"><p>JTAG STANDARD</p></th>
+<th class="head"><p>NOTES</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>VCC-3.3V</p></td>
+<td><p>VTref</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>JTAG_TMS</p></td>
+<td><p>SWDIO/TMS</p></td>
+<td><p>SAM3X pin 31, Pulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>GND</p></td>
+<td><p>GND</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>JTAG_TCK</p></td>
+<td><p>SWDCLK/TCK</p></td>
+<td><p>SAM3X pin 28, Pulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>GND</p></td>
+<td><p>GND</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>JTAG_TDO</p></td>
+<td><p>SWO/EXta/TRACECTL</p></td>
+<td><p>SAM3X pin 30, Pulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>N/C</p></td>
+<td><p>Key</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>JTAG_TDI</p></td>
+<td><p>NC/EXTb/TDI</p></td>
+<td><p>SAM3X pin 29, Pulled up on board</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>GND</p></td>
+<td><p>GNDDetect</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>MRST</p></td>
+<td><p>nReset</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The 10-pin JTAG connector is not populated on the Flip&amp;Click SAM3X. This is
+the part number for the SMD connector recommended by ARM.com: Samtec
+FTSH-105-01-L-DV-K. For example:
+<a class="reference external" href="https://www.digikey.com/product-detail/en/samtec-inc/FTSH-105-01-L-DV-K/SAM8799-ND/1875039">https://www.digikey.com/product-detail/en/samtec-inc/FTSH-105-01-L-DV-K/SAM8799-ND/1875039</a></p>
+<p>You should be able to use a 10- to 20-pin adapter to connect a SAM-ICE
+or J-Link debugger to the Flip&amp;Click SAM3X. I have this Olimex adapter:
+<a class="reference external" href="https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/">https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/</a>. I have been
+loading code and debugging with no problems using JTAG.</p>
+</div>
+</section>
+</section>
+<section id="flip-click-sam3x-specific-configuration-options">
+<h2>Flip&amp;Click SAM3X-specific Configuration Options<a class="headerlink" href="#flip-click-sam3x-specific-configuration-options" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">arch/</span></code> subdirectory. This should be set to:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH=arm</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_family</span></code>: For use in C code:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ARM=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_architecture</span></code>: For use in C code:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CORTEXM3=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">arch/*/chip</span></code> subdirectory</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP=&quot;sam34&quot;</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_name</span></code>: For use in C code to identify the exact chip:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_SAM34</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_SAM3X</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_ATSAM3X8E</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD</span></code>: Identifies the <code class="docutils literal notranslate"><span class="pre">boards/</span></code> subdirectory and hence, the
+board that supports the particular chip or SoC.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD=flipnclick-sam3x</span></code> (for the Flip&amp;Click SAM3X development board)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_name</span></code>: For use in C code</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_FLIPNCLICK_SAM3X=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LOOPSPERMSEC</span></code>: Must be calibrated for correct operation of delay loops</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE</span></code>: Describes the installed DRAM (SRAM in this case):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE=65536</span></code> (64Kb)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_START</span></code>: The start address of installed DRAM</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_START=0x20000000</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code>: Use LEDs to show state. Unique to boards that have LEDs</p></li>
+</ul>
+<p>Individual subsystems can be enabled:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_ADC12B</span></code>: 12-bit Analog To Digital Converter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_CAN0</span></code>: CAN Controller 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_CAN1</span></code>: CAN Controller 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_DACC</span></code>: Digital To Analog Converter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_DMAC0</span></code>: DMA Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_EMAC</span></code>: Ethernet MAC</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_HSMCI</span></code>: High Speed Multimedia Card Interface</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_PWM</span></code>: Pulse Width Modulation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_RTC</span></code>: Real Time Clock</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_RTT</span></code>: Real Time Timer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SDRAMC</span></code>: SDRAM Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SMC</span></code>: Static Memory Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SPI0</span></code>: Serial Peripheral Interface 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SPI1</span></code>: Serial Peripheral Interface 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SSC</span></code>: Synchronous Serial Controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC0</span></code>: Timer Counter 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC1</span></code>: Timer Counter 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC2</span></code>: Timer Counter 2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC3</span></code>: Timer Counter 3</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC4</span></code>: Timer Counter 4</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC5</span></code>: Timer Counter 5</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC6</span></code>: Timer Counter 6</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC7</span></code>: Timer Counter 7</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC8</span></code>: Timer Counter 8</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TRNG</span></code>: True Random Number Generator</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM</span></code>/<code class="docutils literal notranslate"><span class="pre">S0</span></code>: Two-Wire Interface 0 (master/slave)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM</span></code>/<code class="docutils literal notranslate"><span class="pre">S1</span></code>: Two-Wire Interface 1 (master/slave)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_UART0</span></code>: UART 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_UOTGHS</span></code>: USB OTG High Speed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART0</span></code>: USART 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART1</span></code>: USART 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART2</span></code>: USART 2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART3</span></code>: USART 3</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_WDT</span></code>: Watchdog Timer</p></li>
+</ul>
+<p>Some subsystems can be configured to operate in different ways. The drivers
+need to know how to configure the subsystem.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOA_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOB_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOC_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOD_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOE_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOF_IRQ</span></code></p></li>
+</ul>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>Each Flip&amp;Click SAM3X configuration is maintained in a sub-directory and
+can be selected as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>tools/configure.sh<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>flipnclick-sam3x:&lt;subdir&gt;
+</pre></div>
+</div>
+<p>Where typical options are <code class="docutils literal notranslate"><span class="pre">-l</span></code> to configure to build on Linux or <code class="docutils literal notranslate"><span class="pre">-c</span></code> to
+configure for Cygwin under Linux. <code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span> <span class="pre">-h</span></code> will show you all of
+the options.</p>
+<p>Before building, make sure the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable includes the correct
+path to the directory than holds your toolchain binaries.</p>
+<p>And then build NuttX by simply typing the following.  At the conclusion of
+the make, the nuttx binary will reside in an ELF file called, simply,
+nuttx.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;subdir&gt;</span></code> that is provided above as an argument to the
+<code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span></code> must be one of the following:</p>
+<p>These configurations use the <code class="docutils literal notranslate"><span class="pre">mconf-based</span></code> configuration tool. To change any
+of these configurations using that tool, you should:</p>
+<ol class="arabic simple">
+<li><p>Build and install the <code class="docutils literal notranslate"><span class="pre">kconfig-mconf</span></code> tool. See <code class="docutils literal notranslate"><span class="pre">nuttx/README.txt</span></code> see
+additional README.txt files in the NuttX tools repository.</p></li>
+<li><p>Execute <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> in <code class="docutils literal notranslate"><span class="pre">nuttx/</span></code> in order to start the
+reconfiguration process.</p></li>
+</ol>
+<p>Unless stated otherwise, all configurations generate console output on USART0
+which is available either on the Arduion Shield connector or on mikroBUS A as
+described above in the section entitled “Serial Consoles”.</p>
+<p>Unless otherwise stated, the configurations are setup for Cygwin under Windows:</p>
+<p>Build Setup:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HOST_WINDOWS=y</span></code>: Microsoft Windows</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_WINDIWS_CYGWIN=y</span></code>: Cygwin under Windows</p></li>
+</ul>
+<p>All of these configurations are set up to build under Windows using the “GNU
+Tools for ARM Embedded Processors” that is maintained by ARM (unless stated
+otherwise in the description of the configuration).</p>
+<p><a class="reference external" href="https://developer.arm.com/open-source/gnu-toolchain/gnu-rm">https://developer.arm.com/open-source/gnu-toolchain/gnu-rm</a></p>
+<p>That toolchain selection can easily be reconfigured using <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>.
+Here are the relevant current settings:</p>
+<p>System Type -&gt; Toolchain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_GNU_EABI=y</span></code>: GNU ARM EABI toolchain for Windows</p></li>
+</ul>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>This configuration directory will build the NuttShell.</p>
+<p>NSH built-in applications are supported. However, there are no built-in
+applications built with the default configuration.</p>
+<p>Binary Formats:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BUILTIN=y</span></code>: Enable support for built-in programs</p></li>
+</ul>
+<p>Application Configuration:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_BUILTIN_APPS=y</span></code>: Enable starting apps from NSH command line</p></li>
+</ul>
+</section>
+<section id="nxlines">
+<h3>nxlines<a class="headerlink" href="#nxlines" title="Permalink to this heading"></a></h3>
+<p>This is an NSH configuration that supports the NX graphics example at
+<code class="docutils literal notranslate"><span class="pre">apps/examples/nxlines</span></code> as a built-in application.</p>
+<p>This configuration derives from the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration. All of the notes
+there apply here as well.</p>
+<p>The default configuration assumes there is the custom HiletGo OLED in the
+mikroBUS B slot (and a Mikroe RS-232 Click card in the mikroBUS A slot). That is
+easily changed by reconfiguring, however. See the section entitled “HiletGo
+OLED” for information about this custom click card.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>2018-02-11: No complaints from the software, but nothing appears on the
+OLED. There is, most likely, an error in my custom HiletGo Click. Damn!</p>
+</div>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../arduino-due/index.html" class="btn btn-neutral float-left" title="arduino-due" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../sam3u-ek/index.html" class="btn btn-neutral float-right" title="sam3u-ek" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../arduino-due/index.html" class="btn btn-neutral float-left" title="Arduino Due" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../sam3u-ek/index.html" class="btn btn-neutral float-right" title="SAM3U-EK" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

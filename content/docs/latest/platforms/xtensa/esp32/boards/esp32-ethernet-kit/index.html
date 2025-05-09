@@ -128,6 +128,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">Supported Platforms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm/index.html">ARM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm64/index.html">ARM64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../avr/context-switch-notes.html">Notes on AVR context switch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../avr/index.html">Microchip AVR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../ceva/index.html">CEVA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../hc/index.html">HC</a></li>
@@ -254,6 +255,16 @@ of ESP32 through the USB interface without a separate JTAG debugger.</p>
 <p><span class="caption-text">ESP32-Ethernet-Kit V1.2 Electrical Block Diagram</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
+<p>The ESP32 is a dual-core system from Espressif with two Harvard architecture
+Xtensa LX6 CPUs. All embedded memory, external memory and peripherals are
+located on the data bus and/or the instruction bus of these CPUs. With some
+minor exceptions, the address mapping of two CPUs is symmetric, meaning they use
+the same addresses to access the same memory. Multiple peripherals in the system
+can access embedded memory via DMA.</p>
+<p>The ESP32-Ethernet-Kit is an Ethernet-to-Wi-Fi development board that enables
+Ethernet devices to be interconnected over Wi-Fi. At the same time, to provide
+more flexible power supply options, the ESP32-Ethernet-Kit also supports power
+over Ethernet (PoE).</p>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
 <blockquote>
@@ -385,6 +396,73 @@ input.</p>
 <p>There are several on-board LEDs for that indicate the presence of power
 and USB activity. None of these are available for use by software.</p>
 </section>
+</section>
+<section id="ethernet-peripherals">
+<h2>Ethernet Peripherals<a class="headerlink" href="#ethernet-peripherals" title="Permalink to this heading"></a></h2>
+<p>ESP32 has a 802.11 hardware MAC, so just connects to external PHY chip.
+Due to the limited number of GPIOs in ESP32, it’s recommended to use RMII to
+connect to an external PHY chip. Current driver also only supports RMII option.</p>
+<p>The RMII GPIO pins are fixed, but the SMI and functional GPIO pins are optional.</p>
+<p>RMII GPIO pins are as following:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32 GPIO</p></th>
+<th class="head"><p>PHY Chip GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IO25</p></td>
+<td><p>RXD[0]</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO26</p></td>
+<td><p>RXD[1]</p></td>
+</tr>
+<tr class="row-even"><td><p>IO27</p></td>
+<td><p>CRS_DV</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO0</p></td>
+<td><p>REF_CLK</p></td>
+</tr>
+<tr class="row-even"><td><p>IO19</p></td>
+<td><p>TXD[0]</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO21</p></td>
+<td><p>TX_EN</p></td>
+</tr>
+<tr class="row-even"><td><p>IO22</p></td>
+<td><p>TXD[1]</p></td>
+</tr>
+</tbody>
+</table>
+<p>SMI GPIO pins (default option) are as following:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32 GPIO</p></th>
+<th class="head"><p>PHY Chip GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IO18</p></td>
+<td><p>MDIO</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO23</p></td>
+<td><p>MDC</p></td>
+</tr>
+</tbody>
+</table>
+<p>Functional GPIO pins(default option) are as following:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ESP32 GPIO</p></th>
+<th class="head"><p>PHY Chip GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IO5</p></td>
+<td><p>Reset_N</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="pin-mapping">
 <h2>Pin Mapping<a class="headerlink" href="#pin-mapping" title="Permalink to this heading"></a></h2>
@@ -597,6 +675,23 @@ For a reference design please see <a class="reference external" href="https://dl
 </ol>
 </div>
 </section>
+<section id="using-qemu">
+<h2>Using QEMU:<a class="headerlink" href="#using-qemu" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>First follow the instructions at <a class="reference external" href="https://github.com/espressif/qemu/wiki">https://github.com/espressif/qemu/wiki</a> to build QEMU.</p></li>
+<li><p>Enable the <code class="docutils literal notranslate"><span class="pre">ESP32_QEMU_IMAGE</span></code> config found in “Board Selection -&gt; ESP32 binary image for QEMU”.</p></li>
+<li><p>Download the bootloader and the partition table from <a class="reference external" href="https://github.com/espressif/esp-nuttx-bootloader/releases">https://github.com/espressif/esp-nuttx-bootloader/releases</a>
+and place them in a directory, say <code class="docutils literal notranslate"><span class="pre">../esp-bins</span></code>.</p></li>
+<li><p>Build and generate the QEMU image: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">ESPTOOL_BINDIR=../esp-bins</span></code></p></li>
+<li><p>A new image “esp32_qemu_image.bin” will be created. It can be run as:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">~/PATH_TO_QEMU/qemu/build/xtensa-softmmu/qemu-system-xtensa -nographic \</span>
+<span class="go">   -machine esp32 \</span>
+<span class="go">   -drive file=esp32_qemu_image.bin,if=mtd,format=raw</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
 <p>All of the configurations presented below can be tested by running the following commands:</p>
@@ -700,89 +795,6 @@ nsh&gt; renew wlan0
 for more information.</p>
 </div>
 </section>
-</section>
-<section id="readme-txt">
-<h2>README.txt<a class="headerlink" href="#readme-txt" title="Permalink to this heading"></a></h2>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README for the Espressif ESP32 Ethernet Kit
-==============================================
-
-  The ESP32 is a dual-core system from Espressif with two Harvard
-  architecture Xtensa LX6 CPUs. All embedded memory, external memory and
-  peripherals are located on the data bus and/or the instruction bus of
-  these CPUs. With some minor exceptions, the address mapping of two CPUs
-  is symmetric, meaning they use the same addresses to access the same
-  memory. Multiple peripherals in the system can access embedded memory via
-  DMA.
-
-  The ESP32-Ethernet-Kit is an Ethernet-to-Wi-Fi development board that enables
-  Ethernet devices to be interconnected over Wi-Fi. At the same time, to provide
-  more flexible power supply options, the ESP32-Ethernet-Kit also supports power
-  over Ethernet (PoE).
-
-Buttons and LEDs
-================
-
-  Buttons
-  -------
-  There are two buttons labeled Boot and EN.  The EN button is not available
-  to software.  It pulls the chip enable line that doubles as a reset line.
-
-  The BOOT button is connected to IO0.  On reset it is used as a strapping
-  pin to determine whether the chip boots normally or into the serial
-  bootloader.  After reset, however, the BOOT button can be used for software
-  input.
-
-  LEDs
-  ----
-  There are several on-board LEDs for that indicate the presence of power
-  and USB activity.  None of these are available for use by software.
-
-Ethernet
-========
-
-  ESP32 has a 802.11 hardware MAC, so just connects to external PHY chip.
-  Due to the limited number of GPIOs in ESP32, it&#39;s recommended to use RMII to
-  connect to an external PHY chip. Current driver also only supports RMII option.
-
-  The RMII GPIO pins are fixed, but the SMI and functional GPIO pins are optional.
-
-  RMII GPIO pins are as following:
-
-      ESP32 GPIO          PHY Chip GPIO
-        IO25       &lt;--&gt;       RXD[0]
-        IO26       &lt;--&gt;       RXD[1]
-        IO27       &lt;--&gt;       CRS_DV
-        IO0        &lt;--&gt;       REF_CLK
-        IO19       &lt;--&gt;       TXD[0]
-        IO21       &lt;--&gt;       TX_EN
-        IO22       &lt;--&gt;       TXD[1]
-
-  SMI GPIO pins (default option) are as following:
-
-      ESP32 GPIO          PHY Chip GPIO
-        IO18       &lt;--&gt;       MDIO
-        IO23       &lt;--&gt;       MDC
-
-  Functional GPIO pins(default option) are as following:
-
-      ESP32 GPIO          PHY Chip GPIO
-        IO5        &lt;--&gt;      Reset_N
-
-Using QEMU:
-==========
-
-First follow the instructions at https://github.com/espressif/qemu/wiki to build QEMU.
-Enable the ESP32_QEMU_IMAGE config found in &quot;Board Selection -&gt; ESP32 binary image for QEMU&quot;.
-Download the bootloader and the partition table from https://github.com/espressif/esp-nuttx-bootloader/releases
-and place them in a directory, say ../esp-bins.
-Build and generate the QEMU image: `make ESPTOOL_BINDIR=../esp-bins`
-A new image &quot;esp32_qemu_image.bin&quot; will be created.  It can be run as:
-
- ~/PATH_TO_QEMU/qemu/build/xtensa-softmmu/qemu-system-xtensa -nographic \
-    -machine esp32 \
-    -drive file=esp32_qemu_image.bin,if=mtd,format=raw
-</pre></div>
-</div>
 </section>
 </section>
 

@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sam4l-xplained &mdash; NuttX latest documentation</title>
+  <title>SAM4L Xplained &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -45,8 +45,8 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="sam4s-xplained-pro" href="../sam4s-xplained-pro/index.html" />
-    <link rel="prev" title="sam4e-ek" href="../sam4e-ek/index.html" /> 
+    <link rel="next" title="SAM4S Xplained Pro" href="../sam4s-xplained-pro/index.html" />
+    <link rel="prev" title="SAM4E-EK" href="../sam4e-ek/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -210,6 +210,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm64/index.html">ARM64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../avr/context-switch-notes.html">Notes on AVR context switch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../avr/index.html">Microchip AVR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../ceva/index.html">CEVA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../hc/index.html">HC</a></li>
@@ -259,7 +260,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Microchip SAM34</a></li>
-      <li class="breadcrumb-item active">sam4l-xplained</li>
+      <li class="breadcrumb-item active">SAM4L Xplained</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../../_sources/platforms/arm/sam34/boards/sam4l-xplained/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -270,682 +271,962 @@
            <div itemprop="articleBody">
              
   <section id="sam4l-xplained">
-<h1>sam4l-xplained<a class="headerlink" href="#sam4l-xplained" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-^^^^^^
-
-This README discusses issues unique to NuttX configurations for the
-Atmel SAM4L Xplained Pro development board.  This board features the
-ATSAM4LC4C MCU.
-
-The SAM4L Xplained Pro Starter Kit is bundled with four modules:
-
-1) I/O1   - An MMC/SD card slot, PWM LED control, ADC light sensor, UART
-            loopback, TWI AT30TSE758 Temperature sensor.
-2) OLED1  - An OLED plus 3 additional switches and 3 additional LEDs
-3) SLCD1  - A segment LCD that connects directly to the &quot;EXT5 SEGMENT LCD&quot;
-           connector
-4) PROTO1 - A prototyping board with logic on board (other than power-related
-            logic).
-
-Contents
-^^^^^^^^
-
-  - Modules
-  - LEDs
-  - Serial Consoles
-  - SAM4L Xplained Pro-specific Configuration Options
-  - Configurations
-
-Modules
-^^^^^^^
-  The SAM4L Xplained Pro Starter Kit is bundled with four modules:
-
-  I/O1
-  ----
-    The primary function of this module is to provide SD card support, but
-    the full list of modules features include:
-
-    - microSD card connector (SPI interface)
-    - PWM (LED control)
-    - ADC (light sensor)
-    - UART loopback
-    - TWI AT30TSE758 Temperature sensor with EEPROM
-
-    SPI is available on two of the SAM4L Xplained connectors, EXT1 and EXT2.
-    They mate with the I/O1 connector as indicated in this table.
-
-    I/O1 Connector
-    --------------
-    I/O1              EXT1                 EXT2                 Other use of either pin
-    ----------------- -------------------- -------------------- ------------------------------------
-    1  ID             1                    1
-    2  GND            2       GND          2
-    3  LIGHT_SENSOR   3  PA04 ADCIFE/AD0   3  PA07 ADCIFE/AD2
-    4  LP_OUT         4  PA05 ADCIFE/AD1   4  PB02 ADCIFE/AD3
-    5  GPIO1          5  PB12 GPIO         5  PC08 GPIO         PB12 and PC8 on EXT5
-    6  GPIO2          6  PC02 GPIO         6  PB10 GPIO         PB10 on EXT5
-    7  LED            7  PC00 TC/1/A0      7  PC04 TC/1/A2
-    8  LP_IN          8  PC01 TC/1/B0      8  PC05 TC/1/B2      PC05 on EXT5
-    9  TEMP_ALERT     9  PC25 EIC/EXTINT2  9  PC06 EIC/EXTINT8  PC25 on EXT5
-    10 microSD_DETECT 10 PB13 SPI/NPCS1    10 PC09 GPIO         PB13 on EXT5
-    11 TWI SDA        11 PA23 TWIMS/0/TWD  11 PB14 TWIMS/3/TWD  PB14 on EXT3&amp;4, PA23 and PB14 on EXT5
-    12 TWI SCL        12 PA24 TWIMS/0/TWCK 12 PB15 TWIMS/3/TWCK PB15 on EXT3&amp;4, PA24 and PB15 on EXT5
-    13 UART RX        13 PB00 USART/0/RXD  13 PC26 USART/1/RXD  PB00 on EXT4, PC26 on EXT3&amp;5
-    14 UART TX        14 PB01 USART/0/TXD  14 PC27 USART/1/TXD  PB01 on EXT4, PC27 on EXT3&amp;5
-    15 microSD_SS     15 PC03 SPI/NPCS0    15 PB11 SPI/NPCS2    PB11 on EXT5
-    16 SPI_MOSI       16 PA22 SPI/MOSI     16 PA22 SPI/MOSI     PA22 on EXT5
-    17 SPI_MISO       17 PA21 SPI/MISO     17 PA21 SPI/MISO     PA21 on EXT5
-    18 SPI_SCK        18 PC30 SPI/SCK      18 PC30 SPI/SCK      PC30 on EXT5
-    19 GND            19      GND             GND
-    20 VCC            20      VCC             VCC
-
-    The mapping between the I/O1 pins and the SD connector are shown in the
-    following table.
-
-    SD Card Connection
-    ------------------
-    I/O1 SD   PIN Description
-    ---- ---- --- -------------------------------------------------
-         D2   1   Data line 2 (not used)
-    15   D3   2   Data line 3. Active low chip select, pulled high
-    16   CMD  3   Command line, connected to SPI_MOSI.
-    20   VDD  4
-    18   CLK  5   Clock line, connected to SPI_SCK.
-    2/19 GND  6
-    17   D0   7   Data line 0, connected to SPI_MISO.
-         D1   8   Data line 1 (not used)
-    10   SW_A 9   Card detect
-    2/19 SW_B 10  GND
-
-    Card Detect
-    -----------
-    When a microSD card is put into the connector SW_A and SW_B are short-
-    circuited. SW_A is connected to the microSD_DETECT signal. To use this
-    as a card indicator remember to enable internal pullup in the target
-    device.
-
-    GPIOs
-    -----
-    So all that is required to connect the SD is configure the SPI
-
-    PIN EXT1           EXT2            Description
-    --- -------------- --------------- -------------------------------------
-    15  PC03 SPI/NPCS0 PB11 SPI/NPCS2  Active low chip select OUTPUT, pulled
-                                       high on board.
-    10  PB13 SPI/NPCS1 10 PC09 GPIO    Active low card detect INPUT, must
-                                       use internal pull-up.
-
-    Configuration Options:
-    ----------------------
-      CONFIG_SAM4L_XPLAINED_IOMODULE=y      : Informs the system that the
-                                              I/O1 module is installed
-      CONFIG_SAM4L_XPLAINED_IOMODULE_EXT1=y : The module is installed in EXT1
-      CONFIG_SAM4L_XPLAINED_IOMODULE_EXT2=y : The mdoule is installed in EXT2
-
-    See the set-up in the discussion of the nsh configuration below for other
-    required configuration options.
-
-    NOTE: As of this writing, only the SD card slot is supported in the I/O1
-    module.
-
-  OLED1
-  -----
-    This module provides an OLED plus 3 additional switches and 3 additional
-    LEDs.
-
-    OLED1 Connector
-    --------------
-    OLED1             EXT1                 EXT2                 Other use of either pin
-    ----------------- -------------------- -------------------- ------------------------------------
-    1  ID             1                    1
-    2  GND            2       GND          2
-    3  BUTTON2        3  PA04 ADCIFE/AD0   3  PA07 ADCIFE/AD2
-    4  BUTTON3        4  PA05 ADCIFE/AD1   4  PB02 ADCIFE/AD3
-    5  DATA_CMD_SEL   5  PB12 GPIO         5  PC08 GPIO         PB12 and PC8 on EXT5
-    6  LED3           6  PC02 GPIO         6  PB10 GPIO         PB10 on EXT5
-    7  LED1           7  PC00 TC/1/A0      7  PC04 TC/1/A2
-    8  LED2           8  PC01 TC/1/B0      8  PC05 TC/1/B2      PC05 on EXT5
-    9  BUTTON1        9  PC25 EIC/EXTINT2  9  PC06 EIC/EXTINT8  PC25 on EXT5
-    10 DISPLAY_RESET  10 PB13 SPI/NPCS1    10 PC09 GPIO         PB13 on EXT5
-    11 N/C            11 PA23 TWIMS/0/TWD  11 PB14 TWIMS/3/TWD  PB14 on EXT3&amp;4, PA23 and PB14 on EXT5
-    12 N/C            12 PA24 TWIMS/0/TWCK 12 PB15 TWIMS/3/TWCK PB15 on EXT3&amp;4, PA24 and PB15 on EXT5
-    13 N/C            13 PB00 USART/0/RXD  13 PC26 USART/1/RXD  PB00 on EXT4, PC26 on EXT3&amp;5
-    14 N/C            14 PB01 USART/0/TXD  14 PC27 USART/1/TXD  PB01 on EXT4, PC27 on EXT3&amp;5
-    15 DISPLAY_SS     15 PC03 SPI/NPCS0    15 PB11 SPI/NPCS2    PB11 on EXT5
-    16 SPI_MOSI       16 PA22 SPI/MOSI     16 PA22 SPI/MOSI     PA22 on EXT5
-    17 N/C            17 PA21 SPI/MISO     17 PA21 SPI/MISO     PA21 on EXT5
-    18 SPI_SCK        18 PC30 SPI/SCK      18 PC30 SPI/SCK      PC30 on EXT5
-    19 GND            19      GND             GND
-    20 VCC            20      VCC             VCC
-
-    Configuration Options:
-    ----------------------
-      CONFIG_SAM4L_XPLAINED_OLED1MODULE=y      : Informs the system that the
-                                                 I/O1 module is installed
-      CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT1=y : The module is installed in EXT1
-      CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT2=y : The mdoule is installed in EXT2
-
-    See the set-up in the discussion of the nsh configuration below for other
-    required configuration options.
-
-  SLCD1
-  -----
-    This module provides a A segment LCD that connects directly to the &quot;EXT5
-    SEGMENT LCD&quot; connector
-
-    Configuration Options:
-    ----------------------
-      CONFIG_SAM4L_XPLAINED_SLCD1MODULE=y   : Informs the system that the
-                                              I/O1 module is installed
-
-    See the set-up in the discussion of the nsh configuration below for other
-    required configuration options.
-
-  PROTO1
-  ------
-  A prototyping board with logic on board (other than power-related logic).
-  There is no built-in support for the PROTO1 module.
-
-LEDs
-^^^^
-  There are three LEDs on board the SAM4L Xplained Pro board:  The EDBG
-  controls two of the LEDs, a power LED and a status LED.  There is only
-  one user controllable LED, a yellow LED labeled LED0 near the SAM4L USB
-  connector.
-
-  This LED is controlled by PC07 and LED0 can be activated by driving the
-  PC07 to GND.
-
-  When CONFIG_ARCH_LEDS is defined in the NuttX configuration, NuttX will
-  control LED0 as follows:
-
-    SYMBOL              Meaning                 LED0
-    ------------------- ----------------------- ------
-    LED_STARTED         NuttX has been started  OFF
-    LED_HEAPALLOCATE    Heap has been allocated OFF
-    LED_IRQSENABLED     Interrupts enabled      OFF
-    LED_STACKCREATED    Idle stack created      ON
-    LED_INIRQ           In an interrupt         N/C
-    LED_SIGNAL          In a signal handler     N/C
-    LED_ASSERTION       An assertion failed     N/C
-    LED_PANIC           The system has crashed  FLASH
-
-  Thus is LED0 is statically on, NuttX has successfully  booted and is,
-  apparently, running normmally.  If LED0 is flashing at approximately
-  2Hz, then a fatal error has been detected and the system has halted.
-
-Serial Consoles
-^^^^^^^^^^^^^^^
-
-  USART0
-  ------
-
-  USART0 is available on connectors EXT1 and EXT4
-
-    EXT1  EXT4  GPIO  Function
-    ----  ---- ------ -----------
-     13    13   PB00  USART0_RXD
-     14    14   PB01  USART0_TXD
-     19    19         GND
-     20    20         VCC
-
-  If you have a TTL to RS-232 converter then this is the most convenient
-  serial console to use.  It is the default in all of these configurations.
-  An option is to use the virtual COM port.
-
-  Virtual COM Port
-  ----------------
-
-  The SAM4L Xplained Pro contains an Embedded Debugger (EDBG) that can be
-  used to program and debug the ATSAM4LC4C using Serial Wire Debug (SWD).
-  The Embedded debugger also include a Virtual Com port interface over
-  USART1.  Virtual COM port connections:
-
-    PC26 USART1 RXD
-    PC27 USART1 TXD
-
-SAM4L Xplained Pro-specific Configuration Options
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    CONFIG_ARCH - Identifies the arch/ subdirectory.  This should
-       be set to:
-
-       CONFIG_ARCH=arm
-
-    CONFIG_ARCH_family - For use in C code:
-
-       CONFIG_ARCH_ARM=y
-
-    CONFIG_ARCH_architecture - For use in C code:
-
-       CONFIG_ARCH_CORTEXM4=y
-
-    CONFIG_ARCH_CHIP - Identifies the arch/*/chip subdirectory
-
-       CONFIG_ARCH_CHIP=&quot;sam34&quot;
-
-    CONFIG_ARCH_CHIP_name - For use in C code to identify the exact
-       chip:
-
-       CONFIG_ARCH_CHIP_SAM34
-       CONFIG_ARCH_CHIP_SAM4L
-       CONFIG_ARCH_CHIP_ATSAM4LC4C
-
-    CONFIG_ARCH_BOARD - Identifies the boards/ subdirectory and
-       hence, the board that supports the particular chip or SoC.
-
-       CONFIG_ARCH_BOARD=sam4l-xplained (for the SAM4L Xplained Pro development board)
-
-    CONFIG_ARCH_BOARD_name - For use in C code
-
-       CONFIG_ARCH_BOARD_SAM4L_XPLAINED=y
-
-    CONFIG_ARCH_LOOPSPERMSEC - Must be calibrated for correct operation
-       of delay loops
-
-    CONFIG_ENDIAN_BIG - define if big endian (default is little
-       endian)
-
-    CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
-
-       CONFIG_RAM_SIZE=0x00008000 (32Kb)
-
-    CONFIG_RAM_START - The start address of installed DRAM
-
-       CONFIG_RAM_START=0x20000000
-
-    CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
-       have LEDs
-
-    CONFIG_ARCH_INTERRUPTSTACK - This architecture supports an interrupt
-       stack. If defined, this symbol is the size of the interrupt
-        stack in bytes.  If not defined, the user task stacks will be
-      used during interrupt handling.
-
-    CONFIG_ARCH_STACKDUMP - Do stack dumps after assertions
-
-    CONFIG_ARCH_LEDS -  Use LEDs to show state. Unique to board architecture.
-
-  Individual subsystems can be enabled:
-
-    CPU
-    ---
-    CONFIG_SAM34_OCD
-
-    HSB
-    ---
-    CONFIG_SAM34_APBA
-    CONFIG_SAM34_AESA
-
-    PBA
-    ---
-    CONFIG_SAM34_IISC
-    CONFIG_SAM34_SPI0
-    CONFIG_SAM34_TC0
-    CONFIG_SAM34_TC1
-    CONFIG_SAM34_TWIM0
-    CONFIG_SAM34_TWIS0
-    CONFIG_SAM34_TWIM1
-    CONFIG_SAM34_TWIS1
-    CONFIG_SAM34_USART0
-    CONFIG_SAM34_USART1
-    CONFIG_SAM34_USART2
-    CONFIG_SAM34_USART3
-    CONFIG_SAM34_ADC12B
-    CONFIG_SAM34_DACC
-    CONFIG_SAM34_ACC
-    CONFIG_SAM34_GLOC
-    CONFIG_SAM34_ABDACB
-    CONFIG_SAM34_TRNG
-    CONFIG_SAM34_PARC
-    CONFIG_SAM34_CATB
-    CONFIG_SAM34_TWIM2
-    CONFIG_SAM34_TWIM3
-    CONFIG_SAM34_LCDCA
-
-    PBB
-    ---
-    CONFIG_SAM34_HRAMC1
-    CONFIG_SAM34_HMATRIX
-    CONFIG_SAM34_PDCA
-    CONFIG_SAM34_CRCCU
-    CONFIG_SAM34_USBC
-    CONFIG_SAM34_PEVC
-
-    PBC
-    ---
-    CONFIG_SAM34_CHIPID
-    CONFIG_SAM34_FREQM
-
-    PBD
-    ---
-    CONFIG_SAM34_AST
-    CONFIG_SAM34_WDT
-    CONFIG_SAM34_EIC
-    CONFIG_SAM34_PICOUART
-
-  Some subsystems can be configured to operate in different ways. The drivers
-  need to know how to configure the subsystem.
-
-    CONFIG_SAM34_GPIOA_IRQ
-    CONFIG_SAM34_GPIOB_IRQ
-    CONFIG_SAM34_GPIOC_IRQ
-    CONFIG_USART0_SERIALDRIVER
-    CONFIG_USART1_SERIALDRIVER
-    CONFIG_USART2_SERIALDRIVER
-    CONFIG_USART3_SERIALDRIVER
-
-  ST91SAM4L specific device driver settings
-
-    CONFIG_U[S]ARTn_SERIAL_CONSOLE - selects the USARTn (n=0,1,2,3) or UART
-           m (m=4,5) for the console and ttys0 (default is the USART1).
-    CONFIG_U[S]ARTn_RXBUFSIZE - Characters are buffered as received.
-       This specific the size of the receive buffer
-    CONFIG_U[S]ARTn_TXBUFSIZE - Characters are buffered before
-       being sent.  This specific the size of the transmit buffer
-    CONFIG_U[S]ARTn_BAUD - The configure BAUD of the UART.  Must be
-    CONFIG_U[S]ARTn_BITS - The number of bits.  Must be either 7 or 8.
-    CONFIG_U[S]ARTn_PARTIY - 0=no parity, 1=odd parity, 2=even parity
-    CONFIG_U[S]ARTn_2STOP - Two stop bits
-
-Configurations
-^^^^^^^^^^^^^^
-
-  Each SAM4L Xplained Pro configuration is maintained in a sub-directory and
-  can be selected as follow:
-
-    tools/configure.sh sam4l-xplained:&lt;subdir&gt;
-
-  Before building, make sure the PATH environment variable includes the
-  correct path to the directory than holds your toolchain binaries.
-
-  And then build NuttX by simply typing the following.  At the conclusion of
-  the make, the nuttx binary will reside in an ELF file called, simply, nuttx.
-
-    make
-
-  The &lt;subdir&gt; that is provided above as an argument to the tools/configure.sh
-  must be is one of the following.
-
-  NOTE:  These configurations use the mconf-based configuration tool.  To
-  change any of these configurations using that tool, you should:
-
-    a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-       see additional README.txt files in the NuttX tools repository.
-
-    b. Execute &#39;make menuconfig&#39; in nuttx/ in order to start the
-       reconfiguration process.
-
-  NOTES:
-
-  1. These configurations use the mconf-based configuration tool.  To
-    change any of these configurations using that tool, you should:
-
-    a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-       see additional README.txt files in the NuttX tools repository.
-
-    b. Execute &#39;make menuconfig&#39; in nuttx/ in order to start the
-       reconfiguration process.
-
-  2. Unless stated otherwise, all configurations generate console
-     output of on USART0 which is available on EXT1 or EXT4 (see the
-     section &quot;Serial Consoles&quot; above).  The virtual COM port could
-     be used, instead, by reconfiguring to use USART1 instead of
-     USART0:
-
-       System Type -&gt; AT91SAM3/4 Peripheral Support
-         CONFIG_SAM_USART0=y
-         CONFIG_SAM_USART1=n
-
-       Device Drivers -&gt; Serial Driver Support -&gt; Serial Console
-         CONFIG_USART0_SERIAL_CONSOLE=y
-
-       Device Drivers -&gt; Serial Driver Support -&gt; USART0 Configuration
-         CONFIG_USART0_2STOP=0
-         CONFIG_USART0_BAUD=115200
-         CONFIG_USART0_BITS=8
-         CONFIG_USART0_PARITY=0
-         CONFIG_USART0_RXBUFSIZE=256
-         CONFIG_USART0_TXBUFSIZE=256
-
-  3. Unless otherwise stated, the configurations are setup for
-     Linux (or any other POSIX environment like Cygwin under Windows):
-
-     Build Setup:
-       CONFIG_HOST_LINUX=y   : Linux or other POSIX environment
-
-  4. These configurations use the older, OABI, buildroot toolchain.  But
-     that is easily reconfigured:
-
-     System Type -&gt; Toolchain:
-       CONFIG_ARM_TOOLCHAIN_BUILDROOT=y : Buildroot toolchain
-       CONFIG_ARM_TOOLCHAIN_BUILDROOT_OABI=y      : Older, OABI toolchain
-
-     If you want to use the Atmel GCC toolchain, here are the steps to
-     do so:
-
-     Build Setup:
-       CONFIG_HOST_WINDOWS=y   : Windows
-       CONFIG_HOST_CYGWIN=y    : Using Cygwin or other POSIX environment
-
-     System Type -&gt; Toolchain:
-       CONFIG_ARM_TOOLCHAIN_GNU_EABI=y  : General GCC EABI toolchain under windows
-
-     This re-configuration should be done before making NuttX or else the
-     subsequent &#39;make&#39; will fail.  If you have already attempted building
-     NuttX then you will have to 1) &#39;make distclean&#39; to remove the old
-     configuration, 2) &#39;tools/configure.sh sam3u-ek/ksnh&#39; to start
-     with a fresh configuration, and 3) perform the configuration changes
-     above.
-
-     Also, make sure that your PATH variable has the new path to your
-     Atmel tools.  Try &#39;which arm-none-eabi-gcc&#39; to make sure that you
-     are selecting the right tool.
-
-     See also the &quot;NOTE about Windows native toolchains&quot; in the section call
-     &quot;GNU Toolchain Options&quot; above.
-
-Configuration sub-directories
------------------------------
-
-  nsh:
-    This configuration directory will built the NuttShell.  See NOTES above
-    and below:
-
-    NOTES:
-
-    1. NOTE: If you get a compilation error like:
-
-         libxx_new.cxx:74:40: error: &#39;operator new&#39; takes type &#39;size_t&#39;
-                              (&#39;unsigned int&#39;) as first parameter [-fper
-
-       Sometimes NuttX and your toolchain will disagree on the underlying
-       type of size_t; sometimes it is an &#39;unsigned int&#39; and sometimes it is
-       an &#39;unsigned long int&#39;.  If this error occurs, then you may need to
-       toggle the value of CONFIG_ARCH_SIZET_LONG.
-
-    2. If the I/O1 module is connected to the SAM4L Xplained Pro, then
-       support for the SD card slot can be enabled by making the following
-       changes to the configuration:
-
-       File Systems:
-         CONFIG_FS_FAT=y                   : Enable the FAT file system
-         CONFIG_FAT_LCNAMES=y              : Enable upper/lower case 8.3 file names (Optional, see below)
-         CONFIG_FAT_LFN=y                  : Enable long file named (Optional, see below)
-         CONFIG_FAT_MAXFNAME=32            : Maximum supported file name length
-
-         There are issues related to patents that Microsoft holds on FAT long
-         file name technologies.  See the top level NOTICE file for further
-         details.
-
-       System Type -&gt; Peripherals:
-         CONFIG_SAM34_SPI0=y                : Enable the SAM4L SPI peripheral
-
-       Device Drivers
-         CONFIG_SPI=y                      : Enable SPI support
-         CONFIG_SPI_EXCHANGE=y             : The exchange() method is supported
-
-         CONFIG_MMCSD=y                    : Enable MMC/SD support
-         CONFIG_MMCSD_NSLOTS=1             : Only one MMC/SD card slot
-         CONFIG_MMCSD_MULTIBLOCK_LIMIT=0   : Should not need to disable multi-block transfers
-         CONFIG_MMCSD_HAVE_CARDDETECT=y    : I/O1 module as a card detect GPIO
-         CONFIG_MMCSD_SPI=y                : Use the SPI interface to the MMC/SD card
-         CONFIG_MMCSD_SPICLOCK=20000000    : This is a guess for the optimal MMC/SD frequency
-         CONFIG_MMCSD_SPIMODE=0            : Mode 0 is required
-
-       Board Selection -&gt; Common Board Options
-         CONFIG_NSH_MMCSDSLOTNO=0          : Only one MMC/SD slot, slot 0
-         CONFIG_NSH_MMCSDSPIPORTNO=0       : Use CS=0 if the I/O1 is in EXT1, OR
-         CONFIG_NSH_MMCSDSPIPORTNO=2       : Use CS=2 if the I/O1 is in EXT2
-
-       Board Selection -&gt; SAM4L Xplained Pro Modules
-         CONFIG_SAM4L_XPLAINED_IOMODULE=y      : I/O1 module is connected
-         CONFIG_SAM4L_XPLAINED_IOMODULE_EXT1=y : In EXT1, or EXT2
-         CONFIG_SAM4L_XPLAINED_IOMODULE_EXT2=y
-
-       Application Configuration -&gt; NSH Library
-         CONFIG_NSH_ARCHINIT=y             : Board has architecture-specific initialization
-
-       NOTE: If you enable the I/O1 this configuration with USART0 as the
-       console and with the I/O1 module in EXT1, you *must* remove UART
-       jumper.  Otherwise, you have lookpack on USART0 and NSH will *not*
-       behave very well (since its outgoing prompts also appear as incoming
-       commands).
-
-       STATUS:  As of 2013-6-18, this configuration appears completely
-       functional.  Testing, however, has been very light.  Example:
-
-         NuttShell (NSH) NuttX-6.28
-         nsh&gt; mount -t vfat /dev/mmcsd0 /mnt/stuff
-         nsh&gt; ls /mnt/stuff
-         /mnt/stuff:
-         nsh&gt; echo &quot;This is a test&quot; &gt;/mnt/stuff/atest.txt
-         nsh&gt; ls /mnt/stuff
-         /mnt/stuff:
-          atest.txt
-         nsh&gt; cat /mnt/stuff/atest.txt
-         This is a test
-         nsh&gt;
-
-    3. If the OLED1 module is connected to the SAM4L Xplained Pro, then
-       support for the OLED display can be enabled by making the following
-       changes to the configuration:
-
-       System Type -&gt; Peripherals:
-         CONFIG_SAM34_SPI0=y                 : Enable the SAM4L SPI peripheral
-
-       Device Drivers -&gt; SPI
-         CONFIG_SPI=y                       : Enable SPI support
-         CONFIG_SPI_EXCHANGE=y              : The exchange() method is supported
-         CONFIG_SPI_CMDDATA=y               : CMD/DATA support is required
-
-       Device Drivers -&gt; LCDs
-         CONFIG_LCD=y                       : Enable LCD support
-         CONFIG_LCD_MAXCONTRAST=255         : Maximum contrast value
-         CONFIG_LCD_LANDSCAPE=y             : Landscape orientation (see below*)
-         CONFIG_LCD_UG2832HSWEG04=y         : Enable support for the OLED
-         CONFIG_LCD_SSD1306_SPIMODE=0       : SPI Mode 0
-         CONFIG_LCD_SSD1306_SPIMODE=3500000 : Pick an SPI frequency
-
-       Board Selection -&gt; SAM4L Xplained Pro Modules
-         CONFIG_SAM4L_XPLAINED_OLED1MODULE=y      : OLED1 module is connected
-         CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT1=y : In EXT1, or EXT2
-         CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT2=y
-
-       The NX graphics subsystem also needs to be configured:
-
-         CONFIG_NX=y                        : Enable graphics support
-         CONFIG_NX_LCDDRIVER=y              : Using an LCD driver
-         CONFIG_NX_NPLANES=1                : With a single color plane
-         CONFIG_NX_WRITEONLY=n              : You can read from the LCD (see below**)
-         CONFIG_NX_DISABLE_2BPP=y           : Disable all resolutions except 1BPP
-         CONFIG_NX_DISABLE_4BPP=y
-         CONFIG_NX_DISABLE_8BPP=y
-         CONFIG_NX_DISABLE_16BPP=y
-         CONFIG_NX_DISABLE_24BPP=y
-         CONFIG_NX_DISABLE_32BPP=y
-         CONFIG_NX_PACKEDMSFIRST=y          : LSB packed first (shouldn&#39;t matter)
-         CONFIG_NXSTART_EXTERNINIT=y        : We have board_graphics_setup()
-         CONFIG_NXTK_BORDERWIDTH=2          : Use a small border
-         CONFIG_NXTK_DEFAULT_BORDERCOLORS=y : Default border colors
-         CONFIG_NXFONTS_CHARBITS=7          : 7-bit fonts
-         CONFIG_NXFONT_SANS17X23B=y         : Pick a font (any that will fit)
-
-        * This orientation will put the buttons &quot;above&quot; the LCD.  The
-          reverse landscape configuration (CONFIG_LCD_RLANDSCAPE) will
-          &quot;flip&quot; the display so that the buttons are &quot;below&quot; the LCD.
-
-       ** The hardware is write only, but the driver maintains a frame buffer
-          to support read and read-write-modiry operations on the LCD.
-          Reading from the frame buffer is, however, untested.
-
-       Then, in order to use the OLED, you will need to build some kind of
-       graphics application or use one of the NuttX graphics examples.
-       Here, for example, is the setup for the graphic &quot;Hello, World!&quot;
-       example:
-
-         CONFIG_EXAMPLES_NXHELLO=y                : Enables the example
-         CONFIG_EXAMPLES_NXHELLO_DEFAULT_COLORS=y : Use default colors (see below *)
-         CONFIG_EXAMPLES_NXHELLO_DEFAULT_FONT=y   : Use the default font
-         CONFIG_EXAMPLES_NXHELLO_BPP=1            : One bit per pixel
-         CONFIG_EXAMPLES_NXHELLO_EXTERNINIT=y     : Special initialization is required.
-
-        * The OLED is monochrome so the only &quot;colors&quot; are black and white.
-          The default &quot;colors&quot; will give you while text on a black background.
-          You can override the faults it you want black text on a while background.
-
-       NOTE:  One issue that I have seen with the NXHello example when
-       running as an NSH command is that it only works the first time.
-       So, after you run the &#39;nxhello&#39; command one time, you will have to
-       reset the board before you run it again.
-
-       This is clearly some issue with initializing, un-initializing, and
-       then re-initializing. If you want to fix this, patches are quite
-       welcome.
-
-    4. If the LCD1 module is connected to the SAM4L Xplained Pro, then
-       support for the SLCDt can be enabled by making the following
-       changes to the configuration:
-
-       System Type -&gt; AT91SAM3/4 Peripheral Support
-         CONFIG_SAM34_LCDCA=y
-
-       System Type -&gt; AT91SAM3/4 Clock Configuration
-         CONFIG_SAM34_OSC32K=y
-
-       Board Selection -&gt; Board-Specific Options -&gt; SAM4L Xplained Pro Modules
-         CONFIG_SAM4L_XPLAINED_SLCD1MODULE=y
-
-       Device Drivers
-         CONFIG_LCD=y
-         CONFIG_LCD_MAXCONTRAST=63
-
-       Library Routines -&gt; Non-standard Library Support
-         CONFIG_LIBC_SLCDCODEC=y
-
-       The SLCD example can be enabled to verify the SLCD:
-
-       Application Configuration -&gt; Examples
-         CONFIG_EXAMPLES_SLCD=y
-         CONFIG_EXAMPLES_SLCD_DEVNAME=&quot;/dev/slcd0&quot;
-         CONFIG_EXAMPLES_SLCD_BUFSIZE=64
-
-       Application Configuration -&gt; NSH Library
-         CONFIG_NSH_ARCHINIT=y
-
-       NOTE:  In order to use the segment LCD you *must* open the VLCD_A and
-       VLCD_BC jumpers or the SLD will not be powered!
+<h1>SAM4L Xplained<a class="headerlink" href="#sam4l-xplained" title="Permalink to this heading"></a></h1>
+<p>This documentation discusses issues unique to NuttX configurations for the Atmel
+SAM4L Xplained Pro development board.  This board features the ATSAM4LC4C MCU.</p>
+<p>The SAM4L Xplained Pro Starter Kit is bundled with four modules:</p>
+<ol class="arabic simple">
+<li><p>I/O1: An MMC/SD card slot, PWM LED control, ADC light sensor, UART loopback,
+TWI AT30TSE758 Temperature sensor.</p></li>
+<li><p>OLED1: An OLED plus 3 additional switches and 3 additional LEDs</p></li>
+<li><p>SLCD1: A segment LCD that connects directly to the “EXT5 SEGMENT LCD”
+connector</p></li>
+<li><p>PROTO1: A prototyping board with logic on board (other than power-related
+logic).</p></li>
+</ol>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Permalink to this heading"></a></h2>
+<p>The SAM4L Xplained Pro Starter Kit is bundled with four modules:</p>
+<section id="i-o1">
+<h3>I/O1<a class="headerlink" href="#i-o1" title="Permalink to this heading"></a></h3>
+<p>The primary function of this module is to provide SD card support, but the full
+list of modules features include:</p>
+<ul class="simple">
+<li><p>microSD card connector (SPI interface)</p></li>
+<li><p>PWM (LED control)</p></li>
+<li><p>ADC (light sensor)</p></li>
+<li><p>UART loopback</p></li>
+<li><p>TWI AT30TSE758 Temperature sensor with EEPROM</p></li>
+</ul>
+<p>SPI is available on two of the SAM4L Xplained connectors, EXT1 and EXT2. They
+mate with the I/O1 connector as indicated in this table.</p>
+</section>
+<section id="i-o1-connector">
+<h3>I/O1 Connector<a class="headerlink" href="#i-o1-connector" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>I/O1</p></th>
+<th class="head"><p>EXT1</p></th>
+<th class="head"><p>EXT2</p></th>
+<th class="head"><p>Other use of either pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1  ID</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>2  GND</p></td>
+<td><p>2       GND</p></td>
+<td><p>2</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>3  LIGHT_SENSOR</p></td>
+<td><p>3  PA04 ADCIFE/AD0</p></td>
+<td><p>3  PA07 ADCIFE/AD2</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>4  LP_OUT</p></td>
+<td><p>4  PA05 ADCIFE/AD1</p></td>
+<td><p>4  PB02 ADCIFE/AD3</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>5  GPIO1</p></td>
+<td><p>5  PB12 GPIO</p></td>
+<td><p>5  PC08 GPIO</p></td>
+<td><p>PB12 and PC8 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>6  GPIO2</p></td>
+<td><p>6  PC02 GPIO</p></td>
+<td><p>6  PB10 GPIO</p></td>
+<td><p>PB10 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>7  LED</p></td>
+<td><p>7  PC00 TC/1/A0</p></td>
+<td><p>7  PC04 TC/1/A2</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>8  LP_IN</p></td>
+<td><p>8  PC01 TC/1/B0</p></td>
+<td><p>8  PC05 TC/1/B2</p></td>
+<td><p>PC05 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>9  TEMP_ALERT</p></td>
+<td><p>9  PC25 EIC/EXTINT2</p></td>
+<td><p>9  PC06 EIC/EXTINT8</p></td>
+<td><p>PC25 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>10 microSD_DETECT</p></td>
+<td><p>10 PB13 SPI/NPCS1</p></td>
+<td><p>10 PC09 GPIO</p></td>
+<td><p>PB13 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>11 TWI SDA</p></td>
+<td><p>11 PA23 TWIMS/0/TWD</p></td>
+<td><p>11 PB14 TWIMS/3/TWD</p></td>
+<td><p>PB14 on EXT3&amp;4, PA23 and PB14 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>12 TWI SCL</p></td>
+<td><p>12 PA24 TWIMS/0/TWCK</p></td>
+<td><p>12 PB15 TWIMS/3/TWCK</p></td>
+<td><p>PB15 on EXT3&amp;4, PA24 and PB15 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>13 UART RX</p></td>
+<td><p>13 PB00 USART/0/RXD</p></td>
+<td><p>13 PC26 USART/1/RXD</p></td>
+<td><p>PB00 on EXT4, PC26 on EXT3&amp;5</p></td>
+</tr>
+<tr class="row-odd"><td><p>14 UART TX</p></td>
+<td><p>14 PB01 USART/0/TXD</p></td>
+<td><p>14 PC27 USART/1/TXD</p></td>
+<td><p>PB01 on EXT4, PC27 on EXT3&amp;5</p></td>
+</tr>
+<tr class="row-even"><td><p>15 microSD_SS</p></td>
+<td><p>15 PC03 SPI/NPCS0</p></td>
+<td><p>15 PB11 SPI/NPCS2</p></td>
+<td><p>PB11 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>16 SPI_MOSI</p></td>
+<td><p>16 PA22 SPI/MOSI</p></td>
+<td><p>16 PA22 SPI/MOSI</p></td>
+<td><p>PA22 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>17 SPI_MISO</p></td>
+<td><p>17 PA21 SPI/MISO</p></td>
+<td><p>17 PA21 SPI/MISO</p></td>
+<td><p>PA21 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>18 SPI_SCK</p></td>
+<td><p>18 PC30 SPI/SCK</p></td>
+<td><p>18 PC30 SPI/SCK</p></td>
+<td><p>PC30 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>19 GND</p></td>
+<td><p>19      GND</p></td>
+<td><p>GND</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>20 VCC</p></td>
+<td><p>20      VCC</p></td>
+<td><p>VCC</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The mapping between the I/O1 pins and the SD connector are shown in the
+following table.</p>
+</section>
+<section id="sd-card-connection">
+<h3>SD Card Connection<a class="headerlink" href="#sd-card-connection" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>I/O1</p></th>
+<th class="head"><p>SD</p></th>
+<th class="head"><p>PIN</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>D3</p></td>
+<td><p>2</p></td>
+<td><p>Data line 3. Active low chip select, pulled high</p></td>
+</tr>
+<tr class="row-odd"><td><p>16</p></td>
+<td><p>CMD</p></td>
+<td><p>3</p></td>
+<td><p>Command line, connected to SPI_MOSI.</p></td>
+</tr>
+<tr class="row-even"><td><p>20</p></td>
+<td><p>VDD</p></td>
+<td><p>4</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>18</p></td>
+<td><p>CLK</p></td>
+<td><p>5</p></td>
+<td><p>Clock line, connected to SPI_SCK.</p></td>
+</tr>
+<tr class="row-even"><td><p>2/19</p></td>
+<td><p>GND</p></td>
+<td><p>6</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>17</p></td>
+<td><p>D0
+D1</p></td>
+<td><p>7
+8</p></td>
+<td><p>Data line 0, connected to SPI_MISO.
+Data line 1 (not used)</p></td>
+</tr>
+<tr class="row-even"><td><p>10</p></td>
+<td><p>SW_A</p></td>
+<td><p>9</p></td>
+<td><p>Card detect</p></td>
+</tr>
+<tr class="row-odd"><td><p>2/19</p></td>
+<td><p>SW_B</p></td>
+<td><p>10</p></td>
+<td><p>GND</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="card-detect">
+<h3>Card Detect<a class="headerlink" href="#card-detect" title="Permalink to this heading"></a></h3>
+<p>When a microSD card is put into the connector <code class="docutils literal notranslate"><span class="pre">SW_A</span></code> and <code class="docutils literal notranslate"><span class="pre">SW_B</span></code> are short-
+circuited. <code class="docutils literal notranslate"><span class="pre">SW_A</span></code> is connected to the <code class="docutils literal notranslate"><span class="pre">microSD_DETECT</span></code> signal. To use this
+as a card indicator remember to enable internal pullup in the target device.</p>
+</section>
+<section id="gpios">
+<h3>GPIOs<a class="headerlink" href="#gpios" title="Permalink to this heading"></a></h3>
+<p>So all that is required to connect the SD is configure the SPI</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PIN</p></th>
+<th class="head"><p>EXT1</p></th>
+<th class="head"><p>EXT2</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>PC03 SPI/NPCS0</p></td>
+<td><p>PB11 SPI/NPCS2</p></td>
+<td><p>Active low chip select OUTPUT, pulled high on board.</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>PB13 SPI/NPCS1</p></td>
+<td><p>10 PC09 GPIO</p></td>
+<td><p>Active low card detect INPUT, must use internal pull-up.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="configuration-options">
+<h3>Configuration Options:<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_IOMODULE=y</span></code>: Informs the system that the I/O1 module
+is installed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_IOMODULE_EXT1=y</span></code>: The module is installed in EXT1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_IOMODULE_EXT2=y</span></code>: The mdoule is installed in EXT2</p></li>
+</ul>
+<p>See the set-up in the discussion of the nsh configuration below for other
+required configuration options.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As of this writing, only the SD card slot is supported in the I/O1 module.</p>
+</div>
+</section>
+<section id="oled1">
+<h3>OLED1<a class="headerlink" href="#oled1" title="Permalink to this heading"></a></h3>
+<p>This module provides an OLED plus 3 additional switches and 3 additional LEDs.</p>
+</section>
+<section id="oled1-connector">
+<h3>OLED1 Connector<a class="headerlink" href="#oled1-connector" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>OLED1</p></th>
+<th class="head"><p>EXT1</p></th>
+<th class="head"><p>EXT2</p></th>
+<th class="head"><p>Other use of either pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1  ID</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>2  GND</p></td>
+<td><p>2       GND</p></td>
+<td><p>2</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>3  BUTTON2</p></td>
+<td><p>3  PA04 ADCIFE/AD0</p></td>
+<td><p>3  PA07 ADCIFE/AD2</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>4  BUTTON3</p></td>
+<td><p>4  PA05 ADCIFE/AD1</p></td>
+<td><p>4  PB02 ADCIFE/AD3</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>5  DATA_CMD_SEL</p></td>
+<td><p>5  PB12 GPIO</p></td>
+<td><p>5  PC08 GPIO</p></td>
+<td><p>PB12 and PC8 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>6  LED3</p></td>
+<td><p>6  PC02 GPIO</p></td>
+<td><p>6  PB10 GPIO</p></td>
+<td><p>PB10 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>7  LED1</p></td>
+<td><p>7  PC00 TC/1/A0</p></td>
+<td><p>7  PC04 TC/1/A2</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>8  LED2</p></td>
+<td><p>8  PC01 TC/1/B0</p></td>
+<td><p>8  PC05 TC/1/B2</p></td>
+<td><p>PC05 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>9  BUTTON1</p></td>
+<td><p>9  PC25 EIC/EXTINT2</p></td>
+<td><p>9  PC06 EIC/EXTINT8</p></td>
+<td><p>PC25 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>10 DISPLAY_RESET</p></td>
+<td><p>10 PB13 SPI/NPCS1</p></td>
+<td><p>10 PC09 GPIO</p></td>
+<td><p>PB13 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>11 N/C</p></td>
+<td><p>11 PA23 TWIMS/0/TWD</p></td>
+<td><p>11 PB14 TWIMS/3/TWD</p></td>
+<td><p>PB14 on EXT3&amp;4, PA23 and PB14 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>12 N/C</p></td>
+<td><p>12 PA24 TWIMS/0/TWCK</p></td>
+<td><p>12 PB15 TWIMS/3/TWCK</p></td>
+<td><p>PB15 on EXT3&amp;4, PA24 and PB15 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>13 N/C</p></td>
+<td><p>13 PB00 USART/0/RXD</p></td>
+<td><p>13 PC26 USART/1/RXD</p></td>
+<td><p>PB00 on EXT4, PC26 on EXT3&amp;5</p></td>
+</tr>
+<tr class="row-odd"><td><p>14 N/C</p></td>
+<td><p>14 PB01 USART/0/TXD</p></td>
+<td><p>14 PC27 USART/1/TXD</p></td>
+<td><p>PB01 on EXT4, PC27 on EXT3&amp;5</p></td>
+</tr>
+<tr class="row-even"><td><p>15 DISPLAY_SS</p></td>
+<td><p>15 PC03 SPI/NPCS0</p></td>
+<td><p>15 PB11 SPI/NPCS2</p></td>
+<td><p>PB11 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>16 SPI_MOSI</p></td>
+<td><p>16 PA22 SPI/MOSI</p></td>
+<td><p>16 PA22 SPI/MOSI</p></td>
+<td><p>PA22 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>17 N/C</p></td>
+<td><p>17 PA21 SPI/MISO</p></td>
+<td><p>17 PA21 SPI/MISO</p></td>
+<td><p>PA21 on EXT5</p></td>
+</tr>
+<tr class="row-odd"><td><p>18 SPI_SCK</p></td>
+<td><p>18 PC30 SPI/SCK</p></td>
+<td><p>18 PC30 SPI/SCK</p></td>
+<td><p>PC30 on EXT5</p></td>
+</tr>
+<tr class="row-even"><td><p>19 GND</p></td>
+<td><p>19      GND</p></td>
+<td><p>GND</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>20 VCC</p></td>
+<td><p>20      VCC</p></td>
+<td><p>VCC</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Configuration Options</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_OLED1MODULE=y</span></code>: Informs the system that the I/O1
+module is installed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT1=y</span></code>: The module is installed in EXT1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT2=y</span></code>: The mdoule is installed in EXT2</p></li>
+</ul>
+<p>See the set-up in the discussion of the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration below for other
+required configuration options.</p>
+</section>
+<section id="slcd1">
+<h3>SLCD1<a class="headerlink" href="#slcd1" title="Permalink to this heading"></a></h3>
+<p>This module provides a A segment LCD that connects directly to the “EXT5
+SEGMENT LCD” connector</p>
+<p><strong>Configuration Options</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_SLCD1MODULE=y</span></code>: Informs the system that the I/O1
+module is installed</p></li>
+</ul>
+<p>See the set-up in the discussion of the nsh configuration below for other
+required configuration options.</p>
+</section>
+<section id="proto1">
+<h3>PROTO1<a class="headerlink" href="#proto1" title="Permalink to this heading"></a></h3>
+<p>A prototyping board with logic on board (other than power-related logic). There
+is no built-in support for the PROTO1 module.</p>
+</section>
+</section>
+<section id="leds">
+<h2>LEDs<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h2>
+<p>There are three LEDs on board the SAM4L Xplained Pro board: The EDBG controls
+two of the LEDs, a power LED and a status LED. There is only one user
+controllable LED, a yellow LED labeled LED0 near the SAM4L USB connector.</p>
+<p>This LED is controlled by PC07 and LED0 can be activated by driving the PC07 to
+GND.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> is defined in the NuttX configuration, NuttX will
+control LED0 as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>SYMBOL</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>LED0</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>LED_STARTED</p></td>
+<td><p>NuttX has been started</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_HEAPALLOCATE</p></td>
+<td><p>Heap has been allocated</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_IRQSENABLED</p></td>
+<td><p>Interrupts enabled</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_STACKCREATED</p></td>
+<td><p>Idle stack created</p></td>
+<td><p>ON</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_INIRQ</p></td>
+<td><p>In an interrupt</p></td>
+<td><p>N/C</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_SIGNAL</p></td>
+<td><p>In a signal handler</p></td>
+<td><p>N/C</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_ASSERTION</p></td>
+<td><p>An assertion failed</p></td>
+<td><p>N/C</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_PANIC</p></td>
+<td><p>The system has crashed</p></td>
+<td><p>FLASH</p></td>
+</tr>
+</tbody>
+</table>
+<p>Thus is LED0 is statically on, NuttX has successfully  booted and is,
+apparently, running normally. If LED0 is flashing at approximately 2Hz, then a
+fatal error has been detected and the system has halted.</p>
+</section>
+<section id="serial-consoles">
+<h2>Serial Consoles<a class="headerlink" href="#serial-consoles" title="Permalink to this heading"></a></h2>
+<section id="usart0">
+<h3>USART0<a class="headerlink" href="#usart0" title="Permalink to this heading"></a></h3>
+<p>USART0 is available on connectors EXT1 and EXT4.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>EXT1</p></th>
+<th class="head"><p>EXT4</p></th>
+<th class="head"><p>GPIO</p></th>
+<th class="head"><p>Function</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>13</p></td>
+<td><p>13</p></td>
+<td><p>PB00</p></td>
+<td><p>USART0_RXD</p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p>14</p></td>
+<td><p>PB01</p></td>
+<td><p>USART0_TXD</p></td>
+</tr>
+<tr class="row-even"><td><p>19</p></td>
+<td><p>19</p></td>
+<td></td>
+<td><p>GND</p></td>
+</tr>
+<tr class="row-odd"><td><p>20</p></td>
+<td><p>20</p></td>
+<td></td>
+<td><p>VCC</p></td>
+</tr>
+</tbody>
+</table>
+<p>If you have a TTL to RS-232 converter then this is the most convenient serial
+console to use. It is the default in all of these configurations. An option is
+to use the virtual COM port.</p>
+</section>
+<section id="virtual-com-port">
+<h3>Virtual COM Port<a class="headerlink" href="#virtual-com-port" title="Permalink to this heading"></a></h3>
+<p>The SAM4L Xplained Pro contains an Embedded Debugger (EDBG) that can be used to
+program and debug the ATSAM4LC4C using Serial Wire Debug (SWD). The Embedded
+debugger also include a Virtual Com port interface over USART1. Virtual COM
+port connections:</p>
+<ul class="simple">
+<li><p>PC26 USART1 RXD</p></li>
+<li><p>PC27 USART1 TXD</p></li>
+</ul>
+</section>
+</section>
+<section id="sam4l-xplained-pro-specific-configuration-options">
+<h2>SAM4L Xplained Pro-specific Configuration Options<a class="headerlink" href="#sam4l-xplained-pro-specific-configuration-options" title="Permalink to this heading"></a></h2>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH</span></code> - Identifies the <code class="docutils literal notranslate"><span class="pre">arch/</span></code> subdirectory.  This should be set
+to:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH=arm</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_family</span></code> - For use in C code:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ARM=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_architecture</span></code> - For use in C code:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CORTEXM4=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP</span></code> - Identifies the <code class="docutils literal notranslate"><span class="pre">arch/*/chip</span></code> subdirectory</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP=&quot;sam34&quot;</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_name</span></code> - For use in C code to identify the exact chip:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_SAM34</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_SAM4L</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_ATSAM4LC4C</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD</span></code> - Identifies the <code class="docutils literal notranslate"><span class="pre">boards/</span></code> subdirectory and hence, the
+board that supports the particular chip or SoC.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD=sam4l-xplained</span></code> (for the SAM4L Xplained Pro development board)</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_name</span></code> - For use in C code</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_SAM4L_XPLAINED=y</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LOOPSPERMSEC</span></code> - Must be calibrated for correct operation of
+delay loops</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ENDIAN_BIG</span></code> - define if big endian (default is little endian)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE</span></code> - Describes the installed DRAM (SRAM in this case):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE=0x00008000</span></code> (32Kb)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_START</span></code> - The start address of installed DRAM</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_START=0x20000000</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> - Use LEDs to show state. Unique to boards that have LEDs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_INTERRUPTSTACK</span></code> - This architecture supports an interrupt
+stack. If defined, this symbol is the size of the interrupt stack in bytes.
+If not defined, the user task stacks will be used during interrupt handling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_STACKDUMP</span></code> - Do stack dumps after assertions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> -  Use LEDs to show state. Unique to board architecture.</p></li>
+</ul>
+<p>Individual subsystems can be enabled:</p>
+<section id="cpu">
+<h3>CPU<a class="headerlink" href="#cpu" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_OCD</span></code></p></li>
+</ul>
+</section>
+<section id="hsb">
+<h3>HSB<a class="headerlink" href="#hsb" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_APBA</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_AESA</span></code></p></li>
+</ul>
+</section>
+<section id="pba">
+<h3>PBA<a class="headerlink" href="#pba" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_IISC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SPI0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TC1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIS0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIS1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USART3</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_ADC12B</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_DACC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_ACC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GLOC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_ABDACB</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TRNG</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_PARC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_CATB</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_TWIM3</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_LCDCA</span></code></p></li>
+</ul>
+</section>
+<section id="pbb">
+<h3>PBB<a class="headerlink" href="#pbb" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_HRAMC1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_HMATRIX</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_PDCA</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_CRCCU</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_USBC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_PEVC</span></code></p></li>
+</ul>
+</section>
+<section id="pbc">
+<h3>PBC<a class="headerlink" href="#pbc" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_CHIPID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_FREQM</span></code></p></li>
+</ul>
+</section>
+<section id="pbd">
+<h3>PBD<a class="headerlink" href="#pbd" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_AST</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_WDT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_EIC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_PICOUART</span></code></p></li>
+</ul>
+<p>Some subsystems can be configured to operate in different ways. The drivers need
+to know how to configure the subsystem.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOA_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOB_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_GPIOC_IRQ</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_SERIALDRIVER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART1_SERIALDRIVER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART2_SERIALDRIVER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART3_SERIALDRIVER</span></code></p></li>
+</ul>
+<p>ST91SAM4L specific device driver settings</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_U[S]ARTn_SERIAL_CONSOLE</span></code>: selects the USARTn (n=0,1,2,3) or UART m
+(m=4,5) for the console and ttys0 (default is the USART1).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_U[S]ARTn_RXBUFSIZE</span></code>: Characters are buffered as received. This
+specific the size of the receive buffer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_U[S]ARTn_TXBUFSIZE</span></code>: Characters are buffered before being sent.
+This specific the size of the transmit buffer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_U[S]ARTn_BAUD</span></code>: The configure BAUD of the UART.  Must be</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_U[S]ARTn_BITS</span></code>: The number of bits.  Must be either 7 or 8.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_U[S]ARTn_PARTIY</span></code>: 0=no parity, 1=odd parity, 2=even parity</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_U[S]ARTn_2STOP</span></code>: Two stop bits</p></li>
+</ul>
+</section>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>Each SAM4L Xplained Pro configuration is maintained in a sub-directory and
+can be selected as follow:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>tools/configure.sh<span class="w"> </span>sam4l-xplained:&lt;subdir&gt;
 </pre></div>
 </div>
+<p>Before building, make sure the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable includes the correct
+path to the directory than holds your toolchain binaries.</p>
+<p>And then build NuttX by simply typing the following. At the conclusion of the
+make, the nuttx binary will reside in an ELF file called, simply, nuttx.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;subdir&gt;</span></code> that is provided above as an argument to the
+<code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span></code> must be is one of the following.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These configurations use the mconf-based configuration tool.  To change any
+of these configurations using that tool, you should:</p>
+<ol class="arabic simple">
+<li><p>Build and install the kconfig-mconf tool.  See nuttx/README.txt
+see additional README.txt files in the NuttX tools repository.</p></li>
+<li><p>Execute ‘make menuconfig’ in nuttx/ in order to start the
+reconfiguration process.</p></li>
+</ol>
+</div>
+<ol class="arabic">
+<li><p>These configurations use the mconf-based configuration tool. To change any
+of these configurations using that tool, you should:</p>
+<ol class="loweralpha simple">
+<li><p>Build and install the kconfig-mconf tool. See nuttx/README.txt
+see additional README.txt files in the NuttX tools repository.</p></li>
+<li><p>Execute <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> in nuttx/ in order to start the
+reconfiguration process.</p></li>
+</ol>
+</li>
+<li><p>Unless stated otherwise, all configurations generate console output of on
+USART0 which is available on EXT1 or EXT4 (see the section “Serial Consoles”
+above).  The virtual COM port could be used, instead, by reconfiguring to use
+USART1 instead of USART0:</p>
+<p>System Type -&gt; AT91SAM3/4 Peripheral Support</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM_USART0=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM_USART1=n</span></code></p></li>
+</ul>
+<p>Device Drivers -&gt; Serial Driver Support -&gt; Serial Console</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_SERIAL_CONSOLE=y</span></code></p></li>
+</ul>
+<p>Device Drivers -&gt; Serial Driver Support -&gt; USART0 Configuration</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_2STOP=0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_BAUD=115200</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_BITS=8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_PARITY=0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_RXBUFSIZE=256</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USART0_TXBUFSIZE=256</span></code></p></li>
+</ul>
+</li>
+<li><p>Unless otherwise stated, the configurations are setup for Linux (or any other
+POSIX environment like Cygwin under Windows):</p>
+<p>Build Setup:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HOST_LINUX=y</span></code>: Linux or other POSIX environment</p></li>
+</ul>
+</li>
+<li><p>These configurations use the older, OABI, buildroot toolchain.  But that is
+easily reconfigured:</p>
+<p>System Type -&gt; Toolchain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_BUILDROOT=y</span></code>: Buildroot toolchain</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_BUILDROOT_OABI=y</span></code>: Older, OABI toolchain</p></li>
+</ul>
+<p>If you want to use the Atmel GCC toolchain, here are the steps to
+do so:</p>
+<p>Build Setup:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HOST_WINDOWS=y</span></code>: Windows</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HOST_CYGWIN=y</span></code>: Using Cygwin or other POSIX environment</p></li>
+</ul>
+<p>System Type -&gt; Toolchain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_GNU_EABI=y</span></code>: General GCC EABI toolchain under windows</p></li>
+</ul>
+<p>This re-configuration should be done before making NuttX or else the
+subsequent ‘make’ will fail.  If you have already attempted building
+NuttX then you will have to:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">distclean</span></code> to remove the old configuration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span> <span class="pre">sam3u-ek/ksnh</span></code> to start with a fresh configuration</p></li>
+<li><p>Perform the configuration changes above.</p></li>
+</ol>
+<p>Also, make sure that your PATH variable has the new path to your
+Atmel tools.  Try ‘which arm-none-eabi-gcc’ to make sure that you
+are selecting the right tool.</p>
+<p>See also the “NOTE about Windows native toolchains” in the section call
+“GNU Toolchain Options” above.</p>
+</li>
+</ol>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>This configuration directory will built the NuttShell.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you get a compilation error like:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">libxx_new.cxx:74:40: error: &#39;operator new&#39; takes type &#39;size_t&#39;</span>
+<span class="go">                     (&#39;unsigned int&#39;) as first parameter [-fper</span>
+</pre></div>
+</div>
+</div>
+<p>Sometimes NuttX and your toolchain will disagree on the underlying type of
+<code class="docutils literal notranslate"><span class="pre">size_t</span></code>; sometimes it is an <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code> and sometimes it is an
+<code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">int</span></code>. If this error occurs, then you may need to toggle the
+value of <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_SIZET_LONG</span></code>.</p>
+<p>If the I/O1 module is connected to the SAM4L Xplained Pro, then support for the
+SD card slot can be enabled by making the following changes to the
+configuration:</p>
+<p>File Systems:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_FAT=y</span></code>: Enable the FAT file system</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FAT_LCNAMES=y</span></code>: Enable upper/lower case 8.3 file names (Optional, see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FAT_LFN=y</span></code>: Enable long file named (Optional, see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FAT_MAXFNAME=32</span></code>: Maximum supported file name length</p></li>
+</ul>
+<p>There are issues related to patents that Microsoft holds on FAT long file name
+technologies. See the top level NOTICE file for further details.</p>
+<p>System Type -&gt; Peripherals:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SPI0=y</span></code>: Enable the SAM4L SPI peripheral</p></li>
+</ul>
+<p>Device Drivers</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI=y</span></code>: Enable SPI support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_EXCHANGE=y</span></code>: The exchange() method is supported</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD=y</span></code>: Enable MMC/SD support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_NSLOTS=1</span></code>: Only one MMC/SD card slot</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_MULTIBLOCK_LIMIT=0</span></code>: Should not need to disable multi-block transfers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_HAVE_CARDDETECT=y</span></code>: I/O1 module as a card detect GPIO</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_SPI=y</span></code>: Use the SPI interface to the MMC/SD card</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_SPICLOCK=20000000</span></code>: This is a guess for the optimal MMC/SD frequency</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_SPIMODE=0</span></code>: Mode 0 is required</p></li>
+</ul>
+<p>Board Selection -&gt; Common Board Options</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_MMCSDSLOTNO=0</span></code>: Only one MMC/SD slot, slot 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_MMCSDSPIPORTNO=0</span></code>: Use CS=0 if the I/O1 is in EXT1, OR</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_MMCSDSPIPORTNO=2</span></code>: Use CS=2 if the I/O1 is in EXT2</p></li>
+</ul>
+<p>Board Selection -&gt; SAM4L Xplained Pro Modules</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_IOMODULE=y</span></code>: I/O1 module is connected</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_IOMODULE_EXT1=y</span></code>: In EXT1, or EXT2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_IOMODULE_EXT2=y</span></code></p></li>
+</ul>
+<p>Application Configuration -&gt; NSH Library</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_ARCHINIT=y</span></code>: Board has architecture-specific initialization</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you enable the I/O1 this configuration with USART0 as the console and with
+the I/O1 module in EXT1, you <em>must</em> remove UART jumper. Otherwise, you have
+lookpack on USART0 and NSH will <em>not</em> behave very well (since its outgoing
+prompts also appear as incoming commands).</p>
+</div>
+<p>If the OLED1 module is connected to the SAM4L Xplained Pro, then support for the
+OLED display can be enabled by making the following changes to the
+configuration:</p>
+<p>System Type -&gt; Peripherals:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_SPI0=y</span></code>: Enable the SAM4L SPI peripheral</p></li>
+</ul>
+<p>Device Drivers -&gt; SPI</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI=y</span></code>: Enable SPI support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_EXCHANGE=y</span></code>: The exchange() method is supported</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_CMDDATA=y</span></code>: CMD/DATA support is required</p></li>
+</ul>
+<p>Device Drivers -&gt; LCDs</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD=y</span></code>: Enable LCD support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_MAXCONTRAST=255</span></code>: Maximum contrast value</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_LANDSCAPE=y</span></code>: Landscape orientation (see below*)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_UG2832HSWEG04=y</span></code>: Enable support for the OLED</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_SSD1306_SPIMODE=0</span></code>: SPI Mode 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_SSD1306_SPIMODE=3500000</span></code>: Pick an SPI frequency</p></li>
+</ul>
+<p>Board Selection -&gt; SAM4L Xplained Pro Modules</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_OLED1MODULE=y</span></code>: OLED1 module is connected</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT1=y</span></code>: In EXT1, or EXT2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_OLED1MODULE_EXT2=y</span></code></p></li>
+</ul>
+<p>The NX graphics subsystem also needs to be configured:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX=y</span></code>: Enable graphics support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_LCDDRIVER=y</span></code>: Using an LCD driver</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_NPLANES=1</span></code>: With a single color plane</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_WRITEONLY=n</span></code>: You can read from the LCD (see below note)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_DISABLE_2BPP=y</span></code>: Disable all resolutions except 1BPP</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_DISABLE_4BPP=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_DISABLE_8BPP=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_DISABLE_16BPP=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_DISABLE_24BPP=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_DISABLE_32BPP=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NX_PACKEDMSFIRST=y</span></code>: LSB packed first (shouldn’t matter)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXSTART_EXTERNINIT=y</span></code>: We have board_graphics_setup()</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXTK_BORDERWIDTH=2</span></code>: Use a small border</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXTK_DEFAULT_BORDERCOLORS=y</span></code>: Default border colors</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXFONTS_CHARBITS=7</span></code>: 7-bit fonts</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXFONT_SANS17X23B=y</span></code>: Pick a font (any that will fit)</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This orientation will put the buttons “above” the LCD. The reverse landscape
+configuration (CONFIG_LCD_RLANDSCAPE) will “flip” the display so that the
+buttons are “below” the LCD.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The hardware is write only, but the driver maintains a frame buffer to
+support read and read-write-modiry operations on the LCD. Reading from the
+frame buffer is, however, untested.</p>
+</div>
+<p>Then, in order to use the OLED, you will need to build some kind of graphics
+application or use one of the NuttX graphics examples. Here, for example, is the
+setup for the graphic “Hello, World!” example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXHELLO=y</span></code>: Enables the example</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXHELLO_DEFAULT_COLORS=y</span></code>: Use default colors (see below
+note)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXHELLO_DEFAULT_FONT=y</span></code>: Use the default font</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXHELLO_BPP=1</span></code>: One bit per pixel</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXHELLO_EXTERNINIT=y</span></code>: Special initialization is required.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The OLED is monochrome so the only “colors” are black and white. The default
+“colors” will give you while text on a black background. You can override the
+faults it you want black text on a while background.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>One issue that I have seen with the NXHello example when running as an NSH
+command is that it only works the first time. So, after you run the ‘nxhello’
+command one time, you will have to reset the board before you run it again.</p>
+<p>This is clearly some issue with initializing, un-initializing, and then
+re-initializing. If you want to fix this, patches are quite welcome.</p>
+</div>
+<p>If the LCD1 module is connected to the SAM4L Xplained Pro, then support for the
+SLCDt can be enabled by making the following changes to the configuration:</p>
+<p>System Type -&gt; AT91SAM3/4 Peripheral Support</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_LCDCA=y</span></code></p></li>
+</ul>
+<p>System Type -&gt; AT91SAM3/4 Clock Configuration</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM34_OSC32K=y</span></code></p></li>
+</ul>
+<p>Board Selection -&gt; Board-Specific Options -&gt; SAM4L Xplained Pro Modules</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SAM4L_XPLAINED_SLCD1MODULE=y</span></code></p></li>
+</ul>
+<p>Device Drivers</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_MAXCONTRAST=63</span></code></p></li>
+</ul>
+<p>Library Routines -&gt; Non-standard Library Support</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_SLCDCODEC=y</span></code></p></li>
+</ul>
+<p>The SLCD example can be enabled to verify the SLCD:</p>
+<p>Application Configuration -&gt; Examples</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_SLCD=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_SLCD_DEVNAME=&quot;/dev/slcd0&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_SLCD_BUFSIZE=64</span></code></p></li>
+</ul>
+<p>Application Configuration -&gt; NSH Library</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_ARCHINIT=y</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In order to use the segment LCD you <em>must</em> open the <code class="docutils literal notranslate"><span class="pre">VLCD_A</span></code> and
+<code class="docutils literal notranslate"><span class="pre">VLCD_BC</span></code> jumpers or the SLD will not be powered!</p>
+</div>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../sam4e-ek/index.html" class="btn btn-neutral float-left" title="sam4e-ek" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../sam4s-xplained-pro/index.html" class="btn btn-neutral float-right" title="sam4s-xplained-pro" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../sam4e-ek/index.html" class="btn btn-neutral float-left" title="SAM4E-EK" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../sam4s-xplained-pro/index.html" class="btn btn-neutral float-right" title="SAM4S Xplained Pro" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
