@@ -243,7 +243,8 @@ It is built like this:</p>
 </section>
 <section id="toward-a-general-design">
 <h2>Toward a General Design<a class="headerlink" href="#toward-a-general-design" title="Permalink to this heading"></a></h2>
-<p>There is no design in place for accessing Host devices from the simulation.  Here are some directions that I would investigate, however.</p>
+<p>There is no design in place for accessing Host devices from the simulation.
+Here are some directions that could be worth investigating, however.</p>
 <p>Perhaps you could create a NuttX FIFO in the NuttX blob.  It would reside at, say, <code class="docutils literal notranslate"><span class="pre">/dev/mydevice</span></code> in the NuttX VFS.  Perhaps this FIFO could be used in the NuttX world as your character device?  Perhaps it could read and write from FIFOs to intermediate the interaction with the host PC device?</p>
 <p>On the NuttX side the target logic would call <code class="docutils literal notranslate"><span class="pre">open()</span></code>, <code class="docutils literal notranslate"><span class="pre">close()</span></code>, <code class="docutils literal notranslate"><span class="pre">read()</span></code>, … to access the FIFO. These are, of course, really <code class="docutils literal notranslate"><span class="pre">NXopen()</span></code>, <code class="docutils literal notranslate"><span class="pre">NXclose()</span></code>, <code class="docutils literal notranslate"><span class="pre">NXread()</span></code>, …</p>
 <p>On the Host PC side it would call <code class="docutils literal notranslate"><span class="pre">open()</span></code>, <code class="docutils literal notranslate"><span class="pre">close()</span></code>, <code class="docutils literal notranslate"><span class="pre">read()</span></code>, .. to access the host device driver.  These are real host device accesses.  But some code in the host blob should also be able to call <code class="docutils literal notranslate"><span class="pre">NXopen()</span></code>, <code class="docutils literal notranslate"><span class="pre">NXclose()</span></code>, <code class="docutils literal notranslate"><span class="pre">NXwrite()</span></code>, etc. to access the NuttX FIFO.  So there might be a pthread in the host blob that does something like this:</p>
@@ -270,12 +271,12 @@ It is built like this:</p>
 <h2>Simulated Interrupts<a class="headerlink" href="#simulated-interrupts" title="Permalink to this heading"></a></h2>
 <p>The current NuttX host simulation has no interrupts and, hence, is non-preemptible.  Also, without simulated interrupts, there can be no high-fidelity simulated device drivers or precise timer interrupt.</p>
 <p>Currently, all timing and serial input is simulated in the IDLE loop: When nothing is going on in the simulation, the IDLE loop runs and fakes timer and UART events.</p>
-<p>I have been thinking about how to implement simulated interrupts in the simulation.  I think a solution would work like this.</p>
+<p>The simulation of interrupts needs some thought. A possible solution could look like this:</p>
 <blockquote>
 <div><ul>
 <li><p>In the earliest initialization, simulator could start a host simulation interrupt thread and setup a signal handler to catch signals on the main thread.  One signal, say <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> could indicate a context switch.  This would be a type <code class="docutils literal notranslate"><span class="pre">SA_SIGINFO</span></code> and the context switch information would be provided in the <code class="docutils literal notranslate"><span class="pre">sival_t</span></code> field of the <code class="docutils literal notranslate"><span class="pre">siginfo</span></code>.</p></li>
 <li><p>Interrupt logic could be implemented on a host pthread.  The host pthread, like a hardware interrupt, executes asynchronously outside of the operating system.  The interrupt thread could wait for a host signal or a host message and, upon receipt, perform simulated interrupt logic.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">up_interrupt_context()</span></code> would need to be implemented; it is only a stub now.  I think this could be done with a simple global boolean like:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_interrupt_context()</span></code> would need to be implemented; it is only a stub now.  This could probably be done with a simple global boolean like:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">bool g_in_interrupt;</span>
 <span class="go">xcpt_reg_t g_context_regs;</span>
 </pre></div>
@@ -306,7 +307,7 @@ It is built like this:</p>
 <p>When we switch back to this thread, or course, it will appear as another return from <code class="docutils literal notranslate"><span class="pre">up_setjmp()</span></code>, but this time with a non-zero return value.</p>
 <p>The threading is a little mind-bending.  The signal handler needs to run in the context on the main thread.  The main thread is actually using the allocation NuttX stack and is executed the NuttX code.  When the signal handler executes, it should execute on a stack frame added to the stack of the currently executing NuttX task.</p>
 <p>When <code class="docutils literal notranslate"><span class="pre">up_longjmp()</span></code> is executing, operation will continue under the main thread, but the context including the stack are different for the new NuttX thread.  When the context finally switches back to this thread, it will appear as an appear return from <code class="docutils literal notranslate"><span class="pre">up_setjmp()</span></code> with a non-zero return value.  In that case, the signal handler will just return and the normal execution of the preempted NuttX task will resume.</p>
-<p><strong>Issues</strong>.  My only real technical questions involve signal masking.  When the <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> signal handler executes, the <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> interrupt will be masked.  That would prevent any further context switches until the signal handler returns.  Can we simply <em>unmask</em> <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> signal to get more context switches?  I would need to experiment to know for sure.</p>
+<p><strong>Issues</strong>.  My only real technical questions involve signal masking.  When the <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> signal handler executes, the <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> interrupt will be masked.  That would prevent any further context switches until the signal handler returns.  Can we simply <em>unmask</em> <code class="docutils literal notranslate"><span class="pre">SIGUSER</span></code> signal to get more context switches?  This detail needs to be clarified by experiments.</p>
 </section>
 <section id="supported-devices">
 <h2>Supported Devices<a class="headerlink" href="#supported-devices" title="Permalink to this heading"></a></h2>
@@ -333,7 +334,7 @@ It is built like this:</p>
 <section id="smp">
 <h3>SMP<a class="headerlink" href="#smp" title="Permalink to this heading"></a></h3>
 <p>There is a simulator configuration has basic support for SMP testing.  The simulation supports the emulation of multiple CPUs by creating multiple pthreads, each run a copy of the simulation in the same process address space.</p>
-<p>At present, the SMP simulation is not fully functional:  It does operate on the simulated CPU threads for a few context switches then fails during a setjmp() operation.  I suspect that this is not an issue with the NuttX SMP logic but more likely some chaos in the pthread controls.  I have seen similar such strange behavior other times that I have tried to use setjmp/longmp from a signal handler! Like when I tried to implement simulated interrupts using signals.</p>
+<p>At present, the SMP simulation is not fully functional:  It does operate on the simulated CPU threads for a few context switches then fails during a setjmp() operation.  It is suspected that this is not an issue with the NuttX SMP logic but more likely some chaos in the pthread controls.  Similar strange behavior was seen in other times where setjmp/longmp was used from a signal handler. For example when implementing simulated interrupts using signals.</p>
 <p>Apparently, if longjmp is invoked from the context of a signal handler, the result is undefined: <a class="reference external" href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1318.htm">http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1318.htm</a></p>
 <p>You can enable SMP for ostest configuration by enabling:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Add:<span class="w">     </span><span class="nv">CONFIG_SPINLOCK</span><span class="o">=</span>y
@@ -365,7 +366,7 @@ Add:<span class="w">     </span><span class="nv">CONFIG_SCHED_INSTRUMENTATION</s
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>sleep<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">&amp;</span>
 </pre></div>
 </div>
-<p>will execute the sleep command on CPU1 which has worked every time that I have tried it (which is not too many times).</p>
+<p>will execute the sleep command on CPU1 which has worked every time it was tested.</p>
 </section>
 </section>
 </section>

@@ -301,11 +301,11 @@
 <section id="hardware-flow-control">
 <h3>Hardware Flow Control<a class="headerlink" href="#hardware-flow-control" title="Permalink to this heading"></a></h3>
 <p>Hardware flow control must be enabled in serial drivers in order to prevent data
-overrun. However, in the most NuttX serial drivers, hardware flow control only
+overrun. However, in most NuttX serial drivers, hardware flow control only
 protects the hardware RX FIFO: Data will not be lost in the hardware FIFO but
 can still be lost when it is taken from the FIFO. We can still overflow the
 serial driver’s RX buffer even with hardware flow control enabled! That is
-probably a bug. But the workaround solution that I have used is to use lower
+probably a bug. But the currently implemented workaround solution is to use lower
 data rates and a large serial driver RX buffer.</p>
 <p>Those measures should be unnecessary if buffering and hardware flow control are
 set up and working correctly.</p>
@@ -338,7 +338,7 @@ issues effect sending of files).</p>
 <section id="buffer-recommendations">
 <h3>Buffer Recommendations<a class="headerlink" href="#buffer-recommendations" title="Permalink to this heading"></a></h3>
 <p>Based on the limitations of NuttX hardware flow control and of the Linux sz
-behavior, I have been testing with the following configuration (assuming <code class="docutils literal notranslate"><span class="pre">UART1</span></code>
+behavior, testing was conducted with the following configuration (assuming <code class="docutils literal notranslate"><span class="pre">UART1</span></code>
 is the ZModem device):</p>
 <ol class="arabic">
 <li><p>This setting determines that maximum size of a data packet frame:</p>
@@ -477,9 +477,9 @@ problems found with the Linux <code class="docutils literal notranslate"><span c
 <h2>Status<a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">2013-7-15</span></code>: Testing against the Linux <code class="docutils literal notranslate"><span class="pre">rz</span></code>/<code class="docutils literal notranslate"><span class="pre">sz</span></code> commands.</p>
-<p>I have tested with the <code class="docutils literal notranslate"><span class="pre">boards/arm/lpc17xx_40xx/olimex-lpc1766stk</span></code>
-configuration. I have been able to send large and small files with the target
-<code class="docutils literal notranslate"><span class="pre">sz</span></code> command. I have been able to receive small files, but there are problems
+<p>Performed tests with the <code class="docutils literal notranslate"><span class="pre">boards/arm/lpc17xx_40xx/olimex-lpc1766stk</span></code>
+configuration. Large and small files were transferred with the target
+<code class="docutils literal notranslate"><span class="pre">sz</span></code> command. It was possible to receive small files, but there are problems
 receiving large files using the Linux <code class="docutils literal notranslate"><span class="pre">sz</span></code> command: The Linux <code class="docutils literal notranslate"><span class="pre">sz</span></code> does not
 obey the buffering limits and continues to send data while <code class="docutils literal notranslate"><span class="pre">rz</span></code> is writing the
 previously received data to the file and the serial driver’s RX buffer is
@@ -494,9 +494,9 @@ solve the issues. Another option might be to fix the serial driver hardware
 flow control somehow.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">2013-7-16</span></code>. More Testing against the Linux <code class="docutils literal notranslate"><span class="pre">rz</span></code>/<code class="docutils literal notranslate"><span class="pre">sz</span></code> commands.</p>
-<p>I have verified that with debug off and at lower serial BAUD (<code class="docutils literal notranslate"><span class="pre">2400</span></code>), the
-transfers of large files succeed without errors. I do not consider this a
-_solution_ to the problem. I also found that the LPC17xx hardware flow control
+<p>Verified that with debug off and at lower serial BAUD (<code class="docutils literal notranslate"><span class="pre">2400</span></code>), the
+transfers of large files succeed without errors. This is considered a
+_solution_ to the problem. In addition the LPC17xx hardware flow control
 caused strange hangs; ZModem works better with hardware flow control disabled
 on the LPC17xx.</p>
 <p>At this lower BAUD, RX buffer sizes could probably be reduced; Or perhaps the
@@ -521,7 +521,7 @@ using the NuttX <code class="docutils literal notranslate"><span class="pre">sz<
 <li><p><code class="docutils literal notranslate"><span class="pre">2018-5-27</span></code></p>
 <p>Verified correct operation with hardware flow control using the
 <code class="docutils literal notranslate"><span class="pre">olimex-stm32-p407/zmodem</span></code> configuration with target-to-host transfers was
-verified. Again, there are issues remaining if I tried the NuttX <code class="docutils literal notranslate"><span class="pre">rz</span></code> utility
+verified. Again, there are issues remaining when using the NuttX <code class="docutils literal notranslate"><span class="pre">rz</span></code> utility
 running on Linux.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">2018-6-26</span></code></p>

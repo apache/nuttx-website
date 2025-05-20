@@ -45,7 +45,7 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="CEVA" href="../../../../ceva/index.html" />
+    <link rel="next" title="GPIO interrupt multiplexer" href="../../docs/gpio_intr_mux.html" />
     <link rel="prev" title="Microchip DA/DB family" href="../../index.html" /> 
 </head>
 
@@ -128,12 +128,10 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">Supported Platforms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm/index.html">ARM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../arm64/index.html">ARM64</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../context-switch-notes.html">Notes on AVR context switch</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../../../index.html">Microchip AVR</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../../../at32uc3/index.html">Microchip AT32UC3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../at90usb/index.html">Microchip AT90USB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../atmega/index.html">Microchip Atmega</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../gpio_intr_mux.html">GPIO interrupt multiplexer</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">Microchip DA/DB family</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#supported-chips">Supported chips</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#clock-configuration">Clock Configuration</a></li>
@@ -143,8 +141,10 @@
 <li class="toctree-l5 current"><a class="current reference internal" href="#">AVR128DA28 on breadboard</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#other-documents">Other documents</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../common/context-switch-notes.html">Notes on AVR context switch</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../ceva/index.html">CEVA</a></li>
@@ -208,7 +208,8 @@
   <section id="avr128da28-on-breadboard">
 <h1>AVR128DA28 on breadboard<a class="headerlink" href="#avr128da28-on-breadboard" title="Permalink to this heading"></a></h1>
 <p>This is a AVR128DA28 stuck into a breadboard for the purpose
-of developing this port for NuttX</p>
+of developing this port for NuttX. It can also be used as a reference
+for making ports for other boards.</p>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
 <blockquote>
@@ -219,15 +220,78 @@ of developing this port for NuttX</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
-<section id="hello">
-<h3>hello<a class="headerlink" href="#hello" title="Permalink to this heading"></a></h3>
-<p>Basic testing configuration</p>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>Basic testing configuration. When <span class="menuselection">Library Routines ‣ Support Builtin Applications</span>
+and <span class="menuselection">Application Configuration ‣ NSH Library ‣ Enable built-in applications</span>
+are both set, allows adding and execution of other applications.</p>
 </section>
 </section>
-<section id="flash-debug">
-<h2>Flash &amp; Debug<a class="headerlink" href="#flash-debug" title="Permalink to this heading"></a></h2>
-<p>Chip should be supported by avrdude using UPDI (Unified Program
-and Debug Interface)</p>
+<section id="peripheral-usage">
+<h2>Peripheral usage<a class="headerlink" href="#peripheral-usage" title="Permalink to this heading"></a></h2>
+<section id="serial-ports">
+<h3>Serial ports<a class="headerlink" href="#serial-ports" title="Permalink to this heading"></a></h3>
+<p>The board does not need any special configuration for serial port usage.
+Everything is set in architecture configuration
+in <span class="menuselection">System Type ‣ AVR DA/DB Peripheral Selections</span></p>
+</section>
+<section id="buttons">
+<h3>Buttons<a class="headerlink" href="#buttons" title="Permalink to this heading"></a></h3>
+<p>The board supports 4 buttons controlled by input button driver.
+These are connected to I/O pins A2 (button 0), A3 (button 1), C2 (button 2) and C3 (button 3.)</p>
+<p>To be able to use them, it is needed to:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>enable <span class="menuselection">Board Selection ‣ Board button support</span></p></li>
+<li><p>enable <span class="menuselection">Button interrupt support</span> in the same section</p></li>
+<li><p>enable <span class="menuselection">Device Drivers ‣ Input Device Support ‣ Button Inputs</span></p></li>
+<li><p>enable <span class="menuselection">Generic Lower Half Button Driver</span> in the same section</p></li>
+<li><p>enable <span class="menuselection">System Type ‣  GPIO ISR multiplexer</span></p></li>
+<li><p>enable <span class="menuselection">RTOS Features ‣ RTOS hooks ‣ Custom board early initialization</span></p></li>
+<li><p>enable <span class="menuselection">Board Selection ‣ Enable button input driver for GPIO pins</span></p></li>
+</ul>
+</div></blockquote>
+<p>Buttons can be used with the <code class="docutils literal notranslate"><span class="pre">Buttons</span> <span class="pre">driver</span> <span class="pre">example</span></code> example application.
+Configure <span class="menuselection">Number of Buttons in the Board</span> to 4, default
+<span class="menuselection">Button device path</span> <code class="docutils literal notranslate"><span class="pre">/dev/buttons</span></code> is correct.</p>
+<p>The board code depends on GPIO ISR multiplexer - see
+<code class="docutils literal notranslate"><span class="pre">Documentation/platforms/avr/avrdx/gpio_intr_mux.rst</span></code> for details.</p>
+<p>Note that the board configures the I/O pins reserved for buttons to invert
+logical value, ie. logical zero applied to the pin is internally read
+as logical one and vice-versa. This is to conform to button input driver’s
+expectation that requires pressed button to read as logical 1 and depressed
+button as logical 0 while allowing the board to operate without external
+components (internal pull-ups are used.)</p>
+</section>
+</section>
+<section id="compile-flash">
+<h2>Compile &amp; Flash<a class="headerlink" href="#compile-flash" title="Permalink to this heading"></a></h2>
+<p>All code is tested with GCC for AVR. In Debian and operating systems derived
+from it, <code class="docutils literal notranslate"><span class="pre">gcc-avr</span></code> package provides the compiler and <code class="docutils literal notranslate"><span class="pre">avr-libc</span></code> provides
+related files. Note that older versions of GCC do not support these chips
+out of the box
+and some manual downloads are required. Other AVR compilers should work
+as well but since these were not tested, not all features are enabled for them.</p>
+<p>Default configuration produces <code class="docutils literal notranslate"><span class="pre">nuttx.asm</span></code> file with program disassembly
+and <code class="docutils literal notranslate"><span class="pre">nuttx.hex</span></code> file in Intel HEX format to be used for upload to the chip.</p>
+<p>Program can be uploaded for example by <code class="docutils literal notranslate"><span class="pre">avrdude</span></code> using UPDI (Unified Program
+and Debug Interface.) As for programmer hardware, any serial port should
+work. Serial port data pins need to be level-shifted to chip’s supply voltage.
+The pins are then connected through circuit like this one:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>                            Vcc
+                             |
+                            100k
+           schottky          |
+(PC) TX&gt; -- |&lt;|----------------------------- &lt;RX (PC)
+                                 \-- 470R -- &lt;UPDI (MCU)
+</pre></div>
+</div>
+<p>As long as TX is logical 1, there is no current between Vcc and TX pin
+and both RX and UPDI pins read 1. When TX transitions to logical 0,
+the schottky diode opens and overrides the 100k pull-up resistor,
+both RX and UPDI read 0. When UPDI transitions to logical 0, it also
+overrides the pull-up resistor but the schottky diode remains closed
+and prevents TX pin from being affected. RX reads 0.</p>
 </section>
 </section>
 
@@ -236,7 +300,7 @@ and Debug Interface)</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../../index.html" class="btn btn-neutral float-left" title="Microchip DA/DB family" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../../../ceva/index.html" class="btn btn-neutral float-right" title="CEVA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../docs/gpio_intr_mux.html" class="btn btn-neutral float-right" title="GPIO interrupt multiplexer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
