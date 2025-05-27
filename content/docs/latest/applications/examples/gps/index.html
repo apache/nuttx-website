@@ -203,7 +203,11 @@
 <li class="toctree-l4"><a class="reference internal" href="../ftpd/index.html"><code class="docutils literal notranslate"><span class="pre">ftpd</span></code> FTP daemon</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../fxos8700cq_test/index.html"><code class="docutils literal notranslate"><span class="pre">fxos8700cq_test</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../gpio/index.html"><code class="docutils literal notranslate"><span class="pre">gpio</span></code> GPIO Read and Write</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">gps</span></code> GPS example</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">gps</span></code> GPS example</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#waiting-for-gps-fix">Waiting for GPS Fix</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#with-gps-fix">With GPS Fix</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../hall/index.html"><code class="docutils literal notranslate"><span class="pre">hall</span></code> Hall effect sensor example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../hdc1008_demo/index.html"><code class="docutils literal notranslate"><span class="pre">hdc1008_demo</span></code> HDC1008 driver example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../hello/index.html"><code class="docutils literal notranslate"><span class="pre">hello</span></code> Hello World</a></li>
@@ -382,7 +386,54 @@
              
   <section id="gps-gps-example">
 <h1><code class="docutils literal notranslate"><span class="pre">gps</span></code> GPS example<a class="headerlink" href="#gps-gps-example" title="Permalink to this heading"></a></h1>
-<p>GPS example.</p>
+<p>This example can be used to interact with GPS devices in NuttX. It uses the
+<a class="reference external" href="https://github.com/kosma/minmea">MINMEA</a> library to parse standard NMEA
+messages and print out GPS data to the console.</p>
+<p>To use the program, provide the character device path for the GPS serial
+connection as the only argument. If no path is provided, the program will
+default to <code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code>.</p>
+<p>If you want to be able to see the floating point output of this program, make
+sure you remember to enable <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_FLOATINGPOINT</span></code>.</p>
+<p>The program loops forever parsing NMEA values from the serial device.</p>
+<section id="waiting-for-gps-fix">
+<h2>Waiting for GPS Fix<a class="headerlink" href="#waiting-for-gps-fix" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; gps /dev/ttyS3</span>
+<span class="go">Fixed-point Latitude...........: 0</span>
+<span class="go">Fixed-point Longitude..........: 0</span>
+<span class="go">Fixed-point Speed..............: 0</span>
+<span class="go">Floating point degree latitude.: nan</span>
+<span class="go">Floating point degree longitude: nan</span>
+<span class="go">Floating point speed...........: nan</span>
+<span class="go">Fix quality....................: 0</span>
+<span class="go">Altitude.......................: 0</span>
+<span class="go">Tracked satellites.............: 0</span>
+</pre></div>
+</div>
+<p>The output will show <code class="docutils literal notranslate"><span class="pre">nan</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> for values while waiting to obtain a fix,
+at which point real values will begin to appear.</p>
+</section>
+<section id="with-gps-fix">
+<h2>With GPS Fix<a class="headerlink" href="#with-gps-fix" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; gps /dev/ttyS3</span>
+<span class="go">Altitude.......................: 73172</span>
+<span class="go">Tracked satellites.............: 5</span>
+<span class="go">Fixed-point Latitude...........: 4628356</span>
+<span class="go">Fixed-point Longitude..........: -8058408</span>
+<span class="go">Fixed-point Speed..............: 110</span>
+<span class="go">Floating point degree latitude.: 46.476547</span>
+<span class="go">Floating point degree longitude: -80.977995</span>
+<span class="go">Floating point speed...........: 0.001833</span>
+<span class="go">Fix quality....................: 1</span>
+</pre></div>
+</div>
+<p>You can now see the information is filled in with the data from the GPS.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Fixed-point readings may have a different scale than the floating-point
+readings. For instance, the altitude above is fixed-point, but is actually
+73.172 meters in floating point.</p>
+</div>
+</section>
 </section>
 
 
