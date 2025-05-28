@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>imx93-evk &mdash; NuttX latest documentation</title>
+  <title>i.MX93 Evaluation Kit &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -135,7 +135,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../imx8/index.html">NXP i.MX8</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">NXP i.MX9</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
-<li class="toctree-l5 current"><a class="current reference internal" href="#">imx93-evk</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">i.MX93 Evaluation Kit</a></li>
 </ul>
 </li>
 </ul>
@@ -194,7 +194,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM64</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">NXP i.MX9</a></li>
-      <li class="breadcrumb-item active">imx93-evk</li>
+      <li class="breadcrumb-item active">i.MX93 Evaluation Kit</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/arm64/imx9/boards/imx93-evk/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -204,215 +204,220 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="imx93-evk">
-<h1>imx93-evk<a class="headerlink" href="#imx93-evk" title="Permalink to this heading"></a></h1>
-<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-imx93.html"><span class="doc">chip:imx93</span></a></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README.txt
-==========
-
-The kit i.MX93 Evaluation Kit has a pre-installed Linux image which contains
-u-boot and the i.MX93 reference Linux installation.
-
-NuttX may work as the bootloader, replacing u-boot completely. Currently it
-doesn&#39;t initialize the DDR memory yet. In other words, DDR training is still
-missing.
-
-==========================================
-
-How to run nuttx on i.MX93 Evaluation Kit.
-
-==========================================
-
-Below is a set of instructions on how to run NuttX on the i.MX93 EVK, on top
+  <section id="i-mx93-evaluation-kit">
+<h1>i.MX93 Evaluation Kit<a class="headerlink" href="#i-mx93-evaluation-kit" title="Permalink to this heading"></a></h1>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-imx93.html"><span class="doc">chip:imx93</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-arm64.html"><span class="doc">arch:arm64</span></a></p>
+<p>The kit i.MX93 Evaluation Kit has a pre-installed Linux image which contains
+u-boot and the i.MX93 reference Linux installation.</p>
+<p>NuttX may work as the bootloader, replacing u-boot completely. Currently it
+doesn’t initialize the DDR memory yet. In other words, DDR training is still
+missing.</p>
+<p>Below is a set of instructions on how to run NuttX on the i.MX93 EVK, on top
 of the u-boot. Also, instructions on running NuttX as the bootloader will
-follow.
-
-==========================================
-
-Pre-requisites
-
-==========================================
-
-- imx93_ca55.JLinkScript which is a custom file, put it wherever you want
-
-==========================================
-
-U-Boot configuration
-
-==========================================
-
-Two things need to be configured on u-boot before NuttX can be loaded:
-
-- u-boot data cache must be turned off
-- u-boot must stop to the u-boot console, i.e. the Linux payload must not be loaded
-
-Manual option:
-
-1. Disable u-boot autostart (needs to be done only once):
-
-    Hit any key to stop autoboot:  0
-    u-boot=&gt; setenv bootdelay -1
-    u-boot=&gt; saveenv
-    Saving Environment to MMC... Writing to MMC(0)... OK
-    u-boot=&gt; reset
-
-2. On every boot, the data cache must be disabled for options 2 and 3 to work
-
-    u-boot=&gt; dcache off
-
-Automated option:
-
-1. Replace the default bootcmd to disable dcache automatically:
-
-    u-boot=&gt; setenv bootdelay 0
-    u-boot=&gt; setenv bootcmd dcache off
-    u-boot=&gt; saveenv
-    Saving Environment to MMC... Writing to MMC(0)... OK
-    u-boot=&gt; reset
-
-To restore the default bootcmd which starts Linux automatically:
-
-    u-boot=&gt; setenv bootcmd run distro_bootcmd;run bsp_bootcmd
-    u-boot=&gt; saveenv
-    Saving Environment to MMC... Writing to MMC(0)... OK
-    u-boot=&gt; reset
-
-The default bootcmd is:
-
-u-boot=&gt; env print bootcmd
-bootcmd=run distro_bootcmd;run bsp_bootcmd
-
-==========================================
-
-Loading and running the NuttX image
-
-==========================================
-
-You have four options:
-
-1 - Load via u-boot from SD-card
-2 - Load via gdb
-3 - Load via JLink
-4 - Run from SD-card, without u-boot
-5 - Kernel build, via AHAB boot
-
-==========================================
-
-Option 1: load via u-boot from SD-card:
-
-==========================================
-
-1. Build nuttx, and move nuttx.bin to SD-card
-
-2. Load from SD-card and start nuttx payload
-
-    u-boot=&gt; dcache off; fatload mmc 1 0x80000000 nuttx.bin; go 0x80000000
-
-==========================================
-
-Option 2: start via gdb:
-
-==========================================
-
-1. Start JLinkGDBServer
-
-    JLinkGDBServer -device CORTEX-A55 -JLinkScriptFile &lt;path_to&gt;/imx93_ca55.JLinkScript
-
-2. Start gdb
-
-    $ aarch64-none-elf-gdb
-
- 2.1 Attach and load nuttx
-
-    (gdb) target remote localhost:2331
-    (gdb) set mem inaccessible-by-default off
-    (gdb) load &lt;path_to&gt;/nuttx
-    (gdb) monitor go
-
-==========================================
-
-Option 3: load with JLink:
-
-==========================================
-
-1. Start JLink 
-
-    $ JLinkExe -device CORTEX-A55 -if JTAG -jtagconf -1,-1 -speed 4000 -JLinkScriptFile &lt;path_to&gt;/imx93_ca55.JLinkScript
-
- 1.1 Add -AutoConnect 1 to connect automatically
-
-    $ JLinkExe -device CORTEX-A55 -if JTAG -jtagconf -1,-1 -speed 4000 -JLinkScriptFile &lt;path_to&gt;/imx93_ca55.JLinkScript -AutoConnect 1
-
-2. Connect JLink
-    
- 2.1 Connect to the debugger
-
-    Type &quot;connect&quot; to establish a target connection, &#39;?&#39; for help
-    J-Link&gt;connect
-
-    You should now have a JLink prompt.
-    
-    Cortex-A55 identified.
-    J-Link&gt;
-
-3. Load nuttx. Note that JLink expects the .elf extension, the default build output of nuttx is just &quot;nuttx&quot; without the extension, so it must be added to the file...
-
-    J-Link&gt;LoadFile &lt;path_to&gt;/nuttx.elf
-
-==========================================
-
-Option 4: Run from SD-card, without u-boot
-
-==========================================
-
-1. Make sure CONFIG_IMX9_BOOTLOADER is set and system is configured properly for bootloader operation:
-
-  tools/configure.sh imx93-evk:bootloader
-
-2. The build outputs a file &quot;imx9-sdimage.img&quot;. This image also contains the Ahab container. It&#39;s required to grant Trusted Resource Domain Controller (TRDC) permissions.
-   Flash it to an SD-card, where sdX may be sda or something else; verify the block device name properly (eg. /dev/sda, /dev/sdb etc):
-
-  sudo dd if=imx9-sdimage.img of=/dev/sdX bs=1k &amp;&amp; sync
-
-3. Insert the SD-card into the imx93-evk, make sure BMODE switch is [1,2,3,4] = [Off, On, Off, Off] so that it boots from the SD-card.
-
-  This should boot into NuttShell in EL3 level.
-
-==========================================
-
-Option 5: Kernel build, via AHAB boot
-
-==========================================
-
-1. Follow the instructions at: https://spsdk.readthedocs.io/en/latest/examples/ahab/imx93/imx93_ahab_uboot.html
-   to create an eMMC-bootable image (latest version of instructions tested is v2.6.1). We will be replacing the u-boot binary in step 2.3 with NuttX.
-
-2. Clone both NuttX and NuttX-Apps in same level directories `nuttx` and `apps` respectively.
-
-3. Configure and build NuttX:
-
-  cd nuttx
-  tools/configure.sh imx93-evk:knsh
-  make
-  make export
-
-4. Build NuttX apps and prepare the /bin ROMFS image:
-
-  pushd ../apps
-  tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
-  make import
-  tools/mkromfsimg.sh
-  mv boot_romfsimg.h ../nuttx/boards/arm64/imx9/imx93-evk/include/bin_romfsimg.h
-  popd
-
-5. Re-build NuttX embedding the generated /bin ROMFS image:
-
-  make clean clean_context
-  make
-
-6. Replace the value of the `u-boot:` entry in workspace/ahab_template.yaml created in step 1 above with the path to nuttx.bin.
+follow.</p>
+<section id="pre-requisites">
+<h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">imx93_ca55.JLinkScript</span></code> which is a custom file, put it wherever you want</p></li>
+</ul>
+</section>
+<section id="u-boot-configuration">
+<h2>U-Boot configuration<a class="headerlink" href="#u-boot-configuration" title="Permalink to this heading"></a></h2>
+<p>Two things need to be configured on u-boot before NuttX can be loaded:</p>
+<ul class="simple">
+<li><p>u-boot data cache must be turned off</p></li>
+<li><p>u-boot must stop to the u-boot console, i.e. the Linux payload must not be
+loaded</p></li>
+</ul>
+<section id="manual-option">
+<h3>Manual option:<a class="headerlink" href="#manual-option" title="Permalink to this heading"></a></h3>
+<ol class="arabic">
+<li><p>Disable u-boot autostart (needs to be done only once):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Hit any key to stop autoboot:  0</span>
+<span class="go">u-boot=&gt; setenv bootdelay -1</span>
+<span class="go">u-boot=&gt; saveenv</span>
+<span class="go">Saving Environment to MMC... Writing to MMC(0)... OK</span>
+<span class="go">u-boot=&gt; reset</span>
 </pre></div>
 </div>
+</li>
+<li><p>On every boot, the data cache must be disabled for options 2 and 3 to work</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">u-boot=&gt; dcache off</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="automated-option">
+<h3>Automated option:<a class="headerlink" href="#automated-option" title="Permalink to this heading"></a></h3>
+<p>Replace the default bootcmd to disable dcache automatically:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">u-boot=&gt; setenv bootdelay 0</span>
+<span class="go">u-boot=&gt; setenv bootcmd dcache off</span>
+<span class="go">u-boot=&gt; saveenv</span>
+<span class="go">Saving Environment to MMC... Writing to MMC(0)... OK</span>
+<span class="go">u-boot=&gt; reset</span>
+</pre></div>
+</div>
+<p>To restore the default bootcmd which starts Linux automatically:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">u-boot=&gt; setenv bootcmd run distro_bootcmd;run bsp_bootcmd</span>
+<span class="go">u-boot=&gt; saveenv</span>
+<span class="go">Saving Environment to MMC... Writing to MMC(0)... OK</span>
+<span class="go">u-boot=&gt; reset</span>
+</pre></div>
+</div>
+<p>The default bootcmd is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">u-boot=&gt; env print bootcmd</span>
+<span class="go">bootcmd=run distro_bootcmd;run bsp_bootcmd</span>
+</pre></div>
+</div>
+<section id="loading-and-running-the-nuttx-image">
+<h4>Loading and running the NuttX image<a class="headerlink" href="#loading-and-running-the-nuttx-image" title="Permalink to this heading"></a></h4>
+<p>You have four options:</p>
+<ol class="arabic simple">
+<li><p>Load via u-boot from SD-card</p></li>
+<li><p>Load via gdb</p></li>
+<li><p>Load via JLink</p></li>
+<li><p>Run from SD-card, without u-boot</p></li>
+<li><p>Kernel build, via AHAB boot</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="option-1-load-via-u-boot-from-sd-card">
+<h2>Option 1: load via u-boot from SD-card:<a class="headerlink" href="#option-1-load-via-u-boot-from-sd-card" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Build nuttx, and move <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> to SD-card</p></li>
+<li><p>Load from SD-card and start nuttx payload</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">u-boot=&gt; dcache off; fatload mmc 1 0x80000000 nuttx.bin; go 0x80000000</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="option-2-start-via-gdb">
+<h2>Option 2: start via <code class="docutils literal notranslate"><span class="pre">gdb</span></code>:<a class="headerlink" href="#option-2-start-via-gdb" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Start JLinkGDBServer</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>JLinkGDBServer<span class="w"> </span>-device<span class="w"> </span>CORTEX-A55<span class="w"> </span>-JLinkScriptFile<span class="w"> </span>&lt;path_to&gt;/imx93_ca55.JLinkScript
+</pre></div>
+</div>
+</li>
+<li><p>Start gdb</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>aarch64-none-elf-gdb
+</pre></div>
+</div>
+<ol class="loweralpha simple">
+<li><p>Attach and load nuttx</p></li>
+</ol>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">target remote localhost:2331</span>
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">set mem inaccessible-by-default off</span>
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">load &lt;path_to&gt;/nuttx</span>
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">monitor go</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="option-3-load-with-jlink">
+<h2>Option 3: load with JLink:<a class="headerlink" href="#option-3-load-with-jlink" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Start JLink</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>JLinkExe<span class="w"> </span>-device<span class="w"> </span>CORTEX-A55<span class="w"> </span>-if<span class="w"> </span>JTAG<span class="w"> </span>-jtagconf<span class="w"> </span>-1,-1<span class="w"> </span>-speed<span class="w"> </span><span class="m">4000</span><span class="w"> </span>-JLinkScriptFile<span class="w"> </span>&lt;path_to&gt;/imx93_ca55.JLinkScript
+</pre></div>
+</div>
+<ol class="loweralpha">
+<li><p>Add -AutoConnect 1 to connect automatically</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>JLinkExe<span class="w"> </span>-device<span class="w"> </span>CORTEX-A55<span class="w"> </span>-if<span class="w"> </span>JTAG<span class="w"> </span>-jtagconf<span class="w"> </span>-1,-1<span class="w"> </span>-speed<span class="w"> </span><span class="m">4000</span><span class="w"> </span>-JLinkScriptFile<span class="w"> </span>&lt;path_to&gt;/imx93_ca55.JLinkScript<span class="w"> </span>-AutoConnect<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</li>
+<li><p>Connect JLink</p>
+<ol class="loweralpha">
+<li><p>Connect to the debugger</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Type &quot;connect&quot; to establish a target connection, &#39;?&#39; for help</span>
+<span class="go">J-Link&gt;connect</span>
+</pre></div>
+</div>
+<p>You should now have a JLink prompt.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Cortex-A55 identified.</span>
+<span class="go">J-Link&gt;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</li>
+<li><p>Load nuttx. Note that JLink expects the .elf extension, the default build
+output of nuttx is just “nuttx” without the extension, so it must be added to
+the file…</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">J-Link&gt;LoadFile &lt;path_to&gt;/nuttx.elf</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="option-4-run-from-sd-card-without-u-boot">
+<h2>Option 4: Run from SD-card, without u-boot<a class="headerlink" href="#option-4-run-from-sd-card-without-u-boot" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Make sure <code class="docutils literal notranslate"><span class="pre">CONFIG_IMX9_BOOTLOADER</span></code> is set and system is configured properly
+for bootloader operation:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>tools/configure.sh<span class="w"> </span>imx93-evk:bootloader
+</pre></div>
+</div>
+</li>
+<li><p>The build outputs a file <code class="docutils literal notranslate"><span class="pre">imx9-sdimage.img</span></code>. This image also contains the
+Ahab container. It’s required to grant Trusted Resource Domain Controller
+(TRDC) permissions. Flash it to an SD-card, where sdX may be sda or something
+else; verify the block device name properly (eg. <code class="docutils literal notranslate"><span class="pre">/dev/sda</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/sdb</span></code> etc):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>imx9-sdimage.img<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/dev/sdX<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>1k<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sync
+</pre></div>
+</div>
+</li>
+<li><p>Insert the SD-card into the imx93-evk, make sure BMODE switch is [1,2,3,4] =
+[Off, On, Off, Off] so that it boots from the SD-card. This should boot into
+NuttShell in EL3 level.</p></li>
+</ol>
+</section>
+<section id="option-5-kernel-build-via-ahab-boot">
+<h2>Option 5: Kernel build, via AHAB boot<a class="headerlink" href="#option-5-kernel-build-via-ahab-boot" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Follow the instructions at:
+<a class="reference external" href="https://spsdk.readthedocs.io/en/latest/examples/ahab/imx93/imx93_ahab_uboot.html">https://spsdk.readthedocs.io/en/latest/examples/ahab/imx93/imx93_ahab_uboot.html</a>
+to create an eMMC-bootable image (latest version of instructions tested is
+v2.6.1). We will be replacing the u-boot binary in step 2.3 with NuttX.</p></li>
+<li><p>Clone both NuttX and NuttX-Apps in same level directories <cite>nuttx</cite> and <cite>apps</cite>
+respectively.</p></li>
+<li><p>Configure and build NuttX:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
+<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>imx93-evk:knsh
+<span class="gp">$ </span>make
+<span class="gp">$ </span>make<span class="w"> </span><span class="nb">export</span>
+</pre></div>
+</div>
+</li>
+<li><p>Build NuttX apps and prepare the <code class="docutils literal notranslate"><span class="pre">/bin</span></code> ROMFS image:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">pushd</span><span class="w"> </span>../apps
+<span class="gp">$ </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.tar.gz
+<span class="gp">$ </span>make<span class="w"> </span>import
+<span class="gp">$ </span>tools/mkromfsimg.sh
+<span class="gp">$ </span>mv<span class="w"> </span>boot_romfsimg.h<span class="w"> </span>../nuttx/boards/arm64/imx9/imx93-evk/include/bin_romfsimg.h
+<span class="gp">$ </span><span class="nb">popd</span>
+</pre></div>
+</div>
+</li>
+<li><p>Re-build NuttX embedding the generated /bin ROMFS image:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>clean<span class="w"> </span>clean_context
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+</li>
+<li><p>Replace the value of the <cite>u-boot:</cite> entry in <code class="docutils literal notranslate"><span class="pre">workspace/ahab_template.yaml</span></code>
+created in step 1 above with the path to <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code>.</p></li>
+</ol>
+</section>
 </section>
 
 

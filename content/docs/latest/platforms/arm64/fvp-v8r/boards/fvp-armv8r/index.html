@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fvp-armv8r &mdash; NuttX latest documentation</title>
+  <title>FVP ARMv8-r &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -133,7 +133,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../bcm2711/index.html">BCM2711</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">fvp-v8r</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
-<li class="toctree-l5 current"><a class="current reference internal" href="#">fvp-armv8r</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">FVP ARMv8-r</a></li>
 </ul>
 </li>
 </ul>
@@ -194,7 +194,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM64</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">fvp-v8r</a></li>
-      <li class="breadcrumb-item active">fvp-armv8r</li>
+      <li class="breadcrumb-item active">FVP ARMv8-r</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/arm64/fvp-v8r/boards/fvp-armv8r/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -204,235 +204,256 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fvp-armv8r">
-<h1>fvp-armv8r<a class="headerlink" href="#fvp-armv8r" title="Permalink to this heading"></a></h1>
-<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-virt.html"><span class="doc">chip:virt</span></a></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README.txt
-==========
-
-This board configuration will use FVP_BaseR_AEMv8R to emulate
-generic ARM64v8-R (Cotex-R82) series hardware platform and
-provides support for these devices:
-
- - GICv3 interrupt controllers for ARMv8-r
- - PL011 UART controller(FVP)
-
-Contents
-========
-  - Getting Started
-  - Status
-  - Platform Features
-  - References
-
-Getting Started
-===============
-
-1. Compile Toolchain
-    The FVP platform using same Compiler like qemu, read the following
-  file for How to get the Tool:
-  https://github.com/apache/nuttx/tree/master/boards/arm64/qemu/qemu-armv8a
-
-Note:
-  1 My host environment is Ubuntu 22.04.1 LTS, Ubuntu 18.04 will work too
-  2 The newest GNU toolchain is 12.2, available from:
-     https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
-
-
-2. Getting Armv8-R AEM FVP
-   The Armv8-R AEM FVP is a free of charge Armv8-R Fixed Virtual Platform.
-   It supports the latest Armv8-R feature set. we can get it from:
-   https://developer.arm.com/downloads/-/arm-ecosystem-models
-
-   Please select to download Armv8-R AEM FVP product, extract the tool package
-   the FVP tool is locate at:
-   AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R
-
-3. Configuring and building
-  3.1 FVP Overview
-     Just like QEMU, Fixed Virtual Platforms (FVP) are complete simulations of an Arm system,
-   including processor, memory and peripherals. These are set out in a &quot;programmer&#39;s view&quot;,
-   which gives you a comprehensive model on which to build and test your software.
-
-     The FVP tools simulate 4 serial port and implement them to wait on local socket port:
-
-     $ /home/qinwei/workdir/tools/AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R \
-        -f boards/arm64/fvp-v8r/fvp-armv8r/scripts/fvp_cfg.txt -a ./nuttx
-      terminal_0: Listening for serial connection on port 5000
-      terminal_1: Listening for serial connection on port 5001
-      terminal_2: Listening for serial connection on port 5002
-      terminal_3: Listening for serial connection on port 5003
-
-     FVP has four UART port and UART1 was choosen as tty, so just telnet to port 5001
-     will enter nsh:
-     telnet localhost 5001
-
-  3.1 Single Core
-   Configuring NuttX and compile:
-   $ ./tools/configure.sh -l fvp-armv8r:nsh
-   $ make
-
-  3.2 SMP
-   Configuring NuttX and compile:
-   $ ./tools/configure.sh -l fvp-armv8r:nsh_smp
-   $ make
-
-4. Running
-
-  4.1 Single Core
-
-  Step1: Booting NuttX
-
-  $ AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R \
-           -f boards/arm64/fvp-v8r/fvp-armv8r/scripts/fvp_cfg.txt \
-           -a ./nuttx
-    terminal_0: Listening for serial connection on port 5000
-    terminal_1: Listening for serial connection on port 5001
-    terminal_2: Listening for serial connection on port 5002
-    terminal_3: Listening for serial connection on port 5003
-    - Ready to Boot Primary CPU
-    - Boot from EL2
-    - Boot from EL1
-    - Boot to C runtime for OS Initialize
-    [ 0] (null): arm64_chip_boot: Main CPU 0x80000000
-    [ 0] (null): nx_start: Entry
-    [ 0] (null): up_allocate_heap: heap_start=0x0x3c000, heap_size=0x7fc4000
-    [ 0] Idle Task: gic_validate_dist_version: GICv3 version detect
-    [ 0] Idle Task: gic_validate_dist_version: GICD_TYPER = 0x490067
-    [ 0] Idle Task: gic_validate_dist_version: 224 SPIs implemented
-    [ 0] Idle Task: gic_validate_dist_version: 0 Extended SPIs implemented
-    [ 0] Idle Task: gic_validate_dist_version: Distributor has no Range Selector support
-    [ 0] Idle Task: gic_validate_dist_version: MBIs is present, But No support
-    [ 0] Idle Task: gic_validate_redist_version: GICR_TYPER = 0x0
-    [ 0] Idle Task: gic_validate_redist_version: 16 PPIs implemented
-    [ 0] Idle Task: gic_validate_redist_version: no VLPI support, no direct LPI support
-    [ 0] Idle Task: up_timer_initialize: up_timer_initialize: cp15 timer(s) running at 100.00MHz, cycle 100000
-    [ 0] Idle Task: uart_register: Registering /dev/console
-    [ 0] Idle Task: uart_register: Registering /dev/ttyS0
-    [ 0] Idle Task: work_start_highpri: Starting high-priority kernel worker thread(s)
-    [ 0] Idle Task: nx_start_application: Starting init thread
-    [ 0] Idle Task: task_spawn: name=nsh_main entry=0xa590 file_actions=0 attr=0x3bf88 argv=0x3bf80
-    nsh: mkfatfs: command not found
-    
-    NuttShell (NSH) NuttX-12.0.0
-    nsh&gt; [ 0] Idle Task: nx_start: CPU0: Beginning Idle Loop
-
-  Step2: telnet to UART1
-  Starting another terminal and enter:
-  $ telnet localhost 5001
-    Trying 127.0.0.1...
-    Connected to localhost.
-    Escape character is &#39;^]&#39;.
-    nsh: mkfatfs: command not found
-    NuttShell (NSH) NuttX-12.0.0
-    nsh&gt;
-
-  4.2 SMP
-  $ AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R \
-           -f boards/arm64/fvp-v8r/fvp-armv8r/scripts/fvp_cfg_smp.txt \
-           -a ./nuttx
-    terminal_0: Listening for serial connection on port 5000
-    terminal_1: Listening for serial connection on port 5001
-    terminal_2: Listening for serial connection on port 5002
-    terminal_3: Listening for serial connection on port 5003
-    - Ready to Boot Primary CPU
-    - Boot from EL2
-    - Boot from EL1
-    - Boot to C runtime for OS Initialize
-    [CPU0] [ 0] (null): arm64_chip_boot: Main CPU 0x80000000
-    [CPU0] [ 0] (null): nx_start: Entry
-    [CPU0] [ 0] (null): up_allocate_heap: heap_start=0x0x4a000, heap_size=0x7fb6000
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: GICv3 version detect
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: GICD_TYPER = 0x490067
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: 224 SPIs implemented
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: 0 Extended SPIs implemented
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: Distributor has no Range Selector support
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: MBIs is present, But No support
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_redist_version: GICR_TYPER = 0x0
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_redist_version: 16 PPIs implemented
-    [CPU0] [ 0] CPU0 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support
-    [CPU0] [ 0] CPU0 IDLE: up_timer_initialize: up_timer_initialize: cp15 timer(s) running at 100.00MHz, cycle 100000
-    [CPU0] [ 0] CPU0 IDLE: uart_register: Registering /dev/console
-    [CPU0] [ 0] CPU0 IDLE: uart_register: Registering /dev/ttyS0
-    - Ready to Boot Second CPU
-    - Boot from EL2
-    - Boot from EL1
-    - Boot to C runtime for OS Initialize
-    [CPU1] [ 1] CPU1 IDLE: gic_validate_redist_version: GICR_TYPER = 0x100000100
-    [CPU1] [ 1] CPU1 IDLE: gic_validate_redist_version: 16 PPIs implemented
-    [CPU1] [ 1] CPU1 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support
-    [CPU1] [ 1] CPU1 IDLE: nx_idle_trampoline: CPU1: Beginning Idle Loop
-    - Ready to Boot Second CPU
-    - Boot from EL2
-    - Boot from EL1
-    - Boot to C runtime for OS Initialize
-    [CPU2] [ 2] CPU2 IDLE: gic_validate_redist_version: GICR_TYPER = 0x200000200
-    [CPU2] [ 2] CPU2 IDLE: gic_validate_redist_version: 16 PPIs implemented
-    [CPU2] [ 2] CPU2 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support
-    [CPU2] [ 2] CPU2 IDLE: nx_idle_trampoline: CPU2: Beginning Idle Loop
-    - Ready to Boot Second CPU
-    - Boot from EL2
-    - Boot from EL1
-    - Boot to C runtime for OS Initialize
-    [CPU3] [ 3] CPU3 IDLE: gic_validate_redist_version: GICR_TYPER = 0x300000310
-    [CPU3] [ 3] CPU3 IDLE: gic_validate_redist_version: 16 PPIs implemented
-    [CPU3] [ 3] CPU3 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support
-    [CPU3] [ 3] CPU3 IDLE: nx_idle_trampoline: CPU3: Beginning Idle Loop
-    [CPU0] [ 0] CPU0 IDLE: work_start_highpri: Starting high-priority kernel worker thread(s)
-    [CPU0] [ 0] CPU0 IDLE: nx_start_application: Starting init thread
-    [CPU0] [ 0] CPU0 IDLE: task_spawn: name=nsh_main entry=0xc41c file_actions=0 attr=0x43f68 argv=0x43f60
-    [CPU0] [ 0] CPU0 IDLE: nx_start: CPU0: Beginning Idle Loop
-    nsh: mkfatfs: command not found
-    
-    NuttShell (NSH) NuttX-12.0.0
-    nsh&gt;
-
-  Step2: telnet to UART1
-  Starting another terminal and enter:
-  $ telnet localhost 5001
-    Trying 127.0.0.1...
-    Connected to localhost.
-    Escape character is &#39;^]&#39;.
-    nsh: mkfatfs: command not found
-    NuttShell (NSH) NuttX-12.0.0
-    nsh&gt;
-
-Status
-======
-
-2023-2-18:
-1. Release the first version for ARMv8-R, Single Core and SMP is supported
-   OS test is passed.
-
-Platform Features
-=================
-
-The following hardware features are supported:
-+--------------+------------+----------------------+
-| Interface    | Controller | Driver/Component     |
-+==============+============+======================+
-| GICv3        | on-chip    | interrupt controller |
-+--------------+------------+----------------------+
-| PL011 UART   | on-chip    | serial port          |
-+--------------+------------+----------------------+
-| ARM TIMER    | on-chip    | system clock         |
-+--------------+------------+----------------------+
-
-References
-===========
-
-1. (ID050815) ARM® Cortex®-A Series - Programmer’s Guide for ARMv8-A
-2. (ID020222) Arm® Architecture Reference Manual - for A profile architecture
-3. (ARM062-948681440-3280) Armv8-A Instruction Set Architecture
-4. AArch64 Exception and Interrupt Handling
-5. AArch64 Programmer&#39;s Guides Generic Timer
-6. Arm Generic Interrupt Controller v3 and v4 Overview
-7. Arm® Generic Interrupt Controller Architecture Specification GIC architecture version 3 and version 4
-8. (DEN0022D.b) Arm Power State Coordination Interface Platform Design Document
-9. Arm® Architecture Reference Manual Supplement, Armv8, for R-profile AArch64 architecture,
-   ARM DDI 0600B.a (ID062922)
-10.Arm® Cortex®-R82 Processor Technical Reference Manual, Revision: r0p2
+  <section id="fvp-armv8-r">
+<h1>FVP ARMv8-r<a class="headerlink" href="#fvp-armv8-r" title="Permalink to this heading"></a></h1>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-virt.html"><span class="doc">chip:virt</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-arm64.html"><span class="doc">arch:arm64</span></a></p>
+<p>This board configuration will use FVP_BaseR_AEMv8R to emulate generic ARM64v8-R
+(Cotex-R82) series hardware platform and provides support for these devices:</p>
+<ul class="simple">
+<li><p>GICv3 interrupt controllers for ARMv8-r</p></li>
+<li><p>PL011 UART controller(FVP)</p></li>
+</ul>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
+<section id="compile-toolchain">
+<h3>Compile Toolchain<a class="headerlink" href="#compile-toolchain" title="Permalink to this heading"></a></h3>
+<p>The FVP platform using same compiler like QEMU, read the following file for how
+to get the tool: <a class="reference internal" href="../../../qemu/boards/qemu-armv8a/index.html"><span class="doc">QEMU ARMv8-A</span></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>My host environment is Ubuntu 22.04.1 LTS, Ubuntu 18.04 will work too</p></li>
+<li><p>The newest GNU toolchain is 12.2, available from:
+<a class="reference external" href="https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads">https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads</a></p></li>
+</ol>
+</div>
+</section>
+<section id="getting-armv8-r-aem-fvp">
+<h3>Getting Armv8-R AEM FVP<a class="headerlink" href="#getting-armv8-r-aem-fvp" title="Permalink to this heading"></a></h3>
+<p>The Armv8-R AEM FVP is a free of charge Armv8-R Fixed Virtual Platform.
+It supports the latest Armv8-R feature set. We can get it from:
+<a class="reference external" href="https://developer.arm.com/downloads/-/arm-ecosystem-models">https://developer.arm.com/downloads/-/arm-ecosystem-models</a></p>
+<p>Please select to download Armv8-R AEM FVP product, extract the tool package the
+FVP tool is located at:
+<code class="docutils literal notranslate"><span class="pre">AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R</span></code></p>
+</section>
+<section id="configuring-and-building">
+<h3>Configuring and building<a class="headerlink" href="#configuring-and-building" title="Permalink to this heading"></a></h3>
+<p>Just like QEMU, Fixed Virtual Platforms (FVP) are complete simulations of an Arm
+system, including processor, memory and peripherals. These are set out in a
+“programmer’s view”, which gives you a comprehensive model on which to build and
+test your software.</p>
+<blockquote>
+<div><p>The FVP tools simulate 4 serial port and implement them to wait on local socket
+port:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>/home/qinwei/workdir/tools/AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-f<span class="w"> </span>boards/arm64/fvp-v8r/fvp-armv8r/scripts/fvp_cfg.txt<span class="w"> </span>-a<span class="w"> </span>./nuttx
+<span class="go"> terminal_0: Listening for serial connection on port 5000</span>
+<span class="go"> terminal_1: Listening for serial connection on port 5001</span>
+<span class="go"> terminal_2: Listening for serial connection on port 5002</span>
+<span class="go"> terminal_3: Listening for serial connection on port 5003</span>
 </pre></div>
 </div>
+<p>FVP has four UART port and UART1 was choosen as tty, so just telnet to port 5001
+will enter <code class="docutils literal notranslate"><span class="pre">nsh</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>telnet<span class="w"> </span>localhost<span class="w"> </span><span class="m">5001</span>
+</pre></div>
+</div>
+</div></blockquote>
+<section id="single-core">
+<h4>Single Core<a class="headerlink" href="#single-core" title="Permalink to this heading"></a></h4>
+<p>Configuring NuttX and compile:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>-l<span class="w"> </span>fvp-armv8r:nsh
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+</section>
+<section id="smp">
+<h4>SMP<a class="headerlink" href="#smp" title="Permalink to this heading"></a></h4>
+<p>Configuring NuttX and compile:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>-l<span class="w"> </span>fvp-armv8r:nsh_smp
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+</section>
+<p>   $ make</p>
+</section>
+<section id="running">
+<h3>Running<a class="headerlink" href="#running" title="Permalink to this heading"></a></h3>
+<section id="running-single-core">
+<h4>Running Single Core<a class="headerlink" href="#running-single-core" title="Permalink to this heading"></a></h4>
+<p>Step 1: Booting NuttX</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R<span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>-f<span class="w"> </span>boards/arm64/fvp-v8r/fvp-armv8r/scripts/fvp_cfg.txt<span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>-a<span class="w"> </span>./nuttx
+<span class="go">  terminal_0: Listening for serial connection on port 5000</span>
+<span class="go">  terminal_1: Listening for serial connection on port 5001</span>
+<span class="go">  terminal_2: Listening for serial connection on port 5002</span>
+<span class="go">  terminal_3: Listening for serial connection on port 5003</span>
+<span class="go">  - Ready to Boot Primary CPU</span>
+<span class="go">  - Boot from EL2</span>
+<span class="go">  - Boot from EL1</span>
+<span class="go">  - Boot to C runtime for OS Initialize</span>
+<span class="go">  [ 0] (null): arm64_chip_boot: Main CPU 0x80000000</span>
+<span class="go">  [ 0] (null): nx_start: Entry</span>
+<span class="go">  [ 0] (null): up_allocate_heap: heap_start=0x0x3c000, heap_size=0x7fc4000</span>
+<span class="go">  [ 0] Idle Task: gic_validate_dist_version: GICv3 version detect</span>
+<span class="go">  [ 0] Idle Task: gic_validate_dist_version: GICD_TYPER = 0x490067</span>
+<span class="go">  [ 0] Idle Task: gic_validate_dist_version: 224 SPIs implemented</span>
+<span class="go">  [ 0] Idle Task: gic_validate_dist_version: 0 Extended SPIs implemented</span>
+<span class="go">  [ 0] Idle Task: gic_validate_dist_version: Distributor has no Range Selector support</span>
+<span class="go">  [ 0] Idle Task: gic_validate_dist_version: MBIs is present, But No support</span>
+<span class="go">  [ 0] Idle Task: gic_validate_redist_version: GICR_TYPER = 0x0</span>
+<span class="go">  [ 0] Idle Task: gic_validate_redist_version: 16 PPIs implemented</span>
+<span class="go">  [ 0] Idle Task: gic_validate_redist_version: no VLPI support, no direct LPI support</span>
+<span class="go">  [ 0] Idle Task: up_timer_initialize: up_timer_initialize: cp15 timer(s) running at 100.00MHz, cycle 100000</span>
+<span class="go">  [ 0] Idle Task: uart_register: Registering /dev/console</span>
+<span class="go">  [ 0] Idle Task: uart_register: Registering /dev/ttyS0</span>
+<span class="go">  [ 0] Idle Task: work_start_highpri: Starting high-priority kernel worker thread(s)</span>
+<span class="go">  [ 0] Idle Task: nx_start_application: Starting init thread</span>
+<span class="go">  [ 0] Idle Task: task_spawn: name=nsh_main entry=0xa590 file_actions=0 attr=0x3bf88 argv=0x3bf80</span>
+<span class="go">  nsh: mkfatfs: command not found</span>
+
+<span class="go">  NuttShell (NSH) NuttX-12.0.0</span>
+<span class="go">  nsh&gt; [ 0] Idle Task: nx_start: CPU0: Beginning Idle Loop</span>
+</pre></div>
+</div>
+<p>Step 2: telnet to UART1
+Starting another terminal and enter:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>telnet<span class="w"> </span>localhost<span class="w"> </span><span class="m">5001</span>
+<span class="go">  Trying 127.0.0.1...</span>
+<span class="go">  Connected to localhost.</span>
+<span class="go">  Escape character is &#39;^]&#39;.</span>
+<span class="go">  nsh: mkfatfs: command not found</span>
+<span class="go">  NuttShell (NSH) NuttX-12.0.0</span>
+<span class="go">  nsh&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="running-smp">
+<h4>Running SMP<a class="headerlink" href="#running-smp" title="Permalink to this heading"></a></h4>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>AEMv8R_FVP/AEMv8R_base_pkg/models/Linux64_GCC-9.3/FVP_BaseR_AEMv8R<span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>-f<span class="w"> </span>boards/arm64/fvp-v8r/fvp-armv8r/scripts/fvp_cfg_smp.txt<span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>-a<span class="w"> </span>./nuttx
+<span class="go">  terminal_0: Listening for serial connection on port 5000</span>
+<span class="go">  terminal_1: Listening for serial connection on port 5001</span>
+<span class="go">  terminal_2: Listening for serial connection on port 5002</span>
+<span class="go">  terminal_3: Listening for serial connection on port 5003</span>
+<span class="go">  - Ready to Boot Primary CPU</span>
+<span class="go">  - Boot from EL2</span>
+<span class="go">  - Boot from EL1</span>
+<span class="go">  - Boot to C runtime for OS Initialize</span>
+<span class="go">  [CPU0] [ 0] (null): arm64_chip_boot: Main CPU 0x80000000</span>
+<span class="go">  [CPU0] [ 0] (null): nx_start: Entry</span>
+<span class="go">  [CPU0] [ 0] (null): up_allocate_heap: heap_start=0x0x4a000, heap_size=0x7fb6000</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: GICv3 version detect</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: GICD_TYPER = 0x490067</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: 224 SPIs implemented</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: 0 Extended SPIs implemented</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: Distributor has no Range Selector support</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_dist_version: MBIs is present, But No support</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_redist_version: GICR_TYPER = 0x0</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_redist_version: 16 PPIs implemented</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: up_timer_initialize: up_timer_initialize: cp15 timer(s) running at 100.00MHz, cycle 100000</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: uart_register: Registering /dev/console</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: uart_register: Registering /dev/ttyS0</span>
+<span class="go">  - Ready to Boot Second CPU</span>
+<span class="go">  - Boot from EL2</span>
+<span class="go">  - Boot from EL1</span>
+<span class="go">  - Boot to C runtime for OS Initialize</span>
+<span class="go">  [CPU1] [ 1] CPU1 IDLE: gic_validate_redist_version: GICR_TYPER = 0x100000100</span>
+<span class="go">  [CPU1] [ 1] CPU1 IDLE: gic_validate_redist_version: 16 PPIs implemented</span>
+<span class="go">  [CPU1] [ 1] CPU1 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support</span>
+<span class="go">  [CPU1] [ 1] CPU1 IDLE: nx_idle_trampoline: CPU1: Beginning Idle Loop</span>
+<span class="go">  - Ready to Boot Second CPU</span>
+<span class="go">  - Boot from EL2</span>
+<span class="go">  - Boot from EL1</span>
+<span class="go">  - Boot to C runtime for OS Initialize</span>
+<span class="go">  [CPU2] [ 2] CPU2 IDLE: gic_validate_redist_version: GICR_TYPER = 0x200000200</span>
+<span class="go">  [CPU2] [ 2] CPU2 IDLE: gic_validate_redist_version: 16 PPIs implemented</span>
+<span class="go">  [CPU2] [ 2] CPU2 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support</span>
+<span class="go">  [CPU2] [ 2] CPU2 IDLE: nx_idle_trampoline: CPU2: Beginning Idle Loop</span>
+<span class="go">  - Ready to Boot Second CPU</span>
+<span class="go">  - Boot from EL2</span>
+<span class="go">  - Boot from EL1</span>
+<span class="go">  - Boot to C runtime for OS Initialize</span>
+<span class="go">  [CPU3] [ 3] CPU3 IDLE: gic_validate_redist_version: GICR_TYPER = 0x300000310</span>
+<span class="go">  [CPU3] [ 3] CPU3 IDLE: gic_validate_redist_version: 16 PPIs implemented</span>
+<span class="go">  [CPU3] [ 3] CPU3 IDLE: gic_validate_redist_version: no VLPI support, no direct LPI support</span>
+<span class="go">  [CPU3] [ 3] CPU3 IDLE: nx_idle_trampoline: CPU3: Beginning Idle Loop</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: work_start_highpri: Starting high-priority kernel worker thread(s)</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: nx_start_application: Starting init thread</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: task_spawn: name=nsh_main entry=0xc41c file_actions=0 attr=0x43f68 argv=0x43f60</span>
+<span class="go">  [CPU0] [ 0] CPU0 IDLE: nx_start: CPU0: Beginning Idle Loop</span>
+<span class="go">  nsh: mkfatfs: command not found</span>
+
+<span class="go">  NuttShell (NSH) NuttX-12.0.0</span>
+<span class="go">  nsh&gt;</span>
+</pre></div>
+</div>
+<p>Step 2: telnet to UART1</p>
+<p>Starting another terminal and enter:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>telnet<span class="w"> </span>localhost<span class="w"> </span><span class="m">5001</span>
+<span class="go">  Trying 127.0.0.1...</span>
+<span class="go">  Connected to localhost.</span>
+<span class="go">  Escape character is &#39;^]&#39;.</span>
+<span class="go">  nsh: mkfatfs: command not found</span>
+<span class="go">  NuttShell (NSH) NuttX-12.0.0</span>
+<span class="go">  nsh&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="status">
+<h2>Status<a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
+<p><strong>2023-2-18:</strong></p>
+<p>Release the first version for ARMv8-R, Single Core and SMP is supported OS test
+is passed.</p>
+</section>
+<section id="platform-features">
+<h2>Platform Features<a class="headerlink" href="#platform-features" title="Permalink to this heading"></a></h2>
+<p>The following hardware features are supported:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Interface</p></th>
+<th class="head"><p>Controller</p></th>
+<th class="head"><p>Driver/Component</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GICv3</p></td>
+<td><p>on-chip</p></td>
+<td><p>interrupt controller</p></td>
+</tr>
+<tr class="row-odd"><td><p>PL011 UART</p></td>
+<td><p>on-chip</p></td>
+<td><p>serial port</p></td>
+</tr>
+<tr class="row-even"><td><p>ARM TIMER</p></td>
+<td><p>on-chip</p></td>
+<td><p>system clock</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>(ID050815) ARM® Cortex®-A Series - Programmer’s Guide for ARMv8-A</p></li>
+<li><p>(ID020222) Arm® Architecture Reference Manual - for A profile architecture</p></li>
+<li><p>(ARM062-948681440-3280) Armv8-A Instruction Set Architecture</p></li>
+<li><p>AArch64 Exception and Interrupt Handling</p></li>
+<li><p>AArch64 Programmer’s Guides Generic Timer</p></li>
+<li><p>Arm Generic Interrupt Controller v3 and v4 Overview</p></li>
+<li><p>Arm® Generic Interrupt Controller Architecture Specification GIC architecture version 3 and version 4</p></li>
+<li><p>(DEN0022D.b) Arm Power State Coordination Interface Platform Design Document</p></li>
+<li><p>Arm® Architecture Reference Manual Supplement, Armv8, for R-profile AArch64 architecture,
+ARM DDI 0600B.a (ID062922)</p></li>
+<li><p>Arm® Cortex®-R82 Processor Technical Reference Manual, Revision: r0p2</p></li>
+</ol>
+</section>
 </section>
 
 
