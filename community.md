@@ -59,6 +59,7 @@ The mailing list and project website is our central hub of information, but ther
 * YouTube: [https://www.youtube.com/@nuttxchannel]({{ site.data.project.socialmedia_youtube }}).
 * Hackster: [https://www.hackster.io/nuttx]({{ site.data.project.socialmedia_hackster }}).
 * LinkedIn: [https://www.linkedin.com/company/nuttx]({{ site.data.project.socialmedia_linkedin_company }}) , [https://www.linkedin.com/groups/12002792]({{ site.data.project.socialmedia_linkedin_group }}).
+* Discord: [https://discord.gg/YaqhJjHF95]({{ site.data.project.socialmedia_discord }}).
 
 
 ### Issue tracker
