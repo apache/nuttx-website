@@ -29,6 +29,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_collapse.css" />
       <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
 
@@ -177,13 +178,13 @@
 <li class="toctree-l2"><a class="reference internal" href="partially_linked_elf.html">ELF Programs – With Symbol Tables</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">ELF Programs – No Symbol Tables</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-the-export-package">Creating the Export Package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-add-on-build-directory">The Add-On Build Directory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#preparing-the-add-on-build-directory">Preparing the Add-On Build Directory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hello-example">Hello Example</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#building-the-elf-program">Building the ELF Program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-makefile">The Makefile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-linker-script">The Linker Script</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-the-defines-ld-linker-script">Creating the <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> Linker Script</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#replacing-an-nsh-built-in-function">Replacing an NSH Built-In Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#replacing-nsh-built-in-functions">Replacing NSH Built-In Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#version-dependency">Version Dependency</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tightly-coupled-memories">Tightly Coupled Memories</a></li>
 </ul>
@@ -232,328 +233,326 @@
              
   <section id="elf-programs-no-symbol-tables">
 <h1>ELF Programs – No Symbol Tables<a class="headerlink" href="#elf-programs-no-symbol-tables" title="Permalink to this heading"></a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Migrated from:
-<a class="reference external" href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139629542">https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139629542</a></p>
-</div>
-<p>You can easily extend the firmware in your released, embedded system using ELF
-programs provided via a file system (for example, an SD card or downloaded into
-on-board SPI FLASH). In order to support such post-release updates, your
-released firmware would have to support execution of fully linked, relocatable
-ELF programs loaded into RAM (see, for example, <code class="docutils literal notranslate"><span class="pre">apps/examples/elf</span></code>).</p>
-<p>The files shown in this Wiki page can be downloaded <a class="reference external" href="https://cwiki.apache.org/confluence/download/attachments/139629402/elfprog-nosymtab.tar.gz?version=1&amp;modificationDate=1576735520000&amp;api=v2">here</a>.</p>
-<p>Alan Carvalho de Assis has also made a video based on this example in the
-YouTube <a class="reference external" href="https://www.youtube.com/watch?v=oL6KAgkTb8M">NuttX Channel</a>.</p>
+<p>You can easily extend the firmware in your released, embedded system using
+ELF programs provided via a file system. For example, an SD card or, perhaps,
+downloaded into on-board SPI FLASH.</p>
+<p>In order to support such post-release updates, your released firmware must
+support execution of ELF programs loaded into RAM and symbol tables also
+provided via the file system (see <cite>apps/examples/elf</cite>).</p>
+<p>Alan Carvalho de Assis has also made a video based on this example and
+published it in the <a class="reference external" href="https://www.youtube.com/watch?v=oL6KAgkTb8M">NuttX YouTube channel</a>.</p>
 <section id="creating-the-export-package">
 <h2>Creating the Export Package<a class="headerlink" href="#creating-the-export-package" title="Permalink to this heading"></a></h2>
-<p>At the time that you release the firmware, you should create and save an
-export package. The export package is all that you need to create
-post-release, add-on modules for your embedded system. Let’s illustrate this
-using the <code class="docutils literal notranslate"><span class="pre">STM32F4-Discovery</span></code> networking <code class="docutils literal notranslate"><span class="pre">NSH</span></code> configuration with the
-<code class="docutils literal notranslate"><span class="pre">STM32F4DIS-BB</span></code> baseboard. (This demonstration assumes that you also have
-support for some externally modifiable media in the board configuration, such
-as removable media like an SD card, or a USB FLASH stick, an internal file
-system remotely accessible via USB MSC, FTP, or any remote file system (NFS).
-The networking <code class="docutils literal notranslate"><span class="pre">NSH</span></code> configuration uses the SD card on the STM32 baseboard
-for this demonstration. Other <code class="docutils literal notranslate"><span class="pre">NSH</span></code> configurations could be used, provided
-that you supply the necessary file system support in some fashion.)</p>
-<p>(No baseboard? You can add file system support to the basic <code class="docutils literal notranslate"><span class="pre">STM32F4-Discovery</span></code>
-board by following these instructions:
-<a class="reference external" href="https://www.youtube.com/watch?v=5hB5ZXpRoS4">USB FLASH drive</a>
-or <a class="reference external" href="https://www.youtube.com/watch?v=H28t4RbOXqI">SD card</a>.)</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make<span class="w"> </span>distclean
-$<span class="w"> </span>tools/configure.sh<span class="w"> </span>-c<span class="w"> </span>stm32f4discovery:netnsh
-$<span class="w"> </span>make<span class="w"> </span>menuconfig
+<p>At the time of firmware release, you should create and save an export package.
+This export package contains all the necessary files required to create
+post-release add-on modules for your embedded system.</p>
+<p>For demonstration purposes, we’ll use the STM32F4-Discovery with the network
+NSH configuration. This setup assumes that you have the STM32F4DIS-BB
+baseboard. The demonstration also requires support for externally modifiable
+media, such as:</p>
+<ul class="simple">
+<li><p>Removable media, like an SD card or USB flash drive.</p></li>
+<li><p>An internal file system remotely accessible via USB MSC, FTP, or other
+protocols.</p></li>
+<li><p>A remote file system, such as NFS.</p></li>
+</ul>
+<p>In this demonstration, the networking NSH configuration uses the SD card on
+the STM32 baseboard. Other NSH configurations can also be used, provided they
+supply the necessary file system support.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>No baseboard? You can add file system support to the basic STM32F4-Discovery
+board by following these instructions: <a class="reference external" href="https://www.youtube.com/watch?v=5hB5ZXpRoS4">USB FLASH drive</a>
+or <a class="reference external" href="https://www.youtube.com/watch?v=H28t4RbOXqI">SD card</a>.</p>
+</div>
+<p>Initialize the environment:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>distclean
+<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>-c<span class="w"> </span>stm32f4discovery:netnsh
+<span class="gp">$ </span>make<span class="w"> </span>menuconfig
 </pre></div>
 </div>
-<p>Your released firmware would have to have been built with a few important
-configuration settings:</p>
-<ol class="arabic simple">
-<li><p>Disable networking (Only because it is not needed in this example):</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># CONFIG_NET is not set</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="2">
-<li><p>Enable basic ELF binary support with no built-in symbol table support:</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_ELF</span><span class="o">=</span>y
-<span class="nv">CONFIG_LIBC_EXECFUNCS</span><span class="o">=</span>y
-<span class="c1"># CONFIG_EXECFUNCS_HAVE_SYMTAB is not set</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="3">
-<li><p>Enable PATH variable support:</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_BINFMT_EXEPATH</span><span class="o">=</span>y
-<span class="nv">CONFIG_PATH_INITIAL</span><span class="o">=</span><span class="s2">&quot;/bin&quot;</span>
-<span class="c1"># CONFIG_DISABLE_ENVIRON not set</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="4">
-<li><p>Enable execution of ELF files from the <code class="docutils literal notranslate"><span class="pre">NSH</span></code> command line:</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_NSH_FILE_APPS</span><span class="o">=</span>y
-</pre></div>
-</div>
+<p>Edit the configuration:</p>
+<ul class="simple">
+<li><p>Disable networking (it is not needed in this example):
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">CONFIG_NET</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">set</span></code>.</p></li>
+<li><p>Enable ELF binary support without external symbol tables:
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ELF=y</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_EXECFUNCS=y</span></code>,
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">CONFIG_EXECFUNCS_HAVE_SYMTAB</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">set</span></code>.</p></li>
+<li><p>Enable PATH variable support:
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH=y</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PATH_INITIAL=&quot;/addons&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">CONFIG_DISABLE_ENVIRON</span> <span class="pre">not</span> <span class="pre">set</span></code>.</p></li>
+<li><p>Enable execution of ELF files from NSH: <code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_FILE_APPS=y</span></code>.</p></li>
+</ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You must enable some application that uses <code class="docutils literal notranslate"><span class="pre">printf()</span></code>. This is necessary
-to assure that the symbol <code class="docutils literal notranslate"><span class="pre">printf()</span></code> is included in the base system.
-Here we assume that you include the “Hello, World!” example from
-<code class="docutils literal notranslate"><span class="pre">apps/examples/hello</span></code>:</p>
+to ensure that the symbol <code class="docutils literal notranslate"><span class="pre">printf()</span></code> is included in the base system.
+Here we assume that the “Hello, World!” example from <code class="docutils literal notranslate"><span class="pre">apps/examples/hello</span></code>
+has been enabled with the configuration option <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_HELLO=y</span></code>.</p>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_EXAMPLES_HELLO</span><span class="o">=</span>y
+<p>Then, build the NuttX firmware image and the export package:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make
+<span class="gp">$ </span>make<span class="w"> </span><span class="nb">export</span>
 </pre></div>
 </div>
-<p>Then we can build the NuttX firmware image and the export package:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make
-$<span class="w"> </span>make<span class="w"> </span><span class="nb">export</span>
-</pre></div>
-</div>
-<p>When <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">export</span></code> completes, you will find a ZIP’ed package in the top-level
-NuttX directory called <code class="docutils literal notranslate"><span class="pre">nuttx-export-x.y.zip</span></code> (for version <code class="docutils literal notranslate"><span class="pre">x.y</span></code>). The
-version is determined by the <code class="docutils literal notranslate"><span class="pre">.version</span></code> file in the same directory. The
-content of this ZIP file is the following directory structure:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>nuttx-export-x.x
-<span class="w"> </span><span class="p">|</span>-<span class="w"> </span>arch/
-<span class="w"> </span><span class="p">|</span>-<span class="w"> </span>build/
-<span class="w"> </span><span class="p">|</span>-<span class="w"> </span>include/
-<span class="w"> </span><span class="p">|</span>-<span class="w"> </span>libs/
-<span class="w"> </span><span class="p">|</span>-<span class="w"> </span>startup/
-<span class="w"> </span><span class="p">|</span>-<span class="w"> </span>System.map
-<span class="w"> </span><span class="sb">`</span>-<span class="w"> </span>.config
+<p>When <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">export</span></code> completes, you will find a ZIP package in the top-level
+NuttX directory called <code class="docutils literal notranslate"><span class="pre">nuttx-export-x.y.zip</span></code> (where <code class="docutils literal notranslate"><span class="pre">x.y</span></code> corresponds to
+the version determined by the <code class="docutils literal notranslate"><span class="pre">.version</span></code> file in the same directory).
+The contents of this ZIP file are organized as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nuttx-export-x.x
+|- arch/
+|- include/
+|- libs/
+|- registry/
+|- scripts/
+|- startup/
+|- tools/
+|- System.map
+`- .config
 </pre></div>
 </div>
 </section>
-<section id="the-add-on-build-directory">
-<h2>The Add-On Build Directory<a class="headerlink" href="#the-add-on-build-directory" title="Permalink to this heading"></a></h2>
-<p>In order to create the add-on ELF program, you will need (1) the export
-package, (2) the program build <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, (3) a linker script used by the
-<code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, and (4) a Bash script to create a linker script. That
-<code class="docutils literal notranslate"><span class="pre">Makefile</span></code> and Bash Script are discussed in the following paragraphs.</p>
+<section id="preparing-the-add-on-build-directory">
+<h2>Preparing the Add-On Build Directory<a class="headerlink" href="#preparing-the-add-on-build-directory" title="Permalink to this heading"></a></h2>
+<p>In order to create the add-on ELF program, you will need:</p>
+<ol class="arabic simple">
+<li><p>The export package.</p></li>
+<li><p>A Makefile to build the program.</p></li>
+<li><p>A first linker script to use in the Makefile (<code class="docutils literal notranslate"><span class="pre">gnu-elf.ld</span></code>).</p></li>
+<li><p>A Bash script to create a second linker script (<code class="docutils literal notranslate"><span class="pre">defines.ld</span></code>).</p></li>
+</ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>These example files implicitly assume a GNU tool chain is used and, in at
 least one place, that the target is an ARMv7-M platform. A non-GNU tool
-chain would probably require a significantly different <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> and
+chain would probably require a significantly different Makefile and
 linker script. There is at least one ARMv7-M specific change that would
 have to be made for other platforms in the script that creates the linker
-script (<code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code>).</p>
+script (later on referred to as <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code>).</p>
 </div>
 </section>
 <section id="hello-example">
 <h2>Hello Example<a class="headerlink" href="#hello-example" title="Permalink to this heading"></a></h2>
 <p>To keep things manageable, let’s use a concrete example. Suppose the ELF
-program that we wish to add to the release code is the single source file
-<code class="docutils literal notranslate"><span class="pre">hello.c</span></code>:</p>
+program that we wish to add to the release code is the simple
+source file <code class="docutils literal notranslate"><span class="pre">hello.c</span></code>:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello from Add-On Program!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello from a fully linked Add-On Program!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Let’s say that we have a directory called <code class="docutils literal notranslate"><span class="pre">addon</span></code> and it contains the
-<code class="docutils literal notranslate"><span class="pre">hello.c</span></code> source file, a <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> that will create the ELF program, and a
-Bash script called <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code> that will create a linker script.</p>
+<p>Let’s say that we have a directory called <code class="docutils literal notranslate"><span class="pre">addon</span></code> that contains
+the following:</p>
+<ol class="arabic simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">hello.c</span></code> source file.</p></li>
+<li><p>A Makefile to build the ELF program.</p></li>
+<li><p>The export package <code class="docutils literal notranslate"><span class="pre">nuttx-export-x.y.zip</span></code>.</p></li>
+<li><p>A Bash script called <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code> that will create the second
+(<code class="docutils literal notranslate"><span class="pre">defines.ld</span></code>) linker script.</p></li>
+</ol>
 </section>
 <section id="building-the-elf-program">
 <h2>Building the ELF Program<a class="headerlink" href="#building-the-elf-program" title="Permalink to this heading"></a></h2>
-<p>The first step in creating the ELF program is to unzip the Export Package. We
-start with our <code class="docutils literal notranslate"><span class="pre">addon</span></code> directory containing the following:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>addon
-$<span class="w"> </span>ls
-gnu-elf.ld<span class="w"> </span>hello.c<span class="w"> </span>Makefile<span class="w"> </span>mkdefines.sh<span class="w"> </span>nuttx-export-7.25.zip
+<p>The first step in creating the ELF program is to unzip the export
+package. Starting in the <code class="docutils literal notranslate"><span class="pre">addon</span></code> directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>addon
+<span class="gp">$ </span>ls
+<span class="go">hello.c Makefile mkdefines.sh nuttx-export-x.y.zip</span>
 </pre></div>
 </div>
-<p>Where:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">gnu-elf.ld</span></code> is the linker script.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hello.c</span></code> is our example source file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Makefile</span></code> will build our ELF program and symbol table.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mksymtab.h</span></code> is the Bash script that will create the symbol table for the
-ELF program.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">nuttx-export-7.25.zip</span></code> is the Export Package for NuttX-7.25.</p></li>
-</ul>
-<p>We unzip the Export Package like:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>unzip<span class="w"> </span>nuttx-export-7.25.zip
+<p>Where:
+- <code class="docutils literal notranslate"><span class="pre">hello.c</span></code> is the example source file.
+- <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> builds the ELF program.
+- <code class="docutils literal notranslate"><span class="pre">mkdefines.h</span></code> is the Bash script that will create the linker script that will serve as the symbol table.
+- <code class="docutils literal notranslate"><span class="pre">nuttx-export-x.y.zip</span></code> is the export package from NuttX version <code class="docutils literal notranslate"><span class="pre">x.y</span></code>.</p>
+<p>Unzip the export package and rename the folder for ease of use:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>unzip<span class="w"> </span>nuttx-export-x.y.zip
+<span class="gp">$ </span>mv<span class="w"> </span>nuttx-export-x.y<span class="w"> </span>nuttx-export
 </pre></div>
 </div>
-<p>Then we have a new directory called <code class="docutils literal notranslate"><span class="pre">nuttx-export-7.25</span></code> that contains all of
-the content from the released NuttX code that we need to build the ELF
-program.</p>
+<p>This creates a new directory called <code class="docutils literal notranslate"><span class="pre">nuttx-export</span></code>, containing
+all the content from the released NuttX code required to build
+the ELF program.</p>
 </section>
 <section id="the-makefile">
 <h2>The Makefile<a class="headerlink" href="#the-makefile" title="Permalink to this heading"></a></h2>
 <p>The ELF program is created simply as:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make
 </pre></div>
 </div>
-<p>This uses the following <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> to generate several files:</p>
+<p>This uses the following Makefile to generate several files:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hello.o</span></code>: The compiled <code class="docutils literal notranslate"><span class="pre">hello.c</span></code> object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hello.r</span></code>: A “partially linked” ELF object that still has undefined
-symbols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hello.r</span></code>: A partially linked ELF object that still has undefined symbols.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hello</span></code>: The fully linked, relocatable ELF program.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">linker.ld</span></code>: A linker script created by <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">linker.ld</span></code>: The linker script created by <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code>.</p></li>
 </ul>
-<p>Only the resulting <code class="docutils literal notranslate"><span class="pre">hello</span></code> is needed.</p>
-<p>Below is the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> used to create the ELF program:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>include<span class="w"> </span>nuttx-export-7.25/build/Make.defs
+<p>The Makefile used to create the ELF program is as follows:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When copying the following contents, remember that Makefile indentations
+must be made with proper tab characters and not just spaces.</p>
+</div>
+<div class="highlight-makefile notranslate"><div class="highlight"><pre><span></span><span class="cp">include nuttx-export/scripts/Make.defs</span>
 
-<span class="c1"># Long calls are need to call from RAM into FLASH</span>
+<span class="c"># Long calls are needed to call from RAM into FLASH</span>
 
 <span class="nv">ARCHCFLAGS</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>-mlong-calls
+
+<span class="c"># You may want to check these options against the ones in &quot;nuttx-export/scripts/Make.defs&quot;</span>
+
 <span class="nv">ARCHWARNINGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-Wall<span class="w"> </span>-Wstrict-prototypes<span class="w"> </span>-Wshadow<span class="w"> </span>-Wundef
 <span class="nv">ARCHOPTIMIZATION</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-Os<span class="w"> </span>-fno-strict-aliasing<span class="w"> </span>-fno-strength-reduce<span class="w"> </span>-fomit-frame-pointer
-<span class="nv">ARCHINCLUDES</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-I.<span class="w"> </span>-isystem<span class="w">  </span>nuttx-export-7.25/include
+<span class="nv">ARCHINCLUDES</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-I.<span class="w"> </span>-isystem<span class="w"> </span>nuttx-export/include
 
-<span class="nv">CFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>ARCHCFLAGS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHWARNINGS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHOPTIMIZATION<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHINCLUDES<span class="k">)</span><span class="w"> </span>-pipe
+<span class="nv">CFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>ARCHCFLAGS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHWARNINGS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHOPTIMIZATION<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHCPUFLAGS<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHINCLUDES<span class="k">)</span><span class="w"> </span><span class="k">$(</span>ARCHDEFINES<span class="k">)</span><span class="w"> </span><span class="k">$(</span>EXTRADEFINES<span class="k">)</span>
 
-<span class="nv">CROSSDEV</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>arm-none-eabi-
-<span class="nv">CC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>CROSSDEV<span class="k">)</span>gcc
-<span class="nv">LD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>CROSSDEV<span class="k">)</span>ld
-<span class="nv">STRIP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>CROSSDEV<span class="k">)</span>strip<span class="w"> </span>--strip-unneeded
+<span class="c"># Setup up linker command line options</span>
 
-<span class="c1"># Setup up linker command line options</span>
+<span class="nv">LDRELFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>--relocatable
 
-<span class="nv">LDRELFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-r
+<span class="nv">LDELFFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>--relocatable<span class="w"> </span>-e<span class="w"> </span>main
+<span class="nv">LDELFFLAGS</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>-T<span class="w"> </span>defines.ld<span class="w"> </span>-T<span class="w"> </span>nuttx-export/scripts/gnu-elf.ld
 
-<span class="nv">LDELFFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-r<span class="w"> </span>-e<span class="w"> </span>main
-<span class="nv">LDELFFLAGS</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>-T<span class="w"> </span>defines.ld<span class="w"> </span>-T<span class="w"> </span>gnu-elf.ld
-
-<span class="c1"># This might change in a different environment</span>
-
-OBJEXT<span class="w"> </span>?<span class="o">=</span><span class="w"> </span>.o
-
-<span class="c1"># This is the generated ELF program</span>
+<span class="c"># This is the generated ELF program</span>
 
 <span class="nv">BIN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>hello
 <span class="nv">REL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>hello.r
 
-<span class="c1"># These are the sources files that we use</span>
+<span class="c"># These are the source files that we use</span>
 
 <span class="nv">SRCS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>hello.c
 <span class="nv">OBJS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>SRCS:.c<span class="o">=</span><span class="k">$(</span>OBJEXT<span class="k">))</span>
 
-<span class="c1"># Build targets</span>
+<span class="c"># Build targets</span>
 
-all:<span class="w"> </span><span class="k">$(</span>BIN<span class="k">)</span>
-.PHONY:<span class="w"> </span>clean
+<span class="nf">.PHONY</span><span class="o">:</span><span class="w"> </span><span class="n">clean</span>
 
-<span class="k">$(</span>OBJS<span class="k">)</span>:<span class="w"> </span>%<span class="k">$(</span>OBJEXT<span class="k">)</span>:<span class="w"> </span>%.c
-<span class="k">$(</span>CC<span class="k">)</span><span class="w"> </span>-c<span class="w"> </span><span class="k">$(</span>CFLAGS<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$@</span><span class="w"> </span>$&lt;
+<span class="nf">all</span><span class="o">:</span><span class="w"> </span><span class="k">$(</span><span class="nv">BIN</span><span class="k">)</span>
 
-System.map:<span class="w"> </span>nuttx-export-7.25/System.map
-cat<span class="w"> </span>nuttx-export-7.25/System.map<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;s/\r//g&quot;</span><span class="w"> </span>&gt;System.map
+<span class="nf">$(OBJS)</span><span class="o">:</span><span class="w"> </span>%<span class="k">$(</span><span class="nv">OBJEXT</span><span class="k">)</span>: %.<span class="n">c</span>
+<span class="w">   </span><span class="k">$(</span>CC<span class="k">)</span><span class="w"> </span>-c<span class="w"> </span><span class="k">$(</span>CFLAGS<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$@</span><span class="w"> </span>$&lt;
 
-<span class="k">$(</span>REL<span class="k">)</span>:<span class="w"> </span><span class="k">$(</span>OBJS<span class="k">)</span>
-<span class="k">$(</span>LD<span class="k">)</span><span class="w"> </span><span class="k">$(</span>LDRELFLAGS<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$@</span><span class="w"> </span>$&lt;
+<span class="nf">System.map</span><span class="o">:</span><span class="w"> </span><span class="n">nuttx</span>-<span class="n">export</span>/<span class="n">System</span>.<span class="n">map</span>
+<span class="w">   </span>cat<span class="w"> </span>nuttx-export/System.map<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;s/\r//g&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>System.map
 
-defines.ld:<span class="w"> </span>System.map<span class="w"> </span><span class="k">$(</span>REL<span class="k">)</span>
-./mkdefines.sh<span class="w"> </span>System.map<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>REL<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>&gt;defines.ld
+<span class="nf">$(REL)</span><span class="o">:</span><span class="w"> </span><span class="k">$(</span><span class="nv">OBJS</span><span class="k">)</span>
+<span class="w">   </span><span class="k">$(</span>LD<span class="k">)</span><span class="w"> </span><span class="k">$(</span>LDRELFLAGS<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$@</span><span class="w"> </span>$&lt;
 
-<span class="k">$(</span>BIN<span class="k">)</span>:<span class="w"> </span>defines.ld<span class="w"> </span><span class="k">$(</span>REL<span class="k">)</span>
-<span class="k">$(</span>LD<span class="k">)</span><span class="w"> </span><span class="k">$(</span>LDELFFLAGS<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$@</span><span class="w"> </span><span class="k">$(</span>REL<span class="k">)</span>
-<span class="k">$(</span>STRIP<span class="k">)</span><span class="w"> </span><span class="k">$(</span>REL<span class="k">)</span>
+<span class="nf">defines.ld</span><span class="o">:</span><span class="w"> </span><span class="n">System</span>.<span class="n">map</span> <span class="k">$(</span><span class="nv">REL</span><span class="k">)</span>
+<span class="w">   </span>./mkdefines.sh<span class="w"> </span>System.map<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>REL<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>defines.ld
 
-clean:
-rm<span class="w"> </span>-f<span class="w"> </span><span class="k">$(</span>BIN<span class="k">)</span>
-rm<span class="w"> </span>-f<span class="w"> </span><span class="k">$(</span>REL<span class="k">)</span>
-rm<span class="w"> </span>-f<span class="w"> </span>defines.ld
-rm<span class="w"> </span>-f<span class="w"> </span>System.map
-rm<span class="w"> </span>-f<span class="w"> </span>*.o
+<span class="nf">$(BIN)</span><span class="o">:</span><span class="w"> </span><span class="n">defines</span>.<span class="n">ld</span> <span class="k">$(</span><span class="nv">REL</span><span class="k">)</span>
+<span class="w">   </span><span class="k">$(</span>LD<span class="k">)</span><span class="w"> </span><span class="k">$(</span>LDELFFLAGS<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$@</span><span class="w"> </span><span class="k">$(</span>REL<span class="k">)</span>
+<span class="w">   </span><span class="k">$(</span>STRIP<span class="k">)</span><span class="w"> </span><span class="nv">$@</span>
+<span class="c">   #$(CROSSDEV)objdump -f $@</span>
+
+<span class="nf">clean</span><span class="o">:</span>
+<span class="w">   </span>rm<span class="w"> </span>-f<span class="w"> </span><span class="k">$(</span>BIN<span class="k">)</span>
+<span class="w">   </span>rm<span class="w"> </span>-f<span class="w"> </span><span class="k">$(</span>REL<span class="k">)</span>
+<span class="w">   </span>rm<span class="w"> </span>-f<span class="w"> </span><span class="k">$(</span>OBJS<span class="k">)</span>
+<span class="w">   </span>rm<span class="w"> </span>-f<span class="w"> </span>defines.ld
+<span class="w">   </span>rm<span class="w"> </span>-f<span class="w"> </span>System.map
 </pre></div>
 </div>
 </section>
 <section id="the-linker-script">
 <h2>The Linker Script<a class="headerlink" href="#the-linker-script" title="Permalink to this heading"></a></h2>
-<p>Two linker scripts are used. One is a normal file (we’ll call it the main
-linker script), and the other, <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code>, is created on-the-fly as
-described in the next section.</p>
-<p>The main linker script, <code class="docutils literal notranslate"><span class="pre">gnu-elf.ld</span></code>, contains the following:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>SECTIONS
-<span class="o">{</span>
-.text<span class="w"> </span>0x00000000<span class="w"> </span>:
-<span class="w">   </span><span class="o">{</span>
-<span class="w">      </span><span class="nv">_stext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">      </span>*<span class="o">(</span>.text<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.text.*<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.gnu.warning<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.stub<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.glue_7<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.glue_7t<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.jcr<span class="o">)</span>
-<span class="w">      </span><span class="nv">_etext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">   </span><span class="o">}</span>
+<p>Two linker scripts are used: the main one, <code class="docutils literal notranslate"><span class="pre">gnu-elf.ld</span></code>, is a normal file,
+while <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> is created on-the-fly as described in the next section.</p>
+<p>The main linker script used in this example is the one from the exported
+NuttX package: <code class="docutils literal notranslate"><span class="pre">nuttx-export/scripts/gnu-elf.ld</span></code>.</p>
+<div class="admonition-here-is-an-alternative-minimal-and-possibly-outdated-version admonition">
+<p class="admonition-title">Here is an alternative minimal (and possibly outdated) version</p>
+<div class="sphinx_collapse docutils">
+<input class="sphinx_collapse__input" id="fdbf33e9-4c85-47d0-9a8f-ea25839aa2da" name="fdbf33e9-4c85-47d0-9a8f-ea25839aa2da" type="checkbox"><label class="sphinx_collapse__label" for="fdbf33e9-4c85-47d0-9a8f-ea25839aa2da"><i class="sphinx_collapse__icon"></i>Show content:</label><div class="sphinx_collapse__content docutils">
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SECTIONS
+{
+.text 0x00000000 :
+   {
+      _stext = . ;
+      *(.text)
+      *(.text.*)
+      *(.gnu.warning)
+      *(.stub)
+      *(.glue_7)
+      *(.glue_7t)
+      *(.jcr)
+      _etext = . ;
+   }
 
-.rodata<span class="w"> </span>:
-<span class="w">   </span><span class="o">{</span>
-<span class="w">      </span><span class="nv">_srodata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">      </span>*<span class="o">(</span>.rodata<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.rodata1<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.rodata.*<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.gnu.linkonce.r*<span class="o">)</span>
-<span class="w">      </span><span class="nv">_erodata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">   </span><span class="o">}</span>
+.rodata :
+   {
+      _srodata = . ;
+      *(.rodata)
+      *(.rodata1)
+      *(.rodata.*)
+      *(.gnu.linkonce.r*)
+      _erodata = . ;
+   }
 
-.data<span class="w"> </span>:
-<span class="w">   </span><span class="o">{</span>
-<span class="w">      </span><span class="nv">_sdata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">      </span>*<span class="o">(</span>.data<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.data1<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.data.*<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.gnu.linkonce.d*<span class="o">)</span>
-<span class="w">      </span><span class="nv">_edata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">   </span><span class="o">}</span>
+.data :
+   {
+      _sdata = . ;
+      *(.data)
+      *(.data1)
+      *(.data.*)
+      *(.gnu.linkonce.d*)
+      _edata = . ;
+   }
 
-.bss<span class="w"> </span>:
-<span class="w">   </span><span class="o">{</span>
-<span class="w">      </span><span class="nv">_sbss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">      </span>*<span class="o">(</span>.bss<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.bss.*<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.sbss<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.sbss.*<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>.gnu.linkonce.b*<span class="o">)</span>
-<span class="w">      </span>*<span class="o">(</span>COMMON<span class="o">)</span>
-<span class="w">      </span><span class="nv">_ebss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.<span class="w"> </span><span class="p">;</span>
-<span class="w">   </span><span class="o">}</span>
+.bss :
+   {
+      _sbss = . ;
+      *(.bss)
+      *(.bss.*)
+      *(.sbss)
+      *(.sbss.*)
+      *(.gnu.linkonce.b*)
+      *(COMMON)
+      _ebss = . ;
+   }
 
-<span class="w">   </span>/*<span class="w"> </span>Stabs<span class="w"> </span>debugging<span class="w"> </span>sections.<span class="w">    </span>*/
+   /* Stabs debugging sections.    */
 
-<span class="w">   </span>.stab<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.stab<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.stabstr<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.stabstr<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.stab.excl<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.stab.excl<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.stab.exclstr<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.stab.exclstr<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.stab.index<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.stab.index<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.stab.indexstr<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.stab.indexstr<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.comment<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.comment<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.debug_abbrev<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.debug_abbrev<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.debug_info<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.debug_info<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.debug_line<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.debug_line<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.debug_pubnames<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.debug_pubnames<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="w">   </span>.debug_aranges<span class="w"> </span><span class="m">0</span><span class="w"> </span>:<span class="w"> </span><span class="o">{</span><span class="w"> </span>*<span class="o">(</span>.debug_aranges<span class="o">)</span><span class="w"> </span><span class="o">}</span>
-<span class="o">}</span>
+   .stab 0 : { *(.stab) }
+   .stabstr 0 : { *(.stabstr) }
+   .stab.excl 0 : { *(.stab.excl) }
+   .stab.exclstr 0 : { *(.stab.exclstr) }
+   .stab.index 0 : { *(.stab.index) }
+   .stab.indexstr 0 : { *(.stab.indexstr) }
+   .comment 0 : { *(.comment) }
+   .debug_abbrev 0 : { *(.debug_abbrev) }
+   .debug_info 0 : { *(.debug_info) }
+   .debug_line 0 : { *(.debug_line) }
+   .debug_pubnames 0 : { *(.debug_pubnames) }
+   .debug_aranges 0 : { *(.debug_aranges) }
+}
 </pre></div>
+</div>
+</div>
+</div>
 </div>
 </section>
 <section id="creating-the-defines-ld-linker-script">
 <h2>Creating the <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> Linker Script<a class="headerlink" href="#creating-the-defines-ld-linker-script" title="Permalink to this heading"></a></h2>
-<p>The additional linker script <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> is created through a three-step
+<p>The additional linker script, <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code>, is created through a three-step
 process:</p>
 <ol class="arabic simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> generates a partially linked ELF object, <code class="docutils literal notranslate"><span class="pre">hello.r</span></code>.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> then invokes the <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code> script, which generates
+<li><p>The Makefile generates a partially linked ELF object, <code class="docutils literal notranslate"><span class="pre">hello.r</span></code>.</p></li>
+<li><p>The Makefile then invokes the <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code> script, which generates
 the <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> linker script that provides values for all of the
 undefined symbols.</p></li>
-<li><p>Finally, the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> produces the fully linked, relocatable <code class="docutils literal notranslate"><span class="pre">hello</span></code>
-ELF object using the <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> linker script.</p></li>
+<li><p>Finally, the Makefile produces the fully linked, relocatable <code class="docutils literal notranslate"><span class="pre">hello</span></code>
+ELF binary using the <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> linker script.</p></li>
 </ol>
-<p>Below is the version of <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code> used in this demo:</p>
+<p>Here are the contents of the <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code> script used in this example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 
 <span class="nv">usage</span><span class="o">=</span><span class="s2">&quot;Usage: </span><span class="nv">$0</span><span class="s2"> &lt;system-map&gt; &lt;relprog&gt;&quot;</span>
@@ -564,7 +563,7 @@ ELF object using the <code class="docutils literal notranslate"><span class="pre
 <span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$sysmap</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Missing &lt;system-map&gt;&quot;</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="nb">echo</span><span class="w"> </span><span class="nv">$usage</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$usage</span><span class="s2">&quot;</span>
 <span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 
@@ -574,7 +573,7 @@ ELF object using the <code class="docutils literal notranslate"><span class="pre
 <span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$relprog</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Missing &lt;program-list&gt;&quot;</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="nb">echo</span><span class="w"> </span><span class="nv">$usage</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$usage</span><span class="s2">&quot;</span>
 <span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 
@@ -583,143 +582,133 @@ ELF object using the <code class="docutils literal notranslate"><span class="pre
 <span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$sysmap</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR:  </span><span class="nv">$sysmap</span><span class="s2"> does not exist&quot;</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="nb">echo</span><span class="w"> </span><span class="nv">$usage</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$usage</span><span class="s2">&quot;</span>
 <span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 
 <span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$relprog</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR:  </span><span class="nv">$relprog</span><span class="s2"> does not exist&quot;</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="nb">echo</span><span class="w"> </span><span class="nv">$usage</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$usage</span><span class="s2">&quot;</span>
 <span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 
 <span class="c1"># Extract all of the undefined symbols from the partially linked file and create a</span>
 <span class="c1"># list of sorted, unique undefined variable names.</span>
 
-<span class="nv">varlist</span><span class="o">=</span><span class="sb">`</span>nm<span class="w"> </span><span class="nv">$relprog</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>fgrep<span class="w"> </span><span class="s1">&#39; U &#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;s/^[ ]*//g&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="s1">&#39; &#39;</span><span class="w"> </span>-f2<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="sb">`</span>
+<span class="nv">varlist</span><span class="o">=</span><span class="k">$(</span>nm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$relprog</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-F<span class="w"> </span><span class="s1">&#39; U &#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;s/^[ ]*//g&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="s1">&#39; &#39;</span><span class="w"> </span>-f2<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="k">)</span>
 
 <span class="c1"># Now output the linker script that provides a value for all of the undefined symbols</span>
 
 <span class="k">for</span><span class="w"> </span>var<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nv">$varlist</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="nv">map</span><span class="o">=</span><span class="sb">`</span>grep<span class="w"> </span><span class="s2">&quot; </span><span class="si">${</span><span class="nv">var</span><span class="si">}</span>$<span class="s2">&quot;</span><span class="w"> </span><span class="si">${</span><span class="nv">sysmap</span><span class="si">}</span><span class="sb">`</span>
+<span class="nv">map</span><span class="o">=</span><span class="k">$(</span>grep<span class="w"> </span><span class="s2">&quot; </span><span class="si">${</span><span class="nv">var</span><span class="si">}</span>$<span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">sysmap</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span>
 <span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$map</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
 <span class="w">   </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR:  Variable </span><span class="nv">$var</span><span class="s2"> not found in </span><span class="nv">$sysmap</span><span class="s2">&quot;</span>
 <span class="w">   </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="w">   </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$usage</span>
+<span class="w">   </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$usage</span><span class="s2">&quot;</span>
 <span class="w">   </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 
-<span class="nv">varaddr</span><span class="o">=</span><span class="sb">`</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">map</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="s1">&#39; &#39;</span><span class="w"> </span>-f1<span class="sb">`</span>
+<span class="nv">varaddr</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">map</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="s1">&#39; &#39;</span><span class="w"> </span>-f1<span class="k">)</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">var</span><span class="si">}</span><span class="s2"> = 0x</span><span class="si">${</span><span class="nv">varaddr</span><span class="si">}</span><span class="s2"> | 0x00000001;&quot;</span>
 <span class="k">done</span>
 </pre></div>
 </div>
-<p>This script uses the <code class="docutils literal notranslate"><span class="pre">nm</span></code> utility to find all of the undefined symbols in the
-ELF object, then searches for the address of each undefined symbol in the
-<code class="docutils literal notranslate"><span class="pre">System.map</span></code> that was created when the released firmware was built. Finally,
-it uses the symbol name and the symbol address to create each symbol table
-entry.</p>
+<p>This script uses the <code class="docutils literal notranslate"><span class="pre">nm</span></code> utility to find all the undefined symbols in the
+ELF binary, then searches for the address of each undefined symbol in the
+<code class="docutils literal notranslate"><span class="pre">System.map</span></code> file that was created when the firmware was built. Finally,
+it uses the symbols’ names and addresses to create each symbol table entry.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>For the ARMv7-M architecture, bit 0 of the address must be set to indicate
+<p>For the ARMv7-M architecture, bit 0 of the address must be set to indicate
 thumb mode. If you are using a different architecture that requires
 normal aligned addresses, you will need to change the following line by
-eliminating the ORed value:</p></li>
-</ul>
+eliminating the ORed value:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">var</span><span class="si">}</span><span class="s2"> = 0x</span><span class="si">${</span><span class="nv">varaddr</span><span class="si">}</span><span class="s2"> | 0x00000001;&quot;</span>
 </pre></div>
 </div>
-<ul class="simple">
-<li><p>If the new ELF module uses a symbol that is not provided in the base
-firmware and, hence, not included in the <code class="docutils literal notranslate"><span class="pre">System.map</span></code> file, this script
-will fail. In that case, you will need to provide the missing logic
-within the ELF program itself, if possible.</p></li>
-<li><p>The technique as described here is only valid in the FLAT build mode. It
-could probably also be extended to work in the PROTECTED mode by
-substituting <code class="docutils literal notranslate"><span class="pre">User.map</span></code> for <code class="docutils literal notranslate"><span class="pre">System.map</span></code>.</p></li>
-</ul>
 </div>
-<p>Here is an example <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> created by <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">printf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>0x0800aefc<span class="w"> </span><span class="p">|</span><span class="w"> </span>0x00000001<span class="w"> </span><span class="p">;</span>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the new ELF binary uses a symbol that is not provided in the base
+firmware (and hence not included in the <code class="docutils literal notranslate"><span class="pre">System.map</span></code> file) this script
+will fail. In that case, you will need to provide the missing logic
+within the ELF program itself, if possible.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The technique described here is only valid in the FLAT build mode. It
+could probably also be extended to work in the PROTECTED mode by
+substituting <code class="docutils literal notranslate"><span class="pre">User.map</span></code> for <code class="docutils literal notranslate"><span class="pre">System.map</span></code>.</p>
+</div>
+<p>Here is a short example of a <code class="docutils literal notranslate"><span class="pre">defines.ld</span></code> script created by <code class="docutils literal notranslate"><span class="pre">mkdefines.sh</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">printf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>0x0800aefc<span class="w"> </span><span class="p">|</span><span class="w"> </span>0x00000001<span class="p">;</span>
 </pre></div>
 </div>
 </section>
-<section id="replacing-an-nsh-built-in-function">
-<h2>Replacing an NSH Built-In Function<a class="headerlink" href="#replacing-an-nsh-built-in-function" title="Permalink to this heading"></a></h2>
-<p>Files can be executed by <code class="docutils literal notranslate"><span class="pre">NSH</span></code> from the command line by simply typing the
-name of the ELF program. This requires:</p>
+<section id="replacing-nsh-built-in-functions">
+<h2>Replacing NSH Built-In Functions<a class="headerlink" href="#replacing-nsh-built-in-functions" title="Permalink to this heading"></a></h2>
+<p>Files can be executed by NSH from the command line by simply typing the name
+of the ELF program, given that the following requirements are met:</p>
 <ol class="arabic simple">
-<li><p>That the feature be enabled with``CONFIG_NSH_FILE_APP=y``</p></li>
-<li><p>That support for the PATH variable is enabled (<code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_EXEPATH=y</span></code> and
-<code class="docutils literal notranslate"><span class="pre">CONFIG_PATH_INITIAL</span></code> set to the mount point of the file system that
-may contain ELF programs).</p></li>
+<li><p>The feature is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_FILE_APP=y</span></code>.</p></li>
+<li><p>Support for the PATH variable is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH=y</span></code>.</p></li>
+<li><p>The mount point of the file system that may contain ELF programs is
+set in <code class="docutils literal notranslate"><span class="pre">CONFIG_PATH_INITIAL</span></code>.</p></li>
 </ol>
-<p>Suppose, for example, I have a built-in application called <code class="docutils literal notranslate"><span class="pre">hello</span></code>. Before
-installing the new replacement <code class="docutils literal notranslate"><span class="pre">hello</span></code> ELF program in the file system, this
-is the version of <code class="docutils literal notranslate"><span class="pre">hello</span></code> that <code class="docutils literal notranslate"><span class="pre">NSH</span></code> will execute:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>hello
-Hello,<span class="w"> </span>World!
+<p>Suppose, for example, that a built-in application called <code class="docutils literal notranslate"><span class="pre">hello</span></code> already
+exist. Before the installation of the new replacement <code class="docutils literal notranslate"><span class="pre">hello</span></code> ELF program in
+the file system, this is the version of <code class="docutils literal notranslate"><span class="pre">hello</span></code> that NSH will execute:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nsh&gt; hello
+Hello, World!
 nsh&gt;
 </pre></div>
 </div>
-<p>In the above configuration, <code class="docutils literal notranslate"><span class="pre">NSH</span></code> will first attempt to run the program called
-<code class="docutils literal notranslate"><span class="pre">hello</span></code> from the file system. This will fail because we have not yet placed
-our custom <code class="docutils literal notranslate"><span class="pre">hello</span></code> ELF program in the file system. So instead, <code class="docutils literal notranslate"><span class="pre">NSH</span></code> will
-fall back and execute the built-in application called <code class="docutils literal notranslate"><span class="pre">hello</span></code>.</p>
-<p>In this way, any command known to <code class="docutils literal notranslate"><span class="pre">NSH</span></code> can be replaced by an ELF program
-installed in a mounted file system directory that is found via the PATH
-variable.</p>
-<p>Now suppose that we do add our custom <code class="docutils literal notranslate"><span class="pre">hello</span></code> to the file system. When
-<code class="docutils literal notranslate"><span class="pre">NSH</span></code> attempts to run the program called <code class="docutils literal notranslate"><span class="pre">hello</span></code> from the file system, it
-will run successfully. The built-in version will be ignored. It has been
-replaced with the version in the file system:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>vfat<span class="w"> </span>/dev/mmcsd0<span class="w"> </span>/bin
-nsh&gt;<span class="w"> </span>hello
-Hello<span class="w"> </span>from<span class="w"> </span>Add-On<span class="w"> </span>Program!
+<p>Now suppose that we add our custom <code class="docutils literal notranslate"><span class="pre">hello</span></code> binary to the file system inside
+the appropriate path (see <code class="docutils literal notranslate"><span class="pre">CONFIG_PATH_INITIAL</span></code> above). When NSH will attempt
+to run the program called <code class="docutils literal notranslate"><span class="pre">hello</span></code>, it will prefer the new binary present on
+the file system over the built-in version of the same program.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /bin
+nsh&gt; hello
+Hello from a fully linked Add-On Program!
 nsh&gt;
 </pre></div>
 </div>
 </section>
 <section id="version-dependency">
 <h2>Version Dependency<a class="headerlink" href="#version-dependency" title="Permalink to this heading"></a></h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
 <p>This technique generates ELF programs using fixed addresses from the
 <code class="docutils literal notranslate"><span class="pre">System.map</span></code> file of a versioned release. The generated ELF programs can
 only be used with that specific firmware version. A crash will most likely
-result if used with a different firmware version, because the addresses
-from the <code class="docutils literal notranslate"><span class="pre">System.map</span></code> will not match the addresses in a different version
-of the firmware.</p>
+happen if used with a different firmware version, because the addresses
+from the <code class="docutils literal notranslate"><span class="pre">System.map</span></code> will not match.</p>
 </div>
-<p>The alternative approach using <a class="reference internal" href="#"><span class="doc">Symbol Tables</span></a> is more
-or less version independent.</p>
+<p>The alternative approach using <a class="reference internal" href="partially_linked_elf.html"><span class="doc">Symbol Tables</span></a> is
+more or less version independent.</p>
 </section>
 <section id="tightly-coupled-memories">
 <h2>Tightly Coupled Memories<a class="headerlink" href="#tightly-coupled-memories" title="Permalink to this heading"></a></h2>
 <p>Most MCUs based on ARMv7-M family processors support some kind of Tightly
 Coupled Memory (TCM). These TCMs have somewhat different properties for
-specialized operations. Depending on the bus matrix of the processor, you may
-not be able to execute programs from TCM. For instance, the <code class="docutils literal notranslate"><span class="pre">STM32</span> <span class="pre">F4</span></code>
-supports Core Coupled Memory (CCM), but since it is tied directly to the D-bus,
-it cannot be used to execute programs! On the other hand, the <code class="docutils literal notranslate"><span class="pre">STM32F3</span></code> has a
-CCM that is accessible to both the D-Bus and the I-Bus, in which case it
-should be possible to execute programs from this TCM.</p>
+specialized operations. Depending on the bus matrix of the processor, you
+may not be able to execute programs from the TCM. For instance, the STM32F4
+supports Core Coupled Memory (CCM) but, since it is tied directly to the
+D-bus, it cannot be used to execute programs. On the other hand, the STM32F3
+has a CCM that is accessible to both the D-Bus and the I-Bus, in which case
+it should be possible to execute programs directly from this TCM.</p>
 <img alt="../_images/system_arch_stm32f42xx_and_f43xx.png" src="../_images/system_arch_stm32f42xx_and_f43xx.png" />
 <img alt="../_images/system_arch_stm32f303xBC_and_f358xC.png" src="../_images/system_arch_stm32f303xBC_and_f358xC.png" />
-<p>When ELF programs are loaded into memory, the memory is allocated from the
-heap via a standard memory allocator. By default with the <code class="docutils literal notranslate"><span class="pre">STM32</span> <span class="pre">F4</span></code>, the
-CCM is included in <code class="docutils literal notranslate"><span class="pre">HEAP</span></code> and will typically be allocated first. If CCM
-memory is allocated to hold the ELF program, a hard-fault will occur
-immediately when you try to execute the ELF program in memory.</p>
-<p>Therefore, it is necessary on <code class="docutils literal notranslate"><span class="pre">STM32</span> <span class="pre">F4</span></code> platforms to include the following
-configuration setting:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_STM32_CCMEXCLUDE</span><span class="o">=</span>y
-</pre></div>
-</div>
-<p>With that setting, the CCM memory will be excluded from the heap, and so will
-never be allocated for ELF program memory.</p>
+<p>When ELF programs are loaded into memory, such memory is allocated from the
+heap via a standard memory allocator. With the STM32F4, the CCM is included
+in the heap by default and will typically be allocated first. If CCM memory
+is allocated to hold the loaded ELF program, then a hard-fault will occur
+immediately when you try to execute it.
+Therefore, on STM32F4 platforms it is necessary to include the
+<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_CCMEXCLUDE=y</span></code> configuration setting. With it, the CCM
+memory will be excluded from the heap and will never be allocated for
+ELF program memory.</p>
 </section>
 </section>
 
