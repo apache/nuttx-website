@@ -156,6 +156,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#syslog-channels">SYSLOG Channels</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#syslog-channel-options">SYSLOG Channel Options</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#ram-logging-device">RAM Logging Device</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#syslog-protocol-rfc-5424">SYSLOG Protocol (RFC 5424)</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="sdio.html">SDIO Device Drivers</a></li>
@@ -686,6 +687,34 @@ when called! So you probably do want this!</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAMLOG_NPOLLWAITERS</span></code>: The maximum number of threads
 that may be waiting on the poll method.</p></li>
 </ul>
+</section>
+</section>
+<section id="syslog-protocol-rfc-5424">
+<h2>SYSLOG Protocol (RFC 5424)<a class="headerlink" href="#syslog-protocol-rfc-5424" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc5424">RFC 5424</a> is a protocol defined for
+syslog messages which makes provisions to have logs created by “originators” to
+be saved on “collectors” (log servers).</p>
+<p>NuttX is capable of generating RFC 5424 compatible <code class="docutils literal notranslate"><span class="pre">syslog</span></code> entries with the
+option <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_RFC5424</span></code>. Not all features of RFC 5424 are currently
+implemented, such as the <code class="docutils literal notranslate"><span class="pre">HOSTNAME</span></code> field or <code class="docutils literal notranslate"><span class="pre">MSGID</span></code> fields. However, the
+majority of the RFC 5424 functionality is in place and allows for a NuttX device
+to become a RFC 5424 originator.</p>
+<section id="syslog-over-the-network">
+<h3>Syslog over the network<a class="headerlink" href="#syslog-over-the-network" title="Permalink to this heading"></a></h3>
+<p>Using RFC 5424, network capable NuttX devices can become originators and
+transmit <code class="docutils literal notranslate"><span class="pre">syslog</span></code> entries to a collector (log server). This is currently
+possible using the basic UDP implementation with
+<a class="reference internal" href="../../../applications/system/syslogd/index.html"><span class="doc">syslogd</span></a>.</p>
+<p>If using <code class="docutils literal notranslate"><span class="pre">syslogd</span></code>, it is recommended to use the <code class="docutils literal notranslate"><span class="pre">RAMLOG</span></code> device as the
+syslog sink. This allows very fast recording of logs, which unlocks the
+ability to record logs from interrupt contexts or time-sensitive code. The
+<code class="docutils literal notranslate"><span class="pre">syslogd</span></code> daemon can then transmit these later from user space. As stated
+in <a class="reference internal" href="../../../applications/system/syslogd/index.html"><span class="doc">the syslogd documentation</span></a>, it is
+recommended to configure <code class="docutils literal notranslate"><span class="pre">RAMLOG</span></code> in blocking mode.</p>
+<p>Once messages are set up for transmission with <code class="docutils literal notranslate"><span class="pre">syslogd</span></code>, you can consume them
+on another network capable host device using one of the RFC 5424 compatible log
+servers. You’re even able to use <a class="reference external" href="https://www.wireshark.org/">WireShark</a> to
+view and parse <code class="docutils literal notranslate"><span class="pre">syslog</span></code> entries in your packet captures.</p>
 </section>
 </section>
 </section>
