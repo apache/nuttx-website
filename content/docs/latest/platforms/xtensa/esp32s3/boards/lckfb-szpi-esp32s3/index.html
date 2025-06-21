@@ -350,8 +350,10 @@ $ make flash ESPTOOL_PORT=/dev/ttyUSBx
 </section>
 <section id="fastboot">
 <h3>fastboot<a class="headerlink" href="#fastboot" title="Permalink to this heading"></a></h3>
-<p>The basic Fastboot configuration is based on lckfb-szpi-esp32s3:usb_device.
-More details about usage of fastboot, please refer to <a class="reference external" href="https://nuttx.apache.org/docs/latest/applications/system/fastboot/index.html">fastbootd — NuttX latest documentation</a>.</p>
+<div class="line-block">
+<div class="line">The Fastboot configuration is based on lckfb-szpi-esp32s3:usb_device and lckfb-szpi-esp32s3:wifi, and support both <strong>USB</strong> and <strong>TCP</strong> network transport.</div>
+<div class="line">More details about usage of fastboot, please refer to <a class="reference external" href="https://nuttx.apache.org/docs/latest/applications/system/fastboot/index.html">fastbootd — NuttX latest documentation</a>.</div>
+</div>
 <p>You can run the configuration and compilation procedure:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l lckfb-szpi-esp32s3:fastboot
 $ make flash ESPTOOL_PORT=/dev/ttyUSBx -j
@@ -364,16 +366,36 @@ $ make flash ESPTOOL_PORT=/dev/ttyUSBx -j
 </pre></div>
 </div>
 </li>
-<li><p>List devices running fastboot:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>fastboot devices
-</pre></div>
-</div>
-</li>
+<li><p>Specify a device / List devices:</p></li>
 </ol>
 <blockquote>
-<div><p>Example:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ fastboot devices
+<div><p>List devices only supported for USB transport:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>fastboot devices
+
+# Examples
+
+$ fastboot devices
 1234    fastboot
+</pre></div>
+</div>
+<p>To specific a device, use “-s” option:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Usage
+#
+#   -s tcp:HOST[:PORT]         Specify a TCP network device.
+#   -s SERIAL                  Specify a USB device.
+
+fastboot -s SERIAL COMMAND
+fastboot -s tcp:HOST[:PORT] COMMAND
+
+# Examples
+
+$ fastboot -s 1234 oem shell ifconfig
+wlan0   Link encap:Ethernet HWaddr a0:85:e3:f4:43:30 at RUNNING mtu 1500
+        inet addr:192.168.211.111 DRaddr:192.168.211.107 Mask:255.255.255.0
+
+PS C:\workspace&gt; fastboot.exe -s tcp:192.168.211.111 oem shell ifconfig
+wlan0   Link encap:Ethernet HWaddr a0:85:e3:f4:43:30 at RUNNING mtu 1500
+        inet addr:192.168.211.111 DRaddr:192.168.211.107 Mask:255.255.255.0
 </pre></div>
 </div>
 </div></blockquote>
@@ -444,6 +466,50 @@ nsh&gt; hexdump /dev/ram10 count=128
 </pre></div>
 </div>
 </div></blockquote>
+</section>
+<section id="fastboot-usb">
+<h3>fastboot_usb<a class="headerlink" href="#fastboot-usb" title="Permalink to this heading"></a></h3>
+<div class="line-block">
+<div class="line">The basic Fastboot configuration is based on lckfb-szpi-esp32s3:usb_device and support <strong>USB</strong> transport only.</div>
+<div class="line">More details about usage of fastboot, please refer to <a class="reference external" href="https://nuttx.apache.org/docs/latest/applications/system/fastboot/index.html">fastbootd — NuttX latest documentation</a>.</div>
+</div>
+<p>You can run the configuration and compilation procedure:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l lckfb-szpi-esp32s3:fastboot_usb
+$ make flash ESPTOOL_PORT=/dev/ttyUSBx -j
+</pre></div>
+</div>
+</section>
+<section id="fastboot-tcp">
+<h3>fastboot_tcp<a class="headerlink" href="#fastboot-tcp" title="Permalink to this heading"></a></h3>
+<div class="line-block">
+<div class="line">The Fastboot TCP network device configuration is based on lckfb-szpi-esp32s3:wifi and support <strong>TCP</strong> network transport only.</div>
+<div class="line">More details about usage of fastboot, please refer to <a class="reference external" href="https://nuttx.apache.org/docs/latest/applications/system/fastboot/index.html">fastbootd — NuttX latest documentation</a>.</div>
+</div>
+<p>You can run the configuration and compilation procedure:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l lckfb-szpi-esp32s3:fastboot_tcp
+$ make flash ESPTOOL_PORT=/dev/ttyUSBx -j
+</pre></div>
+</div>
+<p>To test it, just run the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Device side
+
+nsh&gt; wapi psk wlan0 mypasswd 3
+nsh&gt; wapi essid wlan0 myssid 1
+nsh&gt; renew wlan0
+
+# Host side
+
+PS C:\workspace&gt; fastboot.exe -s tcp:HOST[:PORT] oem shell ls
+/:
+ data/
+ dev/
+ etc/
+ proc/
+ var/
+OKAY [  0.063s]
+Finished. Total time: 0.064s
+</pre></div>
+</div>
 </section>
 <section id="pca9557">
 <h3>pca9557<a class="headerlink" href="#pca9557" title="Permalink to this heading"></a></h3>
