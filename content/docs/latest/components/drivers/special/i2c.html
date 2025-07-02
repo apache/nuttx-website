@@ -140,6 +140,10 @@
 <li class="toctree-l4"><a class="reference internal" href="dma.html">DMA Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="framebuffer.html">Frame Buffer Drivers</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">I2C Device Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#i2c-slave-device-drivers">I2C Slave Device Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#i2c-slave-driver-api">I2C Slave Driver API</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="i3c.html">I3C Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ioexpander.html">IO Expander Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lcd.html">LCD Character Drivers</a></li>
@@ -237,7 +241,7 @@
   <section id="i2c-device-drivers">
 <h1>I2C Device Drivers<a class="headerlink" href="#i2c-device-drivers" title="Permalink to this heading"></a></h1>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/i2c/i2c_master.h</span></code> and <code class="docutils literal notranslate"><span class="pre">include/nuttx/i2c/i2c_slave.h</span></code>.
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/i2c/i2c_master.h</span></code>
 All structures and APIs needed to work with I2C drivers are provided in
 this header file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_ops_s</span></code>. Each I2C device driver must implement
@@ -255,13 +259,63 @@ higher level device driver.</p></li>
 </li>
 <li><p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">arch/z80/src/ez80/ez80_i2c.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">arch/z80/src/z8/z8_i2c.c</span></code>, etc.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_slaveops_s</span></code>. Each I2C slave device driver must implement
-an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_slaveops_s</span></code>. That structure defines a call
-table with the following methods:</p></li>
-<li><p><strong>Binding I2C Slave Drivers</strong>. I2C slave drivers are normally directly
-accessed by user code, We can read and write to device nodes using posix
-interfaces.</p></li>
 </ul>
+</section>
+<section id="i2c-slave-device-drivers">
+<h1>I2C Slave Device Drivers<a class="headerlink" href="#i2c-slave-device-drivers" title="Permalink to this heading"></a></h1>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/i2c/i2c_slave.h</span></code>
+Declaration of all macros and ops and <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">i2c_slave_register</span></code>,
+used to bind the lowerhalf driver to the upper one and register an
+I2C slave device.</p></li>
+<li><p><strong>Binding I2C Slave Drivers</strong>. Use <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">i2c_slave_register</span></code> in your BSP
+to register your slave device. Before that, you need to get the instance
+of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_slave_s</span></code> from the hardware-specific I2C Slave driver.</p></li>
+<li><p><strong>Using I2C Slave in your Application</strong>. I2C slave drivers are normally directly
+accessed by user code, We can read and write to device nodes using posix
+interfaces. The device is registered as <code class="docutils literal notranslate"><span class="pre">/dev/i2cslv%d</span></code>, where <code class="docutils literal notranslate"><span class="pre">%d</span></code>
+is a number provided in the BSP initialization phase.</p></li>
+<li><p><strong>BSP initialization example (STM32 I2C Slave)</strong>:</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_i2cs_setup</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="n">i2cs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stm32_i2cbus_slaveinitialize</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i2cs</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">       </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ENOENT</span><span class="p">;</span>
+<span class="w">     </span><span class="p">}</span>
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">i2c_slave_register</span><span class="p">(</span><span class="n">i2cs</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mh">0x01</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="i2c-slave-driver-api">
+<h2>I2C Slave Driver API<a class="headerlink" href="#i2c-slave-driver-api" title="Permalink to this heading"></a></h2>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.i2c_slave_register">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">i2c_slave_register</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">i2c_slave_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">bus</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">addr</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">nbit</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.i2c_slave_register" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Bind the lowerhalf <code class="docutils literal notranslate"><span class="pre">dev</span></code> driver to the upperhalf driver and register
+a device. The name of the device is <code class="docutils literal notranslate"><span class="pre">/dev/i2cslv%d</span></code>, where <code class="docutils literal notranslate"><span class="pre">%d</span></code> is
+bus. The address the I2C slave is specified in <code class="docutils literal notranslate"><span class="pre">addr</span></code>.
+<code class="docutils literal notranslate"><span class="pre">nbit</span></code> is either 7 or 10 and it specifies the address format.</p>
+</dd></dl>
+
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_slaveops_s</span></code>. Each I2C slave lowerhalf driver must implement
+an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_slaveops_s</span></code>. That structure defines a call
+table with the following methods:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">setownaddress</span></code>: the address the slave responds to,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write</span></code>: sets the tx buffer pointer,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code>: sets the rx buffer pointer,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">registercallback</span></code>: registers the callback function which should
+be called from a service routine. Signals the received or fully transferred
+I2C packet.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">setup</span></code>: initializes the peripheral,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shutdown</span></code>: shutdowns the peripheral.</p></li>
+</ul>
+</li>
+</ul>
+</section>
 </section>
 
 
