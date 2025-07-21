@@ -106,6 +106,8 @@
     
     <option value="../../../../../../12.9.0" >12.9.0</option>
     
+    <option value="../../../../../../12.10.0" >12.10.0</option>
+    
     </select>
   </div>
 
@@ -421,6 +423,10 @@ You can scan for all I2C devices using the following command:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev 0x00 0x7f
 </pre></div>
 </div>
+<p>To use LP_I2C, you can enable <cite>ESPRESSIF_LP_I2C0</cite> option.  When this option is enabled,
+LP_I2C operates on GPIO7 as SCL and GPIO6 as SDA. These pins are fixed and cannot be changed.
+Also enabling LP_I2C will change the default pins of I2C0 due to LP_I2C pin limitation.
+The default I2C0 pins will be remapped to GPIO23 for SCL and GPIO5 for SDA.</p>
 <p>To use slave mode, you can enable <cite>ESPRESSIF_I2C0_SLAVE_MODE</cite> option.
 To use slave mode driver following snippet demonstrates how write to i2c bus
 using slave driver:</p>
@@ -542,6 +548,37 @@ nsh&gt; alarm -r
 Opening /dev/rtc0
 Alarm 0 is active with 10 seconds to expiration
 nsh&gt; alarm_daemon: alarm 0 received
+</pre></div>
+</div>
+</section>
+<section id="sdmmc-spi">
+<h2>sdmmc_spi<a class="headerlink" href="#sdmmc-spi" title="Permalink to this heading"></a></h2>
+<p>This configuration is used to mount a FAT/FAT32 SD Card into the OS’ filesystem.
+It uses SPI to communicate with the SD Card, defaulting to SPI2.</p>
+<p>The SD slot number, SPI port number and minor number can be modified in <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">Configuration</span> <span class="pre">→</span> <span class="pre">NSH</span> <span class="pre">Library</span></code>.</p>
+<p>To access the card’s files, make sure <code class="docutils literal notranslate"><span class="pre">/dev/mmcsd0</span></code> exists and then execute the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /dev
+/dev:
+console
+mmcsd0
+null
+ttyS0
+zero
+nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+</pre></div>
+</div>
+<p>This will mount the SD Card to <code class="docutils literal notranslate"><span class="pre">/mnt</span></code>. Now, you can use the SD Card as a normal filesystem.
+For example, you can read a file and write to it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /mnt
+/mnt:
+hello.txt
+nsh&gt; cat /mnt/hello.txt
+Hello World
+nsh&gt; echo &#39;NuttX RTOS&#39; &gt;&gt; /mnt/hello.txt
+nsh&gt; cat /mnt/hello.txt
+Hello World!
+NuttX RTOS
+nsh&gt;
 </pre></div>
 </div>
 </section>

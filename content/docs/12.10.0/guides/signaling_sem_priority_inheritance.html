@@ -1,0 +1,493 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signaling Semaphores and Priority Inheritance &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Smaller Vector Tables" href="smaller_vector_tables.html" />
+    <link rel="prev" title="Signaling Events from Interrupt Handlers" href="signal_events_interrupt_handlers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    <option value="../../12.7.0" >12.7.0</option>
+    
+    <option value="../../12.8.0" >12.8.0</option>
+    
+    <option value="../../12.9.0" >12.9.0</option>
+    
+    <option value="../../12.10.0" >12.10.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
+<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortify.html">Fortify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="include_files_board_h.html">Including Files in board.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specialstuff_in_nuttxheaderfiles.html">Why can’t I put my special stuff in NuttX header files?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_with_custom_stacks.html">Kernel Threads with Custom Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning_and_task_names.html">Versioning and Task Names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging_rambuffer.html">Logging to a RAM Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ipv6.html">IPv6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrate_newlib.html">Integrating with Newlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="protected_build.html">NuttX Protected Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="platform_directories.html">Platform Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="port_drivers_to_stm32f7.html">Porting Drivers to the STM32 F7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semihosting.html">Semihosting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="renode.html">Run NuttX on Renode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signal_events_interrupt_handlers.html">Signaling Events from Interrupt Handlers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Signaling Semaphores and Priority Inheritance</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#locking-vs-signaling-semaphores">Locking vs Signaling Semaphores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#locking-semaphores">Locking Semaphores</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mutual-exclusion-example">Mutual Exclusion Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#signaling-semaphores">Signaling Semaphores</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#signaling-semaphores-and-priority-inheritance-details">Signaling Semaphores and Priority Inheritance details</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage-in-drivers">Usage in Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#priority-inheritance-fails">Priority Inheritance Fails</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#who-s-to-blame">Who’s to Blame</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#selecting-the-semaphore-protocol">Selecting the Semaphore Protocol</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#sem-setprotocol"><code class="docutils literal notranslate"><span class="pre">sem_setprotocol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#why-another-non-standard-os-interface">Why Another Non-Standard OS Interface?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pthread-mutexattr-setprotocol"><code class="docutils literal notranslate"><span class="pre">pthread_mutexattr_setprotocol()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#is-this-always-a-problem">Is this Always a Problem?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="smaller_vector_tables.html">Smaller Vector Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="port.html">How to port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updating_release_system_elf.html">Updating a Release System with ELF Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="partially_linked_elf.html">ELF Programs – With Symbol Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fully_linked_elf.html">ELF Programs – No Symbol Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building_nuttx_with_app_out_of_src_tree.html">Building NuttX with Applications Outside the Source Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building_uclibcpp.html">Building uClibc++</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_app_directories.html">Custom Application Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiple_nsh_sessions.html">Multiple NSH Sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nsh_network_link_management.html">NSH Network Link Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ram_rom_disks.html">RAM Disks and ROM Disks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reading_can_msgs.html">Reading CAN Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remove_device_drivers_nsh.html">Removing Device Drivers with NSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rust.html">Rust in NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optee.html">Interfacing with OP-TEE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">Signaling Semaphores and Priority Inheritance</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/guides/signaling_sem_priority_inheritance.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="signaling-semaphores-and-priority-inheritance">
+<h1>Signaling Semaphores and Priority Inheritance<a class="headerlink" href="#signaling-semaphores-and-priority-inheritance" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Signaling+Semaphores+and+Priority+Inheritance">https://cwiki.apache.org/confluence/display/NUTTX/Signaling+Semaphores+and+Priority+Inheritance</a></p>
+</div>
+<section id="locking-vs-signaling-semaphores">
+<h2>Locking vs Signaling Semaphores<a class="headerlink" href="#locking-vs-signaling-semaphores" title="Permalink to this heading"></a></h2>
+<section id="locking-semaphores">
+<h3>Locking Semaphores<a class="headerlink" href="#locking-semaphores" title="Permalink to this heading"></a></h3>
+<p>POSIX counting semaphores have multiple uses. The typical usage is where
+the semaphore is used as lock on one or more resources. In this typical
+case, priority inheritance works perfectly: The holder of a semaphore
+count must be remembered so that its priority can be boosted if a higher
+priority task requires a count from the semaphore. It remains the
+holder until the same task calls <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code> to release the count on
+the semaphore.</p>
+</section>
+<section id="mutual-exclusion-example">
+<h3>Mutual Exclusion Example<a class="headerlink" href="#mutual-exclusion-example" title="Permalink to this heading"></a></h3>
+<p>This usage is very common for providing mutual exclusion. The semaphore
+is initialized to a value of one. The first task to take the semaphore
+has access; additional tasks that need access will then block until
+the first holder calls <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code> to relinquish access:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>TASK A</strong></p></th>
+<th class="head"><p><strong>TASK B</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><cite>have access</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><cite>priority boost</cite></p></td>
+<td><p><strong>sem_wait(sem);</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><cite>priority restored</cite></p></td>
+<td><p><cite>have access</cite></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>sem_post(sem);</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>sem_wait(sem);</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><cite>blocked</cite></p></td>
+</tr>
+</tbody>
+</table>
+<p>The important thing to note is that <code class="docutils literal notranslate"><span class="pre">sem_wait()</span></code> and <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code> both
+called on the same thread, TASK A. When <code class="docutils literal notranslate"><span class="pre">sem_wait()</span></code> succeeds, TASK
+A becomes the holder of the semaphore and, while it is the holder
+of the semaphore (1) other threads, such as TASK B, cannot access
+the protected resource and (2) the priority of TASK A may be modified
+by the priority inheritance logic. TASK A remains the holder until
+is calls <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code> on the <cite>same thread</cite>. At that time, (1) its
+priority may be restored and (2) TASK B has access to the resource.</p>
+</section>
+<section id="signaling-semaphores">
+<h3>Signaling Semaphores<a class="headerlink" href="#signaling-semaphores" title="Permalink to this heading"></a></h3>
+<p>But a very different usage model for semaphores is for signaling
+events. In this case, the semaphore count is initialized to
+zero and the receiving task calls <code class="docutils literal notranslate"><span class="pre">sem_wait()</span></code> to wait for the
+next event of interest to occur. When an event of interest is
+detected by another task (or even an interrupt handler),
+<code class="docutils literal notranslate"><span class="pre">sem_post()</span></code> is called which increments the count to 1 and
+wakes up the receiving task.</p>
+</section>
+</section>
+<section id="signaling-semaphores-and-priority-inheritance-details">
+<h2>Signaling Semaphores and Priority Inheritance details<a class="headerlink" href="#signaling-semaphores-and-priority-inheritance-details" title="Permalink to this heading"></a></h2>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h3>
+<p>For example, in the following TASK A waits on a semaphore
+for events and TASK B (or perhaps an interrupt handler)
+signals task A of the occurrence of the events by posting
+to that semaphore:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>TASK A</strong></p></th>
+<th class="head"><p><strong>TASK B</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>sem_init(sem, 0, 0);</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>sem_wait(sem);</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><cite>blocked</cite></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><strong>sem_post(sem);</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><cite>Awakens as holder</cite></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Notice that unlike the mutual exclusion case above,
+<code class="docutils literal notranslate"><span class="pre">sem_wait()</span></code> and <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code> are called on <cite>different</cite>
+threads.</p>
+</section>
+<section id="usage-in-drivers">
+<h3>Usage in Drivers<a class="headerlink" href="#usage-in-drivers" title="Permalink to this heading"></a></h3>
+<p>This usage case is used often within drivers, for example,
+when the user calls the <code class="docutils literal notranslate"><span class="pre">read()</span></code> method and there is no data
+available. <code class="docutils literal notranslate"><span class="pre">sem_wait()</span></code> is called to wait for new data to be
+received; <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code> is called when the new data arrives
+and the user task is re-awakened.</p>
+</section>
+<section id="priority-inheritance-fails">
+<h3>Priority Inheritance Fails<a class="headerlink" href="#priority-inheritance-fails" title="Permalink to this heading"></a></h3>
+<p>These two usage models, the locking modeling and the
+signaling model, are really very different and priority
+inheritance simply does not apply when the semaphore is
+used for signalling rather than locking. In this signaling
+case priority inheritance can interfere with the operation
+of the semaphore. The problem is that when TASK A is
+awakened it is a holder of the semaphore. Normally, a
+task is removed from the holder list when it finally
+releases the semaphore via <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code>.</p>
+<p>In this case, TASK B calls <code class="docutils literal notranslate"><span class="pre">sem_post(sem)</span></code> but TASK B is
+not the holder of the semaphore. Since TASK A never
+calls <code class="docutils literal notranslate"><span class="pre">sem_post(sem)</span></code> it becomes a permanently a holder
+of the semaphore and may have its priority boosted at
+any time when any other task tries to acquire the
+semaphore.</p>
+</section>
+<section id="who-s-to-blame">
+<h3>Who’s to Blame<a class="headerlink" href="#who-s-to-blame" title="Permalink to this heading"></a></h3>
+<p>In the POSIX case, priority inheritance is specified only
+in the pthread mutex layer. In NuttX, on the other hand,
+pthread mutexes are simply built on top of binary locking
+semaphores. Hence, in NuttX, priority inheritance is
+implemented in the semaphore layer.</p>
+<p>In the case of a mutex this could be simply resolved since
+there is only one holder but for the case of counting
+semaphores, there may be many holders and if the holder
+is not the thread that calls <code class="docutils literal notranslate"><span class="pre">sem_post()</span></code>, then it is not
+possible to know which thread/holder should be released.</p>
+</section>
+</section>
+<section id="selecting-the-semaphore-protocol">
+<h2>Selecting the Semaphore Protocol<a class="headerlink" href="#selecting-the-semaphore-protocol" title="Permalink to this heading"></a></h2>
+<section id="sem-setprotocol">
+<h3><code class="docutils literal notranslate"><span class="pre">sem_setprotocol()</span></code><a class="headerlink" href="#sem-setprotocol" title="Permalink to this heading"></a></h3>
+<p>The fix is to call non-standard NuttX function
+<code class="docutils literal notranslate"><span class="pre">sem_setprotocol(SEM_PRIO_NONE)</span></code> immediately after the
+<code class="docutils literal notranslate"><span class="pre">sem_init()</span></code>. The effect of this function call is to
+disable priority inheritance for that specific
+semaphore. There should then be no priority inheritance
+operations on this semaphore that is used for signalling.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">sem_t</span><span class="w"> </span><span class="n">sem</span>
+<span class="c1">// ...</span>
+<span class="n">sem_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="n">sem_setprotocol</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem</span><span class="p">,</span><span class="w"> </span><span class="n">SEM_PRIO_NONE</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Here is the rule: If you have priority inheritance
+enabled and you use semaphores for signaling events,
+then you <cite>must</cite> call <code class="docutils literal notranslate"><span class="pre">sem_setprotocol(SEM_PRIO_NONE)</span></code>
+immediately after initializing the semaphore.</p>
+</section>
+<section id="why-another-non-standard-os-interface">
+<h3>Why Another Non-Standard OS Interface?<a class="headerlink" href="#why-another-non-standard-os-interface" title="Permalink to this heading"></a></h3>
+<p>The non-standard <code class="docutils literal notranslate"><span class="pre">sem_setprotocol()</span></code> is the <cite>moral</cite>
+<cite>equivalent</cite> of the POSIX <code class="docutils literal notranslate"><span class="pre">pthread_mutexattr_setprotocol()</span></code>
+and its naming reflects that relationship. In most
+implementations, priority inheritance is implemented
+only in the pthread mutex layer. In NuttX, on the
+other hand, pthread mutexes are simply built on top
+of binary locking semaphores. Hence, in NuttX,
+priority inheritance is implemented in the semaphore
+layer. This architecture then requires an interface
+like <code class="docutils literal notranslate"><span class="pre">sem_setprotocol()</span></code> in order to manage the protocol
+of the underlying semaphore.</p>
+</section>
+<section id="pthread-mutexattr-setprotocol">
+<h3><code class="docutils literal notranslate"><span class="pre">pthread_mutexattr_setprotocol()</span></code><a class="headerlink" href="#pthread-mutexattr-setprotocol" title="Permalink to this heading"></a></h3>
+<p>Since NuttX implements pthread mutexes on top of
+binary semaphores, the above recommendation also
+applies when pthread mutexes are used for inter-thread
+signaling. That is, a mutex that is used for
+signaling should be initialize like this (simplified,
+no error checking here):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">pthread_mutexattr_t</span><span class="w"> </span><span class="n">attr</span><span class="p">;</span>
+<span class="n">pthread_mutex_t</span><span class="w"> </span><span class="n">mutex</span><span class="p">;</span>
+<span class="c1">// ...</span>
+<span class="n">pthread_mutexattr_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">attr</span><span class="p">);</span>
+<span class="n">pthread_mutexattr_settype</span><span class="p">(</span><span class="o">&amp;</span><span class="n">attr</span><span class="p">,</span><span class="w"> </span><span class="n">PTHREAD_PRIO_NONE</span><span class="p">);</span>
+<span class="n">pthread_mutex_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mutex</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">attr</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="is-this-always-a-problem">
+<h2>Is this Always a Problem?<a class="headerlink" href="#is-this-always-a-problem" title="Permalink to this heading"></a></h2>
+<p>Ideally <code class="docutils literal notranslate"><span class="pre">sem_setprotocol(SEM_PRIO_NONE)</span></code> should be
+called for all signaling semaphores. But, no,
+often the use of a signaling semaphore with priority
+inversion is not a problem. It is not a problem
+if the signaling semaphore is always taken on
+the same thread. For example:</p>
+<ul class="simple">
+<li><p>If the driver is used by only a single task, or</p></li>
+<li><p>If the semaphore is only taken on the worker thread.</p></li>
+</ul>
+<p>But this can be a serious problem if multiple tasks
+ever wait on the signaling semaphore. Drivers like
+the serial driver, for example, have many user
+threads that may call into the driver.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="signal_events_interrupt_handlers.html" class="btn btn-neutral float-left" title="Signaling Events from Interrupt Handlers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="smaller_vector_tables.html" class="btn btn-neutral float-right" title="Smaller Vector Tables" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

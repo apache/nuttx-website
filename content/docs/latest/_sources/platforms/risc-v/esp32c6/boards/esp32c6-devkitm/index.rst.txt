@@ -210,6 +210,11 @@ You can scan for all I2C devices using the following command::
 
     nsh> i2c dev 0x00 0x7f
 
+To use LP_I2C, you can enable `ESPRESSIF_LP_I2C0` option.  When this option is enabled,
+LP_I2C operates on GPIO7 as SCL and GPIO6 as SDA. These pins are fixed and cannot be changed.
+Also enabling LP_I2C will change the default pins of I2C0 due to LP_I2C pin limitation.
+The default I2C0 pins will be remapped to GPIO23 for SCL and GPIO5 for SDA.
+
 To use slave mode, you can enable `ESPRESSIF_I2C0_SLAVE_MODE` option.
 To use slave mode driver following snippet demonstrates how write to i2c bus
 using slave driver:
@@ -322,6 +327,39 @@ You can set an alarm, check its progress and receive a notification after it exp
     Opening /dev/rtc0
     Alarm 0 is active with 10 seconds to expiration
     nsh> alarm_daemon: alarm 0 received
+
+sdmmc_spi
+---------
+
+This configuration is used to mount a FAT/FAT32 SD Card into the OS' filesystem.
+It uses SPI to communicate with the SD Card, defaulting to SPI2.
+
+The SD slot number, SPI port number and minor number can be modified in ``Application Configuration → NSH Library``.
+
+To access the card's files, make sure ``/dev/mmcsd0`` exists and then execute the following commands::
+
+    nsh> ls /dev
+    /dev:
+    console
+    mmcsd0
+    null
+    ttyS0
+    zero
+    nsh> mount -t vfat /dev/mmcsd0 /mnt
+
+This will mount the SD Card to ``/mnt``. Now, you can use the SD Card as a normal filesystem.
+For example, you can read a file and write to it::
+
+    nsh> ls /mnt
+    /mnt:
+    hello.txt
+    nsh> cat /mnt/hello.txt
+    Hello World
+    nsh> echo 'NuttX RTOS' >> /mnt/hello.txt
+    nsh> cat /mnt/hello.txt
+    Hello World!
+    NuttX RTOS
+    nsh>
 
 spi
 --------

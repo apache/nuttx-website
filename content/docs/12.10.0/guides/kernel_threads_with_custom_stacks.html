@@ -1,0 +1,383 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kernel Threads with Custom Stacks &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Versioning and Task Names" href="versioning_and_task_names.html" />
+    <link rel="prev" title="Why can’t I put my special stuff in NuttX header files?" href="specialstuff_in_nuttxheaderfiles.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    <option value="../../12.7.0" >12.7.0</option>
+    
+    <option value="../../12.8.0" >12.8.0</option>
+    
+    <option value="../../12.9.0" >12.9.0</option>
+    
+    <option value="../../12.10.0" >12.10.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
+<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortify.html">Fortify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="include_files_board_h.html">Including Files in board.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specialstuff_in_nuttxheaderfiles.html">Why can’t I put my special stuff in NuttX header files?</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Kernel Threads with Custom Stacks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#background">Background</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#freeing-the-tcb">Freeing the TCB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#freeing-the-custom-stack-memory">Freeing the Custom Stack Memory</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="versioning_and_task_names.html">Versioning and Task Names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging_rambuffer.html">Logging to a RAM Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ipv6.html">IPv6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrate_newlib.html">Integrating with Newlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="protected_build.html">NuttX Protected Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="platform_directories.html">Platform Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="port_drivers_to_stm32f7.html">Porting Drivers to the STM32 F7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semihosting.html">Semihosting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="renode.html">Run NuttX on Renode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signal_events_interrupt_handlers.html">Signaling Events from Interrupt Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signaling_sem_priority_inheritance.html">Signaling Semaphores and Priority Inheritance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smaller_vector_tables.html">Smaller Vector Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="port.html">How to port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updating_release_system_elf.html">Updating a Release System with ELF Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="partially_linked_elf.html">ELF Programs – With Symbol Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fully_linked_elf.html">ELF Programs – No Symbol Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building_nuttx_with_app_out_of_src_tree.html">Building NuttX with Applications Outside the Source Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building_uclibcpp.html">Building uClibc++</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_app_directories.html">Custom Application Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiple_nsh_sessions.html">Multiple NSH Sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nsh_network_link_management.html">NSH Network Link Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ram_rom_disks.html">RAM Disks and ROM Disks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reading_can_msgs.html">Reading CAN Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remove_device_drivers_nsh.html">Removing Device Drivers with NSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rust.html">Rust in NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optee.html">Interfacing with OP-TEE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">Kernel Threads with Custom Stacks</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/guides/kernel_threads_with_custom_stacks.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="kernel-threads-with-custom-stacks">
+<h1>Kernel Threads with Custom Stacks<a class="headerlink" href="#kernel-threads-with-custom-stacks" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Kernel+Threads+with+Custom+Stacks">https://cwiki.apache.org/confluence/display/NUTTX/Kernel+Threads+with+Custom+Stacks</a></p>
+</div>
+<section id="background">
+<h2>Background<a class="headerlink" href="#background" title="Permalink to this heading"></a></h2>
+<p>Under certain conditions, it may be necessary to create a kernel thread whose
+stack lives in some custom memory.  This page provides and example of how that
+would be done:</p>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
+<p>Here is the body of some function.  It expects to have the following inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">taskname</span></code>:  The name of the kernel thread to be started</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stacksize</span></code>:  The size of the custom stack</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">priority</span></code>:  The priority of the kernel thread to be started</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entry_point</span></code>:  The entry point of the kernel thread to be started</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argv</span></code>:  An optional array of argument strings passed to the kernel thread</p></li>
+</ol>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Allocate a TCB for the new kernel thread.  kmm_zalloc() is</span>
+<span class="cm">* used to that all fields of the new TCB will be zeroed.</span>
+<span class="cm">*/</span>
+
+<span class="n">tcb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">task_tcb_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">kmm_zalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">task_tcb_s</span><span class="p">));</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">tcb</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/* Indicate (1) that this is a kernel thread and that (2) a custom</span>
+<span class="cm">* stack will be used.</span>
+<span class="cm">*/</span>
+
+<span class="n">tcb</span><span class="o">-&gt;</span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TCB_FLAG_TTYPE_KERNEL</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">TCB_FLAG_CUSTOM_STACK</span><span class="p">;</span>
+
+<span class="cm">/* Allocate the custom stack for the new kernel thread.</span>
+<span class="cm">*</span>
+<span class="cm">* Do whatever it takes to get a reference to the custom stack.</span>
+<span class="cm">* Here custom_alloc() is used as a placeholder for whatever</span>
+<span class="cm">* that may be.</span>
+<span class="cm">*/</span>
+
+<span class="n">stack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">custom_alloc</span><span class="p">(</span><span class="n">stacksize</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">stack</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">kmm_free</span><span class="p">(</span><span class="n">tcb</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/* Initialize the TCB.  This will initialize all remaining</span>
+<span class="cm">* fields of the TCB, associate the stack to the TCB, allocate</span>
+<span class="cm">* any additional resources needed by the kernel thread, and</span>
+<span class="cm">* place the TCB in a list of inactive tasks.</span>
+<span class="cm">*/</span>
+
+<span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task_init</span><span class="p">((</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">tcb_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">tcb</span><span class="p">,</span><span class="w"> </span><span class="n">progname</span><span class="p">,</span><span class="w"> </span><span class="n">priority</span><span class="p">,</span>
+<span class="w">                </span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="n">stacksize</span><span class="p">,</span><span class="w"> </span><span class="n">entry_point</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">kmm_free</span><span class="p">(</span><span class="n">tcb</span><span class="p">);</span>
+<span class="w">    </span><span class="n">custom_free</span><span class="p">(</span><span class="n">stack</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/* Then activate the kernel thread at the provided priority */</span>
+
+<span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task_activate</span><span class="p">((</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">tcb_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">tcb</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cm">/* nxtask_unit() will undo all of the operations of nxtask_init().</span>
+<span class="cm">    * It also has the side-effect of freeing the TCB which it assumes</span>
+<span class="cm">    * was allocated with one of the kmm_malloc()functions.</span>
+<span class="cm">    */</span>
+
+<span class="w">    </span><span class="n">nxtask_uninit</span><span class="p">(</span><span class="n">tcb</span><span class="p">);</span>
+<span class="w">    </span><span class="n">custom_free</span><span class="p">(</span><span class="n">stack</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="freeing-the-tcb">
+<h2>Freeing the TCB<a class="headerlink" href="#freeing-the-tcb" title="Permalink to this heading"></a></h2>
+<p>Prior to calling <code class="docutils literal notranslate"><span class="pre">nxtask_init()</span></code>, the TCB  can be freed using the kmm
+allocator, specifically the function <code class="docutils literal notranslate"><span class="pre">kmm_free()</span></code>.  However, after
+<code class="docutils literal notranslate"><span class="pre">nxtask_init()</span></code> is called, additional resources will be associated with the
+TCB and you must then call <code class="docutils literal notranslate"><span class="pre">nxtask_uninit()</span></code> to free the TCB and all of its
+associated resources. <code class="docutils literal notranslate"><span class="pre">kmm_free()</span></code> will be used internally by
+<code class="docutils literal notranslate"><span class="pre">nxtask_uninit()</span></code> to free the TCB. Note that in any event, the TCB must be
+allocated with one of the <code class="docutils literal notranslate"><span class="pre">kmm_malloc()</span></code> allocation functions.</p>
+<p>You must never free the TCB after <code class="docutils literal notranslate"><span class="pre">nxtask_activate()</span></code> returns successfully.</p>
+</section>
+<section id="freeing-the-custom-stack-memory">
+<h2>Freeing the Custom Stack Memory<a class="headerlink" href="#freeing-the-custom-stack-memory" title="Permalink to this heading"></a></h2>
+<p>The effect of the <code class="docutils literal notranslate"><span class="pre">TCB_FLAG_CUSTOM_STACK</span></code> flag is that the OS will not
+attempt to free the custom stack memory if the kernel thread exits, crashes,
+or is killed. Does this matter in your implementation?  Could this result in
+some kind of memory leak?  If any kind of clean-up is required by your
+application to free the custom stack memory, you will probably want to use
+an <code class="docutils literal notranslate"><span class="pre">on_exit()</span></code> or <code class="docutils literal notranslate"><span class="pre">atexit()</span></code> function to get a callback when the kernel
+thread is terminated.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">TCB_FLAG_CUSTOM_STACK</span></code> were not set in the TCB flags, the OS would
+attempt to free the stack using <code class="docutils literal notranslate"><span class="pre">kmm_free()</span></code> which is probably not what you
+want in this case.</p>
+<p>The actual logic is a slightly more complex and somewhat redundant:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">TCB_FLAG_CUSTOM_STACK</span></code> is set in the TCB flags, no attempt will be made
+to free the custom stack.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">TCB_FLAG_CUSTOM_STACK</span></code> is not set in the TCB flags, the stack will be
+de-allocated for the kernel thread only if the stack lies in the kernel
+memory pool.</p></li>
+</ul>
+<p>So in reality <code class="docutils literal notranslate"><span class="pre">TCB_FLAG_CUSTOM_STACK</span></code> may not be necessary.  But the safest
+option is to include it in all cases where you do not expect the custom stack
+to be de-allocated.</p>
+<p>You must not free the custom stack after <code class="docutils literal notranslate"><span class="pre">nxtask_activate()</span></code> returns
+successfully and until the kernel thread is terminated.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="specialstuff_in_nuttxheaderfiles.html" class="btn btn-neutral float-left" title="Why can’t I put my special stuff in NuttX header files?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="versioning_and_task_names.html" class="btn btn-neutral float-right" title="Versioning and Task Names" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

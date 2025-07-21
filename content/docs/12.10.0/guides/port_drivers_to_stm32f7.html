@@ -1,0 +1,673 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Porting Drivers to the STM32 F7 &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Semihosting" href="semihosting.html" />
+    <link rel="prev" title="Platform Directories" href="platform_directories.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    <option value="../../12.7.0" >12.7.0</option>
+    
+    <option value="../../12.8.0" >12.8.0</option>
+    
+    <option value="../../12.9.0" >12.9.0</option>
+    
+    <option value="../../12.10.0" >12.10.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_cmake.html">C++ Example using CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customboards.html">Custom Boards How-To</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
+<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Test Locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zerolatencyinterrupts.html">High Performance: Zero Latency Interrupts, Maskable Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fortify.html">Fortify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedinterrupts.html">Nested Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ofloader.html">Open Flash Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testingtcpip.html">Testing TCP/IP Network Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automounter.html">Auto-Mounter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32nullpointer.html">STM32 Null Pointer Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="include_files_board_h.html">Including Files in board.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specialstuff_in_nuttxheaderfiles.html">Why can’t I put my special stuff in NuttX header files?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_with_custom_stacks.html">Kernel Threads with Custom Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning_and_task_names.html">Versioning and Task Names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging_rambuffer.html">Logging to a RAM Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ipv6.html">IPv6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrate_newlib.html">Integrating with Newlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="protected_build.html">NuttX Protected Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="platform_directories.html">Platform Directories</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Porting Drivers to the STM32 F7</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#problem-statement">Problem Statement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#porting-simple-drivers">Porting Simple Drivers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#porting-complex-drivers">Porting Complex Drivers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cache-coherency">Cache Coherency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dma">DMA</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dma-read-accesses">DMA Read Accesses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dma-write-accesses">DMA Write Accesses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#write-back-vs-write-through-d-cache">Write-back vs. Write-through D-Cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dma-module">DMA Module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#converting-an-stm32f429-driver-for-the-stm32f746">Converting an STM32F429 Driver for the STM32F746</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#an-example">An Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reorganize-dma-data-structure">Reorganize DMA Data Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#add-cache-operations">Add Cache Operations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="semihosting.html">Semihosting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="renode.html">Run NuttX on Renode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signal_events_interrupt_handlers.html">Signaling Events from Interrupt Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signaling_sem_priority_inheritance.html">Signaling Semaphores and Priority Inheritance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smaller_vector_tables.html">Smaller Vector Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="port.html">How to port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updating_release_system_elf.html">Updating a Release System with ELF Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="partially_linked_elf.html">ELF Programs – With Symbol Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fully_linked_elf.html">ELF Programs – No Symbol Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building_nuttx_with_app_out_of_src_tree.html">Building NuttX with Applications Outside the Source Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building_uclibcpp.html">Building uClibc++</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_app_directories.html">Custom Application Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiple_nsh_sessions.html">Multiple NSH Sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nsh_network_link_management.html">NSH Network Link Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ram_rom_disks.html">RAM Disks and ROM Disks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reading_can_msgs.html">Reading CAN Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remove_device_drivers_nsh.html">Removing Device Drivers with NSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rust.html">Rust in NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optee.html">Interfacing with OP-TEE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+      <li class="breadcrumb-item active">Porting Drivers to the STM32 F7</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/guides/port_drivers_to_stm32f7.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="porting-drivers-to-the-stm32-f7">
+<h1>Porting Drivers to the STM32 F7<a class="headerlink" href="#porting-drivers-to-the-stm32-f7" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Porting+Drivers+to+the+STM32+F7">https://cwiki.apache.org/confluence/display/NUTTX/Porting+Drivers+to+the+STM32+F7</a></p>
+</div>
+<section id="problem-statement">
+<h2>Problem Statement<a class="headerlink" href="#problem-statement" title="Permalink to this heading"></a></h2>
+<p>I recently completed a port to the STMicro STM32F746G Discovery board.
+That MCU is clearly a derivative of the STM32 F3/F4 and many peripherals
+are, in fact, essentially identical to the STM32F429. The biggest
+difference is that the STM32F746 sports a Cortex-M7 which includes
+several improvements over the Cortex-M4 and including, most relevant
+to this discussion, a fully integrated data cache (<cite>D-Cache</cite>).</p>
+<p>Because of this one difference, I chose to provide the STM32 F7 code its
+own directories separate from the STM32 F1, F2, F3, and F4.</p>
+</section>
+<section id="porting-simple-drivers">
+<h2>Porting Simple Drivers<a class="headerlink" href="#porting-simple-drivers" title="Permalink to this heading"></a></h2>
+<p>Some of the STM32 F4 drivers can be used with the STM32 F7 can be ported
+very simply; many ports would just be a matter of copying files and some
+search-and-replacement. Like:</p>
+<ul class="simple">
+<li><p>Compare the two register definitions files; make sure that the STM32
+F4 peripheral is identical (or nearly identical) to the F7 peripheral.
+If so then,</p></li>
+<li><p>Copy the register definition file from the <code class="docutils literal notranslate"><span class="pre">stm32/hardware</span></code> to the
+<code class="docutils literal notranslate"><span class="pre">stm32f7/hardware</span></code> directory, making name changes as appropriate and
+updating any minor register differences.</p></li>
+<li><p>Copy the corresponding C file (and possibly a <code class="docutils literal notranslate"><span class="pre">.h</span></code> file) from the
+<code class="docutils literal notranslate"><span class="pre">stm32/</span></code> directory to the <code class="docutils literal notranslate"><span class="pre">stm32f7/</span></code> directory, again making any naming
+changes and modifications for any register differences.</p></li>
+<li><p>Update the <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code> file to include the new C file in the build.</p></li>
+</ul>
+</section>
+<section id="porting-complex-drivers">
+<h2>Porting Complex Drivers<a class="headerlink" href="#porting-complex-drivers" title="Permalink to this heading"></a></h2>
+<p>The Cortex-M7 D-Cache, however, does raise issues with the compatibility
+of most complex STM32 F4 and F7 drivers. Even though the peripheral
+registers may be essentially the same between the STM32F429 and the
+the STM32F746, many drivers for the STM32F429 will not be directly
+compatible with the STM32F746, particularly drivers that use DMA.
+And that includes most complex STM32 drivers!</p>
+</section>
+<section id="cache-coherency">
+<h2>Cache Coherency<a class="headerlink" href="#cache-coherency" title="Permalink to this heading"></a></h2>
+<p>With DMA, physical RAM memory contents is accessed directly by peripheral
+hardware without intervention from the CPU. The CPU itself deals only the
+indirectly with RAM through the D-Cache: When you read data from RAM, it
+is first loaded in the D-Cache then accessed by the CPU. If the RAM
+contents is already in the D-Cache, then physical RAM is not accessed
+at all! Similarly, when you write data into RAM (with write buffering
+enabled), it may actually not be written to physical RAM but may just
+remain in the D-Cache in a <cite>dirty</cite> cache line until that cache line is
+flushed to memory. Thus, there may be inconsistencies in the contents
+of the D-Cache and in the contents of contents of physical RAM due
+related to DMA. Such issues are referred to as <cite>Cache Coherency</cite> problems.</p>
+</section>
+<section id="dma">
+<h2>DMA<a class="headerlink" href="#dma" title="Permalink to this heading"></a></h2>
+<section id="dma-read-accesses">
+<h3>DMA Read Accesses<a class="headerlink" href="#dma-read-accesses" title="Permalink to this heading"></a></h3>
+<p>A DMA read access occurs when we program DMA hardware to read data
+from a peripheral and store that data into RAM. This happens, for
+example, when we read a packet from the network, when we read a
+serial byte of data from a UART, when we read a block from an
+MMC/SD card, and so on.</p>
+<p>In this case, the DMA hardware will change the contents of physical
+RAM without knowledge of the CPU. So if that same memory that was
+modified by the DMA read operation is also in the D-Cache, then
+the contents of the D-Cache will no longer be valid; it will no
+longer match the physical contents of the memory. In order to fix
+this, the Cortex-M7 supports a special <cite>cache operation</cite> that can be
+used to <cite>invalidate</cite> the D-Cache contents associate with the read DMA
+buffer address range. Invalidation simply means discarding the
+currently cached D-Cache lines so that they will be refetched
+from physical RAM. <strong>Rule 1a</strong>: Always invalidate RX DMA buffers
+sometime before or after starting the read DMA but certainly <cite>before</cite>
+accessing the read buffer data. <strong>Rule 1b</strong>: Never read from the read
+DMA buffer before the read DMA buffer completes, or otherwise you
+will re-cache the DMA buffer content.</p>
+<p><cite>What if the D-Cache line is also dirty? What if we have writes to
+the DMA buffer that were never flushed to physical RAM?</cite> Those writes
+will then never make it to physical memory if the D-Cache is
+invalidated. <strong>Rule 2</strong>: Never write to read DMA buffer memory!
+<strong>Rule 3</strong>: Make sure that all DMA read buffers are aligned to the
+D-Cache line size so that there are no spill-over cache effects
+at the boarders of the invalidated cache line.</p>
+</section>
+<section id="dma-write-accesses">
+<h3>DMA Write Accesses<a class="headerlink" href="#dma-write-accesses" title="Permalink to this heading"></a></h3>
+<p>A DMA write access occurs when we program DMA hardware to write data from
+RAM into a peripheral. This happen for example, when we send a packet on
+a network or when we write a block of data to an MMC/SD card. In this,
+the hardware expects the correct data to be in physical RAM when write
+DMA is performed. If not then, the wrong data will be sent.</p>
+<p>We assure that we do not have pending writes in a <cite>dirty</cite> cache line by
+<cite>cleaning</cite> (or <cite>flushing</cite>) the <cite>dirty</cite> cache lines; i.e., for forcing any
+pending writes in the D-Cache lines to be written to physical RAM.
+<strong>Rule 4</strong>: Always <cite>clean</cite> (or <cite>flush</cite>) the D-Cache to force all data to
+be written from the D-Cache into physical RAM.</p>
+<p><cite>What if you had two adjacent DMA buffers side-by-side? Couldn’t the
+cleaning of the write buffer force writing into the adjacent read
+buffer?`</cite> Yes! <strong>Rule 5</strong>: Make sure that all DMA write buffers are
+aligned to the D-Cache line size so that there are no spill-over
+cache effects at the borders of the cleaned cache line.</p>
+</section>
+<section id="write-back-vs-write-through-d-cache">
+<h3>Write-back vs. Write-through D-Cache<a class="headerlink" href="#write-back-vs-write-through-d-cache" title="Permalink to this heading"></a></h3>
+<p>The Cortex-M7 supports both <cite>write-back</cite> and <cite>write-through</cite> data cache
+configurations. The write-back D-Cache works just as described above:
+<cite>dirty</cite> cache lines are not written to physical memory until the cache
+line is flushed. But write-through D-Cache works just as without the
+D-Cache. Writes always go directly to physical RAM.</p>
+<p><cite>If I am using a write-through D-Cache, can’t I just forget about
+cleaning the D-Cache?</cite> No, because you don’t know how a user is going
+to configuration the D-Cache. <strong>Rule 6</strong>: Always assume that <cite>write-back</cite>
+caching is being performed; otherwise, your driver will not be portable.</p>
+<p>You may notice in <code class="docutils literal notranslate"><span class="pre">/arch/arm/src/armv7-m/cache.h</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if defined(CONFIG_ARMV7M_DCACHE) &amp;&amp; !defined(CONFIG_ARMV7M_DCACHE_WRITETHROUGH)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">arch_clean_dcache</span><span class="p">(</span><span class="kt">uintptr_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="kt">uintptr_t</span><span class="w"> </span><span class="n">end</span><span class="p">);</span>
+<span class="cp">#else</span>
+<span class="cp">#  define arch_clean_dcache(s,e)</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>NOTE: I have experienced other cases (on the SAMV7) where write buffering
+<cite>must</cite> be disabled: In one case, a certain peripheral used 16-byte DMA
+descriptors in an array. Clearly it is impossible to manage the
+caching of the 16-byte DMA descriptors with a 32-byte cache line in
+this case: I think that the only option is to disabled the write buffer.</p>
+<p>And what if the driver receives arbitrarily aligned buffers from the
+application? Then what? Should write buffering be disabled in that
+case too? And what is the performance cost for disabling the write
+buffer?</p>
+</section>
+<section id="dma-module">
+<h3>DMA Module<a class="headerlink" href="#dma-module" title="Permalink to this heading"></a></h3>
+<p>Some STM32 F7 peripherals have built in DMA. The STM32 F7 Ethernet
+driver discussed below is a good example of such a peripheral with
+built in DMA capability. Most STM32 F7 peripherals, however, have
+no built-in DMA capability and, instead, must use a common STM32
+F7 DMA module to perform DMA data transfers. The interfaces to that
+common DMA module are described in <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32f7/stm32_dma.h</span></code>.</p>
+<p>The DMA modules <cite>does not do any cache operations</cite>. Rather, the client
+of the DMA module must perform the cache operations. Here are the
+basic rules:</p>
+<ul class="simple">
+<li><p>TX DMA Transfers. Before calling <code class="docutils literal notranslate"><span class="pre">stm32_dmastart()</span></code> to start an TX
+transfer, the DMA client must clean the DMA buffer so that the
+content to be DMA’ed is present in physical memory.</p></li>
+<li><p>RX DMA transfers. At the completion of all DMAs, the DMA client
+will receive a callback providing the final status of the DMA
+transfer. For the case of RX DMA completion callbacks, logic in
+the callback handler should invalidate the RX buffer before any
+attempt is made to access new RX buffer content.</p></li>
+</ul>
+</section>
+</section>
+<section id="converting-an-stm32f429-driver-for-the-stm32f746">
+<h2>Converting an STM32F429 Driver for the STM32F746<a class="headerlink" href="#converting-an-stm32f429-driver-for-the-stm32f746" title="Permalink to this heading"></a></h2>
+<p>Since the STM32 F7 is so similar to the STM32 F4, we have a wealth
+of working drivers to port from. Only a little effort is required.
+Below is a summary of the kinds of things that you would have to do
+to convert an STM32F429 driver to the STM32F746.</p>
+<section id="an-example">
+<h3>An Example<a class="headerlink" href="#an-example" title="Permalink to this heading"></a></h3>
+<p>There is a good example in the STM32 Ethernet driver. The STM32 F7
+Ethernet driver (<code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32f7/stm32_ethernet.c</span></code>) derives
+directly from the STM32 F4 Ethernet driver
+(<code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/stm32_eth.c</span></code>). These two Ethernet MAC peripherals
+are nearly identical. Only changes that are a direct consequence of the
+STM32 F7 D-Cache were required to make the driver work on the STM32 F7.
+Those changes are summarized below.</p>
+</section>
+<section id="reorganize-dma-data-structure">
+<h3>Reorganize DMA Data Structure<a class="headerlink" href="#reorganize-dma-data-structure" title="Permalink to this heading"></a></h3>
+<p>The STM32 Ethernet driver has four different kinds DMA buffers:</p>
+<ul class="simple">
+<li><p>RX DMA descriptor,</p></li>
+<li><p>TX DMA descriptors,</p></li>
+<li><p>RX packet buffers, and</p></li>
+<li><p>TX packet buffers,</p></li>
+</ul>
+<p>In the STM32F429 driver, these are simply implemented as part of the
+driver data structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">stm32_ethmac_s</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="cm">/* Descriptor allocations */</span>
+
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_rxdesc_s</span><span class="w"> </span><span class="n">rxtable</span><span class="p">[</span><span class="n">CONFIG_STM32_ETH_NRXDESC</span><span class="p">];</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_txdesc_s</span><span class="w"> </span><span class="n">txtable</span><span class="p">[</span><span class="n">CONFIG_STM32_ETH_NTXDESC</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cm">/* Buffer allocations */</span>
+
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">rxbuffer</span><span class="p">[</span><span class="n">CONFIG_STM32_ETH_NRXDESC</span><span class="o">*</span><span class="n">CONFIG_STM32_ETH_BUFSIZE</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">alloc</span><span class="p">[</span><span class="n">STM32_ETH_NFREEBUFFERS</span><span class="o">*</span><span class="n">CONFIG_STM32_ETH_BUFSIZE</span><span class="p">];</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>There are potentially three problems with this: (1) We don’t know what
+kind of memory the data structure will be defined in. What if it is
+DTCM memory? Then the DMAs will fail. (2) We don’t know the alignment
+of the DMA buffers. They must be aligned on D-Cache line boundaries.
+(3a) The size of RX or TX descriptor is either 16- or 32-bytes. In
+order to individually clean or invalidate the cache line, they must
+be sized in multiples of the cache line size and (3b) the same applies
+to the DMA buffers.</p>
+<p>To fix this, several things were done:</p>
+<ul class="simple">
+<li><p>The buffer allocations were moved from the device structure into
+separate declarations that can have attributes.</p></li>
+<li><p>One attribute that could be added would be a section name to assure
+that the structures are linked into DMA-able memory (via definitions
+in the linker script).</p></li>
+<li><p>Another attribute is that we can force the alignment of the structure
+to the D-Cache line size.</p></li>
+</ul>
+<p>The following definitions were added to support aligning the sizes of
+the buffers to the Cortex-M7 D-Cache line size:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Buffers used for DMA access must begin on an address aligned with the</span>
+<span class="cm">* D-Cache line and must be an even multiple of the D-Cache line size.</span>
+<span class="cm">* These size/alignment requirements are necessary so that D-Cache flush</span>
+<span class="cm">* and invalidate operations will not have any additional effects.</span>
+<span class="cm">*</span>
+<span class="cm">* The TX and RX descriptors are normally 16 bytes in size but could be</span>
+<span class="cm">* 32 bytes in size if the enhanced descriptor format is used (it is not).</span>
+<span class="cm">*/</span>
+
+<span class="w"> </span><span class="cp">#define DMA_BUFFER_MASK    (ARMV7M_DCACHE_LINESIZE - 1)</span>
+<span class="w"> </span><span class="cp">#define DMA_ALIGN_UP(n)    (((n) + DMA_BUFFER_MASK) &amp; ~DMA_BUFFER_MASK)</span>
+<span class="w"> </span><span class="cp">#define DMA_ALIGN_DOWN(n)  ((n) &amp; ~DMA_BUFFER_MASK)</span>
+
+<span class="w"> </span><span class="cp">#ifndef CONFIG_STM32F7_ETH_ENHANCEDDESC</span>
+<span class="w"> </span><span class="cp">#  define RXDESC_SIZE       16</span>
+<span class="w"> </span><span class="cp">#  define TXDESC_SIZE       16</span>
+<span class="w"> </span><span class="cp">#else</span>
+<span class="w"> </span><span class="cp">#  define RXDESC_SIZE       32</span>
+<span class="w"> </span><span class="cp">#  define TXDESC_SIZE       32</span>
+<span class="w"> </span><span class="cp">#endif</span>
+
+<span class="w"> </span><span class="cp">#define RXDESC_PADSIZE      DMA_ALIGN_UP(RXDESC_SIZE)</span>
+<span class="w"> </span><span class="cp">#define TXDESC_PADSIZE      DMA_ALIGN_UP(TXDESC_SIZE)</span>
+<span class="w"> </span><span class="cp">#define ALIGNED_BUFSIZE     DMA_ALIGN_UP(ETH_BUFSIZE)</span>
+
+<span class="w"> </span><span class="cp">#define RXTABLE_SIZE        (STM32F7_NETHERNET * CONFIG_STM32F7_ETH_NRXDESC)</span>
+<span class="w"> </span><span class="cp">#define TXTABLE_SIZE        (STM32F7_NETHERNET * CONFIG_STM32F7_ETH_NTXDESC)</span>
+
+<span class="w"> </span><span class="cp">#define RXBUFFER_SIZE       (CONFIG_STM32F7_ETH_NRXDESC * ALIGNED_BUFSIZE)</span>
+<span class="w"> </span><span class="cp">#define RXBUFFER_ALLOC      (STM32F7_NETHERNET * RXBUFFER_SIZE)</span>
+
+<span class="w"> </span><span class="cp">#define TXBUFFER_SIZE       (STM32_ETH_NFREEBUFFERS * ALIGNED_BUFSIZE)</span>
+<span class="w"> </span><span class="cp">#define TXBUFFER_ALLOC      (STM32F7_NETHERNET * TXBUFFER_SIZE)</span>
+</pre></div>
+</div>
+<p>The RX and TX descriptor types are replace with a union type
+that assures that the allocations will be aligned in size:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* This union type forces the allocated size of RX descriptors to be the</span>
+<span class="cm">* padded to a exact multiple of the Cortex-M7 D-Cache line size.</span>
+<span class="cm">*/</span>
+
+<span class="k">union</span><span class="w"> </span><span class="nc">stm32_txdesc_u</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">             </span><span class="n">pad</span><span class="p">[</span><span class="n">TXDESC_PADSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_txdesc_s</span><span class="w"> </span><span class="n">txdesc</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">union</span><span class="w"> </span><span class="nc">stm32_rxdesc_u</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">             </span><span class="n">pad</span><span class="p">[</span><span class="n">RXDESC_PADSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_rxdesc_s</span><span class="w"> </span><span class="n">rxdesc</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Then, finally, the new buffers are defined by the following globals:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* DMA buffers.  DMA buffers must:</span>
+<span class="cm">*</span>
+<span class="cm">* 1. Be a multiple of the D-Cache line size.  This requirement is assured</span>
+<span class="cm">*    by the definition of RXDMA buffer size above.</span>
+<span class="cm">* 2. Be aligned a D-Cache line boundaries, and</span>
+<span class="cm">* 3. Be positioned in DMA-able memory (*NOT* DTCM memory).  This must</span>
+<span class="cm">*    be managed by logic in the linker script file.</span>
+<span class="cm">*</span>
+<span class="cm">* These DMA buffers are defined sequentially here to best assure optimal</span>
+<span class="cm">* packing of the buffers.</span>
+<span class="cm">*/</span>
+
+<span class="cm">/* Descriptor allocations */</span>
+
+<span class="k">static</span><span class="w"> </span><span class="k">union</span><span class="w"> </span><span class="nc">stm32_rxdesc_u</span><span class="w"> </span><span class="n">g_rxtable</span><span class="p">[</span><span class="n">RXTABLE_SIZE</span><span class="p">]</span>
+<span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="n">ARMV7M_DCACHE_LINESIZE</span><span class="p">)));</span>
+<span class="k">static</span><span class="w"> </span><span class="k">union</span><span class="w"> </span><span class="nc">stm32_txdesc_u</span><span class="w"> </span><span class="n">g_txtable</span><span class="p">[</span><span class="n">TXTABLE_SIZE</span><span class="p">]</span>
+<span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="n">ARMV7M_DCACHE_LINESIZE</span><span class="p">)));</span>
+
+<span class="cm">/* Buffer allocations */</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">g_rxbuffer</span><span class="p">[</span><span class="n">RXBUFFER_ALLOC</span><span class="p">]</span>
+<span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="n">ARMV7M_DCACHE_LINESIZE</span><span class="p">)));</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">g_txbuffer</span><span class="p">[</span><span class="n">TXBUFFER_ALLOC</span><span class="p">]</span>
+<span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="n">ARMV7M_DCACHE_LINESIZE</span><span class="p">)));</span>
+</pre></div>
+</div>
+<p>This does, of course, force additional changes to the functions
+that initialize the buffer chains, but I will leave that to the
+interested reader to discover.</p>
+</section>
+<section id="add-cache-operations">
+<h3>Add Cache Operations<a class="headerlink" href="#add-cache-operations" title="Permalink to this heading"></a></h3>
+<p>The Cortex-M7 cache operations are available the following file is included:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;cache.h&quot;</span>
+</pre></div>
+</div>
+<p>Here is an example where the RX descriptors are invalidated:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_recvframe</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">stm32_ethmac_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="p">...</span>
+<span class="cm">/* Scan descriptors owned by the CPU.  */</span>
+
+<span class="n">rxdesc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">rxhead</span><span class="p">;</span>
+
+<span class="cm">/* Forces the first RX descriptor to be re-read from physical memory */</span>
+
+<span class="n">arch_invalidate_dcache</span><span class="p">((</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">rxdesc</span><span class="p">,</span>
+<span class="w">                        </span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">rxdesc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_rxdesc_s</span><span class="p">));</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">(</span><span class="n">rxdesc</span><span class="o">-&gt;</span><span class="n">rdes0</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">ETH_RDES0_OWN</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">        </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">CONFIG_STM32F7_ETH_NRXDESC</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">        </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">inflight</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">CONFIG_STM32F7_ETH_NTXDESC</span><span class="p">;</span>
+<span class="w">    </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="cm">/* Try the next descriptor */</span>
+
+<span class="w">    </span><span class="n">rxdesc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_rxdesc_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">rxdesc</span><span class="o">-&gt;</span><span class="n">rdes3</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/* Force the next RX descriptor to be re-read from physical memory */</span>
+
+<span class="w">    </span><span class="n">arch_invalidate_dcache</span><span class="p">((</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">rxdesc</span><span class="p">,</span>
+<span class="w">                            </span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">rxdesc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_rxdesc_s</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here is an example where a TX descriptor is cleaned:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_transmit</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">stm32_ethmac_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="p">...</span>
+<span class="w">        </span><span class="cm">/* Give the descriptor to DMA */</span>
+
+<span class="w">        </span><span class="n">txdesc</span><span class="o">-&gt;</span><span class="n">tdes0</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="n">ETH_TDES0_OWN</span><span class="p">;</span>
+
+<span class="w">        </span><span class="cm">/* Flush the contents of the modified TX descriptor into physical</span>
+<span class="cm">        * memory.</span>
+<span class="cm">        */</span>
+
+<span class="w">        </span><span class="n">arch_clean_dcache</span><span class="p">((</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">txdesc</span><span class="p">,</span>
+<span class="w">                            </span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">txdesc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">eth_txdesc_s</span><span class="p">));</span>
+<span class="p">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here is where the read buffer is invalidated just after
+completed a read DMA:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_recvframe</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">stm32_ethmac_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="p">...</span>
+<span class="w">    </span><span class="cm">/* Force the completed RX DMA buffer to be re-read from</span>
+<span class="cm">    * physical memory.</span>
+<span class="cm">    */</span>
+
+<span class="w">    </span><span class="n">arch_invalidate_dcache</span><span class="p">((</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">d_buf</span><span class="p">,</span>
+<span class="w">                        </span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">d_buf</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">d_len</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">nllvdbg</span><span class="p">(</span><span class="s">&quot;rxhead: %p d_buf: %p d_len: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">rxhead</span><span class="p">,</span><span class="w"> </span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">d_buf</span><span class="p">,</span><span class="w"> </span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">d_len</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Return success*/</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here is where the write buffer in clean prior to starting a write DMA:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_transmit</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">stm32_ethmac_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="p">...</span>
+<span class="cm">/* Flush the contents of the TX buffer into physical memory */</span>
+
+<span class="n">arch_clean_dcache</span><span class="p">((</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">dev</span><span class="p">.</span><span class="n">d_buf</span><span class="p">,</span>
+<span class="w">                    </span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">dev</span><span class="p">.</span><span class="n">d_buf</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">dev</span><span class="p">.</span><span class="n">d_len</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="platform_directories.html" class="btn btn-neutral float-left" title="Platform Directories" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="semihosting.html" class="btn btn-neutral float-right" title="Semihosting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

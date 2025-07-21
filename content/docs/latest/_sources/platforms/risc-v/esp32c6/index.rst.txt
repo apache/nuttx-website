@@ -346,7 +346,7 @@ ECC              No
 eFuse            Yes
 GPIO             Yes     Dedicated GPIO supported
 HMAC             No
-I2C              Yes     Master and Slave mode supported
+I2C              Yes     Master and Slave mode also LPI2C supported
 I2S              Yes
 LED/PWM          Yes
 MCPWM            Yes
@@ -356,13 +356,13 @@ RNG              Yes
 RSA              No
 RTC              Yes
 SDIO             No
-SHA              No
+SHA              Yes
 SPI              Yes
 SPIFLASH         Yes
 SPIRAM           No
 Temp. Sensor     No
 Timers           Yes
-UART             Yes
+UART             Yes     LPUART supported
 USB Serial       Yes
 Watchdog         Yes
 Wi-Fi            Yes

@@ -106,6 +106,8 @@
     
     <option value="../../../../12.9.0" >12.9.0</option>
     
+    <option value="../../../../12.10.0" >12.10.0</option>
+    
     </select>
   </div>
 
@@ -239,6 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../max31855/index.html"><code class="docutils literal notranslate"><span class="pre">max31855</span></code> max31855 example</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">mcuboot</span></code> MCUboot examples</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#swap-test"><code class="docutils literal notranslate"><span class="pre">swap_test</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#mcuboot-local-agent"><code class="docutils literal notranslate"><span class="pre">mcuboot_local_agent</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../media/index.html"><code class="docutils literal notranslate"><span class="pre">media</span></code> Media test</a></li>
@@ -397,8 +400,9 @@ valid images.</p>
 <p>This application add 3 Builtin Apps to NuttX NSH: version, set_img and confirm.
 After application is build and <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> be generated, the binary must be
 signed. Consult your board documentation page to get instructions how to do it.</p>
+</section>
 <section id="how-to-build-and-flash">
-<h4>How to build and flash<a class="headerlink" href="#how-to-build-and-flash" title="Permalink to this heading"></a></h4>
+<h3>How to build and flash<a class="headerlink" href="#how-to-build-and-flash" title="Permalink to this heading"></a></h3>
 <p>First step is build your board configuration using <code class="docutils literal notranslate"><span class="pre">mcuboot-loader</span></code> as target.
 That create the bootloader itself. The <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> must be flash as usual.</p>
 <p>After that, clean up environment and set <code class="docutils literal notranslate"><span class="pre">mcuboot-swap-test</span></code> as target. The
@@ -413,7 +417,7 @@ at Slot-1.</p>
 page.</p>
 </section>
 <section id="running-swap-image-test">
-<h4>Running swap image test<a class="headerlink" href="#running-swap-image-test" title="Permalink to this heading"></a></h4>
+<h3>Running swap image test<a class="headerlink" href="#running-swap-image-test" title="Permalink to this heading"></a></h3>
 <p>Open you terminal and reboot your board. You can see a similar output as below.
 You can check builtin apps using command <code class="docutils literal notranslate"><span class="pre">?</span></code>:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>*** Booting MCUboot build 7c890f4b075aed73e4c825ccf875b2fb9ebf2ded ***
@@ -503,6 +507,112 @@ nsh&gt;
 </div>
 <p>Conclusion, once we boot a newer image and confirm it MCUboot always run that
 image, unless you instruct it to swap again!</p>
+</section>
+</section>
+<section id="mcuboot-local-agent">
+<h2><code class="docutils literal notranslate"><span class="pre">mcuboot_local_agent</span></code><a class="headerlink" href="#mcuboot-local-agent" title="Permalink to this heading"></a></h2>
+<p>MCUBoot Local Update Agent is an application to demonstrate firmware upgrade
+using a binary file from local storage. Unlike remote update mechanisms, this
+example copies the firmware binary directly from local storage (such as SD Card,
+USB drive, or any mounted filesystem) to the secondary flash slot for MCUBoot
+to process during the next boot.</p>
+<p>This application provides a simple and reliable way to update firmware without
+requiring network connectivity or complex remote update infrastructure.</p>
+<p>Features:</p>
+<ul class="simple">
+<li><p>Copy firmware binary from local storage to secondary flash slot</p></li>
+<li><p>Progress indication during firmware copy</p></li>
+<li><p>Automatic size validation (ensures firmware fits in secondary slot)</p></li>
+<li><p>Flash area erasing and writing</p></li>
+<li><p>Automatic boot marking and system restart</p></li>
+</ul>
+<section id="build-and-flash">
+<h3>Build and flash<a class="headerlink" href="#build-and-flash" title="Permalink to this heading"></a></h3>
+<p>First, build your board configuration with MCUBoot, SD Card support and enable this tool under
+<cite>Application Configuration → Examples → MCUboot Examples → MCUBoot Local Update Agent</cite>.</p>
+<p>Flash the board normally.</p>
+<section id="generating-the-update-binary">
+<h4>Generating the update binary<a class="headerlink" href="#generating-the-update-binary" title="Permalink to this heading"></a></h4>
+<p>To create a firmware binary for update:</p>
+<ol class="arabic">
+<li><p>Configure the build to target the secondary slot:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make menuconfig
+# Configure MCUBoot to build for secondary slot
+# (specific configuration varies by architecture)
+</pre></div>
+</div>
+</li>
+<li><p>Optionally modify the application (e.g., change MOTD) to visually identify
+the updated image</p></li>
+<li><p>Build the update binary:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make
+</pre></div>
+</div>
+</li>
+<li><p>The resulting binary should be copied to your local storage device (i.e. SD Card).
+Consult your board documentation for the specific binary filename and
+any required post-processing steps.</p></li>
+</ol>
+</section>
+<section id="running-the-local-update-agent">
+<h4>Running the local update agent<a class="headerlink" href="#running-the-local-update-agent" title="Permalink to this heading"></a></h4>
+<ol class="arabic">
+<li><p>Mount your storage device containing the firmware binary:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+</pre></div>
+</div>
+</li>
+<li><p>Verify the firmware file is accessible:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /mnt
+/mnt:
+ nuttx.bin
+ readme.txt
+</pre></div>
+</div>
+</li>
+<li><p>Run the update agent with the firmware file path:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mcuboot_local_agent /mnt/nuttx.bin
+</pre></div>
+</div>
+<p>If no path is specified, it defaults to <code class="docutils literal notranslate"><span class="pre">/mnt/sdcard/nuttx.bin</span></code></p>
+</li>
+</ol>
+</section>
+<section id="example-output">
+<h4>Example output<a class="headerlink" href="#example-output" title="Permalink to this heading"></a></h4>
+<p>When running the update agent, you should see output similar to:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mcuboot_local_agent /mnt/nuttx.bin
+MCUBoot Local Update Agent
+Firmware file: /mnt/nuttx.bin
+Firmware file size: 1048576 bytes
+Erasing secondary flash slot...
+Copying firmware to secondary slot...
+Progress: 4096/1048576 bytes [0%]
+Progress: 8192/1048576 bytes [0%]
+Progress: 12288/1048576 bytes [1%]
+...
+Progress: 1044480/1048576 bytes [99%]
+Progress: 1048576/1048576 bytes [100%]
+Firmware copy completed successfully!
+Firmware successfully copied to secondary slot!
+Update scheduled for next boot. Restarting...
+reboot status=0
+</pre></div>
+</div>
+<p>After reboot, MCUBoot will detect the new firmware in the secondary slot and
+perform the update. You should see MCUBoot messages indicating the swap process:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>*** Booting MCUboot build v2.2.0-rc1 ***
+...
+Primary image: magic=good, swap_type=0x1, copy_done=0x3, image_ok=0x1
+Scratch: magic=unset, swap_type=0x1, copy_done=0x3, image_ok=0x3
+Boot source: primary slot
+Image index: 0, Swap type: test
+Starting swap using scratch algorithm.
+...
+This is MCUBoot Updated Image!!
+nsh&gt;
+</pre></div>
+</div>
 </section>
 </section>
 </section>

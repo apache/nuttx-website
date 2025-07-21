@@ -106,6 +106,8 @@
     
     <option value="../../../../12.9.0" >12.9.0</option>
     
+    <option value="../../../../12.10.0" >12.10.0</option>
+    
     </select>
   </div>
 
@@ -145,6 +147,8 @@
 <li class="toctree-l4"><a class="reference internal" href="ioexpander.html">IO Expander Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lcd.html">LCD Character Drivers</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">Memory Technology Device Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#registration-method">Registration Method</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#control-ftl-behavior-via-open-flags">Control FTL Behavior via Open Flags</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#eeprom">EEPROM</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#cfi-flash">CFI FLASH</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#nand-memory">NAND MEMORY</a></li>
@@ -279,12 +283,78 @@ level device driver. In general, the binding sequence is:</p>
 <ol class="arabic simple">
 <li><p>Get an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mtd_dev_s</span></code> from the
 hardware-specific MTD device driver, and</p></li>
-<li><p>Provide that instance to the initialization method of the
-higher level device driver.</p></li>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">register_mtddriver</span></code> interface to register the MTD drivers.</p></li>
 </ol>
 </li>
-<li><p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/mtd/m25px.c</span></code> and <code class="docutils literal notranslate"><span class="pre">drivers/mtd/ftl.c</span></code></p></li>
+<li><p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/mtd/m25px.c</span></code> and <code class="docutils literal notranslate"><span class="pre">boards/arm/sama5/sama5d4-ek/src/sam_at25.c</span></code></p></li>
 </ul>
+<section id="registration-method">
+<h2>Registration Method<a class="headerlink" href="#registration-method" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">register_mtddriver</span></code> function provides a unified interface for
+registering MTD devices. Upon registration, the MTD device will automatically
+incorporate FTL (Flash Translation Layer) and BCH (Block-to-Character conversion)
+wrappers during the <code class="docutils literal notranslate"><span class="pre">open()</span></code> process. This automatic wrapping obviates the
+need for legacy registration methods <code class="docutils literal notranslate"><span class="pre">ftl_initialize()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bchdev_register()</span></code> in user code. Users can directly access the MTD device
+via standard file operations (e.g., <code class="docutils literal notranslate"><span class="pre">open()</span></code>, <code class="docutils literal notranslate"><span class="pre">read()</span></code>, <code class="docutils literal notranslate"><span class="pre">write()</span></code>)
+after registration.</p>
+<ul>
+<li><p><strong>Character Device Mode</strong> (via <code class="docutils literal notranslate"><span class="pre">open()</span></code>):
+Enables byte-oriented access with both FTL and BCH layers applied
+(requires <code class="docutils literal notranslate"><span class="pre">CONFIG_BCH</span></code>).</p></li>
+<li><p><strong>Block Device Mode</strong> (via <code class="docutils literal notranslate"><span class="pre">open_blockdriver()</span></code>):
+Presents a block interface with only the FTL layer enabled</p>
+<p>The functions register_partition_with_mtd() and register_mtdpartition()
+are actually wrappers built on top of register_mtddriver(),
+and they can be used to create sub-partition devices for MTD devices.</p>
+<p>In scenarios where the FTL layer is not suitable for converting MTD to a
+block device, alternatives like Dhara can be used instead.
+To register a Dhara-backed block device: Use the <code class="docutils literal notranslate"><span class="pre">dhara_initialize()</span></code>
+function, passing the underlying  <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mtd_dev_s</span> <span class="pre">*dev</span></code>
+as a parameter to create a Dhara block device instance.  Once Dhara is
+initialized, register the block device using <code class="docutils literal notranslate"><span class="pre">register_blockdriver()</span></code>
+with the Dhara device’s block operations:  This approach bypasses the FTL
+layer and directly integrates Dhara’s block management capabilities with the
+MTD device. Dhara provides features such as wear-leveling and bad block
+management tailored for specific use cases.</p>
+</li>
+</ul>
+</section>
+<section id="control-ftl-behavior-via-open-flags">
+<h2>Control FTL Behavior via Open Flags<a class="headerlink" href="#control-ftl-behavior-via-open-flags" title="Permalink to this heading"></a></h2>
+<p>The FTL layer translates MTD operations into block-device semantics
+while managing NAND-specific challenges (e.g., bad blocks, wear leveling).
+By default, FTL employs a read-modify-write cycle for writes:</p>
+<ol class="arabic simple">
+<li><p>Read the entire erase block into a cache buffer.</p></li>
+<li><p>Modify the target data in memory.</p></li>
+<li><p>Erase the physical block.</p></li>
+<li><p>Write the entire buffer back.</p></li>
+</ol>
+<p>This approach ensures data consistency but introduces latency and requires
+sufficient RAM.
+To accommodate performance-sensitive applications,
+FTL supports the following flags during <code class="docutils literal notranslate"><span class="pre">open()</span></code>:</p>
+<ul class="simple">
+<li><p><strong>``O_DIRECT``</strong>:
+Bypasses the read-modify-write cycle, enabling direct writes to flash.
+Use this flag when: Write speed is critical or Sufficient RAM for caching
+is unavailable.</p></li>
+<li><p><strong>``O_SYNC``</strong>:
+Assumes blocks are pre-erased, skipping the erase step during writes.
+This flag only takes effect when used in conjunction with <code class="docutils literal notranslate"><span class="pre">O_DIRECT</span></code>.</p></li>
+</ul>
+<p>The diagram below illustrates the workflow when opening an MTD device node
+via the <code class="docutils literal notranslate"><span class="pre">open()</span></code> function, highlighting how <code class="docutils literal notranslate"><span class="pre">oflags</span></code>
+(e.g., <code class="docutils literal notranslate"><span class="pre">O_DIRECT</span></code>, <code class="docutils literal notranslate"><span class="pre">O_SYNC</span></code>) are propagated through layers to control
+FTL behavior:</p>
+<figure class="align-center" id="id1">
+<img alt="MTD Device Open Sequence with Oflags" src="../../../_images/mtd_open_flow.png" />
+<figcaption>
+<p><span class="caption-text"><em>Figure 1: Sequence of opening an MTD device node and oflag propagation</em></span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
 <section id="eeprom">
 <h2>EEPROM<a class="headerlink" href="#eeprom" title="Permalink to this heading"></a></h2>
 <p>EEPROMs are a form of Memory Technology Device (MTD).  EEPROMs are non-

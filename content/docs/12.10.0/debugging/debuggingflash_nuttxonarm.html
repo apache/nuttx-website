@@ -1,0 +1,314 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD) &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Analyzing Cortex-M Hardfaults" href="cortexmhardfaults.html" />
+    <link rel="prev" title="Disabling the Stack Dump During Debugging" href="disabling_stackdumpdebug.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    <option value="../../12.7.0" >12.7.0</option>
+    
+    <option value="../../12.8.0" >12.8.0</option>
+    
+    <option value="../../12.9.0" >12.9.0</option>
+    
+    <option value="../../12.10.0" >12.10.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Debugging</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gdbwithpython.html">GDB with Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qemugdb.html">How to debug NuttX using QEMU and GDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdbserver.html">gdbserver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_elf_loadable_modules.html">Debugging ELF Loadable Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasktrace.html">Task Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kasan.html">The Kernel Address Sanitizer (KASAN)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coredump.html">Core Dump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coresight.html">Coresight - HW Assisted Tracing on ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stackcheck.html">Stack Overflow Check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stackrecord.html">Run time stack statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="disabling_stackdumpdebug.html">Disabling the Stack Dump During Debugging</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-s-the-problem">What’s the problem?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#solution">Solution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#work-around">Work-around</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mte.html">ATM64 MTE extension</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Debugging</a></li>
+      <li class="breadcrumb-item active">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/debugging/debuggingflash_nuttxonarm.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="debugging-flashing-nuttx-on-arm-with-hardware-debugger-jtag-swd">
+<h1>Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)<a class="headerlink" href="#debugging-flashing-nuttx-on-arm-with-hardware-debugger-jtag-swd" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139629444">https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139629444</a></p>
+</div>
+<p>NOTE: If you experience the issues described on this page, you can enable the
+configuration option below to resolve it.</p>
+<div class="highlight-makefile notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_STM32_DISABLE_IDLE_SLEEP_DURING_DEBUG</span><span class="o">=</span>y
+</pre></div>
+</div>
+<section id="what-s-the-problem">
+<h2>What’s the problem?<a class="headerlink" href="#what-s-the-problem" title="Permalink to this heading"></a></h2>
+<p>On some architectures (like ARM Cortex-M3) Idle thread causes the core to stop
+using WFI (Wait For Interrupt) assembly instruction. This effectively stops
+clocking of the core, which is resumed only by some enabled interrupt. This
+causes hardware debuggers to believe that they were disconnected from the
+target, as they lose connection with the now stopped core. For example OpenOCD
+shows errors like these the moment you start the target:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 100ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 300ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 700ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 1500ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 3100ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 6300ms</span>
+<span class="go">Error: jtag status contains invalid mode value - communication failure</span>
+<span class="go">Polling target failed, GDB will be halted. Polling again in 6300ms</span>
+</pre></div>
+</div>
+<p>This makes debugging the code impossible and flashing the chip is much harder -
+you have to connect to the chip at the right moment (when it’s not disabled
+due to WFI) - the chances of doing that are inverse proportional to the load
+of your system (if your chip spends 99% of time in Idle mode, you have 1%
+chance of connecting and halting it).</p>
+</section>
+<section id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Permalink to this heading"></a></h2>
+<p>Some ARM cores that support disabling of clocking after WFI instruction have
+special configuration options to make debugging possible. One example is STM32
+family - with it’s <code class="docutils literal notranslate"><span class="pre">DBGMCU-&gt;CR</span></code> register it’s possible to keep the core
+clocked during power-down modes. If your chip supports such configuration you
+should put it in some early stage of initialization, like in
+<code class="docutils literal notranslate"><span class="pre">stm32_boardinitialize()</span></code> function. The following code demonstrates the
+change for STM32:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getreg32</span><span class="p">(</span><span class="n">STM32_DBGMCU_CR</span><span class="p">);</span>
+<span class="n">cr</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="n">DBGMCU_CR_STANDBY</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">DBGMCU_CR_STOP</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">DBGMCU_CR_SLEEP</span><span class="p">;</span>
+<span class="n">putreg32</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span><span class="w"> </span><span class="n">STM32_DBGMCU_CR</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If your chip doesn’t provide such options there is no other way than not using
+WFI instruction in up_idle() function.</p>
+<p>It should be noted that such modification should be done only for development
+stage, as keeping the core clocked during power-down modes contradicts the
+major purpose of using them - reducing power usage.</p>
+<p>In rare cases that you still have problems with connecting to the target
+(especially after power cycle), you should try connecting and halting the chip
+under reset (this is supported by new versions of OpenOCD), by holding the
+reset button while starting OpenOCD or by configuring OpenOCD to do that for
+you.</p>
+<section id="work-around">
+<h3>Work-around<a class="headerlink" href="#work-around" title="Permalink to this heading"></a></h3>
+<p>If you keep the RESET button pressed and run OpenOCD command to connected to
+it, then it will connect successful. After connecting you need to keep the
+reset button pressed until you open the telnet connection
+(telnet 127.0.0.1 4444) and execute “reset halt”:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">&gt; reset halt</span>
+<span class="go">timed out while waiting for target halted</span>
+<span class="go">TARGET: stm32f1x.cpu - Not halted</span>
+
+<span class="go">in procedure &#39;reset&#39;</span>
+<span class="go">target state: halted</span>
+<span class="go">target halted due to debug-request, current mode: Thread</span>
+<span class="go">xPSR: 0x01000000 pc: 0x080003d0 msp: 0x20001278</span>
+</pre></div>
+</div>
+<p>Then release the RESET boot and it will reset correctly.</p>
+<p>This work-around was tested on viewtool-stm32f107 board and bypassed the above
+error reported by OpenOCD. The SWD programmer was a STLink-V2 and this was
+the command to connect:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">openocd -f interface/stlink-v2.cfg -f target/stm32f1x_stlink.cfg</span>
+</pre></div>
+</div>
+<p>The OpenOCD version used was: Open On-Chip Debugger 0.8.0-dev-00307-g215c41c
+(git commit 215c41c)</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="disabling_stackdumpdebug.html" class="btn btn-neutral float-left" title="Disabling the Stack Dump During Debugging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cortexmhardfaults.html" class="btn btn-neutral float-right" title="Analyzing Cortex-M Hardfaults" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

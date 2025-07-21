@@ -1,0 +1,422 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NuttX FLAT Binary Format (NXFLAT) &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+      <script src="../../_static/doctools.js"></script>
+      <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/clipboard.min.js"></script>
+      <script src="../../_static/copybutton.js"></script>
+      <script src="../../_static/design-tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Pseudo File System" href="pseudofs.html" />
+    <link rel="prev" title="Nuttx FS" href="nuttxfs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../../latest" selected="selected">latest</option>
+    
+    <option value="../../../10.0.0" >10.0.0</option>
+    
+    <option value="../../../10.0.1" >10.0.1</option>
+    
+    <option value="../../../10.1.0" >10.1.0</option>
+    
+    <option value="../../../10.2.0" >10.2.0</option>
+    
+    <option value="../../../10.3.0" >10.3.0</option>
+    
+    <option value="../../../11.0.0" >11.0.0</option>
+    
+    <option value="../../../12.0.0" >12.0.0</option>
+    
+    <option value="../../../12.1.0" >12.1.0</option>
+    
+    <option value="../../../12.2.0" >12.2.0</option>
+    
+    <option value="../../../12.2.1" >12.2.1</option>
+    
+    <option value="../../../12.3.0" >12.3.0</option>
+    
+    <option value="../../../12.4.0" >12.4.0</option>
+    
+    <option value="../../../12.5.0" >12.5.0</option>
+    
+    <option value="../../../12.5.1" >12.5.1</option>
+    
+    <option value="../../../12.6.0" >12.6.0</option>
+    
+    <option value="../../../12.7.0" >12.7.0</option>
+    
+    <option value="../../../12.8.0" >12.8.0</option>
+    
+    <option value="../../../12.9.0" >12.9.0</option>
+    
+    <option value="../../../12.10.0" >12.10.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">OS Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../binfmt.html">Binary Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../drivers/index.html">Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nxflat.html">NXFLAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nxgraphics/index.html">NX Graphics Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../paging.html">On-Demand Paging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../audio/index.html">Audio Subsystem</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">NuttX File System</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#virtual-file-system-vfs">Virtual File System (VFS)</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#file-systems">File systems</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="aio.html">Asynchronous I/O support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binfs.html">BINFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="fat.html">FAT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hostfs.html">Host File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mnemofs.html">MNEMOFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nfs.html">NFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="partition.html">Partition Table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="procfs.html">PROCFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="romfs.html">ROMFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rpmsgfs.html">RPMSG File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="smartfs.html">SMARTFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="shmfs.html">Shared Memory File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spiffs.html">SPIFFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tmpfs.html">TMPFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unionfs.html">Union File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="userfs.html">User file system</a></li>
+<li class="toctree-l4"><a class="reference internal" href="zipfs.html">ZipFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="inotify.html">Inotify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nuttxfs.html">Nuttx FS</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">NuttX FLAT Binary Format (NXFLAT)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#toolchain-compatibility-problem">Toolchain Compatibility Problem</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="pseudofs.html">Pseudo File System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="special_files_dev_num.html">Special Files and Device Numbers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="v9fs.html">V9FS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="v9fs.html#adding-v9fs-to-the-nuttx-configuration">Adding V9FS to the NuttX Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="v9fs.html#nfs-mount-command">NFS Mount Command</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#fs-categories">FS Categories</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../net/index.html">Network Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mm/index.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../syscall.html">Syscall Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../arch/index.html">Architecture-Specific Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../boards.html">Boards Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cmake.html">CMake Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../openamp.html">OpenAMP Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../video.html">Video Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../crypto.html">Crypto API Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../wireless.html">Wireless Subsystem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
+          <li class="breadcrumb-item"><a href="index.html">NuttX File System</a></li>
+      <li class="breadcrumb-item active">NuttX FLAT Binary Format (NXFLAT)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/filesystem/nxflat.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="nuttx-flat-binary-format-nxflat">
+<h1>NuttX FLAT Binary Format (NXFLAT)<a class="headerlink" href="#nuttx-flat-binary-format-nxflat" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139630111">https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139630111</a></p>
+</div>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>NuttX supports a configurable <a class="reference internal" href="../binfmt.html"><span class="doc">binary loader</span></a> .
+This binary loader supports loading and executing binary objects from
+the file system.
+The NuttX binary loader is capable of supporting multiple binary formats.
+One of of those binary formats is NXFLAT, the top of this Wiki page.</p>
+<p>NXFLAT is a customized and simplified version of binary format
+implemented a few years ago called XFLAT.
+With the NXFLAT binary format you will be able to do the following:</p>
+<ul class="simple">
+<li><p>Place separately linked programs in a file system, and</p></li>
+<li><p>Execute those programs by dynamically linking them to the
+base NuttX code.</p></li>
+</ul>
+<p>This allows you to extend the NuttX base code after it has been
+written into FLASH.
+One motivation for implementing NXFLAT is support clean CGI under
+an HTTPD server.</p>
+<p>This feature is especially attractive when combined with the
+NuttX ROMFS support:
+ROMFS allows you to execute programs in place (XIP) in flash
+without copying anything other than the .data section to RAM.
+In fact, the initial NXFLAT release only worked on ROMFS.
+Later extensions also support execution NXFLAT binaries from
+an SRAM copy as well.</p>
+<p>This NuttX feature includes:</p>
+<ul class="simple">
+<li><p>A dynamic loader that is built into the NuttX core (See SVN).</p></li>
+<li><p>Minor changes to RTOS to support position independent code, and</p></li>
+<li><p>A linker to bind ELF binaries to produce the
+NXFLAT binary format (See SVN).</p></li>
+</ul>
+</section>
+<section id="toolchain-compatibility-problem">
+<h2>Toolchain Compatibility Problem<a class="headerlink" href="#toolchain-compatibility-problem" title="Permalink to this heading"></a></h2>
+<section id="description">
+<h3>Description<a class="headerlink" href="#description" title="Permalink to this heading"></a></h3>
+<p>NXFLAT flat requires a specific kind of position independence.
+The ARM family of GCC toolchains has historically supported
+this method of position independence: All code addresses are
+accessed relative to the Program Counter (PC) and a special,
+<cite>PIC register</cite> (usually <code class="docutils literal notranslate"><span class="pre">r10</span></code>) is used to access all data. To
+load or store a data value, the contents of <code class="docutils literal notranslate"><span class="pre">r10</span></code>, the PIC
+base, is added to a constant, position-independent offset
+to produce the absolute address of the data.</p>
+<img alt="../../_images/nxflat-addressing.png" src="../../_images/nxflat-addressing.png" />
+<p>The <cite>Global Offset Table</cite> (GOT) is a special data structure that
+resides in D-Space. So PIC-base relative addressing may also
+be specified as GOT-Relative addressing (or <code class="docutils literal notranslate"><span class="pre">GOTOFF</span></code>). The older
+GCC 4.3.3 GCC compiler, for example, generates <code class="docutils literal notranslate"><span class="pre">GOTOFF</span></code>
+relocations to the constant strings, like:</p>
+<div class="highlight-asm notranslate"><div class="highlight"><pre><span></span><span class="nl">.L3:</span>
+<span class="w">        </span><span class="na">.word</span><span class="w">   </span><span class="no">.LC0</span><span class="p">(</span><span class="no">GOTOFF</span><span class="p">)</span>
+<span class="w">        </span><span class="na">.word</span><span class="w">   </span><span class="no">.LC1</span><span class="p">(</span><span class="no">GOTOFF</span><span class="p">)</span>
+<span class="w">        </span><span class="na">.word</span><span class="w">   </span><span class="no">.LC2</span><span class="p">(</span><span class="no">GOTOFF</span><span class="p">)</span>
+<span class="w">        </span><span class="na">.word</span><span class="w">   </span><span class="no">.LC3</span><span class="p">(</span><span class="no">GOTOFF</span><span class="p">)</span>
+<span class="w">        </span><span class="na">.word</span><span class="w">   </span><span class="no">.LC4</span><span class="p">(</span><span class="no">GOTOFF</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">.LC0</span></code>, <code class="docutils literal notranslate"><span class="pre">.LC1</span></code>, <code class="docutils literal notranslate"><span class="pre">.LC2</span></code>, <code class="docutils literal notranslate"><span class="pre">.LC3</span></code>, and <code class="docutils literal notranslate"><span class="pre">.LC4</span></code> are the labels
+corresponding to strings in the <code class="docutils literal notranslate"><span class="pre">.rodata.str1.1</span></code> section. One
+consequence of this is that <code class="docutils literal notranslate"><span class="pre">.rodata</span></code> must reside in D-Space
+since it will addressed relative to the GOT (see the section
+entitled “Read-Only Data in RAM” here).</p>
+<p>The newer 4.6.3 GCC compiler, however, generated PC relative
+relocations to these same strings:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>.L2:
+    .word   .LC0-(.LPIC0+4)
+    .word   .LC1-(.LPIC1+4)
+    .word   .LC2-(.LPIC2+4)
+    .word   .LC3-(.LPIC4+4)
+    .word   .LC4-(.LPIC5+4)
+</pre></div>
+</div>
+<p>These are <cite>PC-Relative</cite> relocations. This means that the string
+data is address not by an offset relative to the PIC register
+(<code class="docutils literal notranslate"><span class="pre">r10</span></code>) but to the program count (PC). This is good and bad. This
+is good because it means that <code class="docutils literal notranslate"><span class="pre">.rodata.str1.1</span></code> must now can now
+reside in FLASH with <code class="docutils literal notranslate"><span class="pre">.text</span></code> and can be accessed using PC-relative
+addressing. That can be accomplished by simply moving the <code class="docutils literal notranslate"><span class="pre">.rodata</span></code>
+from the <code class="docutils literal notranslate"><span class="pre">.data</span></code> section to the <code class="docutils literal notranslate"><span class="pre">.text</span></code> section in the linker script.
+The NXFLAT linker script is located at
+<code class="docutils literal notranslate"><span class="pre">nuttx/binfmt/libnxflat/gnu-nxflat-?.ld</span></code>. <strong>NOTE</strong>: There are two
+linker scripts located at <code class="docutils literal notranslate"><span class="pre">nuttx/binfmt/libnxflat/</span></code>:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">binfmt/libnxflat/gnu-nxflat-gotoff.ld.</span></code> Older versions
+of GCC (at least up to GCC 4.3.3), use GOT-relative
+addressing to access RO data. In that case, read-only
+data (<code class="docutils literal notranslate"><span class="pre">.rodata</span></code>) must reside in D-Space and this linker
+script should be used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binfmt/libnxflat/gnu-nxflat-pcrel.ld.</span></code> Newer versions
+of GCC (at least as of GCC 4.6.3), use PC-relative
+addressing to access RO data. In that case, read-only
+data (<code class="docutils literal notranslate"><span class="pre">.rodata</span></code>) must reside in I-Space and this linker
+script should be used.</p></li>
+</ol>
+<p>But this is very bad because a lot of NXFLAT is now broken.
+For it appears that not just constant strings, but that all
+data may now be referenced using PC-relative addressing to
+.bss and .data values. I do not yet know the extent of this
+problem or the direction that GCC is going but certainly
+version 4.6.3 cannot be used with NXFLAT.</p>
+<p>The workaround for now is to use the older, 4.3.3 OABI
+compiler. In the long run, this might spell the end
+to NXFLAT.</p>
+</section>
+<section id="update-restored-gcc-support">
+<h3>Update: Restored GCC Support<a class="headerlink" href="#update-restored-gcc-support" title="Permalink to this heading"></a></h3>
+<p>This post was pointed out by Michael Jung:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>MCU:<span class="w"> </span>STM32F4<span class="w"> </span><span class="o">(</span>ARM<span class="w"> </span>Cortex<span class="w"> </span>M4<span class="o">)</span>
+Build<span class="w"> </span>environment:<span class="w"> </span>arm-none-eabi-gcc<span class="w"> </span><span class="m">4</span>.8.4<span class="w"> </span><span class="m">20140725</span>
+
+My<span class="w"> </span>goal<span class="w"> </span>is<span class="w"> </span>to<span class="w"> </span>build<span class="w"> </span>an<span class="w"> </span>image<span class="w"> </span>that<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span>run<span class="w"> </span>from<span class="w"> </span>any<span class="w"> </span>properly-aligned
+offset<span class="w"> </span><span class="k">in</span><span class="w"> </span>internal<span class="w"> </span>flash<span class="w"> </span><span class="o">(</span>i.e.,<span class="w"> </span>position-independent<span class="o">)</span>.<span class="w">  </span>I<span class="w"> </span>found<span class="w"> </span>the
+following<span class="w"> </span><span class="nb">set</span><span class="w"> </span>of<span class="w"> </span>gcc<span class="w"> </span>flags<span class="w"> </span>that<span class="w"> </span>achieves<span class="w"> </span>this<span class="w"> </span>goal:
+
+<span class="w">    </span><span class="c1"># Generate position independent code.</span>
+<span class="w">    </span>-fPIC
+
+<span class="w">    </span><span class="c1"># Access bss via the GOT.</span>
+<span class="w">    </span>-mno-pic-data-is-text-relative
+
+<span class="w">    </span><span class="c1"># GOT is not PC-relative; store GOT location in a register.</span>
+<span class="w">    </span>-msingle-pic-base
+
+<span class="w">    </span><span class="c1"># Store GOT location in r9.</span>
+<span class="w">    </span>-mpic-register<span class="o">=</span>r9
+</pre></div>
+</div>
+<p>Reference: <a class="reference external" href="https://gcc.gnu.org/ml/gcc-help/2015-07/msg00027.html">https://gcc.gnu.org/ml/gcc-help/2015-07/msg00027.html</a></p>
+<p>Michael has verified that <code class="docutils literal notranslate"><span class="pre">-mno-pic-data-is-text-relative</span></code> is,
+indeed, a solution to the above NXFLAT problem in newer
+compilers. You simply need to modify the board Make.defs
+file like:</p>
+<ol class="arabic simple">
+<li><p>ARCHPICFLAGS = -fpic -msingle-pic-base -mpic-register=r10</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+ARCHPICFLAGS<span class="w"> </span><span class="o">=</span><span class="w"> </span>-fpic<span class="w"> </span>-msingle-pic-base<span class="w"> </span>-mpic-register<span class="o">=</span>r10<span class="w"> </span>-mno-pic-data-is-text-relative
+</pre></div>
+</div>
+<p>NOTE the minor difference from the post: NuttX uses <code class="docutils literal notranslate"><span class="pre">r10</span></code> as
+the PIC base register by default in all configurations.</p>
+<p>See this <a class="reference external" href="https://groups.google.com/forum/">thread</a> for additional information.</p>
+</section>
+<section id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="../nxflat.html"><span class="doc">NXFLAT</span></a></p></li>
+<li><p><a class="reference external" href="http://xflat.sourceforge.net/">XFLATFLAT</a></p></li>
+<li><p><a class="reference external" href="http://retired.beyondlogic.org/uClinux/bflt.htm">FLAT</a></p></li>
+<li><p><a class="reference external" href="http://romfs.sourceforge.net/">ROMFS</a></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nuttxfs.html" class="btn btn-neutral float-left" title="Nuttx FS" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pseudofs.html" class="btn btn-neutral float-right" title="Pseudo File System" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

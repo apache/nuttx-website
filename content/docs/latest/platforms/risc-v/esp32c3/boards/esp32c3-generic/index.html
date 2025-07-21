@@ -106,6 +106,8 @@
     
     <option value="../../../../../../12.9.0" >12.9.0</option>
     
+    <option value="../../../../../../12.10.0" >12.10.0</option>
+    
     </select>
   </div>
 
@@ -382,6 +384,24 @@ disables the NuttShell to get the best possible score.</p>
 system is turned on.</p>
 </div>
 </section>
+<section id="crypto">
+<h3>crypto<a class="headerlink" href="#crypto" title="Permalink to this heading"></a></h3>
+<p>This configuration enables support for the cryptographic hardware and
+the <code class="docutils literal notranslate"><span class="pre">/dev/crypto</span></code> device file. Currently, we are supporting SHA-1,
+SHA-224 and SHA-256 algorithms using hardware.
+To test hardware acceleration, you can use <cite>hmac</cite> example and following output
+should look like this:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; hmac
+...
+hmac sha1 success
+hmac sha1 success
+hmac sha1 success
+hmac sha256 success
+hmac sha256 success
+hmac sha256 success
+</pre></div>
+</div>
+</section>
 <section id="efuse">
 <h3>efuse<a class="headerlink" href="#efuse" title="Permalink to this heading"></a></h3>
 <p>This configuration demonstrates the use of the eFuse driver. It can be accessed
@@ -614,6 +634,37 @@ DAC feature with following command with connecting simple LED on GPIO5</p>
 <div><p>nsh&gt; dac -d 100 -s 10 test</p>
 </div></blockquote>
 <p>After this command you will see LED will light up in different brightness.</p>
+</section>
+<section id="sdmmc-spi">
+<h3>sdmmc_spi<a class="headerlink" href="#sdmmc-spi" title="Permalink to this heading"></a></h3>
+<p>This configuration is used to mount a FAT/FAT32 SD Card into the OS’ filesystem.
+It uses SPI to communicate with the SD Card, defaulting to SPI2.</p>
+<p>The SD slot number, SPI port number and minor number can be modified in <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">Configuration</span> <span class="pre">→</span> <span class="pre">NSH</span> <span class="pre">Library</span></code>.</p>
+<p>To access the card’s files, make sure <code class="docutils literal notranslate"><span class="pre">/dev/mmcsd0</span></code> exists and then execute the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /dev
+/dev:
+console
+mmcsd0
+null
+ttyS0
+zero
+nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+</pre></div>
+</div>
+<p>This will mount the SD Card to <code class="docutils literal notranslate"><span class="pre">/mnt</span></code>. Now, you can use the SD Card as a normal filesystem.
+For example, you can read a file and write to it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /mnt
+/mnt:
+hello.txt
+nsh&gt; cat /mnt/hello.txt
+Hello World
+nsh&gt; echo &#39;NuttX RTOS&#39; &gt;&gt; /mnt/hello.txt
+nsh&gt; cat /mnt/hello.txt
+Hello World!
+NuttX RTOS
+nsh&gt;
+</pre></div>
+</div>
 </section>
 <section id="spi">
 <h3>spi<a class="headerlink" href="#spi" title="Permalink to this heading"></a></h3>
