@@ -16,18 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Site
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - run: |
         git fetch --prune --unshallow
 
     - name: Checkout NuttX repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: apache/nuttx
         fetch-depth: 0
         ref: master
         path: nuttx
-    - uses: actions/setup-python@v3
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.8'
     - name: Build docs
@@ -50,7 +50,7 @@ jobs:
         echo " Select nuttx/Documentation version candidates"
         echo "======================================================="
 
-        NUTTX_TAGS=$(git tag -l 'nuttx-1?.*' | fgrep -v RC)
+        NUTTX_TAGS=$(git tag -l --sort=taggerdate 'nuttx-1?.*' | fgrep -v RC)
         export NUTTX_VERSIONS=$(echo -n "$NUTTX_TAGS" | sed -r 's|^nuttx-||g' | tr '\n' ',')
         
         echo " ==> BUILD NUTTX DOCUMENTATION FOR: $NUTTX_VERSIONS (and master)."
