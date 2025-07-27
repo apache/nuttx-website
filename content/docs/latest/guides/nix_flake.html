@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Run NuttX on Renode &mdash; NuttX latest documentation</title>
+  <title>Nix Flake for Reproducible Development &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Signaling Events from Interrupt Handlers" href="signal_events_interrupt_handlers.html" />
-    <link rel="prev" title="Semihosting" href="semihosting.html" /> 
+    <link rel="next" title="USB Device Trace" href="usbtrace.html" />
+    <link rel="prev" title="NFS Client How-To" href="nfs.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -137,7 +137,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="nfs.html">NFS Client How-To</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nix_flake.html">Nix Flake for Reproducible Development</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Nix Flake for Reproducible Development</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-the-development-environment">Setting up the Development Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#benefits">Benefits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#contents-of-the-nix-flake">Contents of the Nix Flake</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="usbtrace.html">USB Device Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulator.html">Simulator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rndis.html">How to use RNDIS</a></li>
@@ -172,14 +178,7 @@
 <li class="toctree-l2"><a class="reference internal" href="platform_directories.html">Platform Directories</a></li>
 <li class="toctree-l2"><a class="reference internal" href="port_drivers_to_stm32f7.html">Porting Drivers to the STM32 F7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="semihosting.html">Semihosting</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Run NuttX on Renode</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#stm32f4discovery">stm32f4discovery</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#nucleo-l073rz">nucleo-l073rz</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#nrf52840-dk">nrf52840-dk</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#stm32f746g-disco">stm32f746g-disco</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#nucleo-h743zi">nucleo-h743zi</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="renode.html">Run NuttX on Renode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="signal_events_interrupt_handlers.html">Signaling Events from Interrupt Handlers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="signaling_sem_priority_inheritance.html">Signaling Semaphores and Priority Inheritance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="smaller_vector_tables.html">Smaller Vector Tables</a></li>
@@ -220,9 +219,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Run NuttX on Renode</li>
+      <li class="breadcrumb-item active">Nix Flake for Reproducible Development</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/guides/renode.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/guides/nix_flake.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -230,131 +229,85 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="run-nuttx-on-renode">
-<h1>Run NuttX on Renode<a class="headerlink" href="#run-nuttx-on-renode" title="Permalink to this heading"></a></h1>
-<p>Renode (<a class="reference external" href="https://renode.io/">https://renode.io/</a>) is and open source virtual development
-framework dedicated for complex embedded systems.</p>
-<p>This page contains notes on running some of NuttX boards on Renode.</p>
-<section id="stm32f4discovery">
-<h2>stm32f4discovery<a class="headerlink" href="#stm32f4discovery" title="Permalink to this heading"></a></h2>
-<p>Renode doesn’t support CCM memory, so we have to disable it
-with <code class="docutils literal notranslate"><span class="pre">CONFIG_MM_REGIONS=1</span></code>.</p>
-<p>Renode script:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using sysbus
-$name?=&quot;STM32F4_Discovery&quot;
-mach create $name
-machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
-
-cpu PerformanceInMips 125
-
-$bin?=@nuttx
-
-showAnalyzer sysbus.usart2
-
-macro reset
-&quot;&quot;&quot;
-  sysbus LoadELF $bin
-&quot;&quot;&quot;
-
-runMacro $reset
-</pre></div>
-</div>
-<p>Tested with <code class="docutils literal notranslate"><span class="pre">stm32f4discovery/nsh</span></code>.</p>
-</section>
-<section id="nucleo-l073rz">
-<h2>nucleo-l073rz<a class="headerlink" href="#nucleo-l073rz" title="Permalink to this heading"></a></h2>
-<p>Doesn’t work. No BASEPRI implementation for <code class="docutils literal notranslate"><span class="pre">Cotex-M0</span></code> in NuttX.</p>
-</section>
-<section id="nrf52840-dk">
-<h2>nrf52840-dk<a class="headerlink" href="#nrf52840-dk" title="Permalink to this heading"></a></h2>
-<p>At default Renode uses UART with EasyDMA enabled (UARTE) which is not supported
-by Nuttx yet. We can get around this by creating our own machine description
-based on Renode default implementation:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using &quot;platforms/cpus/nrf52840.repl&quot;
-
-uart0:
-  easyDMA: false
-</pre></div>
-</div>
-<p>Renode script:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using sysbus
-
-mach create
-machine LoadPlatformDescription @nrf52840_custom.repl
-
-$bin?=@nuttx
-
-showAnalyzer uart0
-
-macro reset
-&quot;&quot;&quot;
-  sysbus LoadELF $bin
-&quot;&quot;&quot;
-
-runMacro $reset
-</pre></div>
-</div>
-<p>Tested with <code class="docutils literal notranslate"><span class="pre">nrf52840-dk/nsh</span></code>.</p>
-<p>Known issues:</p>
+  <section id="nix-flake-for-reproducible-development">
+<h1>Nix Flake for Reproducible Development<a class="headerlink" href="#nix-flake-for-reproducible-development" title="Permalink to this heading"></a></h1>
+<p>This guide explains how to use the Nix flake to set up a reproducible development environment for NuttX. The Nix flake ensures that all required build tools and dependencies are consistently available, simplifying onboarding and reducing “works on my machine” issues.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">QSPI</span></code> not implemented in Renode,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">PWM</span></code> doesn’t work, missing <code class="docutils literal notranslate"><span class="pre">NRF52_PWM_EVENTS_SEQSTARTED0_OFFSET</span></code>
-implementation in Renode,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADC</span></code> doesn’t work, missing <code class="docutils literal notranslate"><span class="pre">NRF52_SAADC_EVENTS_CALDONE_OFFSET</span></code>
-implementation in Renode,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SoftDevice</span></code> doesn’t work, crash in <code class="docutils literal notranslate"><span class="pre">mpsl_init()</span></code></p></li>
+<li><p><a class="reference external" href="https://nixos.org/download/">Nix</a> installed on your system.</p></li>
+<li><p>Nix flakes enabled (add <code class="docutils literal notranslate"><span class="pre">experimental-features</span> <span class="pre">=</span> <span class="pre">nix-command</span> <span class="pre">flakes</span></code> to your <code class="docutils literal notranslate"><span class="pre">nix.conf</span></code>).</p></li>
 </ul>
 </section>
-<section id="stm32f746g-disco">
-<h2>stm32f746g-disco<a class="headerlink" href="#stm32f746g-disco" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_BASEPRI_WAR=y</span></code> must be set.</p>
-<p>Renode script:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using sysbus
-$name?=&quot;STM32F746&quot;
-mach create $name
-machine LoadPlatformDescription @platforms/boards/stm32f7_discovery-bb.repl
-
-$bin ?= @nuttx
-
-showAnalyzer usart1
-showAnalyzer ltdc
-
-macro reset
-&quot;&quot;&quot;
-  sysbus LoadELF $bin
-&quot;&quot;&quot;
-
-runMacro $reset
+<section id="setting-up-the-development-environment">
+<h2>Setting up the Development Environment<a class="headerlink" href="#setting-up-the-development-environment" title="Permalink to this heading"></a></h2>
+<p>To enter the NuttX development shell, navigate to the root of the NuttX directory and run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nix<span class="w"> </span>develop
 </pre></div>
 </div>
-<p>Tested with <code class="docutils literal notranslate"><span class="pre">stm32f746g-disco/nsh</span></code>.</p>
-<p>Known issues:</p>
+<p>This command will:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">stm32f746g-disco/lvgl</span></code> - crash due to incompatible I2C our touchscreen driver</p></li>
+<li><p>Download and set up all necessary build tools and dependencies, including:
+*   CMake, Ninja, GNU Make
+*   Clang tools
+*   ARM toolchain (gcc-arm-embedded)
+*   Automake, Bison, Flex, Genromfs, Gettext, Gperf
+*   Kconfig-frontends, libelf, expat, gmp, isl, libmpc, mpfr, ncurses, zlib
+*   Python with kconfiglib</p></li>
+<li><p>Set the <code class="docutils literal notranslate"><span class="pre">CMAKE_EXPORT_COMPILE_COMMANDS</span></code> environment variable to <code class="docutils literal notranslate"><span class="pre">ON</span></code>.</p></li>
+<li><p>Display a welcome message.</p></li>
+</ul>
+<p>Once inside the development shell, you can proceed with building NuttX as usual.</p>
+</section>
+<section id="benefits">
+<h2>Benefits<a class="headerlink" href="#benefits" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Reproducibility:</strong> Ensures a consistent build environment across all developers and machines.</p></li>
+<li><p><strong>Simplified Onboarding:</strong> New contributors can quickly set up their development environment with a single command.</p></li>
+<li><p><strong>Dependency Management:</strong> All dependencies are managed by Nix, avoiding conflicts with system-wide packages.</p></li>
 </ul>
 </section>
-<section id="nucleo-h743zi">
-<h2>nucleo-h743zi<a class="headerlink" href="#nucleo-h743zi" title="Permalink to this heading"></a></h2>
-<p>Renode doesn’t support <code class="docutils literal notranslate"><span class="pre">PWR_CSR1_ACTVOSRDY</span></code> bit so we have to disable
-it with <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H7_PWR_IGNORE_ACTVOSRDY=y</span></code>.</p>
-<p>Renode script:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>using sysbus
-mach create &quot;nucleo_h743zi&quot;
-include @platforms/boards/nucleo_h753zi.repl
+<section id="contents-of-the-nix-flake">
+<h2>Contents of the Nix Flake<a class="headerlink" href="#contents-of-the-nix-flake" title="Permalink to this heading"></a></h2>
+<p>The <cite>flake.nix</cite> file defines a <cite>devShell</cite> that includes the following build inputs:</p>
+<div class="highlight-nix notranslate"><div class="highlight"><pre><span></span><span class="ss">buildInputs</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="c1"># Build tools</span>
+  pkgs<span class="o">.</span>cmake
+  pkgs<span class="o">.</span>ninja
+  pkgs<span class="o">.</span>gnumake
+  pkgs<span class="o">.</span>clang-tools
 
-$bin=@nuttx
+  <span class="c1"># ARM toolchain</span>
+  pkgs<span class="o">.</span>gcc-arm-embedded
 
-showAnalyzer sysbus.usart3
-
-macro reset
-&quot;&quot;&quot;
-  sysbus LoadELF $bin
-&quot;&quot;&quot;
-
-runMacro $reset
+  <span class="c1"># NuttX dependencies</span>
+  pkgs<span class="o">.</span>automake
+  pkgs<span class="o">.</span>bison
+  pkgs<span class="o">.</span>flex
+  pkgs<span class="o">.</span>genromfs
+  pkgs<span class="o">.</span>gettext
+  pkgs<span class="o">.</span>gperf
+  pkgs<span class="o">.</span>kconfig-frontends
+  pkgs<span class="o">.</span>libelf
+  pkgs<span class="o">.</span>expat<span class="o">.</span>dev
+  pkgs<span class="o">.</span>gmp<span class="o">.</span>dev
+  pkgs<span class="o">.</span>isl
+  pkgs<span class="o">.</span>libmpc
+  pkgs<span class="o">.</span>mpfr<span class="o">.</span>dev
+  pkgs<span class="o">.</span>ncurses<span class="o">.</span>dev
+  pkgs<span class="o">.</span>zlib
+  pkgs<span class="o">.</span>python313Packages<span class="o">.</span>kconfiglib
+<span class="p">];</span>
 </pre></div>
 </div>
-<p>Tested with <code class="docutils literal notranslate"><span class="pre">nucleo-h743zi/nsh</span></code>.</p>
+<p>The <cite>shellHook</cite> sets up the <cite>CMAKE_EXPORT_COMPILE_COMMANDS</cite> and provides a welcome message:</p>
+<div class="highlight-nix notranslate"><div class="highlight"><pre><span></span><span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
+<span class="s s-Multiline">  export CMAKE_EXPORT_COMPILE_COMMANDS=ON</span>
+<span class="s s-Multiline">  echo &quot;Welcome to NuttX devShell&quot;</span>
+<span class="s s-Multiline">&#39;&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This setup ensures that the development environment is fully configured for NuttX development.</p>
 </section>
 </section>
 
@@ -362,8 +315,8 @@ runMacro $reset
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="semihosting.html" class="btn btn-neutral float-left" title="Semihosting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="signal_events_interrupt_handlers.html" class="btn btn-neutral float-right" title="Signaling Events from Interrupt Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="nfs.html" class="btn btn-neutral float-left" title="NFS Client How-To" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usbtrace.html" class="btn btn-neutral float-right" title="USB Device Trace" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
