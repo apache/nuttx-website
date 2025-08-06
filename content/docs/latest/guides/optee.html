@@ -241,8 +241,16 @@ interface should allow use-of/integration-with libteec, although this is
 not officially supported by NuttX, and is out of the scope of this guide.</p>
 <p>The driver supports opening and closing sessions, allocating and registering
 shared memory, and invoking functions on OP-TEE Trusted Applications (TAs).
-It does not (yet) support reverse direction commands (TA -&gt; Normal World)
-to something like a TEE supplicant.</p>
+The driver also supports, reverse direction commands called RPCs
+(TA -&gt; Normal World). Some of the RPCs are handled completely by the kernel
+driver while others require the TEE supplicant userspace process to be running
+by having opened (<code class="docutils literal notranslate"><span class="pre">/dev/teepriv#</span></code>). Similarly to libteec, the supplicant
+is not officially supported.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">/dev/teepriv#</span></code> is reserved solely for the supplicant and shouldn’t be
+used by any other NuttX application.</p>
+</div>
 </section>
 <section id="enabling-the-op-tee-driver">
 <h2>Enabling the OP-TEE Driver<a class="headerlink" href="#enabling-the-op-tee-driver" title="Permalink to this heading"></a></h2>
@@ -253,13 +261,11 @@ to something like a TEE supplicant.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_OPTEE_SMC</span></code></p></li>
 </ul>
 <p>All of the above require also <code class="docutils literal notranslate"><span class="pre">CONFIG_ALLOW_BSD_COMPONENTS</span></code> and
-<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_MEMFD_SHMFS</span></code>, which in turn requires <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_SHMFS</span></code>. So,
-at a bare minimum, to enable the driver one would need something like the
-following:</p>
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_ANONMAP</span></code>. So, at a bare minimum, to enable the driver
+one would need something like the following:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_ALLOW_BSD_COMPONENTS=y
 CONFIG_DEV_OPTEE_SMC=y
-CONFIG_FS_SHMFS=y
-CONFIG_LIBC_MEMFD_SHMFS=y
+CONFIG_FS_ANONMAP=y
 </pre></div>
 </div>
 <p>Each implementation (local, RPMsg, or SMC) may have further dependencies
@@ -273,10 +279,12 @@ that in configurations with <code class="docutils literal notranslate"><span cla
 encounter issues with shared memory depending on the state of the data
 cache in Secure World.</p>
 </div>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_OPTEE_SMC</span></code> is enabled we can also enable the kernel driver
+for the TEE supplicant by using <code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_OPTEE_SUPPLICANT</span></code>.</p>
 <p>Successful registration of the driver can be verified by looking into
-<code class="docutils literal notranslate"><span class="pre">/dev/tee0</span></code>. For instance, incompatibility with the TEE OS running in the
-system, will prevent the <code class="docutils literal notranslate"><span class="pre">/dev/tee0</span></code> character device from being
-registered.</p>
+<code class="docutils literal notranslate"><span class="pre">/dev/tee0</span></code> and <code class="docutils literal notranslate"><span class="pre">/dev/teepriv0</span></code> (for the supplicant). For instance,
+incompatibility with the TEE OS running in the system, will prevent the
+<code class="docutils literal notranslate"><span class="pre">/dev/tee0</span></code> character device from being registered.</p>
 </section>
 <section id="ioctls-supported">
 <h2>IOCTLs supported<a class="headerlink" href="#ioctls-supported" title="Permalink to this heading"></a></h2>
@@ -358,6 +366,28 @@ use in memrefs and is automatically de-registered during driver close if
 memory to register and <code class="docutils literal notranslate"><span class="pre">.size</span></code> shall indicate its size. One may use the
 returned <code class="docutils literal notranslate"><span class="pre">.id</span></code> field when specifying shared memory references
 (<code class="docutils literal notranslate"><span class="pre">tee_ioctl_param.c</span></code> field).</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TEE_IOC_SUPPL_RECV</span></code> : Receive an RPC request from the OP-TEE that needs userspace interaction from the supplicant.</p>
+<ul>
+<li><p>Expects a pointer to a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tee_ioctl_buf_data</span></code> instance where the
+<code class="docutils literal notranslate"><span class="pre">.buf_ptr</span></code> field points to a user allocated buffer that must hold a
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tee_iocl_supp_send/recv_arg</span></code> followed by a number of
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tee_ioctl_param</span></code> parameters.  The <code class="docutils literal notranslate"><span class="pre">.buf_len</span></code> field communicates
+to the kernel the length of that buffer.  If the user passes a bigger number
+of parameters than <code class="docutils literal notranslate"><span class="pre">OPTEE_MAX_PARAM_NUM</span></code> or smaller number of parameters than
+the number sent by OP-TEE, the ioctl will fail. The TEE supplicant by default
+uses 5 <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tee_ioctl_param</span></code> parameters.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TEE_IOC_SUPPL_SEND</span></code> : Respond to an RPC request from the OP-TEE that needed userspace interaction from the supplicant.</p>
+<ul>
+<li><p>Expects a pointer to a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tee_ioctl_buf_data</span></code> instance where the
+<code class="docutils literal notranslate"><span class="pre">.buf_ptr</span></code> field points to a user allocated buffer that must hold a
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tee_iocl_supp_send/recv_arg</span></code> followed by a number of
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tee_ioctl_param</span></code> parameters.  The <code class="docutils literal notranslate"><span class="pre">.buf_len</span></code> field communicates
+to the kernel the length of that buffer. The number of parameters depends on
+the size of expected RPC response by the OP-TEE.</p></li>
 </ul>
 </li>
 </ul>
@@ -532,7 +562,37 @@ returned <code class="docutils literal notranslate"><span class="pre">.id</span>
 </pre></div>
 </div>
 </li>
+<li><p>OP-TEE secure storage support through TEE supplicant</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>optee_supplicant<span class="w"> </span>-f<span class="w"> </span>/data/tee<span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+</li>
 </ol>
+<p>This runs the OP-TEE supplicant in the background, using <code class="docutils literal notranslate"><span class="pre">/data/tee</span></code> as the
+directory for the TEE file system. Output is redirected to <code class="docutils literal notranslate"><span class="pre">/dev/null</span></code> to
+suppress standard output. Make sure that the userspace support for the
+supplicant is enabled and that <code class="docutils literal notranslate"><span class="pre">/data</span></code> is mounted as read/write.</p>
+<p>With the supplicant running, secure storage objects can be created, retrieved,
+and managed by Trusted Applications (TAs). In a typical workflow, a Client
+Application (CA) running on NuttX invokes a command in a TA that may need to
+read from or create persistent objects. In such cases, certain RPCs generated
+by OP-TEE are routed from the CA to the TEE supplicant for handling (provided
+the supplicant is running in the background). Once the supplicant has processed
+the request, it responds using <code class="docutils literal notranslate"><span class="pre">TEE_IOC_SUPPL_SEND</span></code>, and the kernel driver
+delivers this response back to the CA in its context.</p>
+<ol class="arabic simple">
+<li><p>OP-TEE REE time request</p></li>
+</ol>
+<p>In this scenario, the userspace supplicant isn’t needed, as the response can be
+handled directly by the kernel driver.</p>
+<p>An OP-TEE application can request the current time from the NuttX clock using:</p>
+<blockquote>
+<div><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">TEE_GetREETime</span><span class="p">(</span><span class="o">&amp;</span><span class="n">t</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The NuttX kernel driver will respond to the TA with the <code class="docutils literal notranslate"><span class="pre">CLOCK_REALTIME</span></code>
+which represents the machine’s best-guess as to the current wall-clock.</p>
 </section>
 </section>
 
