@@ -187,7 +187,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../smart_test/index.html"><code class="docutils literal notranslate"><span class="pre">smart_test</span></code> SMART File System</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../smp/index.html"><code class="docutils literal notranslate"><span class="pre">smp</span></code> SMP example</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../uclibcxx_test/index.html"><code class="docutils literal notranslate"><span class="pre">uclibcxx_test</span></code> uclibcxx test</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">unity</span></code> Unity testing framework</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">unity</span></code> Unity testing framework</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../tools/index.html">Host Side Tools</a></li>
@@ -236,6 +239,71 @@
 <h1><code class="docutils literal notranslate"><span class="pre">unity</span></code> Unity testing framework<a class="headerlink" href="#unity-unity-testing-framework" title="Permalink to this heading"></a></h1>
 <p>Unity is a unit testing framework for C developed by ThrowTheSwitch.org:</p>
 <p><a class="reference external" href="http://www.throwtheswitch.org/unity">http://www.throwtheswitch.org/unity</a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There is more detailed documentation than what can be found on the website on
+the GitHub page. It can be found in <a class="reference external" href="https://github.com/ThrowTheSwitch/Unity/tree/master/docs">this collection of markdown
+documents</a></p>
+</div>
+<p>It is very minimalist and is designed to also run on embedded systems. Unity is
+highly configurable through the use of different macros. These are described in
+the <a class="reference external" href="https://github.com/ThrowTheSwitch/Unity/blob/master/docs/UnityConfigurationGuide.md">configuration guide</a>.
+Some of these configuration options are exposed in NuttX via the Kconfig
+selection menu for the Unity test framework, but not all of them are
+implemented.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If some configuration options you’d like to use for Unity are missing from
+NuttX, please open a pull request following the <a class="reference internal" href="../../../contributing/index.html"><span class="doc">contribution guidelines</span></a>.</p>
+</div>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>In order to test your application using the Unity framework in NuttX, you can
+create a test application. Documentation for creating a custom NuttX application
+can be found <a class="reference internal" href="../../../guides/customapps.html"><span class="doc">here</span></a>.</p>
+<p>Just mark your application to depend on any Unity options you use:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span><span class="k">config</span><span class="w"> </span>MY_TESTS
+<span class="w">    </span><span class="nb">tristate</span><span class="w"> </span><span class="s2">&quot;Test cases&quot;</span>
+<span class="w">    </span><span class="k">depends on</span><span class="w"> </span>TESTING_UNITY
+<span class="w">    </span><span class="k">depends on</span><span class="w"> </span>TESTING_UNITY_EXCLUDE_SETJMP
+<span class="w">    </span><span class="k">depends on</span><span class="w"> </span>TESTING_UNITY_PRINT_FORMATTED
+<span class="w">    </span><span class="k">depends on</span><span class="w"> </span>MY_APPLICATION_CODE
+</pre></div>
+</div>
+<p>In your application’s main function, you can include the testing library and
+write tests!</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;testing/unity.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">setUp</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* Test setup code for Unity */</span><span class="w"> </span><span class="p">}</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">tearDown</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* Test tear-down code for Unity */</span><span class="w"> </span><span class="p">}</span>
+
+<span class="cm">/* Short test case */</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">test_mything__passes</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">mynum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">mynum</span><span class="o">++</span><span class="p">;</span>
+<span class="w">  </span><span class="n">TEST_ASSERT_EQUAL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">mynum</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="n">UNITY_BEGIN</span><span class="p">();</span>
+<span class="w">   </span><span class="n">RUN_TEST</span><span class="p">(</span><span class="n">test_mything__passes</span><span class="p">);</span>
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">UNITY_END</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Now when you build your code, your test application will be visible in NSH to
+run. If you run it, you will see a test report!</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; mytests</span>
+<span class="go">mytests_main.c:18:test_mything__passes:PASS</span>
+
+<span class="go">-----------------------</span>
+<span class="go">1 Tests 0 Failures 0 Ignored</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 

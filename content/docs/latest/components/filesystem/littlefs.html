@@ -229,6 +229,28 @@
 <h1>LITTLEFS<a class="headerlink" href="#littlefs" title="Permalink to this heading"></a></h1>
 <p>A little fail-safe filesystem designed for microcontrollers from
 <a class="reference external" href="https://github.com/littlefs-project/littlefs">https://github.com/littlefs-project/littlefs</a>.</p>
+<p>In NuttX, littlefs can be interacted with through the virtual file system. This
+means that it can be used normally with <code class="docutils literal notranslate"><span class="pre">read()</span></code>, <code class="docutils literal notranslate"><span class="pre">write()</span></code>, etc. calls, as
+well as file operations (<code class="docutils literal notranslate"><span class="pre">fopen()</span></code>, <code class="docutils literal notranslate"><span class="pre">fclose()</span></code>, etc).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since littlefs is power-fail safe and must commit writes before they are
+permanently stored (corruption prevention mechanism), it is required to
+periodically call <code class="docutils literal notranslate"><span class="pre">fsync</span></code> on the file to commit your writes. The exact
+semantics of when littlefs files are committed are discussed in <a class="reference external" href="https://github.com/apache/nuttx/issues/15840">this issue</a>.</p>
+</div>
+<p>..note:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>If your littlefs setup is experiencing crashes when you boot, try
+troubleshooting by tweaking the ``BLOCK_SIZE_FACTOR`` options in Kconfig. A
+factor of 4 works well for SD cards.
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The littlefs support on NuttX only works with mtd drivers, for storage
+devices such as flash chips, SD cards and eMMC. Performance on SD cards and
+eMMC devices is worse than flash.</p>
+</div>
 </section>
 
 
