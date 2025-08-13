@@ -140,6 +140,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Nix Flake for Reproducible Development</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#setting-up-the-development-environment">Setting up the Development Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-the-documentation-environment">Setting up the Documentation Environment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#benefits">Benefits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#contents-of-the-nix-flake">Contents of the Nix Flake</a></li>
 </ul>
@@ -231,45 +232,95 @@
              
   <section id="nix-flake-for-reproducible-development">
 <h1>Nix Flake for Reproducible Development<a class="headerlink" href="#nix-flake-for-reproducible-development" title="Permalink to this heading"></a></h1>
-<p>This guide explains how to use the Nix flake to set up a reproducible development environment for NuttX. The Nix flake ensures that all required build tools and dependencies are consistently available, simplifying onboarding and reducing “works on my machine” issues.</p>
+<p>This guide explains how to use the Nix flake to set up a reproducible
+development environment for NuttX. The Nix flake ensures that all required
+build tools and dependencies are consistently available, simplifying
+onboarding and reducing “works on my machine” issues.</p>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://nixos.org/download/">Nix</a> installed on your system.</p></li>
-<li><p>Nix flakes enabled (add <code class="docutils literal notranslate"><span class="pre">experimental-features</span> <span class="pre">=</span> <span class="pre">nix-command</span> <span class="pre">flakes</span></code> to your <code class="docutils literal notranslate"><span class="pre">nix.conf</span></code>).</p></li>
+<li><p>Nix flakes enabled (add <code class="docutils literal notranslate"><span class="pre">experimental-features</span> <span class="pre">=</span> <span class="pre">nix-command</span> <span class="pre">flakes</span></code>
+to your <code class="docutils literal notranslate"><span class="pre">nix.conf</span></code>).</p></li>
 </ul>
 </section>
 <section id="setting-up-the-development-environment">
 <h2>Setting up the Development Environment<a class="headerlink" href="#setting-up-the-development-environment" title="Permalink to this heading"></a></h2>
-<p>To enter the NuttX development shell, navigate to the root of the NuttX directory and run:</p>
+<p>To enter the <strong>NuttX build</strong> development shell, navigate to the root of
+the NuttX directory and run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nix<span class="w"> </span>develop
 </pre></div>
 </div>
 <p>This command will:</p>
 <ul class="simple">
-<li><p>Download and set up all necessary build tools and dependencies, including:
-*   CMake, Ninja, GNU Make
-*   Clang tools
-*   ARM toolchain (gcc-arm-embedded)
-*   Automake, Bison, Flex, Genromfs, Gettext, Gperf
-*   Kconfig-frontends, libelf, expat, gmp, isl, libmpc, mpfr, ncurses, zlib
-*   Python with kconfiglib</p></li>
+<li><p>Download and set up all necessary build tools and dependencies, including:</p>
+<ul>
+<li><p>CMake, Ninja, GNU Make</p></li>
+<li><p>Clang tools</p></li>
+<li><p>ARM toolchain (gcc-arm-embedded)</p></li>
+<li><p>Automake, Bison, Flex, Genromfs, Gettext, Gperf</p></li>
+<li><p>Kconfig-frontends, libelf, expat, gmp, isl, libmpc, mpfr, ncurses, zlib</p></li>
+<li><p>Python with kconfiglib</p></li>
+</ul>
+</li>
 <li><p>Set the <code class="docutils literal notranslate"><span class="pre">CMAKE_EXPORT_COMPILE_COMMANDS</span></code> environment variable to <code class="docutils literal notranslate"><span class="pre">ON</span></code>.</p></li>
 <li><p>Display a welcome message.</p></li>
 </ul>
 <p>Once inside the development shell, you can proceed with building NuttX as usual.</p>
 </section>
+<section id="setting-up-the-documentation-environment">
+<h2>Setting up the Documentation Environment<a class="headerlink" href="#setting-up-the-documentation-environment" title="Permalink to this heading"></a></h2>
+<p>The flake also provides a <strong>documentation</strong> development shell that includes
+Sphinx and all required extensions for building the NuttX documentation.</p>
+<p>To enter the documentation shell, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nix<span class="w"> </span>develop<span class="w"> </span>.#docs
+</pre></div>
+</div>
+<p>This command will:</p>
+<ul class="simple">
+<li><p>Provide Python 3.13 with Sphinx and extensions, including:</p>
+<ul>
+<li><p>sphinx-rtd-theme</p></li>
+<li><p>myst-parser</p></li>
+<li><p>sphinx-tabs</p></li>
+<li><p>sphinx-autobuild</p></li>
+<li><p>sphinx-copybutton</p></li>
+<li><p>sphinx-togglebutton</p></li>
+<li><p>sphinx-design</p></li>
+<li><p>sphinx-tags</p></li>
+<li><p>sphinx-collapse</p></li>
+<li><p>pytz, importlib-metadata</p></li>
+</ul>
+</li>
+<li><p>Allow you to build and preview the documentation without installing
+anything globally.</p></li>
+</ul>
+<p>Example usage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build HTML docs</span>
+make<span class="w"> </span>html
+</pre></div>
+</div>
+<p>See the <a class="reference internal" href="../contributing/documentation.html"><span class="doc">Documentation</span></a> guide for more details.</p>
+</section>
 <section id="benefits">
 <h2>Benefits<a class="headerlink" href="#benefits" title="Permalink to this heading"></a></h2>
 <ul class="simple">
-<li><p><strong>Reproducibility:</strong> Ensures a consistent build environment across all developers and machines.</p></li>
-<li><p><strong>Simplified Onboarding:</strong> New contributors can quickly set up their development environment with a single command.</p></li>
-<li><p><strong>Dependency Management:</strong> All dependencies are managed by Nix, avoiding conflicts with system-wide packages.</p></li>
+<li><p><strong>Reproducibility:</strong> Ensures a consistent build environment across all
+developers and machines.</p></li>
+<li><p><strong>Simplified Onboarding:</strong> New contributors can quickly set up their
+development environment with a single command.</p></li>
+<li><p><strong>Dependency Management:</strong> All dependencies are managed by Nix, avoiding
+conflicts with system-wide packages.</p></li>
+<li><p><strong>Separate Environments:</strong> Keep firmware build tools and documentation
+tools isolated, or combine them if needed.</p></li>
 </ul>
 </section>
 <section id="contents-of-the-nix-flake">
 <h2>Contents of the Nix Flake<a class="headerlink" href="#contents-of-the-nix-flake" title="Permalink to this heading"></a></h2>
-<p>The <cite>flake.nix</cite> file defines a <cite>devShell</cite> that includes the following build inputs:</p>
+<p>The <cite>flake.nix</cite> file defines two <cite>devShells</cite>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">devShells.default</span></code> - NuttX build environment:</p></li>
+</ul>
 <div class="highlight-nix notranslate"><div class="highlight"><pre><span></span><span class="ss">buildInputs</span> <span class="o">=</span> <span class="p">[</span>
   <span class="c1"># Build tools</span>
   pkgs<span class="o">.</span>cmake
@@ -298,16 +349,34 @@
   pkgs<span class="o">.</span>zlib
   pkgs<span class="o">.</span>python313Packages<span class="o">.</span>kconfiglib
 <span class="p">];</span>
-</pre></div>
-</div>
-<p>The <cite>shellHook</cite> sets up the <cite>CMAKE_EXPORT_COMPILE_COMMANDS</cite> and provides a welcome message:</p>
-<div class="highlight-nix notranslate"><div class="highlight"><pre><span></span><span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
+
+<span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
 <span class="s s-Multiline">  export CMAKE_EXPORT_COMPILE_COMMANDS=ON</span>
 <span class="s s-Multiline">  echo &quot;Welcome to NuttX devShell&quot;</span>
 <span class="s s-Multiline">&#39;&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>This setup ensures that the development environment is fully configured for NuttX development.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">devShells.docs</span></code> - Documentation environment (from <cite>Documentation/flake.nix</cite>):</p></li>
+</ul>
+<div class="highlight-nix notranslate"><div class="highlight"><pre><span></span>python<span class="o">.</span>withPackages <span class="p">(</span>ps<span class="p">:</span> <span class="k">with</span> ps<span class="p">;</span> <span class="p">[</span>
+  sphinx
+  sphinx_rtd_theme
+  myst-parser
+  sphinx-tabs
+  sphinx-autobuild
+  sphinx-copybutton
+  sphinx-togglebutton
+  sphinx-design
+  sphinx-tags
+  sphinx-collapse
+  pytz
+  importlib-metadata
+<span class="p">]);</span>
+</pre></div>
+</div>
+<p>This setup ensures that both firmware development and documentation building
+are fully reproducible and isolated.</p>
 </section>
 </section>
 

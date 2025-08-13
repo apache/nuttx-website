@@ -5,7 +5,7 @@ Raspberry Pi Pico 2 RISC-V
 .. tags:: chip:rp2350
 
 The `Raspberry Pi Pico 2 <https://www.raspberrypi.com/products/raspberry-pi-pico-2/>`_ is a general purpose board supplied by
-the Raspberry Pi Foundation.
+Raspberry Pi.
 
 .. figure:: pico-2.png
    :align: center
@@ -155,7 +155,6 @@ There is currently no direct user mode access to these RP2350 hardware features:
 
 * SPI Slave Mode
 * SSI
-* RTC
 * Timers
 
 RICS-V toolchain
