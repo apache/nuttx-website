@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RTC Drivers &mdash; NuttX latest documentation</title>
+  <title>Capture &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="Capture" href="capture.html" />
-    <link rel="prev" title="Watchdog Timer Drivers" href="watchdog.html" /> 
+    <link rel="next" title="Touchscreen Device Drivers" href="../touchscreen.html" />
+    <link rel="prev" title="RTC Drivers" href="rtc.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -158,8 +158,8 @@
 <li class="toctree-l5"><a class="reference internal" href="timer.html">Timer Drivers</a></li>
 <li class="toctree-l5"><a class="reference internal" href="pwm.html">PWM Drivers</a></li>
 <li class="toctree-l5"><a class="reference internal" href="watchdog.html">Watchdog Timer Drivers</a></li>
-<li class="toctree-l5 current"><a class="current reference internal" href="#">RTC Drivers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="capture.html">Capture</a></li>
+<li class="toctree-l5"><a class="reference internal" href="rtc.html">RTC Drivers</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">Capture</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../touchscreen.html">Touchscreen Device Drivers</a></li>
@@ -224,9 +224,9 @@
           <li class="breadcrumb-item"><a href="../../index.html">Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Character Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="index.html">Timers Drivers</a></li>
-      <li class="breadcrumb-item active">RTC Drivers</li>
+      <li class="breadcrumb-item active">Capture</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/character/timers/rtc.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/character/timers/capture.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -234,39 +234,154 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="rtc-drivers">
-<h1>RTC Drivers<a class="headerlink" href="#rtc-drivers" title="Permalink to this heading"></a></h1>
-<p>NuttX supports a low-level, two-part RealTime Clock (RTC) driver.</p>
-<ol class="arabic simple">
-<li><p>An “upper half”, generic driver that provides the common RTC
-interface to application level code, and</p></li>
-<li><p>A “lower half”, platform-specific driver that implements the
-low-level timer controls to implement the RTC functionality.</p></li>
-</ol>
-<p>Files supporting the RTC driver can be found in the following
-locations:</p>
+  <section id="capture">
+<h1>Capture<a class="headerlink" href="#capture" title="Permalink to this heading"></a></h1>
+<p>The <strong>capture driver</strong> is a character device driver that allows capturing
+timer values on specific events. This is useful for tasks such as
+measuring the frequency, duty cycle, or pulse count of an input signal.</p>
+<p>This documentation is based on the STM32H7 timer capture driver.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>The capture driver is accessed via a device file (e.g., <code class="docutils literal notranslate"><span class="pre">/dev/capture0</span></code>).
+You can use standard file operations along with <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> calls to
+retrieve captured values or configure the driver.</p>
+<section id="supported-ioctl-commands">
+<h3>Supported <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> Commands<a class="headerlink" href="#supported-ioctl-commands" title="Permalink to this heading"></a></h3>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_DUTYCYCLE">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_DUTYCYCLE</span></span></span><a class="headerlink" href="#c.CAPIOC_DUTYCYCLE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the PWM duty cycle from the capture unit.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> (pointer to duty cycle percentage).</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_FREQUENCE">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_FREQUENCE</span></span></span><a class="headerlink" href="#c.CAPIOC_FREQUENCE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the pulse frequency from the capture unit.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">int32_t</span> <span class="pre">*</span></code> (pointer to frequency in Hz).</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_EDGES">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_EDGES</span></span></span><a class="headerlink" href="#c.CAPIOC_EDGES" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the number of PWM edges detected.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">int32_t</span> <span class="pre">*</span></code> (pointer to edge count).</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_ALL">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_ALL</span></span></span><a class="headerlink" href="#c.CAPIOC_ALL" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get duty cycle, pulse frequency, and edge count in a single call.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">cap_all_s</span> <span class="pre">*</span></code> (structure containing all values).</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_PULSES">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_PULSES</span></span></span><a class="headerlink" href="#c.CAPIOC_PULSES" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Read the current pulse count value.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">*</span></code> (pointer to pulse count).</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_CLR_CNT">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_CLR_CNT</span></span></span><a class="headerlink" href="#c.CAPIOC_CLR_CNT" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the pulse count value.</p>
+<p><strong>Argument:</strong> None.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_FILTER">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_FILTER</span></span></span><a class="headerlink" href="#c.CAPIOC_FILTER" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Configure the glitch filter.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> (filter value in nanoseconds, <code class="docutils literal notranslate"><span class="pre">0</span></code> to disable).</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_HANDLER">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_HANDLER</span></span></span><a class="headerlink" href="#c.CAPIOC_HANDLER" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set a user callback function for capture events.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">xcpt_t</span></code> (function pointer, <code class="docutils literal notranslate"><span class="pre">NULL</span></code> to disable).</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.CAPIOC_ADD_WP">
+<span class="sig-name descname"><span class="n"><span class="pre">CAPIOC_ADD_WP</span></span></span><a class="headerlink" href="#c.CAPIOC_ADD_WP" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add a watchpoint to the capture unit.</p>
+<p><strong>Argument:</strong> <code class="docutils literal notranslate"><span class="pre">int</span></code> (value to watch for).</p>
+</dd></dl>
+
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h3>
+<p>To enable the capture driver, enable the following configuration options:</p>
 <ul class="simple">
-<li><p><strong>Interface Definition</strong>. The header file for the NuttX RTC
-driver reside at <code class="docutils literal notranslate"><span class="pre">include/nuttx/timers/rtc.h</span></code>. This header
-file includes both the application level interface to the RTC
-driver as well as the interface between the “upper half” and
-“lower half” drivers. The RTC driver uses a standard character
-driver framework.</p></li>
-<li><p><strong>“Upper Half” Driver</strong>. The generic, “upper half” RTC driver
-resides at <code class="docutils literal notranslate"><span class="pre">drivers/timers/rtc.c</span></code>.</p></li>
-<li><p><strong>“Lower Half” Drivers</strong>. Platform-specific RTC drivers reside
-in <code class="docutils literal notranslate"><span class="pre">arch/&lt;architecture&gt;/src/&lt;hardware&gt;</span></code>
-directory for the specific processor <code class="docutils literal notranslate"><span class="pre">&lt;architecture&gt;</span></code> and for
-the specific <code class="docutils literal notranslate"><span class="pre">&lt;chip&gt;</span></code> RTC peripheral devices.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_CAPTURE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H7_TIM4_CAP</span></code> (for STM32H7 Timer 4)</p></li>
 </ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">CONFIG_CAPTURE</span></code> option enables the lower-half driver and registers
+the <code class="docutils literal notranslate"><span class="pre">/dev/capture</span></code> device.</p>
+<p>Without it, capture is still possible manually by including the appropriate
+header (e.g., <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32h7/stm32_capture.h</span></code>) and performing a
+manual initialization.</p>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h3>
+<p>Here is a simple example of using the capture driver to read a signal’s
+frequency:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/ioctl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/timers/capture.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">frequency</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/capture0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDONLY</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to open capture device&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">CAPIOC_FREQUENCE</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="o">&amp;</span><span class="n">frequency</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;Failed to get frequency&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Frequency: %u Hz</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">frequency</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>The actual set of supported <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands may vary depending on
+the hardware and driver implementation.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">CAPIOC_FREQUENCE</span></code> macro name is preserved for compatibility,
+even though “frequency” is the correct English spelling.</p></li>
+<li><p>Always check return values from <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> calls for error handling.</p></li>
+<li><p><strong>Important:</strong> In debug builds of NuttX, calling an unsupported
+<code class="docutils literal notranslate"><span class="pre">ioctl</span></code> command will trigger a <code class="docutils literal notranslate"><span class="pre">DEBUGASSERT</span></code> in the driver,
+which will halt or crash the system.</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="watchdog.html" class="btn btn-neutral float-left" title="Watchdog Timer Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="capture.html" class="btn btn-neutral float-right" title="Capture" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rtc.html" class="btn btn-neutral float-left" title="RTC Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../touchscreen.html" class="btn btn-neutral float-right" title="Touchscreen Device Drivers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
