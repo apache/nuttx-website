@@ -48,15 +48,16 @@ Try the online demo [here]({{ site.baseurl }}/demo).
 
 ## Community Events
 
-### International Workshop 2024
+### International Workshop 2025
 
 The [Apache NuttX International Workshop]({{ site.data.project.community_events }})
 is organized every year. You can attend online or in person for free.
-This year we meet on 13-14 Jun 2024 at Sony Office, Tokyo, Japan. See you there!
+This year we meet on 16-17th October 2025 in Costa Rica.
+We hope to meet with Gregory Nutt on site. See you there!
 
 Please visit [events website]({{ site.data.project.community_events }}) for more details.
-You can join the event at [LinkedIn]({{ site.data.project.community_events_workshop_2024_linkedin_event }}).
-[Call For Papers]({{ site.data.project.community_events_workshop_2024_cfp }}) is now open!
+You can join the event at [LinkedIn]({{ site.data.project.community_events_workshop_2025_linkedin_event }}).
+[Call For Papers]({{ site.data.project.community_events_workshop_2025_cfp }}) is now open!
 
 The scope of the workshop is the Apache Nuttx® Real Time Operating System, the
 tools used for its design, development, deployment, debugging, and maintenance,
