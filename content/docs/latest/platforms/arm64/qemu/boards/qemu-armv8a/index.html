@@ -448,8 +448,80 @@ core limit is 32.</p></li>
 </pre></div>
 </div>
 </section>
+<section id="single-core-w-xedge">
+<h4>Single Core /w Xedge<a class="headerlink" href="#single-core-w-xedge" title="Permalink to this heading"></a></h4>
+<p>Configuring NuttX and compile:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>-l<span class="w"> </span>qemu-armv8a:xedge_demo
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>Running with QEMU:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-aarch64<span class="w"> </span>-cpu<span class="w"> </span>cortex-a53<span class="w"> </span>-smp<span class="w"> </span><span class="m">4</span><span class="w"> </span>-nographic<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-machine<span class="w"> </span>virt,virtualization<span class="o">=</span>on,gic-version<span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-chardev<span class="w"> </span>stdio,id<span class="o">=</span>con,mux<span class="o">=</span>on<span class="w"> </span>-serial<span class="w"> </span>chardev:con<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-netdev<span class="w"> </span>user,id<span class="o">=</span>u1,hostfwd<span class="o">=</span>tcp:127.0.0.1:8080-10.0.2.15:80,hostfwd<span class="o">=</span>tcp:127.0.0.1:8443-10.0.2.15:443,hostfwd<span class="o">=</span>tcp:127.0.0.1:10023-10.0.2.15:23<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-device<span class="w"> </span>virtio-net-device,netdev<span class="o">=</span>u1<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-fsdev<span class="w"> </span>local,security_model<span class="o">=</span>none,id<span class="o">=</span>fsdev0,path<span class="o">=</span>/mnt/xxx<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-device<span class="w"> </span>virtio-9p-device,id<span class="o">=</span>fs0,fsdev<span class="o">=</span>fsdev0,mount_tag<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-mon<span class="w"> </span><span class="nv">chardev</span><span class="o">=</span>con,mode<span class="o">=</span>readline<span class="w"> </span>-kernel<span class="w"> </span>./nuttx
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Replace <strong>/mnt/xxx</strong> with your actual host directory path. This directory will be shared between your host system and the NuttX environment.</p>
+</div>
+<p>Before running Xedge, you need to create and mount a filesystem that Xedge will use for storing configuration files and web content:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>.. code:: console
+</pre></div>
+</div>
+<blockquote>
+<div><p>nsh&gt; mkdir mnt
+nsh&gt; mount -t v9fs -o trans=virtio,tag=host mnt
+nsh&gt; mkdir /mnt/lfs</p>
+</div></blockquote>
+<p>Running Xedge in NuttX terminal</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; xedge_demo</span>
+<span class="go">   [   18.490000] [CPU0] Xedge: Server listening on IPv4 port 80</span>
+<span class="go">   [   18.500000] [CPU0] Xedge: SharkSSL server listening on IPv4 port 443</span>
+<span class="go">   [   18.510000] [CPU0] Xedge: Configuration file: /mnt/lfs/xcfg.bin: enoent</span>
+<span class="go">   [   38.240000] [CPU1] 10.0.2.2 GET &quot;rtl/&quot;</span>
+<span class="go">   [   38.240000] [CPU1] Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138</span>
+<span class="go">   [   38.240000] [CPU1] .0.0.0 Safari/537.36</span>
+<span class="go">   [   38.240000] [CPU1] Host: 127.0.0.1:8080</span>
+<span class="go">   [   38.240000] [CPU1] Connection: keep-alive</span>
+<span class="go">   [   38.240000] [CPU1] sec-ch-ua: &quot;Not)A;Brand&quot;;v=&quot;8&quot;, &quot;Chromium&quot;;v=&quot;138&quot;, &quot;Google Chrome&quot;;v=&quot;138&quot;</span>
+<span class="go">   [   38.240000] [CPU1] sec-ch-ua-mobile: ?0</span>
+<span class="go">   [   38.240000] [CPU1] sec-ch-ua-platform: &quot;Linux&quot;</span>
+<span class="go">   [   38.240000] [CPU1] Upgrade-Insecure-Requests: 1</span>
+<span class="go">   [   38.240000] [CPU1] User-Agent: c</span>
+<span class="go">   [   38.240000] [CPU1] Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138</span>
+<span class="go">   [   38.240000] [CPU1] .0.0.0 Safari/537.36</span>
+<span class="go">   [   38.240000] [CPU1] Sec-Purpose: prefetch;prerender</span>
+<span class="go">   [   38.240000] [CPU1] Purpose: prefetch</span>
+<span class="go">   [   38.240000] [CPU1] Accept:</span>
+<span class="go">   [   38.240000] [CPU1] text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image</span>
+<span class="go">   [   38.240000] [CPU1] /apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7</span>
+<span class="go">   [   38.240000] [CPU1] Sec-Fetch-Site: none</span>
+<span class="go">   [   38.240000] [CPU1] Sec-Fetch-Mode: navigate</span>
+<span class="go">   [   38.240000] [CPU1] Sec-Fetch-User: ?1</span>
+<span class="go">   [   38.240000] [CPU1] Sec-Fetch-Dest: document</span>
+<span class="go">   [   38.240000] [CPU1] Accept-Encoding: gzip, deflate, br, zstd</span>
+<span class="go">   [   38.240000] [CPU1] Accept-Language: pt,en-US;q=0.9,en;q=0.8</span>
+<span class="go">   [   38.240000] [CPU1]</span>
+<span class="go">   [   38.240000] [CPU0] 10.0.2.2 Response:</span>
+<span class="go">   ,</span>
+<span class="go">   [   38.240000] [CPU0] no-store, no-cache, must-revalidate, max-age=0</span>
+<span class="go">   Transfer-Encoding: chunked</span>
+<span class="go">   Keep-</span>
+<span class="go">   [   38.240000] [CPU0] Alive: Keep-Alive</span>
+</pre></div>
+</div>
+<p>Launch your web browser and access 127.0.0.1:8080</p>
+<p>You should see the Xedge IDE, which is enabled in developer mode:</p>
+</section>
+</section>
 <section id="single-core-w-kernel-mode-gicv3">
-<h4>Single Core /w kernel mode (GICv3)<a class="headerlink" href="#single-core-w-kernel-mode-gicv3" title="Permalink to this heading"></a></h4>
+<h3>Single Core /w kernel mode (GICv3)<a class="headerlink" href="#single-core-w-kernel-mode-gicv3" title="Permalink to this heading"></a></h3>
 <p>Configuring NuttX and compile:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>-l<span class="w"> </span>qemu-armv8a:knsh
 <span class="gp">$ </span>make
@@ -467,7 +539,6 @@ core limit is 32.</p></li>
 <span class="w">  </span>-mon<span class="w"> </span><span class="nv">chardev</span><span class="o">=</span>con,mode<span class="o">=</span>readline<span class="w"> </span>-kernel<span class="w"> </span>./nuttx
 </pre></div>
 </div>
-</section>
 </section>
 <section id="inter-vm-share-memory-device-ivshmem">
 <h3>Inter-VM share memory Device (ivshmem)<a class="headerlink" href="#inter-vm-share-memory-device-ivshmem" title="Permalink to this heading"></a></h3>
@@ -703,16 +774,29 @@ needs to be do.</p></li>
 </section>
 <section id="platform-features">
 <h2>Platform Features<a class="headerlink" href="#platform-features" title="Permalink to this heading"></a></h2>
-<p>The following hardware features are supported:
-+————–+————+———————-+
-| Interface    | Controller | Driver/Component     |
-+==============+============+======================+
-| GIC          | on-chip    | interrupt controller |
-+————–+————+———————-+
-| PL011 UART   | on-chip    | serial port          |
-+————–+————+———————-+
-| ARM TIMER    | on-chip    | system clock         |
-+————–+————+———————-+</p>
+<p>The following hardware features are supported:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Interface</p></th>
+<th class="head"><p>Controller</p></th>
+<th class="head"><p>Driver/Component</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GIC</p></td>
+<td><p>on-chip</p></td>
+<td><p>interrupt controller</p></td>
+</tr>
+<tr class="row-odd"><td><p>PL011 UART</p></td>
+<td><p>on-chip</p></td>
+<td><p>serial port</p></td>
+</tr>
+<tr class="row-even"><td><p>ARM TIMER</p></td>
+<td><p>on-chip</p></td>
+<td><p>system clock</p></td>
+</tr>
+</tbody>
+</table>
 <p>The kernel currently does not support other hardware features on this
 QEMU platform.</p>
 </section>
