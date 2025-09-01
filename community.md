@@ -56,17 +56,20 @@ Get help using {{ site.data.project.short_name }} or contribute to the project o
 
 The mailing list and project website is our central hub of information, but there are several social media channels where you can find interesting videos, updates, DIY projects that may help you work with NuttX RTOS.
 
-* YouTube: [https://www.youtube.com/@nuttxchannel]({{ site.data.project.socialmedia_youtube }}).
+* Discord: [https://discord.gg/YaqhJjHF95]({{ site.data.project.socialmedia_discord }}).
 * Hackster: [https://www.hackster.io/nuttx]({{ site.data.project.socialmedia_hackster }}).
 * LinkedIn: [https://www.linkedin.com/company/nuttx]({{ site.data.project.socialmedia_linkedin_company }}) , [https://www.linkedin.com/groups/12002792]({{ site.data.project.socialmedia_linkedin_group }}).
-* Discord: [https://discord.gg/YaqhJjHF95]({{ site.data.project.socialmedia_discord }}).
+* Reddit: [https://www.reddit.com/r/nuttx/]({{ site.data.project.socialmedia_reddit }}).
+* YouTube: [https://www.youtube.com/@nuttxchannel]({{ site.data.project.socialmedia_youtube }}).
 
+You may also use the Reddit forum as a place to ask support/help questions. The mailing list must be used for big change proposals, but if you just need help using NuttX and navigating the project, the Reddit forum is another avenue to seek help!
 
 ### Issue tracker
 
 #### Bug Reports
 
-Found a bug? Send an email to the dev list {{ site.data.project.dev_list }}.
+Found a bug? Send an email to the dev list {{ site.data.project.dev_list }}, or open an issue on the GitHub repository
+issue tracker.
 
 Before submitting an issue, please:
 
