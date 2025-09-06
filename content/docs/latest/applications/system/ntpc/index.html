@@ -182,7 +182,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../mdio/index.html"><code class="docutils literal notranslate"><span class="pre">mdio</span></code> PHY MDIO tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../netdb/index.html"><code class="docutils literal notranslate"><span class="pre">netdb</span></code> netdb interface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nsh/index.html"><code class="docutils literal notranslate"><span class="pre">nsh</span></code> NuttShell (NSH) example</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ntpc</span></code> NTP Daemon Commands</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ntpc</span></code> NTP Daemon Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#expected-output">Expected Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../nxcamera/index.html"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> NxCamera video test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxcodec/index.html"><code class="docutils literal notranslate"><span class="pre">nxcodec</span></code> NxCodec video codec test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxdiag/index.html"><code class="docutils literal notranslate"><span class="pre">nxdiag</span></code> NuttX Diagnostic Tool</a></li>
@@ -264,6 +271,96 @@
              
   <section id="ntpc-ntp-daemon-commands">
 <h1><code class="docutils literal notranslate"><span class="pre">ntpc</span></code> NTP Daemon Commands<a class="headerlink" href="#ntpc-ntp-daemon-commands" title="Permalink to this heading"></a></h1>
+<p>This example demonstrates how to use the NTP client to synchronize system time
+and retrieve the current time and date. It uses the Network Time Protocol (NTP)
+to provide accurate time synchronization.</p>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading"></a></h2>
+<p>The ntpc example:</p>
+<ul class="simple">
+<li><p>Uses the NTP client library to synchronize system time</p></li>
+<li><p>Connects to NTP servers (default: pool.ntp.org)</p></li>
+<li><p>Starts the NTP client in the background for continuous synchronization</p></li>
+<li><p>Provides commands to check status and stop the NTP client</p></li>
+<li><p>Allows management of the NTP client through command line options</p></li>
+</ul>
+<p>Note: This example assumes that network connectivity is already established.</p>
+<p>The NTP (Network Time Protocol) is a sophisticated protocol that provides
+high-precision time synchronization and is the standard for network time services.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>This example requires the following NuttX configuration options:</p>
+<ul class="simple">
+<li><p>CONFIG_NET: Enable networking support</p></li>
+<li><p>CONFIG_NET_UDP: Enable UDP support</p></li>
+<li><p>CONFIG_NETUTILS_NTPCLIENT: Enable NTP client support</p></li>
+<li><p>CONFIG_SYSTEM_NTPC: Enable this example</p></li>
+</ul>
+<p>Additional configuration options:
+- CONFIG_NETUTILS_NTPCLIENT_SERVER: NTP server hostname (default: “pool.ntp.org”)</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Configure your NuttX build with networking support</p></li>
+<li><p>Ensure network connectivity is established (e.g., via NSH network commands)</p></li>
+<li><p>Build and flash the image to your target board</p></li>
+<li><p>Run the commands:
+- <code class="docutils literal notranslate"><span class="pre">ntpcstart</span></code>, <code class="docutils literal notranslate"><span class="pre">ntpcstop</span></code>, <code class="docutils literal notranslate"><span class="pre">ntpcstatus</span></code></p></li>
+</ol>
+<p><strong>Available Commands:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ntpcstart</span></code> - Start NTP client in background</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ntpcstop</span></code> - Stop the NTP client</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ntpcstatus</span></code> - Display NTP client status information</p></li>
+</ul>
+</section>
+<section id="expected-output">
+<h2>Expected Output<a class="headerlink" href="#expected-output" title="Permalink to this heading"></a></h2>
+<p><strong>Start NTP client (ntpcstart):</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Starting NTP client...
+Using NTP servers: pool.ntp.org
+NTP client started successfully (task ID: 123)
+NTP client is now running in the background
+</pre></div>
+</div>
+<p><strong>Stop NTP client (ntpcstop):</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Stopping NTP client...
+Stopped the NTP daemon
+</pre></div>
+</div>
+<p><strong>Show NTP status (ntpcstatus):</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>The number of last samples: 3
+[0] srv &lt;ip&gt; offset -0.033502142 delay 0.249973549
+[1] srv &lt;ip&gt; offset -0.020698070 delay 0.029928000
+[2] srv &lt;ip&gt; offset -0.015448935 delay 0.019815119
+</pre></div>
+</div>
+<p><strong>Verify using date command:</strong></p>
+<p>Given network connectivity is available, executing <cite>date</cite> should
+give the proper time and date.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ntpcstart
+Starting NTP client...
+Using NTP servers: 0.pool.ntp.org;1.pool.ntp.org;2.pool.ntp.org
+NTP client started successfully (task ID: 10)
+NTP client is now running in the background
+nsh&gt; date
+Fri, Sep 05 18:49:37 2025
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>This example requires internet connectivity</p></li>
+<li><p>Network must be configured and connected before running this example</p></li>
+<li><p>NTP servers must be accessible (default: pool.ntp.org)</p></li>
+<li><p>UDP port 123 (NTP) must not be blocked by firewalls</p></li>
+<li><p>The example includes error handling for network failures</p></li>
+<li><p>NTP provides more accurate time synchronization than simple time protocols</p></li>
+</ul>
+</section>
 </section>
 
 

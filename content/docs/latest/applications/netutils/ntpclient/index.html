@@ -166,7 +166,20 @@
 <li class="toctree-l3"><a class="reference internal" href="../netinit/index.html"><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network initialization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../netlib/index.html"><code class="docutils literal notranslate"><span class="pre">netlib</span></code> Network support library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nng/index.html"><code class="docutils literal notranslate"><span class="pre">nng</span></code> Nanomsg NG</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#what-is-ntp">What is NTP?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ntp-protocol-overview">NTP Protocol Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#implementation-details">Implementation Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#source-code-structure">Source Code Structure</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#key-functions">Key Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../ping/index.html"><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP ping support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../pppd/index.html"><code class="docutils literal notranslate"><span class="pre">pppd</span></code> PPP server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ptpd/index.html"><code class="docutils literal notranslate"><span class="pre">ptpd</span></code> PTPD client/server</a></li>
@@ -233,8 +246,180 @@
              
   <section id="ntpclient-ntp-client">
 <h1><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client<a class="headerlink" href="#ntpclient-ntp-client" title="Permalink to this heading"></a></h1>
-<p>This is a fragmentary NTP client. It neither well-tested nor
-mature nor complete at this point in time.</p>
+<p>The NTP (Network Time Protocol) client is a network utility that synchronizes
+the system clock with time servers over the Internet. This implementation
+provides a minimal but functional NTP client for NuttX.</p>
+<section id="what-is-ntp">
+<h2>What is NTP?<a class="headerlink" href="#what-is-ntp" title="Permalink to this heading"></a></h2>
+<p>The Network Time Protocol (NTP) is a networking protocol designed to
+synchronize clocks of computer systems over packet-switched, variable-latency
+data networks. NTP is one of the oldest Internet protocols still in use,
+originally designed by David L. Mills of the University of Delaware.</p>
+<p>Key features of NTP:</p>
+<ul class="simple">
+<li><p><strong>High Precision</strong>: NTP can achieve sub-millisecond accuracy on local area
+networks and typically 10-100 millisecond accuracy over the Internet</p></li>
+<li><p><strong>Robust Algorithm</strong>: Uses sophisticated algorithms to filter out network
+jitter and select the best time sources</p></li>
+<li><p><strong>Hierarchical Structure</strong>: Uses a stratum system where stratum 0 devices
+are atomic clocks, stratum 1 servers sync with stratum 0, and so on</p></li>
+<li><p><strong>Fault Tolerance</strong>: Can handle multiple time sources and automatically
+switch between them</p></li>
+</ul>
+</section>
+<section id="ntp-protocol-overview">
+<h2>NTP Protocol Overview<a class="headerlink" href="#ntp-protocol-overview" title="Permalink to this heading"></a></h2>
+<p>NTP uses UDP port 123 and follows a client-server model. The protocol
+exchanges timestamps to calculate:</p>
+<ul class="simple">
+<li><p><strong>Offset</strong>: The difference between the client’s clock and the server’s clock</p></li>
+<li><p><strong>Delay</strong>: The round-trip network delay</p></li>
+<li><p><strong>Dispersion</strong>: The maximum error due to clock frequency tolerance</p></li>
+</ul>
+<p>The NTP packet format (version 3) includes:</p>
+<ul class="simple">
+<li><p><strong>Leap Indicator</strong>: Warns of an impending leap second</p></li>
+<li><p><strong>Version Number</strong>: NTP version (3 in this implementation)</p></li>
+<li><p><strong>Mode</strong>: Client, server, broadcast, etc.</p></li>
+<li><p><strong>Stratum</strong>: Clock level (0-15)</p></li>
+<li><p><strong>Poll Interval</strong>: Maximum interval between successive messages</p></li>
+<li><p><strong>Precision</strong>: Clock precision</p></li>
+<li><p><strong>Root Delay/Dispersion</strong>: Total delay and dispersion to the reference clock</p></li>
+<li><p><strong>Reference Identifier</strong>: Identifies the reference source</p></li>
+<li><p><strong>Reference Timestamp</strong>: Time when the system clock was last set</p></li>
+<li><p><strong>Originate Timestamp</strong>: Time when the request departed the client</p></li>
+<li><p><strong>Receive Timestamp</strong>: Time when the request arrived at the server</p></li>
+<li><p><strong>Transmit Timestamp</strong>: Time when the reply departed the server</p></li>
+</ul>
+</section>
+<section id="implementation-details">
+<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h2>
+<p>The NuttX NTP client implementation consists of several key components:</p>
+<section id="source-code-structure">
+<h3>Source Code Structure<a class="headerlink" href="#source-code-structure" title="Permalink to this heading"></a></h3>
+<p><strong>ntpclient.c</strong> - Main implementation file containing:</p>
+<ul class="simple">
+<li><p><strong>Daemon Management</strong>: Functions to start, stop, and manage the NTP daemon</p></li>
+<li><p><strong>Time Synchronization</strong>: Core algorithms for calculating clock offset and delay</p></li>
+<li><p><strong>Network Communication</strong>: UDP socket handling and NTP packet exchange</p></li>
+<li><p><strong>Sample Collection</strong>: Gathering multiple time samples for statistical filtering</p></li>
+</ul>
+<p><strong>ntpv3.h</strong> - NTP version 3 packet format definitions:</p>
+<ul class="simple">
+<li><p><strong>ntp_datagram_s</strong>: Complete NTP packet structure</p></li>
+<li><p><strong>ntp_timestamp_s</strong>: 64-bit NTP timestamp format</p></li>
+<li><p><strong>Protocol Constants</strong>: NTP version, modes, and stratum definitions</p></li>
+</ul>
+</section>
+<section id="key-functions">
+<h3>Key Functions<a class="headerlink" href="#key-functions" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>ntpc_start_with_list()</strong>: Starts the NTP daemon with a list of servers</p></li>
+<li><p><strong>ntpc_start()</strong>: Starts the NTP daemon with default configuration</p></li>
+<li><p><strong>ntpc_stop()</strong>: Stops the running NTP daemon</p></li>
+<li><p><strong>ntpc_status()</strong>: Retrieves current synchronization status and samples</p></li>
+<li><p><strong>ntpc_daemon()</strong>: Main daemon loop that:</p>
+<ul>
+<li><p>Connects to configured NTP servers</p></li>
+<li><p>Sends NTP requests and processes responses</p></li>
+<li><p>Calculates clock offset and delay</p></li>
+<li><p>Applies time corrections to the system clock</p></li>
+<li><p>Continues polling at configured intervals</p></li>
+</ul>
+</li>
+<li><p><strong>ntpc_get_ntp_sample()</strong>: Performs a single NTP transaction:</p>
+<ul>
+<li><p>Creates UDP socket to NTP server</p></li>
+<li><p>Sends NTP request packet with current timestamp</p></li>
+<li><p>Receives and validates NTP response</p></li>
+<li><p>Calculates offset and delay using NTP algorithms</p></li>
+</ul>
+</li>
+<li><p><strong>ntpc_calculate_offset()</strong>: Implements the NTP clock filter algorithm</p>
+<ul>
+<li><p>Uses four timestamps, calculates offset and delay</p></li>
+<li><p>Applies statistical filtering to reduce jitter</p></li>
+</ul>
+</li>
+<li><p><strong>ntpc_settime()</strong>: Applies time correction to system clock:</p>
+<ul>
+<li><p>Uses calculated offset to adjust system time</p></li>
+<li><p>Handles both positive and negative time adjustments</p></li>
+<li><p>Maintains monotonic clock consistency</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
+<p>The NTP client can be configured through Kconfig options:</p>
+<ul class="simple">
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_SERVER</strong>: List of NTP server hostnames</p></li>
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_PORTNO</strong>: NTP server port (default: 123)</p></li>
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_STACKSIZE</strong>: Daemon task stack size</p></li>
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_SERVERPRIO</strong>: Daemon task priority</p></li>
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_STAY_ON</strong>: Keep polling continuously</p></li>
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_POLLDELAYSEC</strong>: Polling interval in seconds</p></li>
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_NUM_SAMPLES</strong>: Number of samples for filtering</p></li>
+<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_TIMEOUT_MS</strong>: Network timeout in milliseconds</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>The NTP client is typically used through the system commands:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The NTP client functionality requires enabling the <code class="code docutils literal notranslate"><span class="pre">SYSTEM_NTPC</span></code> option in your configuration.
+Make sure to select this option in menuconfig or your Kconfig fragment before building.</p>
+</div>
+<ul class="simple">
+<li><p><strong>ntpcstart</strong>: Start the NTP daemon</p></li>
+<li><p><strong>ntpcstop</strong>: Stop the NTP daemon</p></li>
+<li><p><strong>ntpcstatus</strong>: Display synchronization status</p></li>
+</ul>
+<p>Example workflow:</p>
+<ol class="arabic simple">
+<li><p>Configure network connectivity</p></li>
+<li><p>Start NTP client: <code class="docutils literal notranslate"><span class="pre">ntpcstart</span></code></p></li>
+<li><p>Check status: <code class="docutils literal notranslate"><span class="pre">ntpcstatus</span></code></p></li>
+<li><p>Verify time: <code class="docutils literal notranslate"><span class="pre">date</span></code> command</p></li>
+<li><p>Stop when needed: <code class="docutils literal notranslate"><span class="pre">ntpcstop</span></code></p></li>
+</ol>
+<p>The client will automatically:
+- Connect to configured NTP servers
+- Exchange time information
+- Calculate and apply clock corrections
+- Continue periodic synchronization</p>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading"></a></h2>
+<p>This is a minimal NTP client implementation with some limitations:</p>
+<ul class="simple">
+<li><p><strong>No Authentication</strong>: Does not support NTP authentication (MD5/SHA1)</p></li>
+<li><p><strong>Basic Filtering</strong>: Uses simple statistical filtering, not full NTP algorithms</p></li>
+<li><p><strong>Single Reference</strong>: Does not implement full NTP reference clock selection</p></li>
+<li><p><strong>No Leap Seconds</strong>: Does not handle leap second announcements</p></li>
+<li><p><strong>Limited Error Handling</strong>: Basic error recovery and retry mechanisms</p></li>
+</ul>
+<p>Despite these limitations, the implementation provides sufficient accuracy
+for most embedded applications requiring network time synchronization.</p>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h2>
+<p>The NTP client requires:</p>
+<ul class="simple">
+<li><p><strong>CONFIG_NET</strong>: Network support</p></li>
+<li><p><strong>CONFIG_NET_UDP</strong>: UDP protocol support</p></li>
+<li><p><strong>CONFIG_NET_SOCKOPTS</strong>: Socket options support</p></li>
+<li><p><strong>CONFIG_LIBC_NETDB</strong>: DNS resolution (recommended)</p></li>
+<li><p><strong>CONFIG_HAVE_LONG_LONG</strong>: 64-bit integer support</p></li>
+</ul>
+<p>For best results, ensure:
+- Stable network connectivity
+- Access to reliable NTP servers
+- Sufficient system resources for daemon operation</p>
+</section>
 </section>
 
 
