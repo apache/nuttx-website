@@ -388,7 +388,49 @@
              
   <section id="calib-udelay-calibration-tool-for-udelay">
 <h1><code class="docutils literal notranslate"><span class="pre">calib_udelay</span></code> Calibration tool for udelay<a class="headerlink" href="#calib-udelay-calibration-tool-for-udelay" title="Permalink to this heading"></a></h1>
-<p>Calibration tool for udelay.</p>
+<p>This tool is used for calibrating the configuration option
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_LOOPSPERMSEC</span></code>. This option is used by NuttX to perform
+busy-waiting (i.e., spinning in a loop) when a very basic busy-wait sleep is
+needed in board logic. This is also sometimes used when the timer-based sleep
+functions do not have a low enough resolution for shorter timings (i.e. system
+tick every 1ms but you want to sleep for 100us).</p>
+<p>When porting NuttX a new board, this example program is very useful to get a
+calibrated value for <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_LOOPSPERMSEC</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are testing any drivers and have unexpected issues with them, make
+sure that this configuration option has been calibrated. It can cause
+bad/incorrect timings in drivers if not calibrated.</p>
+</div>
+<p>Here is the example output from running the application:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; calib_udelay</span>
+
+<span class="go">Calibrating timer for main calibration...</span>
+<span class="go">Performing main calibration for udelay.This will take approx. 17.280 seconds.</span>
+<span class="go">Calibration slope for udelay:</span>
+<span class="go">  Y = m*X + b, where</span>
+<span class="go">    X is loop iterations,</span>
+<span class="go">    Y is time in nanoseconds,</span>
+<span class="go">    b is base overhead,</span>
+<span class="go">    m is nanoseconds per loop iteration.</span>
+
+<span class="go">  m = 5.33333333 nsec/iter</span>
+<span class="go">  b = -199999.99999995 nsec</span>
+
+<span class="go">  Correlation coefficient, R² = 1.0000</span>
+
+<span class="go">Without overhead, 0.18750000 iterations per nanosecond and 187500.00 iterations per millis.</span>
+
+<span class="go">Recommended setting for CONFIG_BOARD_LOOPSPERMSEC:</span>
+<span class="go">   CONFIG_BOARD_LOOPSPERMSEC=187500</span>
+</pre></div>
+</div>
+<p>You can simply copy paste the value from the console output and use it as the
+value for your board by setting it in the Kconfig menu.</p>
+<p>The program is run without any arguments. Configuration options for how the
+program runs (taking more measurements, etc.) can be seen in its Kconfig menu.
+Press <code class="docutils literal notranslate"><span class="pre">h</span></code> with the configuration option highlighted under your cursor to read
+the help text about what each option does.</p>
 </section>
 
 
