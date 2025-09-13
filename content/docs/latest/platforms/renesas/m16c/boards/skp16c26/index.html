@@ -204,117 +204,119 @@
              
   <section id="skp16c26">
 <h1>SKP16C26<a class="headerlink" href="#skp16c26" title="Permalink to this heading"></a></h1>
-<pre class="literal-block">Documentation/platforms/renesas/m16c/boards/skp16c26/README.txt
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-1. The buildroot package can be used to build an M16C toolchain.  The toolchain
-   buildroot can be downloaded from buildroot in the NuttX GIT.  Insructions
-   for building the toolchain are provided below.
-
-   However, the target cannot be built because the GNU m16c-nuttx-elf-ld link fails with
-   the following message:
-
-     m32c-nuttx-elf-ld: BFD (GNU Binutils) 2.19 assertion fail /home/Owner/projects/nuttx/buildroot/toolchain_build_m32c/binutils-2.19/bfd/elf32-m32c.c:482
-
-   Where the reference line is:
-
-     /* If the symbol is out of range for a 16-bit address,
-        we must have allocated a plt entry.  */
-     BFD_ASSERT (*plt_offset != (bfd_vma) -1);
-
-   No workaround is known at this time.  This is a show stopper for M16C.
-
-2. A supported version of the M16C toolchain is available here:
-
-     http://www.kpitgnutools.com/index.php
-
-   This download is free but requires registration.  Unfortunately, this v0901 of
-   this toolchain shows the same behavior:
-
-   c:\Hew3\Tools\KPIT Cummins\GNUM16CM32C-ELF\v0901\m32c-elf\bin\m32c-elf-ld.exe: BFD (GNU Binutils) 2.19-GNUM16CM32C_v0901 assertion fail /home/kpit/fsfsrc/binutils-2.19/bfd/elf32-m32c.c:482
-
-It is possible that this error message may be telling me -- a very roundabout way --
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-renesas.html"><span class="doc">arch:renesas</span></a></p>
+<ol class="arabic">
+<li><p>The buildroot package can be used to build an M16C toolchain. The toolchain
+buildroot can be downloaded from buildroot in the NuttX GIT. Instructions for
+building the toolchain are provided below.</p>
+<p>However, the target cannot be built because the GNU m16c-nuttx-elf-ld link
+fails with the following message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">m32c-nuttx-elf-ld: BFD (GNU Binutils) 2.19 assertion fail /home/Owner/projects/nuttx/buildroot/toolchain_build_m32c/binutils-2.19/bfd/elf32-m32c.c:482</span>
+</pre></div>
+</div>
+<p>Where the reference line is:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* If the symbol is out of range for a 16-bit address,</span>
+<span class="cm">   we must have allocated a plt entry.  */</span>
+<span class="n">BFD_ASSERT</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">plt_offset</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="p">(</span><span class="n">bfd_vma</span><span class="p">)</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>No workaround is known at this time. This is a show stopper for M16C.</p>
+</li>
+<li><p>A supported version of the M16C toolchain is available here:</p>
+<p><a class="reference external" href="http://www.kpitgnutools.com/index.php">http://www.kpitgnutools.com/index.php</a></p>
+<p>This download is free but requires registration. Unfortunately, this v0901 of
+this toolchain shows the same behavior:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">c:\Hew3\Tools\KPIT Cummins\GNUM16CM32C-ELF\v0901\m32c-elf\bin\m32c-elf-ld.exe: BFD (GNU Binutils) 2.19-GNUM16CM32C_v0901 assertion fail /home/kpit/fsfsrc/binutils-2.19/bfd/elf32-m32c.c:482</span>
+</pre></div>
+</div>
+<p>It is possible that this error message may be telling me – a very roundabout way –
 that I have exceeded the FLASH region, but I think that unlikely (it is difficult
-to know if the link does not complete gracefully).
-
-BUILDING THE R8C/M16C/M32C GNU TOOLCHAIN USING BUILDROOT
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-NOTE:  See the toolchain issues above -- you may not want to waste your time.
-
-1. CD to the correct directory.
-
-   Change to the directory just above the NuttX installation.  If &lt;nuttx-dir&gt; is
-   where NuttX is installed, then cd to &lt;nuttx-dir&gt;/..
-
-2. Get and Install the buildroot Module
-
-   a. Using a release tarball:
-
-     cd &lt;nuttx-dir&gt;/..
-     Download the appropriate buildroot package.
-     unpack the buildroot package
-     rename the directory to buildroot
-
-   b. Using GIT
-
-     Check out the buildroot module. GIT checkout instructions:
-
-        git clone https://patacongo&#64;bitbucket.org/nuttx/buildroot.git buildroot
-
-     Make the archive directory:
-
-       mkdir archive
-
-     The &lt;nuttx-dir&gt;/../buildroot is where the toolchain is built;
-     The &lt;nuttx-dir&gt;/../archive directory is where toolchain sources will be downloaded.
-
-3. Make sure that NuttX is configured
-
-     cd &lt;nuttx-dir&gt;
-     tools/configure.sh &lt;nuttx-configuration&gt;
-
-4. Configure and Make the buildroot
-
-     cd &lt;buildroot-dir&gt;
-     cp boards/m32c-defconfig-4.2.4 .config
-     make oldconfig
-     make
-
-   This will download the large source packages for the toolchain and build the toolchain.
-   The resulting binaries will be under buildroot/build_m32c.  There will also be a
-   large build directory called toolchain_build_m32c; this directory can be removed once
-   the build completes successfully.
-
-Cygwin GCC BUILD NOTES
-^^^^^^^^^^^^^^^^^^^^^^
-   On Cygwin, the buildroot 'make' command will fail with an error like:
-
-   &quot;...
-      build/genchecksum cc1-dummy &gt; cc1-checksum.c
-      opening cc1-dummy: No such file or directory
-   ...&quot;
-
-   This is caused because on Cygwin, host executables will be generated with the extension .exe
-   and, apparently, the make variable &quot;exeext&quot; is set incorrectly.  A work around after the
-   above occurs is:
-
-      cd toolchain_build_m32c/gcc-4.2.4-initial/gcc     # Go to the directory where error occurred
-      mv cc1-dummy.exe cc1-dummy                        # Rename the executable without .exe
-      rm cc1-checksum.c                                 # Get rid of the bad generated file
-
-   Then resume the buildroot make:
-
-      cd -                                              # Back to the buildroot make directory
-      make                                              # Restart the build
-
-   GCC is built twice.  First a initial, &quot;bootstrap&quot; GCC is produced in
-   toolchain_build_m32c/gcc-4.2.4-initial, then the final GCC is produced in
-   toolchain_build_m32c/gcc-4.2.4-final.  The above error will occur twice:  Once for
-   the initial GCC build (see above) and once for the final GCC build. For the final GCC
-   build, the workaround is the same except that the directory will be
-   toolchain_build_m32c/gcc-4.2.4-final/gcc.
-</pre>
+to know if the link does not complete gracefully).</p>
+</li>
+</ol>
+<section id="building-the-r8c-m16c-m32c-gnu-toolchain-using-buildroot">
+<h2>Building the R8C/M16C/M32C GNU Toolchain Using Buildroot<a class="headerlink" href="#building-the-r8c-m16c-m32c-gnu-toolchain-using-buildroot" title="Permalink to this heading"></a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>See the toolchain issues above – you may not want to waste your time.</p>
+</div>
+<ol class="arabic">
+<li><p>CD to the correct directory.</p>
+<p>Change to the directory just above the NuttX installation.  If &lt;nuttx-dir&gt; is
+where NuttX is installed, then cd to &lt;nuttx-dir&gt;/..</p>
+</li>
+<li><p>Get and Install the buildroot Module</p>
+<ol class="loweralpha">
+<li><p>Using a release tarball:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>&lt;nuttx-dir&gt;/..
+</pre></div>
+</div>
+<p>Download the appropriate buildroot package.
+unpack the buildroot package
+rename the directory to buildroot</p>
+</li>
+<li><p>Using GIT</p></li>
+</ol>
+<blockquote>
+<div><p>Check out the buildroot module. GIT checkout instructions:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://patacongo@bitbucket.org/nuttx/buildroot.git<span class="w"> </span>buildroot
+</pre></div>
+</div>
+<p>Make the archive directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir<span class="w"> </span>archive
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;nuttx-dir&gt;/../buildroot</span></code> is where the toolchain is built;
+The <code class="docutils literal notranslate"><span class="pre">&lt;nuttx-dir&gt;/../archive</span></code> directory is where toolchain sources will be downloaded.</p>
+</div></blockquote>
+</li>
+<li><p>Make sure that NuttX is configured</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>&lt;nuttx-dir&gt;
+<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>&lt;nuttx-configuration&gt;
+</pre></div>
+</div>
+</li>
+<li><p>Configure and Make the buildroot</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>&lt;buildroot-dir&gt;
+<span class="gp">$ </span>cp<span class="w"> </span>boards/m32c-defconfig-4.2.4<span class="w"> </span>.config
+<span class="gp">$ </span>make<span class="w"> </span>oldconfig
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>This will download the large source packages for the toolchain and build the toolchain.
+The resulting binaries will be under buildroot/build_m32c.  There will also be a
+large build directory called toolchain_build_m32c; this directory can be removed once
+the build completes successfully.</p>
+</li>
+</ol>
+</section>
+<section id="cygwin-gcc-build-notes">
+<h2>Cygwin GCC BUILD NOTES<a class="headerlink" href="#cygwin-gcc-build-notes" title="Permalink to this heading"></a></h2>
+<p>On Cygwin, the buildroot ‘make’ command will fail with an error like:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">build/genchecksum cc1-dummy &gt; cc1-checksum.c</span>
+<span class="go">opening cc1-dummy: No such file or directory</span>
+</pre></div>
+</div>
+<p>This is caused because on Cygwin, host executables will be generated with the
+extension .exe and, apparently, the make variable “exeext” is set incorrectly. A
+workaround after the above occurs is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>toolchain_build_m32c/gcc-4.2.4-initial/gcc<span class="w">      </span><span class="c1"># Go to the directory where error occurred</span>
+<span class="gp">$ </span>mv<span class="w"> </span>cc1-dummy.exe<span class="w"> </span>cc1-dummy<span class="w">                 </span><span class="c1"># Rename the executable without .exe</span>
+<span class="gp">$ </span>rm<span class="w"> </span>cc1-checksum.c<span class="w">                                  </span><span class="c1"># Get rid of the bad generated file</span>
+</pre></div>
+</div>
+<p>Then resume the buildroot make:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>-<span class="w">                                               </span><span class="c1"># Back to the buildroot make directory</span>
+<span class="gp">$ </span>make<span class="w">                                               </span><span class="c1"># Restart the build</span>
+</pre></div>
+</div>
+<p>GCC is built twice. First an initial “bootstrap” GCC is produced in
+toolchain_build_m32c/gcc-4.2.4-initial, then the final GCC is produced in
+toolchain_build_m32c/gcc-4.2.4-final. The above error will occur twice: Once for
+the initial GCC build (see above) and once for the final GCC build. For the
+final GCC build, the workaround is the same except that the directory will be
+toolchain_build_m32c/gcc-4.2.4-final/gcc.</p>
+</section>
 </section>
 
 
