@@ -575,6 +575,56 @@ and demonstrates the usage of the RMT peripheral:</p>
 <p>Please note that this board contains an on-board WS2812 LED connected to GPIO8
 and, by default, this config configures the RMT transmitter in the same pin.</p>
 </section>
+<section id="romfs">
+<h2>romfs<a class="headerlink" href="#romfs" title="Permalink to this heading"></a></h2>
+<p>This configuration demonstrates the use of ROMFS (Read-Only Memory File System) to provide
+automated system initialization and startup scripts. ROMFS allows embedding a read-only
+filesystem directly into the NuttX binary, which is mounted at <code class="docutils literal notranslate"><span class="pre">/etc</span></code> during system startup.</p>
+<p><strong>What ROMFS provides:</strong></p>
+<ul class="simple">
+<li><p><strong>System initialization script</strong> (<code class="docutils literal notranslate"><span class="pre">/etc/init.d/rc.sysinit</span></code>): Executed after board bring-up</p></li>
+<li><p><strong>Startup script</strong> (<code class="docutils literal notranslate"><span class="pre">/etc/init.d/rcS</span></code>): Executed after system init, typically used to start applications</p></li>
+</ul>
+<p><strong>Default behavior:</strong></p>
+<p>When this configuration is used, NuttX will:</p>
+<ol class="arabic simple">
+<li><p>Create a read-only RAM disk containing the ROMFS filesystem</p></li>
+<li><p>Mount the ROMFS at <code class="docutils literal notranslate"><span class="pre">/etc</span></code></p></li>
+<li><p>Execute <code class="docutils literal notranslate"><span class="pre">/etc/init.d/rc.sysinit</span></code> during system initialization</p></li>
+<li><p>Execute <code class="docutils literal notranslate"><span class="pre">/etc/init.d/rcS</span></code> for application startup</p></li>
+</ol>
+<p><strong>Customizing startup scripts:</strong></p>
+<p>The startup scripts are located in:
+<code class="docutils literal notranslate"><span class="pre">boards/risc-v/esp32h2/common/src/etc/init.d/</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rc.sysinit</span></code> - System initialization script</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rcS</span></code> - Application startup script</p></li>
+</ul>
+<p>To customize these scripts:</p>
+<ol class="arabic simple">
+<li><p><strong>Edit the script files</strong> in <code class="docutils literal notranslate"><span class="pre">boards/risc-v/esp32h2/common/src/etc/init.d/</span></code></p></li>
+<li><p><strong>Add your initialization commands</strong> using any NSH-compatible commands</p></li>
+</ol>
+<p><strong>Example customizations:</strong></p>
+<ul class="simple">
+<li><p><strong>rc.sysinit</strong> - Set up system services, mount additional filesystems, configure network.</p></li>
+<li><p><strong>rcS</strong> - Start your application, launch daemons, configure peripherals. This is executed after the rc.sysinit script.</p></li>
+</ul>
+<p>Example output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>*** Booting NuttX ***
+[...]
+rc.sysinit is called!
+rcS file is called!
+NuttShell (NSH) NuttX-12.8.0
+nsh&gt; ls /etc/init.d
+/etc/init.d:
+.
+..
+rc.sysinit
+rcS
+</pre></div>
+</div>
+</section>
 <section id="rtc">
 <h2>rtc<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h2>
 <p>This configuration demonstrates the use of the RTC driver through alarms.
