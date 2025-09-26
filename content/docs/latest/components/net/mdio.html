@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>“Raw” packet socket support &mdash; NuttX latest documentation</title>
+  <title>MDIO Bus Driver &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="IP Packet Filter" href="ipfilter.html" />
-    <link rel="prev" title="SocketCAN Device Drivers" href="socketcan.html" /> 
+    <link rel="next" title="CONFIG_NET_GUARDSIZE" href="netguardsize.html" />
+    <link rel="prev" title="Network Drivers" href="netdriver.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -141,16 +141,24 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Network Support</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="sixlowpan.html">6LoWPAN</a></li>
 <li class="toctree-l3"><a class="reference internal" href="socketcan.html">SocketCAN Device Drivers</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">“Raw” packet socket support</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="pkt.html">“Raw” packet socket support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ipfilter.html">IP Packet Filter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="netdev.html">Network Devices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="netdriver.html">Network Drivers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mdio.html">MDIO Bus Driver</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">MDIO Bus Driver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#driver-architecture">Driver Architecture</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#upper-half-implementation">Upper-Half Implementation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#lower-half-implementation">Lower-Half Implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#implementing-a-lower-half-driver">Implementing a Lower-Half Driver</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#key-data-structures">Key Data Structures</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#registration-and-unregistration">Registration and Unregistration</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="netguardsize.html">CONFIG_NET_GUARDSIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="netlink.html">Netlink Route support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="slip.html">SLIP</a></li>
@@ -199,9 +207,9 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
           <li class="breadcrumb-item"><a href="index.html">Network Support</a></li>
-      <li class="breadcrumb-item active">“Raw” packet socket support</li>
+      <li class="breadcrumb-item active">MDIO Bus Driver</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/net/pkt.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/net/mdio.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -209,40 +217,61 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="raw-packet-socket-support">
-<h1>“Raw” packet socket support<a class="headerlink" href="#raw-packet-socket-support" title="Permalink to this heading"></a></h1>
-<p>Packet sockets (<code class="xref c c-macro docutils literal notranslate"><span class="pre">AF_PACKET</span></code>) allow receiving and transmitting frames
-without a transport protocol in between. Frames received are copied into a
-packet socket tap before they enter the network. Data written into a packet
-socket will bypass the network altogether and be placed in the transmission
-buffer of the network interface driver.</p>
-<section id="configuration-options">
-<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
-<dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_PREALLOC_CONNS</span></code></dt><dd><p>Number of preallocated packet connections (all tasks).</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_ALLOC_CONNS</span></code></dt><dd><p>Dynamic memory allocations for packet connections.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_MAX_CONNS</span></code></dt><dd><p>Maximum number of packet connections.</p>
-</dd>
-</dl>
+  <span class="target" id="mdio-bus"></span><section id="mdio-bus-driver">
+<h1>MDIO Bus Driver<a class="headerlink" href="#mdio-bus-driver" title="Permalink to this heading"></a></h1>
+<p>The NuttX MDIO bus driver provides a standardized interface for communicating with Ethernet PHY (Physical Layer) transceivers.
+It employs a classic upper-half/lower-half architecture to abstract hardware-specific logic from the generic MDIO protocol,
+which is currently compliant with Clause 22 of the IEEE 802.3 standard.
+The primary implementation of the upper-half can be found in <code class="docutils literal notranslate"><span class="pre">drivers/net/mdio.c</span></code>.</p>
+<section id="driver-architecture">
+<h2>Driver Architecture<a class="headerlink" href="#driver-architecture" title="Permalink to this heading"></a></h2>
+<p>The MDIO driver framework serves as an intermediary layer between a network device driver and the physical bus.
+The intended operational model is <code class="docutils literal notranslate"><span class="pre">netdev</span> <span class="pre">-&gt;</span> <span class="pre">phydev</span> <span class="pre">-&gt;</span> <span class="pre">mdio</span></code>, where the network device communicates with a dedicated PHY driver,
+which in turn uses the MDIO bus driver for low-level hardware access.
+Direct interaction between the network device and the MDIO bus is discouraged.</p>
+<section id="upper-half-implementation">
+<h3>Upper-Half Implementation<a class="headerlink" href="#upper-half-implementation" title="Permalink to this heading"></a></h3>
+<p>The upper-half driver contains the core logic for the MDIO bus, including bus locking mechanisms to ensure safe transactions.
+It exposes a generic API for managing the bus lifecycle and is capable of handling multiple, independent MDIO bus instances concurrently.
+This abstracts implementation details from both the PHY driver and the underlying hardware-specific code.</p>
 </section>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr_ll</span><span class="w"> </span><span class="n">addr</span><span class="p">;</span>
-<span class="kt">uint8_t</span><span class="w"> </span><span class="n">buffer</span><span class="p">[</span><span class="n">BUFSIZE</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">sd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">socket</span><span class="p">(</span><span class="n">AF_PACKET</span><span class="p">,</span><span class="w"> </span><span class="n">SOCK_RAW</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="cm">/* Create a packet socket */</span>
-
-<span class="n">addr</span><span class="p">.</span><span class="n">sll_family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AF_PACKET</span><span class="p">;</span>
-<span class="n">addr</span><span class="p">.</span><span class="n">sll_ifindex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">if_nametoindex</span><span class="p">(</span><span class="s">&quot;eth0&quot;</span><span class="p">);</span>
-<span class="n">bind</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">addr</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">addr</span><span class="p">));</span><span class="w"> </span><span class="cm">/* Bind to device */</span>
-
-<span class="n">recv</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="cm">/* read(sd, buffer, sizeof(buffer)); */</span>
-<span class="n">send</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="cm">/* write(sd, buffer, sizeof(buffer)); */</span>
-
-<span class="n">close</span><span class="p">(</span><span class="n">sd</span><span class="p">);</span><span class="w"> </span><span class="cm">/* Close the socket */</span>
+<section id="lower-half-implementation">
+<h3>Lower-Half Implementation<a class="headerlink" href="#lower-half-implementation" title="Permalink to this heading"></a></h3>
+<p>A lower-half MDIO driver serves as a thin layer that maps the generic operations defined by the upper-half to hardware-specific register manipulations.
+It is not intended to contain complex logic, but rather to provide a direct translation for bus operations.</p>
+</section>
+</section>
+<section id="implementing-a-lower-half-driver">
+<h2>Implementing a Lower-Half Driver<a class="headerlink" href="#implementing-a-lower-half-driver" title="Permalink to this heading"></a></h2>
+<p>Integrating MDIO support for new hardware requires the implementation of a lower-half driver.
+The contract between the upper and lower halves is defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/net/mdio.h</span></code> and is centered around two key structures.</p>
+<section id="key-data-structures">
+<h3>Key Data Structures<a class="headerlink" href="#key-data-structures" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdio_ops_s</span></code>: A structure containing function pointers that the lower-half driver must implement to perform hardware-level operations.
+*   <code class="docutils literal notranslate"><span class="pre">read</span></code>: Performs a Clause 22 MDIO read operation.
+*   <code class="docutils literal notranslate"><span class="pre">write</span></code>: Performs a Clause 22 MDIO write operation.
+*   <code class="docutils literal notranslate"><span class="pre">reset</span></code>: An optional function to execute a hardware-specific PHY reset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdio_lowerhalf_s</span></code>: The container for the lower-half instance, which holds a pointer to the <code class="docutils literal notranslate"><span class="pre">mdio_ops_s</span></code> vtable
+and an optional private data pointer for the driver’s internal state.</p></li>
+</ol>
+</section>
+<section id="registration-and-unregistration">
+<h3>Registration and Unregistration<a class="headerlink" href="#registration-and-unregistration" title="Permalink to this heading"></a></h3>
+<p>The board-level initialization logic is responsible for instantiating the lower-half driver and registering it with the upper-half via the <code class="docutils literal notranslate"><span class="pre">mdio_register()</span></code> function.
+Each call to this function with a distinct lower-half driver creates a new, unique bus handle, allowing the system to manage several MDIO buses concurrently.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdio_dev_s</span><span class="w"> </span><span class="o">*</span><span class="n">mdio_register</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdio_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">);</span>
 </pre></div>
 </div>
+<p>This function accepts the lower-half instance and returns an opaque handle (<code class="docutils literal notranslate"><span class="pre">FAR</span> <span class="pre">struct</span> <span class="pre">mdio_dev_s</span> <span class="pre">*</span></code>),
+which is subsequently used by the PHY driver to interact with the bus.</p>
+<p>When a bus instance is no longer required, it should be deallocated by calling the <code class="docutils literal notranslate"><span class="pre">mdio_unregister()</span></code> function to ensure proper cleanup of resources.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdio_unregister</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdio_dev_s</span><span class="w"> </span><span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This function takes the handle returned by <code class="docutils literal notranslate"><span class="pre">mdio_register()</span></code> and releases the associated bus instance.</p>
+<p>A (mostly) complete reference implementation for a lower-half driver is available in <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32h7/stm32_mdio.c</span></code>.</p>
+</section>
 </section>
 </section>
 
@@ -250,8 +279,8 @@ buffer of the network interface driver.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="socketcan.html" class="btn btn-neutral float-left" title="SocketCAN Device Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="ipfilter.html" class="btn btn-neutral float-right" title="IP Packet Filter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="netdriver.html" class="btn btn-neutral float-left" title="Network Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="netguardsize.html" class="btn btn-neutral float-right" title="CONFIG_NET_GUARDSIZE" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
