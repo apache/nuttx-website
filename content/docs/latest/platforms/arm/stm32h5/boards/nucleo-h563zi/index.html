@@ -421,6 +421,20 @@ for the Nucleo-H563ZI.  The default console is the VCOM on USART3.</p>
 accessed at the CN9 A0 and A1 pins respectively. Modify
 nucleo-h563zi/src/stm32_adc.c to enable more channels.</p>
 </section>
+<section id="adc-watchdog">
+<h3>adc_watchdog:<a class="headerlink" href="#adc-watchdog" title="Permalink to this heading"></a></h3>
+<p>Test Procedure:</p>
+<ol class="arabic simple">
+<li><p>Build and flash NuttX with the above Kconfig. Register /dev/adc0 via the board init.</p></li>
+<li><p>Start continuous conversions (DMA circular enabled) and run the adc example to sanity-check normal operation.</p></li>
+<li><p>Tie both CH3 and CH10 to GND → verified no AWD interrupts and ADC continues normally.</p></li>
+<li><p>Tie either CH3 or CH10 to 3.3 V with AWD1 set to “all channels” → ISR fires as expected; conversions continue; AWD1 IRQ is disabled by the ISR.</p></li>
+<li><p>Switch to single-channel AWD1.</p></li>
+<li><p>Select CH3: drive CH3 above the window → ISR fires; drive CH10 above the window → no ISR.</p></li>
+<li><p>Select CH10: mirror the above.</p></li>
+<li><p>Re-enable the watchdog interrupt using the driver IOCTL; confirm subsequent out-of-window events retrigger the ISR.</p></li>
+</ol>
+</section>
 <section id="usbnsh">
 <h3>usbnsh:<a class="headerlink" href="#usbnsh" title="Permalink to this heading"></a></h3>
 <p>This configuration provides a basic NuttShell through the USB User interface.</p>
