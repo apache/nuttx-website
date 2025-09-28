@@ -146,7 +146,8 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Stack Overflow Check</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#support">Support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#stack-overflow-software-check">Stack Overflow Software Check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-overflow-software-check-during-function-call">Stack Overflow Software Check During Function Call</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-overflow-software-check-during-context-switching">Stack Overflow Software Check During Context Switching</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stack-overflow-hardware-check">Stack Overflow Hardware Check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stack-canary-check">Stack Canary Check</a></li>
 </ul>
@@ -196,14 +197,20 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>Currently NuttX supports three types of stack overflow detection:</dt><dd><ol class="arabic simple">
-<li><p>Stack Overflow Software Check</p></li>
+<li><p>Stack Overflow Software Check During Function Call</p></li>
+<li><p>Stack Overflow Software Check During Context Switching</p></li>
 <li><p>Stack Overflow Hardware Check</p></li>
 <li><p>Stack Canary Check</p></li>
 </ol>
 </dd>
-<dt>The software stack detection includes two implementation ideas:</dt><dd><ol class="arabic simple">
+<dt>The software stack detection during function call includes two implementation ideas:</dt><dd><ol class="arabic simple">
 <li><p>Implemented by coloring the stack memory</p></li>
 <li><p>Implemented by comparing the sp and sl registers</p></li>
+</ol>
+</dd>
+<dt>The software stack detection during context switching includes two implementation ideas:</dt><dd><ol class="arabic simple">
+<li><p>Implemented by coloring the stack memory</p></li>
+<li><p>Implemented by checking the bottom memory of the stack and the sp register</p></li>
 </ol>
 </dd>
 </dl>
@@ -214,8 +221,8 @@
 currently only implemented on ARM Cortex-M (32-bit) series chips
 Stack Canary Check is available on all platforms</p>
 </section>
-<section id="stack-overflow-software-check">
-<h2>Stack Overflow Software Check<a class="headerlink" href="#stack-overflow-software-check" title="Permalink to this heading"></a></h2>
+<section id="stack-overflow-software-check-during-function-call">
+<h2>Stack Overflow Software Check During Function Call<a class="headerlink" href="#stack-overflow-software-check-during-function-call" title="Permalink to this heading"></a></h2>
 <ol class="arabic">
 <li><dl>
 <dt>Memory Coloring Implementation Principle</dt><dd><ol class="arabic simple">
@@ -245,6 +252,18 @@ __cyg_profile_func_exit</p>
 </dl>
 </li>
 </ol>
+</section>
+<section id="stack-overflow-software-check-during-context-switching">
+<h2>Stack Overflow Software Check During Context Switching<a class="headerlink" href="#stack-overflow-software-check-during-context-switching" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Determine by detecting the number of bytes specified at the bottom of the stack.</p></li>
+<li><p>Check if the sp register is out of bounds.</p></li>
+</ol>
+<dl class="simple">
+<dt>Usage:</dt><dd><p>Enable CONFIG_STACKCHECK_SOFTWARE
+You can set the detection length by STACKCHECK_MARGIN</p>
+</dd>
+</dl>
 </section>
 <section id="stack-overflow-hardware-check">
 <h2>Stack Overflow Hardware Check<a class="headerlink" href="#stack-overflow-hardware-check" title="Permalink to this heading"></a></h2>
