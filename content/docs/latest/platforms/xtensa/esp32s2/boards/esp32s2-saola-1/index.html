@@ -161,6 +161,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#wi-fi">Wi-Fi</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#wi-fi-softap">Wi-Fi SoftAP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#mcuboot-and-ota-update">MCUBoot and OTA Update</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#ulp-risc-v-coprocessor">ULP RISC-V Coprocessor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#id1">Managing esptool on virtual environment</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="../esp32s2-kaluga-1/index.html">ESP32-S2-Kaluga-1 Kit v1.3</a></li>
@@ -863,6 +864,43 @@ Bit timing:
   TSEG2: 4
     SJW: 3
   ID:    1 DLC: 1
+</pre></div>
+</div>
+</section>
+<section id="ulp">
+<h3>ulp<a class="headerlink" href="#ulp" title="Permalink to this heading"></a></h3>
+<p>This configuration enables the support for the ULP RISC-V core coprocessor.
+To get more information about LP Core please check <a class="reference internal" href="../../index.html#esp32s2-ulp"><span class="std std-ref">ULP LP Core Coprocessor docs.</span></a></p>
+<p>Configuration uses a pre-built binary in <code class="docutils literal notranslate"><span class="pre">Documentation/platforms/xtensa/esp32s3/boards/esp32s3-devkit/ulp_riscv_blink.bin</span></code>
+which is a blink example for GPIO0. After flashing operation, GPIO0 pin will blink.</p>
+<p>Prebuild binary runs this code:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdint.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv_utils.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv_gpio.h&quot;</span>
+
+<span class="cp">#define GPIO_PIN 0</span>
+
+<span class="cp">#define nop() __asm__ __volatile__ (&quot;nop&quot;)</span>
+
+<span class="kt">bool</span><span class="w"> </span><span class="n">gpio_level_previous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ulp_riscv_gpio_output_level</span><span class="p">(</span><span class="n">GPIO_PIN</span><span class="p">,</span><span class="w"> </span><span class="n">gpio_level_previous</span><span class="p">);</span>
+<span class="w">        </span><span class="n">gpio_level_previous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">gpio_level_previous</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10000</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="n">nop</span><span class="p">();</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 </section>

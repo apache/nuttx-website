@@ -187,6 +187,12 @@
 <li class="toctree-l5"><a class="reference internal" href="#psram">PSRAM</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#ulp-risc-v-coprocessor">ULP RISC-V Coprocessor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#features-of-the-ulp-risc-v-coprocessor">Features of the ULP RISC-V Coprocessor</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#loading-binary-into-ulp-risc-v-coprocessor">Loading Binary into ULP RISC-V Coprocessor</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#creating-an-ulp-risc-v-coprocessor-application">Creating an ULP RISC-V Coprocessor Application</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#id1">Managing esptool on virtual environment</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#using-pipx-recommended">Using pipx (recommended)</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#using-venv-alternative">Using venv (alternative)</a></li>
@@ -1009,6 +1015,182 @@ Set the attribute <code class="docutils literal notranslate"><span class="pre">_
 <p><code class="docutils literal notranslate"><span class="pre">my_data</span></code> will be allocated in the external PSRAM and can be explicitly initialized on runtime.</p>
 <p>This is particularly useful when the internal RAM is not enough to hold all the data.</p>
 </section>
+</section>
+</section>
+<section id="ulp-risc-v-coprocessor">
+<span id="esp32s3-ulp"></span><h2>ULP RISC-V Coprocessor<a class="headerlink" href="#ulp-risc-v-coprocessor" title="Permalink to this heading"></a></h2>
+<p>The ULP RISC-V core is a 32-bit coprocessor integrated into the ESP32-S3 SoC.
+It is designed to run independently of the main high-performance (HP) core and is capable of executing lightweight tasks
+such as GPIO polling, simple peripheral control and I/O interactions.</p>
+<p>This coprocessor benefits to offload simple tasks from HP core (e.g., GPIO polling , I2C operations, basic control logic) and
+frees the main CPU for higher-level processing</p>
+<p>For more information about ULP RISC-V Coprocessor <a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/system/ulp-risc-v.html">check here</a>.</p>
+<section id="features-of-the-ulp-risc-v-coprocessor">
+<h3>Features of the ULP RISC-V Coprocessor<a class="headerlink" href="#features-of-the-ulp-risc-v-coprocessor" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Processor Architecture</dt><dd><ul>
+<li><p>RV32IMC RISC-V core — Integer (I), Multiplication/Division (M), and Compressed (C) instructions</p></li>
+<li><p>Runs at 17.5 MHz</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Memory</dt><dd><ul>
+<li><p>Access to 8 KB of RTC slow memory (RTC_SLOW_MEM) memory region, and registers in RTC_CNTL, RTC_IO, and SARADC peripherals</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Debugging</dt><dd><ul>
+<li><p>Logging via bit-banged UART</p></li>
+<li><p>Shared memory for state inspection</p></li>
+<li><p>Panic or exception handlers can trigger wake-up or signal to main CPU if main CPU is in sleep</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Peripheral support</dt><dd><ul>
+<li><p>RTC domain peripherals (RTC GPIO, RTC I2C, ADC)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="loading-binary-into-ulp-risc-v-coprocessor">
+<h3>Loading Binary into ULP RISC-V Coprocessor<a class="headerlink" href="#loading-binary-into-ulp-risc-v-coprocessor" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>There are two ways to load a binary into LP-Core:</dt><dd><ul class="simple">
+<li><p>Using a prebuilt binary</p></li>
+<li><p>Using NuttX internal build system to build your own (bare-metal) application</p></li>
+</ul>
+</dd>
+</dl>
+<p>When using a prebuilt binary, the already compiled output for the ULP system whether built from NuttX
+or the ESP-IDF environment can be leveraged. However, whenever the ULP code needs to be modified, it must be rebuilt separately,
+and the resulting .bin file has to be integrated into NuttX. This workflow, while compatible, can become tedious.</p>
+<p>With NuttX internal build system, the ULP binary code can be built and flashed from a single location. It is more convenient but
+using build system has some dependencies on example side.</p>
+<p>Both methods requires <cite>CONFIG_ESP32S3_ULP_COPROC_ENABLED</cite> and <cite>CONFIG_ESP32S3_ULP_COPROC_RESERVE_MEM</cite> variables to set ULP RISC-V core and
+<cite>CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH</cite> variable to set the path to the ULP project or prebuilt binary file
+relative to NuttX root folder.
+These variables can be set using <cite>make menuconfig</cite> or <cite>kconfig-tweak</cite> commands.</p>
+<p>Here is an example for enabling ULP and using a prebuilt binary for ULP RISC-V core:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make distclean
+./tools/configure.sh esp32s3-devkit:nsh
+kconfig-tweak -e CONFIG_ESP32S3_ULP_COPROC_ENABLED
+kconfig-tweak --set-val CONFIG_ESP32S3_ULP_COPROC_RESERVE_MEM 8176
+kconfig-tweak --set-str CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH &quot;Documentation/platforms/xtensa/esp32s3/boards/esp32s3-devkit/ulp_riscv_blink.bin&quot;
+make olddefconfig
+make -j
+</pre></div>
+</div>
+</section>
+<section id="creating-an-ulp-risc-v-coprocessor-application">
+<h3>Creating an ULP RISC-V Coprocessor Application<a class="headerlink" href="#creating-an-ulp-risc-v-coprocessor-application" title="Permalink to this heading"></a></h3>
+<p>To use NuttX’s internal build system to compile the bare-metal ULP RISC-V Coprocessor binary, check the following instructions.</p>
+<p>First, create a folder for the ULP source and header files. This folder is just for ULP project and it is
+an independent project. Therefore, the NuttX example guide should not be followed, and no Makefile or similar
+build files should be added. Also folder location could be anywhere. To include ULP folder into build
+system don’t forget to set <cite>CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH</cite> variable with path of the ULP project folder relative to
+NuttX root folder. Instructions for setting up can be found above.</p>
+<p>NuttX’s internal functions or POSIX calls are not supported.</p>
+<p>Here is an example:</p>
+<ul class="simple">
+<li><p>ULP UART Snippet:</p></li>
+</ul>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv_utils.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv_print.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv_uart_ulp_core.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;sdkconfig.h&quot;</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">ulp_riscv_uart_t</span><span class="w"> </span><span class="n">s_print_uart</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">ulp_riscv_uart_cfg_t</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="p">.</span><span class="n">tx_pin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">ulp_riscv_uart_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s_print_uart</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">cfg</span><span class="p">);</span>
+<span class="w">  </span><span class="n">ulp_riscv_print_install</span><span class="p">((</span><span class="n">putc_fn_t</span><span class="p">)</span><span class="n">ulp_riscv_uart_putc</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">s_print_uart</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">ulp_riscv_print_str</span><span class="p">(</span><span class="s">&quot;Hello from the LP core!!</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ulp_riscv_delay_cycles</span><span class="p">(</span><span class="mi">1000</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ULP_RISCV_CYCLES_PER_MS</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For more information about ULP RISC-V Coprocessor examples <a class="reference external" href="https://github.com/espressif/esp-idf/tree/master/examples/system/ulp/lp_core">check here</a>.
+After these settings follow the same steps as for any other configuration to build NuttX. Build system checks ULP project path,
+adds every source and header file into project and builds it.</p>
+<p>To sum up, here is an complete example. <cite>ulp_example/ulp (../ulp_example/ulp)</cite> folder selected as example
+to create a subfolder for ULP but folder that includes ULP source code can be anywhere:</p>
+<ul class="simple">
+<li><p>Tree view:</p></li>
+</ul>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nuttxspace/
+├── nuttx/
+└── apps/
+└── ulp_example/
+    └── ulp/
+        └── ulp_main.c
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in ulp_main.c:</p></li>
+</ul>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdint.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv_utils.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_riscv_gpio.h&quot;</span>
+
+<span class="cp">#define GPIO_PIN 0</span>
+
+<span class="cp">#define nop() __asm__ __volatile__ (&quot;nop&quot;)</span>
+
+<span class="kt">bool</span><span class="w"> </span><span class="n">gpio_level_previous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ulp_riscv_gpio_output_level</span><span class="p">(</span><span class="n">GPIO_PIN</span><span class="p">,</span><span class="w"> </span><span class="n">gpio_level_previous</span><span class="p">);</span>
+<span class="w">        </span><span class="n">gpio_level_previous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">gpio_level_previous</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10000</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="n">nop</span><span class="p">();</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<ul>
+<li><p>Command to build:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make distclean
+./tools/configure.sh esp32s3-devkitc:nsh
+kconfig-tweak -e CONFIG_ESP32S3_ULP_COPROC_ENABLED
+kconfig-tweak --set-val CONFIG_ESP32S3_ULP_COPROC_RESERVE_MEM 8176
+kconfig-tweak -e CONFIG_DEV_GPIO
+kconfig-tweak --set-str CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH &quot;../ulp_example/ulp&quot;
+make olddefconfig
+make -j
+</pre></div>
+</div>
+</li>
+</ul>
 </section>
 </section>
 <section id="id1">
