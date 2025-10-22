@@ -193,7 +193,9 @@
 <li class="toctree-l4"><a class="reference internal" href="#ulp-risc-v-coprocessor">ULP RISC-V Coprocessor</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#features-of-the-ulp-risc-v-coprocessor">Features of the ULP RISC-V Coprocessor</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#loading-binary-into-ulp-risc-v-coprocessor">Loading Binary into ULP RISC-V Coprocessor</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#makefile-variables-for-ulp-risc-v-core-build">Makefile Variables for ULP RISC-V Core Build:</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#creating-an-ulp-risc-v-coprocessor-application">Creating an ULP RISC-V Coprocessor Application</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#accessing-the-ulp-risc-v-coprocessor-program-variables">Accessing the ULP RISC-V Coprocessor Program Variables</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#id1">Managing esptool on virtual environment</a><ul>
@@ -1191,16 +1193,37 @@ or the ESP-IDF environment can be leveraged. However, whenever the ULP code need
 and the resulting .bin file has to be integrated into NuttX. This workflow, while compatible, can become tedious.</p>
 <p>With NuttX internal build system, the ULP binary code can be built and flashed from a single location. It is more convenient but
 using build system has some dependencies on example side.</p>
-<p>Both methods requires <cite>CONFIG_ESP32S3_ULP_COPROC_ENABLED</cite> and <cite>CONFIG_ESP32S3_ULP_COPROC_RESERVE_MEM</cite> variables to set ULP RISC-V core and
-<cite>CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH</cite> variable to set the path to the ULP project or prebuilt binary file
-relative to NuttX root folder.
-These variables can be set using <cite>make menuconfig</cite> or <cite>kconfig-tweak</cite> commands.</p>
-<p>Here is an example for enabling ULP and using a prebuilt binary for ULP RISC-V core:</p>
+<p>Both methods requires <code class="docutils literal notranslate"><span class="pre">CONFIG_ESP32S3_ULP_COPROC_ENABLED</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_ESP32S3_ULP_COPROC_RESERVE_MEM</span></code> variables to enable ULP RISC-V core.
+These variables can be set using <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> or <code class="docutils literal notranslate"><span class="pre">kconfig-tweak</span></code> commands.</p>
+<p>Additionally, a Makefile needs to be provided to specify the ULP application name,
+source path of the ULP application, and either the binary (for prebuilt) or the source files (for internal build).
+This Makefile must include the ULP makefile after the variable set process on <code class="docutils literal notranslate"><span class="pre">arch/xtensa/src/common/espressif/esp_ulp.mk</span></code> integration script.
+For more information please refer to <a class="reference internal" href="#ulp-makefile"><span class="std std-ref">ulp example Makefile.</span></a></p>
+</section>
+<section id="makefile-variables-for-ulp-risc-v-core-build">
+<h3>Makefile Variables for ULP RISC-V Core Build:<a class="headerlink" href="#makefile-variables-for-ulp-risc-v-core-build" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code>: Sets name for the ULP RISC-V application. This variable also be used as prefix (e.g. ULP RISC-V application bin variable name)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_FOLDER</span></code>: Specifies the directory containing the ULP RISC-V application’s source codes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_BIN</span></code>: Defines the path of the prebuilt ULP RISC-V binary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_C_SRCS</span></code>: Lists all C source files (.c) that need to be compiled for the ULP RISC-V application.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_ASM_SRCS</span></code>: Lists all assembly source files (.S or .s) to be assembled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_INCLUDES</span></code>: Specifies additional include directories for the compiler and assembler.</p></li>
+</ul>
+<p>Here is an Makefile example when using prebuilt binary for ULP RISC-V core:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ULP_APP_NAME = esp_ulp</span>
+<span class="go">ULP_APP_FOLDER = $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)$(CHIP_SERIES)</span>
+<span class="go">ULP_APP_BIN = $(TOPDIR)$(DELIM)Documentation$(DELIM)platforms$(DELIM)$(CONFIG_ARCH)$(DELIM)$(CONFIG_ARCH_CHIP)$(DELIM)boards$(DELIM)$(CONFIG_ARCH_BOARD)$(DELIM)ulp_riscv_blink.bin</span>
+
+<span class="go">include $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)common$(DELIM)espressif$(DELIM)esp_ulp.mk</span>
+</pre></div>
+</div>
+<p>Here is an example for enabling ULP and using the prebuilt test binary for ULP RISC-V core:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make distclean
 ./tools/configure.sh esp32s3-devkit:nsh
 kconfig-tweak -e CONFIG_ESP32S3_ULP_COPROC_ENABLED
 kconfig-tweak --set-val CONFIG_ESP32S3_ULP_COPROC_RESERVE_MEM 8176
-kconfig-tweak --set-str CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH &quot;Documentation/platforms/xtensa/esp32s3/boards/esp32s3-devkit/ulp_riscv_blink.bin&quot;
+kconfig-tweak -e CONFIG_ESPRESSIF_ULP_USE_TEST_BIN
 make olddefconfig
 make -j
 </pre></div>
@@ -1209,11 +1232,11 @@ make -j
 <section id="creating-an-ulp-risc-v-coprocessor-application">
 <h3>Creating an ULP RISC-V Coprocessor Application<a class="headerlink" href="#creating-an-ulp-risc-v-coprocessor-application" title="Permalink to this heading"></a></h3>
 <p>To use NuttX’s internal build system to compile the bare-metal ULP RISC-V Coprocessor binary, check the following instructions.</p>
-<p>First, create a folder for the ULP source and header files. This folder is just for ULP project and it is
-an independent project. Therefore, the NuttX example guide should not be followed, and no Makefile or similar
-build files should be added. Also folder location could be anywhere. To include ULP folder into build
-system don’t forget to set <cite>CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH</cite> variable with path of the ULP project folder relative to
-NuttX root folder. Instructions for setting up can be found above.</p>
+<p>First, create a folder for the ULP source and header files into your NuttX example.
+This folder is just for ULP project and it is an independent project. Therefore, the NuttX example guide should not be followed
+for ULP example (folder location is irrelevant. It can be the same of the <cite>nuttx-apps</cite> repository, for instance).
+To include the ULP folder in the build system, don’t forget to include the ULP Makefile in the NuttX example Makefile. Lastly, configuration variables
+needed to enable ULP core instructions can be found above.</p>
 <p>NuttX’s internal functions or POSIX calls are not supported.</p>
 <p>Here is an example:</p>
 <ul class="simple">
@@ -1248,8 +1271,10 @@ NuttX root folder. Instructions for setting up can be found above.</p>
 <p>For more information about ULP RISC-V Coprocessor examples <a class="reference external" href="https://github.com/espressif/esp-idf/tree/master/examples/system/ulp/lp_core">check here</a>.
 After these settings follow the same steps as for any other configuration to build NuttX. Build system checks ULP project path,
 adds every source and header file into project and builds it.</p>
-<p>To sum up, here is an complete example. <cite>ulp_example/ulp (../ulp_example/ulp)</cite> folder selected as example
-to create a subfolder for ULP but folder that includes ULP source code can be anywhere:</p>
+<p>To sum up, here is an example. <code class="docutils literal notranslate"><span class="pre">ulp_example/ulp</span> <span class="pre">(../ulp_example/ulp)</span></code> folder selected as example
+to create a subfolder for ULP but folder that includes ULP source code can be anywhere. For more information about
+custom apps, please follow NuttX <a class="reference external" href="https://nuttx.apache.org/docs/latest/guides/customapps.html#custom-apps-how-to">Custom Apps How-to</a> guide,
+this example will demonstrate how to add ULP code into a custom application:</p>
 <ul class="simple">
 <li><p>Tree view:</p></li>
 </ul>
@@ -1257,8 +1282,80 @@ to create a subfolder for ULP but folder that includes ULP source code can be an
 ├── nuttx/
 └── apps/
 └── ulp_example/
+    └── Makefile
+    └── Kconfig
+    └── ulp_example.c
     └── ulp/
+        └── Makefile
         └── ulp_main.c
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in Makefile:</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">include $(APPDIR)/Make.defs</span>
+
+<span class="go">PROGNAME  = $(CONFIG_EXAMPLES_ULP_EXAMPLE_PROGNAME)</span>
+<span class="go">PRIORITY  = $(CONFIG_EXAMPLES_ULP_EXAMPLE_PRIORITY)</span>
+<span class="go">STACKSIZE = $(CONFIG_EXAMPLES_ULP_EXAMPLE_STACKSIZE)</span>
+<span class="go">MODULE    = $(CONFIG_EXAMPLES_ULP_EXAMPLE)</span>
+
+<span class="go">MAINSRC = ulp_example.c</span>
+
+<span class="go">include $(APPDIR)/Application.mk</span>
+
+<span class="go">include ulp/Makefile</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in Kconfig:</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">config EXAMPLES_ULP_EXAMPLE</span>
+<span class="go">  bool &quot;ULP Example&quot;</span>
+<span class="go">  default n</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in ulp_example.c:</p></li>
+</ul>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/ioctl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;inttypes.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdint.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp/ulp/ulp_main.h&quot;</span>
+<span class="cm">/* Files that holds ULP binary header */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp/ulp/ulp_code.h&quot;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">   </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ulp&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_WRONLY</span><span class="p">);</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">       </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Failed to open ULP: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">errno</span><span class="p">);</span>
+<span class="w">       </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">     </span><span class="p">}</span>
+<span class="w">   </span><span class="cm">/* ulp_example is the prefix which can be changed with ULP_APP_NAME makefile</span>
+<span class="cm">    * variable to access ULP binary code variable */</span>
+<span class="w">   </span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">ulp_example_bin</span><span class="p">,</span><span class="w"> </span><span class="n">ulp_example_bin_len</span><span class="p">);</span>
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple" id="ulp-makefile">
+<li><p>Contents in ulp/Makefile:</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ULP_APP_NAME = ulp_example</span>
+<span class="go">ULP_APP_FOLDER = $(APPDIR)$(DELIM)ulp_example$(DELIM)ulp</span>
+<span class="go">ULP_APP_C_SRCS = ulp_main.c</span>
+
+<span class="go">include $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)common$(DELIM)espressif$(DELIM)esp_ulp.mk</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -1300,13 +1397,66 @@ to create a subfolder for ULP but folder that includes ULP source code can be an
 kconfig-tweak -e CONFIG_ESP32S3_ULP_COPROC_ENABLED
 kconfig-tweak --set-val CONFIG_ESP32S3_ULP_COPROC_RESERVE_MEM 8176
 kconfig-tweak -e CONFIG_DEV_GPIO
-kconfig-tweak --set-str CONFIG_ESPRESSIF_ULP_RISCV_PROJECT_PATH &quot;../ulp_example/ulp&quot;
+kconfig-tweak -e CONFIG_EXAMPLES_ULP_EXAMPLE
 make olddefconfig
 make -j
 </pre></div>
 </div>
 </li>
 </ul>
+<p>Here is an example of a single ULP application. However, support is not limited to just
+one application. Multiple ULP applications are also supported.
+By following the same guideline, multiple ULP applications can be created and loaded using <code class="docutils literal notranslate"><span class="pre">write</span></code> POSIX call.
+Each NuttX application can build one ULP application. Therefore, to build multiple ULP applications, multiple NuttX
+applications are needed to create each ULP binary. This limitation only applies when using the NuttX build system to
+build multiple ULP applications; it does not affect the ability to load multiple ULP applications built by other means.</p>
+<p>ULP binary can be included in NuttX application by adding
+<code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&quot;ulp/ulp/ulp_code.h&quot;</span></code> line. Then, the ULP binary is accessible by using the ULP application
+prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP application Makefile) with the <code class="docutils literal notranslate"><span class="pre">bin</span></code> keyword to
+access the binary data (e.g., if <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is <code class="docutils literal notranslate"><span class="pre">ulp_test</span></code>, the binary variable will be <code class="docutils literal notranslate"><span class="pre">ulp_test_bin</span></code>)
+and <code class="docutils literal notranslate"><span class="pre">bin_len</span></code> keyword to access its length (e.g., <code class="docutils literal notranslate"><span class="pre">ulp_test_bin_len</span></code> for <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is <code class="docutils literal notranslate"><span class="pre">ulp_test</span></code>).</p>
+</section>
+<section id="accessing-the-ulp-risc-v-coprocessor-program-variables">
+<h3>Accessing the ULP RISC-V Coprocessor Program Variables<a class="headerlink" href="#accessing-the-ulp-risc-v-coprocessor-program-variables" title="Permalink to this heading"></a></h3>
+<p>Global symbols defined in the ULP application are available to the HP core through a shared memory region. To read or write ULP variables,
+direct reading/writing to such memory positions are not allowed. POSIX calls are needed instead. To access the ULP variable through the HP core,
+consider that its name is defined by the ULP application prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP application Makefile) + the ULP application variable.
+For example if HP core tries to access a ULP application variable named <code class="docutils literal notranslate"><span class="pre">result</span></code> and <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> in the ULP application Makefile set as <code class="docutils literal notranslate"><span class="pre">ulp_app</span></code>, required name for
+that variable will be <code class="docutils literal notranslate"><span class="pre">ulp_app_result</span></code>.
+<code class="docutils literal notranslate"><span class="pre">FIONREAD</span></code> or <code class="docutils literal notranslate"><span class="pre">FIONWRITE</span></code> ioctl calls are, then, performed with the address of a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">symtab_s</span></code> previously defined with the name of the variable to be read or written.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Ensure that the related ULP application is running. Otherwise, another ULP application may interfere by using the same memory space for a different variables.</p>
+</div>
+<p>Here is a snippet for reading and writing to a ULP variable named <code class="docutils literal notranslate"><span class="pre">var_test</span></code> (assuming the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is set to <code class="docutils literal notranslate"><span class="pre">ulp</span></code>) through the HP core:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/ioctl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;nuttx/symtab.h&quot;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ulp_var</span><span class="p">;</span>
+<span class="w">   </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">   </span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span><span class="w"> </span><span class="n">sym</span><span class="w"> </span><span class="o">=</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">     </span><span class="p">.</span><span class="n">sym_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ulp_var_test&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="p">.</span><span class="n">sym_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ulp_var</span><span class="p">,</span>
+<span class="w">   </span><span class="p">};</span>
+<span class="w">   </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ulp&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDWR</span><span class="p">);</span>
+<span class="w">   </span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">FIONREAD</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sym</span><span class="p">);</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ulp_var</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">       </span><span class="n">ulp_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">       </span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">FIONWRITE</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sym</span><span class="p">);</span>
+<span class="w">     </span><span class="p">}</span>
+
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="id1">
