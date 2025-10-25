@@ -223,68 +223,56 @@
              
   <section id="smartl-c906">
 <h1>smartl-c906<a class="headerlink" href="#smartl-c906" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. Download and install toolchain
-
-  https://occ.t-head.cn/community/download
-
-2. Download and install qemu
-
-  https://occ.t-head.cn/community/download
-
-3. Modify defconfig
-
-4. Configure and build NuttX
-
-  $ make distclean
-  $ ./tools/configure.sh smartl-c906:nsh
-  $ make -j
-
-5. Run the nuttx by downloading elf to RAM via HW debugger
-
-6. TODO
-
-  Support FPU
-  Support ELF based file applications
-  Support RISC-V User mode
-
-</pre></div>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-riscv.html"><span class="doc">arch:riscv</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning reference internal" href="../../../../../_tags/experimental.html"><span class="doc">experimental</span></a></p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>There is currently no support for the FPU, ELF-based file applications,
+protected mode with PMP or RISC-V User mode.</p>
 </div>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. Download and install toolchain
-
-  https://occ.t-head.cn/community/download
-
-2. Download and install qemu
-
-  https://occ.t-head.cn/community/download
-
-3. Modify defconfig
-
-  CONFIG_C906_WITH_QEMU=y
-
-4. Configure and build NuttX
-
-  $ make distclean
-  $ ./tools/configure.sh smartl-c906:nsh
-  $ make -j
-
-5. Run the nuttx with qemu
-
-  Modify the soc config file &quot;smarth_906_cfg.xml&quot;, enlarge the RAM size.
--        &lt;mem name=&quot;smart_inst_mem&quot; addr=&quot;0x0&quot; size =&quot;0x00020000&quot; attr =&quot;MEM_RAM&quot;&gt;&lt;/mem&gt;
-+        &lt;mem name=&quot;smart_inst_mem&quot; addr=&quot;0x0&quot; size =&quot;0x00400000&quot; attr =&quot;MEM_RAM&quot;&gt;&lt;/mem&gt;
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>Download and install the toolchain from
+<a class="reference external" href="https://occ.t-head.cn/community/download">https://occ.t-head.cn/community/download</a>.</p>
+<p>If you’re planning on using NuttX in QEMU for this board, install QEMU from
+<a class="reference external" href="https://occ.t-head.cn/community/download">https://occ.t-head.cn/community/download</a>.</p>
+</section>
+<section id="building-nuttx">
+<h2>Building NuttX<a class="headerlink" href="#building-nuttx" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If configuring to run on QEMU, enable the option <code class="docutils literal notranslate"><span class="pre">CONFIG_C906_WITH_QEMU=y</span></code>
+in the Kconfig menu (<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>).</p>
+</div>
+</section>
+<section id="flashing">
+<h2>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h2>
+<p>Run NuttX by downloading the produced ELF to RAM via a HW debugger.</p>
+<p>If running on QEMU, first modify the config file <code class="docutils literal notranslate"><span class="pre">smarth_906_cfg.xml</span></code> to
+enlarge the RAM size with this patch:</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">-        &lt;mem name=&quot;smart_inst_mem&quot; addr=&quot;0x0&quot; size =&quot;0x00020000&quot; attr =&quot;MEM_RAM&quot;&gt;&lt;/mem&gt;</span>
+<span class="gi">+        &lt;mem name=&quot;smart_inst_mem&quot; addr=&quot;0x0&quot; size =&quot;0x00400000&quot; attr =&quot;MEM_RAM&quot;&gt;&lt;/mem&gt;</span>
 ...
--                smart_inst_mem, Start: 0x0, Length: 0x20000
-+                smart_inst_mem, Start: 0x0, Length: 0x400000
-
-  Then launch QEMU:
-  $ ./cskysim -soc $PATH_TO_SOCCFG/smarth_906_cfg.xml -nographic -kernel $PATH_TO_NUTTX_BUILD_DIR/nuttx
-
-6. TODO
-
-  Support protect mode via PMP
-  Support RISC-V User mode
+<span class="gd">-                smart_inst_mem, Start: 0x0, Length: 0x20000</span>
+<span class="gi">+                smart_inst_mem, Start: 0x0, Length: 0x400000</span>
 </pre></div>
 </div>
+<p>Then, you can launch QEMU using the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./cskysim<span class="w"> </span>-soc<span class="w"> </span><span class="nv">$PATH_TO_SOCCFG</span>/smarth_906_cfg.xml<span class="w"> </span>-nographic<span class="w"> </span>-kernel<span class="w"> </span><span class="nv">$PATH_TO_NUTTX_BUILD_DIR</span>/nuttx
+</pre></div>
+</div>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>You can select a configuration using the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>smartl-c906:&lt;config&gt;
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;config&gt;</span></code> is one of the configurations listed below.</p>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>A simple configuration with the NSH shell.</p>
+</section>
+</section>
 </section>
 
 

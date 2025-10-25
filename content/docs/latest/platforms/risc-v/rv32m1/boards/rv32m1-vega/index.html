@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rv32m1-vega &mdash; NuttX latest documentation</title>
+  <title>RV32M1-VEGA &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -161,7 +161,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../rp23xx-rv/index.html">Raspberry Pi rp2350 RISC-V</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">NXP RV32M1</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
-<li class="toctree-l5 current"><a class="current reference internal" href="#">rv32m1-vega</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">RV32M1-VEGA</a></li>
 </ul>
 </li>
 </ul>
@@ -211,7 +211,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">RISC-V</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">NXP RV32M1</a></li>
-      <li class="breadcrumb-item active">rv32m1-vega</li>
+      <li class="breadcrumb-item active">RV32M1-VEGA</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/risc-v/rv32m1/boards/rv32m1-vega/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -222,248 +222,316 @@
            <div itemprop="articleBody">
              
   <section id="rv32m1-vega">
-<h1>rv32m1-vega<a class="headerlink" href="#rv32m1-vega" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-======
-
-This README discusses issues unique to NuttX configurations for the
-OPEN ISA RV32M1-VEGA development board featuring the RV32M1 MCU. The
-RV32M1 is a heterogeneous soc including an ARM Cortex-M4 CPU, an ARM
-Cortex-M0+ CPU, a RISC-V RI5CY CPU, and a RISC-V ZERO_RISCY CPU. the
-SOC integrates 1.25 MB flash, 384 KB SRAM, and varieties of peripherals.
-The RV32M1-VEGA board features:
-
-  - On-board OpenSDA Debug Adapter,
-  - USB Device Port,
-  - FXOS8700CQ Digital Combo Sensor: 3D Accelerometer + 3D Magnetometer,
-  - Wirless Abilities: BLE, Generic FSK, and IEEE Std.802.15.4(Thread),
-  - ONE user RGB LED,
-  - Four user push-buttons,
-  - 4 MB external SPI Flash,
-  - Micro-SD Card Slot on the backside,
-  - Arduino R3 Compatible IO Header.
-
-Refer to https://open-isa.org for further information about this board.
-
-Currently NuttX is ported to RV32M1 RI5CY only. RI5CY is RV32IMC RISC-V CPU
-with PULP extensions features:
-  - Post-Incrementing load and stores,
-  - Multiply-Accumulate extensions,
-  - ALU extensions,
-  - Hardware Loops.
-
-Contents
-========
-
-  - LEDs
-  - UARTs
-  - Buttons
-  - ITCM
-  - TSTMR
-
-LEDs
-====
-
-The RV32M1-VEGA board has ONE user RGB LED; Only the red part led is used to
-indicate an interrupt request is being serviced.
-
-  SYMBOL                Meaning                 RED*    GREEN     BLUE
-  -------------------  -----------------------  -------  -------  -----
-  LED_STARTED          NuttX has been started   OFF      OFF      OFF
-  LED_HEAPALLOCATE     Heap has been allocated  OFF      OFF      OFF
-  LED_IRQSENABLED      Interrupts enabled       OFF      OFF      OFF
-  LED_STACKCREATED     Idle stack created       OFF      OFF      OFF
-  LED_INIRQ            In an interrupt**        OFF      OFF      OFF
-  LED_SIGNAL           In a signal handler***   OFF      OFF      OFF
-  LED_ASSERTION        An assertion failed      OFF      OFF      OFF
-  LED_PANIC            The system has crashed   OFF      OFF      OFF
-  LED_CPU              Interrupt service        ON       OFF      OFF
-
-UARTs
-====
-
-LPUART PINS
----------------
-
-LPUART0
-  RX      PC7, PB25, PA2
-  TX      PC8, PB26, PA3
-LPUART1
-  RX      PB2, PC29, PA2, PA25
-  TX      PB3, PC30, PA3, PA26
-LPUART2
-  RX      PB11, PB18, PB1
-  TX      PB12, PB19, PB0
-LPUART3
-  RX      PB28, PE8, PE29
-  TX      PB29, PE9, PE30
-
-Default LPUART Configuration
---------------------------------
-
-LPUART0 is enabled in most configurations (see */defconfig). RX and TX are
-configured on pins PC7 and PC8, respectively (see include/board.h). These
-two above pins are connected to onboard Debug Adapter which provides a USB-
-TTL serial channel.
-
-Buttons
-====
-
-Four tactile buttons are populated on RV32M1-VEGA Board.
-
-Buttons PINS Assignment
----------------
-NAME    PIN    EXTERNAL-PULLUP
-SW2     PA0        YES
-SW3     PE8        NO
-SW4     PE9        NO
-SW5     PE12       NO
-
-All these buttons can be used as interrupt and wake up sources while SW2 can
-be an alternative NMI Source.
-
-ITCM
-====
-
-A 64KB ITCM is coupled with M4 Cores, RI5CY CPU or ARM Cortex-M4 CPU. If the
+<h1>RV32M1-VEGA<a class="headerlink" href="#rv32m1-vega" title="Permalink to this heading"></a></h1>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-riscv.html"><span class="doc">arch:riscv</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/vendor-vega.html"><span class="doc">vendor:vega</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning reference internal" href="../../../../../_tags/experimental.html"><span class="doc">experimental</span></a></p>
+<figure class="align-center" id="id2" style="width: 40%">
+<img alt="The RV32M1-VEGA development board." src="../../../../../_images/rv32m1-vega.png" />
+<figcaption>
+<p><span class="caption-text">The RV32M1-VEGA development board.</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<p>The RV32M1 is a heterogeneous SoC including an ARM Cortex-M4 CPU, an ARM
+Cortex-M0+ CPU, a RISC-V RI5CY CPU, and a RISC-V ZERO_RISCY CPU. The SOC
+integrates 1.25 MB flash, 384 KB SRAM, and a variety of peripherals.</p>
+<p>Refer to <a class="reference external" href="https://open-isa.org">https://open-isa.org</a> for further information about this board.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently NuttX is ported to RV32M1 RI5CY only. RI5CY is RV32IMC RISC-V CPU
+with PULP extensions features:</p>
+<ul class="simple">
+<li><p>Post-Incrementing load and stores,</p></li>
+<li><p>Multiply-Accumulate extensions,</p></li>
+<li><p>ALU extensions,</p></li>
+<li><p>Hardware Loops.</p></li>
+</ul>
+</div>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>On-board OpenSDA Debug Adapter,</p></li>
+<li><p>USB Device Port,</p></li>
+<li><p>FXOS8700CQ Digital Combo Sensor: 3D Accelerometer + 3D Magnetometer,</p></li>
+<li><p>Wirless Abilities: BLE, Generic FSK, and IEEE Std.802.15.4(Thread),</p></li>
+<li><p>ONE user RGB LED,</p></li>
+<li><p>Four user push-buttons,</p></li>
+<li><p>4 MB external SPI Flash,</p></li>
+<li><p>Micro-SD Card Slot on the backside,</p></li>
+<li><p>Arduino R3 Compatible IO Header.</p></li>
+</ul>
+</section>
+<section id="buttons-and-leds">
+<h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
+<p>The RV32M1-VEGA board has <strong>one</strong> user RGB LED; only the red part of the LED is
+used to indicate an interrupt request is being serviced.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>SYMBOL</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>RED*</p></th>
+<th class="head"><p>GREEN</p></th>
+<th class="head"><p>BLUE</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>LED_STARTED</p></td>
+<td><p>NuttX has been started</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_HEAPALLOCATE</p></td>
+<td><p>Heap has been allocated</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_IRQSENABLED</p></td>
+<td><p>Interrupts enabled</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_STACKCREATED</p></td>
+<td><p>Idle stack created</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_INIRQ</p></td>
+<td><p>In an interrupt**</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_SIGNAL</p></td>
+<td><p>In a signal handler***</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_ASSERTION</p></td>
+<td><p>An assertion failed</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED_PANIC</p></td>
+<td><p>The system has crashed</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p>LED_CPU</p></td>
+<td><p>Interrupt service</p></td>
+<td><p>ON</p></td>
+<td><p>OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+</tbody>
+</table>
+<p>Four tactile buttons are populated on RV32M1-VEGA board:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>NAME</p></th>
+<th class="head"><p>PIN</p></th>
+<th class="head"><p>EXTERNAL-PULLUP</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SW2</p></td>
+<td><p>PA0</p></td>
+<td><p>YES</p></td>
+</tr>
+<tr class="row-odd"><td><p>SW3</p></td>
+<td><p>PE8</p></td>
+<td><p>NO</p></td>
+</tr>
+<tr class="row-even"><td><p>SW4</p></td>
+<td><p>PE9</p></td>
+<td><p>NO</p></td>
+</tr>
+<tr class="row-odd"><td><p>SW5</p></td>
+<td><p>PE12</p></td>
+<td><p>NO</p></td>
+</tr>
+</tbody>
+</table>
+<p>All of these buttons can be used as interrupt and wake up sources, while SW2 can
+be an alternative NMI Source.</p>
+</section>
+<section id="itcm">
+<h2>ITCM<a class="headerlink" href="#itcm" title="Permalink to this heading"></a></h2>
+<p>A 64KB ITCM is coupled with M4 Cores, RI5CY CPU or ARM Cortex-M4 CPU. If the
 ITCM is selected, Critical Codes including but not limited to Exception Vectors,
-Interrupt Service Routines will be placed in ITCM.
-
-TSTMR
-====
-
-TSTMR Module is embedded in RV32M1 to provide system time stamp. It runs off 1MHz
-with a 56-bit counter, and can be adopted to get more accurate delay counting. If
-the Module is selected, a hardware delay method will replace mdealy and udelay,
-the built-in software delay methods.
-
-TOOLCHAIN
-========
-
-It is preferable to use OPEN ISA gcc Toolchain to exploit RV32M1 RI5CY capabi-
-lities, though the generic GNU RVG Toolchain can generate binary codes running
-on RV32M1 RI5CY without any problems. To switch generic GNU RVG Toolchain to
-OPEN ISA Toolchain, the following option must be selected:
-
-Board Selection  ---&gt;
+Interrupt Service Routines will be placed in ITCM.</p>
+</section>
+<section id="tstmr">
+<h2>TSTMR<a class="headerlink" href="#tstmr" title="Permalink to this heading"></a></h2>
+<p>TSTMR Module is embedded in RV32M1 to provide system time stamp. It runs off
+1MHz with a 56-bit counter, and can be adopted to get more accurate delay
+counting. If the module is selected, a hardware delay method will replace
+<code class="docutils literal notranslate"><span class="pre">up_mdelay</span></code> and <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code>, the built-in software delay methods.</p>
+</section>
+<section id="pin-mapping">
+<h2>Pin Mapping<a class="headerlink" href="#pin-mapping" title="Permalink to this heading"></a></h2>
+<section id="lpuart-pins">
+<h3>LPUART Pins<a class="headerlink" href="#lpuart-pins" title="Permalink to this heading"></a></h3>
+<p>LPUART0:</p>
+<ul class="simple">
+<li><p>RX: PC7, PB25, PA2</p></li>
+<li><p>TX: PC8, PB26, PA3</p></li>
+</ul>
+<p>LPUART1:</p>
+<ul class="simple">
+<li><p>RX: PB2, PC29, PA2, PA25</p></li>
+<li><p>TX: PB3, PC30, PA3, PA26</p></li>
+</ul>
+<p>LPUART2:</p>
+<ul class="simple">
+<li><p>RX: PB11, PB18, PB1</p></li>
+<li><p>TX: PB12, PB19, PB0</p></li>
+</ul>
+<p>LPUART3:</p>
+<ul class="simple">
+<li><p>RX: PB28, PE8, PE29</p></li>
+<li><p>TX: PB29, PE9, PE30</p></li>
+</ul>
+<p>LPUART0 is enabled in most configurations. RX and TX are configured on pins PC7
+and PC8, respectively. These two above pins are connected to onboard Debug
+Adapter which provides a USB- TTL serial channel.</p>
+</section>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>It is preferable to use OPEN ISA gcc Toolchain to exploit RV32M1 RI5CY
+capabilities, though the generic GNU RVG Toolchain can generate binary codes
+running on RV32M1 RI5CY without any problems. To switch generic GNU RVG
+Toolchain to OPEN ISA Toolchain, the following option must be selected in the
+Kconfig menu:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Board Selection  ---&gt;
   [*] Utilize OPEN ISA Toolchain
-
-Make sure OPEN ISA Toolchain have been installed and be found in PATH.
-
-ARCHCPUFLAGS
-====
-
-RI5CY Core supports hardware loop with 6 hardware loop registers assistance,
-these registers could be overwritten when contexts switch. If codes are generated
-by OPEN ISA Toolchain and CONFIG_ARCH_RISCV_INTXCPT_EXTREGS is not less than 6,
-the RI5CY specific architecture flag will be passed to gcc compiler. In that case,
-the 6 hardware loop registers must be saved and restored in interrupt routines with
-the general purpose registers.
-
-You will see the following lines in Make.defs file:
-
-  ARCHCPURV32IM = -march=rv32imc -mabi=ilp32
-
-  ifeq ($(CONFIG_RV32M1_OPENISA_TOOLCHAIN),y)
-    ifdef CONFIG_ARCH_RISCV_INTXCPT_EXTREGS
-      ifeq ($(filter 0 1 2 3 4 5 , $(CONFIG_ARCH_RISCV_INTXCPT_EXTREGS)),)
-        ARCHCPURV32IM = -march=rv32imcxpulpv2
-      endif
-    endif
-  endif
-
-  ARCHCPUFLAGS = $(ARCHCPURV32IM)
-
-CONFIG_ARCH_RISV_INTXCPT_EXTREGS could be configured in the following menu:
-
-System Type  ---&gt;
-  [*] RISC-V Integer Context Extensions
-  (6)   Number of Extral RISC-V Integer Context Registers
-
-Program &amp; Debug
-========
-
-Program
-====
-
-To program RV32M1, openocd from OPEN ISA and an external jtag adapter are pre-
-requisite. There are 2 tested jtag adapters: Segger Jlink EDU mini and SiPEED
-USB Jtag Adapter. The Segger Jlink EDU mini can connect J55 header on RV32M1-VEGA
-board directly while SiPEED USB Jtag Adapter has to co-operate with an Adapter
-board to setup wires connection.
-Compared to Segger Jlink EDU Mini Adapter, SiPEED USB Jtag Adapter is cheaper but
-not inferior.
-
-With SiPEED USB Jtag Adapter, some patches must be applied to rv32m1_ri5cy.cfg:
-
---- a/rv32m1_ri5cy.cfg
-+++ b/rv32m1_ri5cy.cfg
-@@ -2,7 +2,11 @@ set _WORKAREASIZE 0x2000
-
- adapter_khz 1000
-
--interface jlink
-+interface ftdi
-+ftdi_vid_pid 0x0403 0x6010
-+ftdi_layout_init 0x0508 0x0f1b
-+ftdi_layout_signal nTRST -data 0x0200 -noe 0x0100
-+ftdi_layout_signal nSRST -data 0x0800 -noe 0x0400
- transport select jtag
-
- set _WORKAREASIZE 0x1000
-
-------------------------------
-Make sure that RV32M1 boots RI5CY, and you do this ONLY ONCE. Refer to RV32M1-VEGA
-quick start guide for more details.
-
-Note:
-
-OPEN ISA Toolchain, rv32m1_ri5cy.cfg contained in RV32M1 SDK, and RV32M1-VEGA
-quick start guide could be found in the following link:
-https://open-isa.org/downloads/
-
-Debug
-====
-
-riscv64-unknonw-elf-gdb can not debug RV32M1 RISC-V Cores currently. GDB from
-OPEN ISA Toolchain seems the only option and even can debug elf files generated
-by risc64-unknown-elf-* tools.
-
-Configuration Sub-directories
-========
-
-NuttX of all configurations in rv32m1-vega/configs can be compiled by
-the generic GNU RVG Toolchain and OPEN ISA Toolchain.
-
-buttons
-====
-  This configuration is a variant of the NSH configuration used for
-  demonstrating the four buttons on RV32M1-VEGA board.
-  Example usage of buttons:
-
-  a. Start the buttons daemon:
-     nsh&gt; buttons
-
-  b. Press and release SW2, SW3, SW4, SW5 freely, the button pressed
-     and released messages will display correspondingly.
-
-nsh
-====
-  This configuration is basic. getprime is included in this configuration to
-  determine performance of RV32M1 RI5CY Core.
-
-nsh-itcm
-====
-  This configuration is a variant of the NSH configuration used for
-  demonstrating ITCM. When ITCM is selected, RI5CY Exception Vectors and
-  Interrupt Service Routines are placed in ITCM. Performance can be calculated
-  by getprime, and you might find it deteriorated a little ironically. The drawback
-  may be caused by long jump frequently between ITCM and flash. Besides, an instr-
-  uction cache is enabled always after RI5CY resets, and amelioration could not be
-  achieved with even ITCM enabled.
-  What if codes fulfill the 64KB ITCM ?
 </pre></div>
 </div>
+<p>Make sure the OPEN ISA Toolchain has been installed and can be found in <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+</section>
+<section id="building-nuttx">
+<h2>Building NuttX<a class="headerlink" href="#building-nuttx" title="Permalink to this heading"></a></h2>
+<p>The RI5CY Core supports hardware loop with 6 hardware loop registers assistance,
+these registers could be overwritten when contexts switch. If code is generated
+by OPEN ISA Toolchain and <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_RISCV_INTXCPT_EXTREGS</span></code> is not less than
+6, the RI5CY specific architecture flag will be passed to the <code class="docutils literal notranslate"><span class="pre">gcc</span></code> compiler.
+In that case, the 6 hardware loop registers must be saved and restored in
+interrupt routines with the general purpose registers.</p>
+<p>You will see the following lines in Make.defs file:</p>
+<div class="highlight-make notranslate"><div class="highlight"><pre><span></span><span class="nv">ARCHCPURV32IM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-march<span class="o">=</span>rv32imc<span class="w"> </span>-mabi<span class="o">=</span>ilp32
+
+<span class="cp">ifeq ($(CONFIG_RV32M1_OPENISA_TOOLCHAIN),y)</span>
+<span class="cp">  ifdef CONFIG_ARCH_RISCV_INTXCPT_EXTREGS</span>
+<span class="cp">    ifeq ($(filter 0 1 2 3 4 5 , $(CONFIG_ARCH_RISCV_INTXCPT_EXTREGS)),)</span>
+<span class="w">      </span><span class="nv">ARCHCPURV32IM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-march<span class="o">=</span>rv32imcxpulpv2
+<span class="cp">    endif</span>
+<span class="cp">  endif</span>
+<span class="cp">endif</span>
+
+<span class="nv">ARCHCPUFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>ARCHCPURV32IM<span class="k">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_RISV_INTXCPT_EXTREGS</span></code> could be configured in the following menu:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>System Type  ---&gt;
+  [*] RISC-V Integer Context Extensions
+  (6)   Number of Extral RISC-V Integer Context Registers
+</pre></div>
+</div>
+</section>
+<section id="flashing">
+<h2>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h2>
+<p>To program the RV32M1, OpenOCD from OPEN ISA and an external JTAG adapter are
+prerequisites. There are 2 tested JTAG adapters:</p>
+<ul class="simple">
+<li><p>Segger Jlink EDU mini</p></li>
+<li><p>SiPEED USB JTAG Adapter</p></li>
+</ul>
+<p>The Segger Jlink EDU mini can connect J55 header on RV32M1-VEGA board directly
+while SiPEED USB JTAG Adapter has to co-operate with an adapter board to setup
+wires connection. Compared to the Segger Jlink EDU Mini adapter, SiPEED USB JTAG
+Adapter is cheaper but not inferior.</p>
+<p>With SiPEED USB Jtag Adapter, some patches must be applied to <code class="docutils literal notranslate"><span class="pre">rv32m1_ri5cy.cfg</span></code>:</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">--- a/rv32m1_ri5cy.cfg</span>
+<span class="gi">+++ b/rv32m1_ri5cy.cfg</span>
+<span class="gu">@@ -2,7 +2,11 @@ set _WORKAREASIZE 0x2000</span>
+
+<span class="w"> </span>adapter_khz 1000
+
+<span class="gd">-interface jlink</span>
+<span class="gi">+interface ftdi</span>
+<span class="gi">+ftdi_vid_pid 0x0403 0x6010</span>
+<span class="gi">+ftdi_layout_init 0x0508 0x0f1b</span>
+<span class="gi">+ftdi_layout_signal nTRST -data 0x0200 -noe 0x0100</span>
+<span class="gi">+ftdi_layout_signal nSRST -data 0x0800 -noe 0x0400</span>
+<span class="w"> </span>transport select jtag
+
+<span class="w"> </span>set _WORKAREASIZE 0x1000
+</pre></div>
+</div>
+<p>Make sure that RV32M1 boots RI5CY, and you do this <strong>ONLY ONCE</strong>. Refer to
+RV32M1-VEGA quick start guide for more details.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>OPEN ISA Toolchain and <code class="docutils literal notranslate"><span class="pre">rv32m1_ri5cy.cfg</span></code> are contained in the RV32M1 SDK,
+and the RV32M1-VEGA quick start guide can be found at the following link:
+<a class="reference external" href="https://open-isa.org/downloads/">https://open-isa.org/downloads/</a></p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">riscv64-unknown-elf-gdb</span></code> can not debug RV32M1 RISC-V Cores currently. GDB
+from the OPEN ISA Toolchain seems to be the only option and can even debug
+ELF files generated by <code class="docutils literal notranslate"><span class="pre">risc64-unknown-elf-*</span></code> tools.</p>
+</div>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>You can configure NuttX using the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>rv32m1-vega:&lt;config&gt;
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;config&gt;</span></code> is one of the configurations listed below.</p>
+<p>All of the configurations can be compiled by the generic GNU RVG Toolchain and
+OPEN ISA Toolchain.</p>
+<section id="buttons">
+<h3>buttons<a class="headerlink" href="#buttons" title="Permalink to this heading"></a></h3>
+<p>This configuration is a variant of the NSH configuration used for demonstrating
+the four buttons on RV32M1-VEGA board.</p>
+<p>Example usage of buttons:</p>
+<ol class="arabic">
+<li><p>Start the buttons daemon:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; buttons</span>
+</pre></div>
+</div>
+</li>
+<li><p>Press and release SW2, SW3, SW4, SW5 as you wish. The button press/release
+event messages will display in the console accordingly.</p></li>
+</ol>
+</section>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>This configuration is basic. <code class="docutils literal notranslate"><span class="pre">getprime</span></code> is included in this configuration to
+determine performance of RV32M1 RI5CY Core.</p>
+</section>
+<section id="nsh-itcm">
+<h3>nsh-itcm<a class="headerlink" href="#nsh-itcm" title="Permalink to this heading"></a></h3>
+<p>This configuration is a variant of the NSH configuration used for demonstrating
+ITCM. When ITCM is selected, RI5CY Exception Vectors and Interrupt Service
+Routines are placed in ITCM. Performance can be calculated by <code class="docutils literal notranslate"><span class="pre">getprime</span></code>, and
+you might find it deteriorated a little ironically. The drawback may be caused
+by long jump frequently between ITCM and flash. Besides, an instruction cache is
+enabled always after RI5CY resets, and amelioration could not be achieved with
+even ITCM enabled.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>What if codes fulfill the 64KB ITCM ?</p>
+</div>
+</section>
+</section>
 </section>
 
 

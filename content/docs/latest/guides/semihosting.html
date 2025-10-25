@@ -173,7 +173,14 @@
 <li class="toctree-l2"><a class="reference internal" href="protected_build.html">NuttX Protected Build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="platform_directories.html">Platform Directories</a></li>
 <li class="toctree-l2"><a class="reference internal" href="port_drivers_to_stm32f7.html">Porting Drivers to the STM32 F7</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Semihosting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Semihosting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#semihosting-syslog">Semihosting SYSLOG</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#semihosting-files">Semihosting files</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="renode.html">Run NuttX on Renode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="signal_events_interrupt_handlers.html">Signaling Events from Interrupt Handlers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="signaling_sem_priority_inheritance.html">Signaling Semaphores and Priority Inheritance</a></li>
@@ -227,11 +234,171 @@
              
   <section id="semihosting">
 <h1>Semihosting<a class="headerlink" href="#semihosting" title="Permalink to this heading"></a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Migrated from:
-<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Semihosting">https://cwiki.apache.org/confluence/display/NUTTX/Semihosting</a></p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>NuttX supports many types of semihosting (syslog, file host sharing, poweroff, etc).
+The focus of this document is syslog and file sharing, since these are the most common
+features used when porting NuttX to a new platform or when testing requires files from
+the host machine (i.e. to play an audio file).</p>
+<section id="semihosting-syslog">
+<h3>Semihosting SYSLOG<a class="headerlink" href="#semihosting-syslog" title="Permalink to this heading"></a></h3>
+<p>This feature is highly valuable, particularly during the porting process to a new chip.
+It allows the developer to track events and diagnose issues during the early initialization
+phase, even if the UART driver support hasn’t been implemented. Furthermore, it serves as a
+critical debugging tool when a physical serial port isn’t available for monitoring.</p>
+<p>These are the steps to get semihost syslog working on stm32f4discovery board, but it could
+be adapted to other boards as well:</p>
+<ol class="arabic simple">
+<li><p>Select the stm32f4discovery board with the nsh profile:</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>stm32f4discovery:nsh
+<span class="go">  Copy files</span>
+<span class="go">  Select CONFIG_HOST_LINUX=y</span>
+<span class="go">  Refreshing...</span>
+</pre></div>
 </div>
+<ol class="arabic simple" start="2">
+<li><p>Run the menuconfig to select the necessary options:</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>menuconfig
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Enable the debug options to be displayed over syslog semihost (we want see the memory allocations) :</p></li>
+</ol>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Build Setup  ---&gt;
+    Debug Options  ---&gt;
+        [*] Enable Debug Features
+        [*]   Enable Error Output (NEW)
+        [*]     Enable Warnings Output (NEW)
+        [*]       Enable Informational Debug Output (NEW)
+        ...
+        [*]   Memory Manager Debug Features
+        [*]     Memory Manager Error Output
+        [*]     Memory Manager Warnings Output
+        [*]     Memory Manager Informational Output
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Enable the semihost syslog support:</p></li>
+</ol>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>System Type  ---&gt;
+    [*] Semihosting SYSLOG support
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>We need to disable the /dev/console otherwise the serial initialization will be called:</p></li>
+</ol>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>RTOS Features  ---&gt;
+    Files and I/O  ---&gt;
+        [ ] Enable /dev/console (disable the /dev/console)
+</pre></div>
+</div>
+<ol class="arabic simple" start="6">
+<li><p>Disable the serial driver and enable syslog buffer to speed up the output:</p></li>
+</ol>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Device Drivers  ---&gt;
+    [ ] Serial Driver Support  ---- (disable serial driver)
+
+    System Logging  ---&gt;
+        [*] Use buffered output
+</pre></div>
+</div>
+<ol class="arabic simple" start="7">
+<li><p>Save and leave menuconfig.</p></li>
+<li><p>Compile the firmware:</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+<ol class="arabic simple" start="9">
+<li><p>Flash the firmware in the board:</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>openocd<span class="w"> </span>-f<span class="w"> </span>interface/stlink.cfg<span class="w"> </span>-f<span class="w"> </span>target/stm32f4x.cfg<span class="w"> </span>-c<span class="w"> </span>init<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;reset halt&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;flash write_image erase nuttx.bin 0x08000000&quot;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="10">
+<li><p>Start the openocd server to wait for GDB connection:</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>openocd<span class="w"> </span>-f<span class="w"> </span>interface/stlink.cfg<span class="w"> </span>-f<span class="w"> </span>target/stm32f4x.cfg<span class="w"> </span>-c<span class="w"> </span>init<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;reset halt&quot;</span>
+<span class="go">Open On-Chip Debugger 0.12.0</span>
+<span class="go">Licensed under GNU GPL v2</span>
+<span class="go">For bug reports, read</span>
+<span class="go">  http://openocd.org/doc/doxygen/bugs.html</span>
+<span class="go">Info : auto-selecting first available session transport &quot;hla_swd&quot;. To override use &#39;transport select &lt;transport&gt;&#39;.</span>
+<span class="go">Info : The selected transport took over low-level target control. The results might differ compared to plain JTAG/SWD</span>
+<span class="go">Info : clock speed 2000 kHz</span>
+<span class="go">Info : STLINK V2J14S0 (API v2) VID:PID 0483:3748</span>
+<span class="go">Info : Target voltage: 3.202097</span>
+<span class="go">Info : [stm32f4x.cpu] Cortex-M4 r0p1 processor detected</span>
+<span class="go">Info : [stm32f4x.cpu] target has 6 breakpoints, 4 watchpoints</span>
+<span class="go">Info : starting gdb server for stm32f4x.cpu on 3333</span>
+<span class="go">Info : Listening on port 3333 for gdb connections</span>
+<span class="go">[stm32f4x.cpu] halted due to breakpoint, current mode: Thread</span>
+<span class="go">xPSR: 0x01000000 pc: 0x08004b68 msp: 0x200016b0</span>
+<span class="go">[stm32f4x.cpu] halted due to debug-request, current mode: Thread</span>
+<span class="go">xPSR: 0x01000000 pc: 0x0800052c msp: 0x200017f0</span>
+<span class="go">Info : Listening on port 6666 for tcl connections</span>
+<span class="go">Info : Listening on port 4444 for telnet connections</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="11">
+<li><p>Open another terminal go to the same directory where you compiled nuttx and run GDB passing the ELF file (nuttx)</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb-multiarch<span class="w"> </span>-ex<span class="w"> </span><span class="s2">&quot;set architecture arm&quot;</span><span class="w"> </span>nuttx
+<span class="go">GNU gdb (Ubuntu 15.0.50.20240403-0ubuntu1) 15.0.50.20240403-git</span>
+<span class="go">Copyright (C) 2024 Free Software Foundation, Inc.</span>
+<span class="go">...</span>
+<span class="go">Reading symbols from nuttx...</span>
+<span class="go">The target architecture is set to &quot;arm&quot;.</span>
+
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">target extended-remote 127.0.0.1:3333</span>
+<span class="go">Remote debugging using 127.0.0.1:3333</span>
+<span class="go">0x0800052c in start ()</span>
+
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">monitor arm semihosting enable</span>
+<span class="go">semihosting is enabled</span>
+
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">monitor arm semihosting_fileio enable</span>
+<span class="go">semihosting fileio is enabled</span>
+
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">monitor reset halt</span>
+<span class="go">[stm32f4x.cpu] halted due to debug-request, current mode: Thread</span>
+<span class="go">xPSR: 0x01000000 pc: 0x0800052c msp: 0x200017f0, semihosting fileio</span>
+
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">c</span>
+<span class="go">Continuing.</span>
+<span class="go">mm_initialize: Heap: name=Umem, start=0x200017f0 size=124944</span>
+<span class="go">mm_addregion: [Umem] Region 1: base=0x20001960 size=124576</span>
+<span class="go">mm_malloc: Allocated 0x20001970, size 72</span>
+<span class="go">mm_malloc: Allocated 0x200019b8, size 40</span>
+<span class="go">mm_addregion: [Umem] Region 2: base=0x10000000 size=65536</span>
+<span class="go">mm_malloc: Allocated 0x10000010, size 48</span>
+<span class="go">mm_malloc: Allocated 0x10000040, size 48</span>
+<span class="go">mm_malloc: Allocated 0x10000070, size 48</span>
+<span class="go">mm_malloc: Allocated 0x100000a0, size 24</span>
+<span class="go">mm_malloc: Allocated 0x100000b8, size 16</span>
+<span class="go">mm_malloc: Allocated 0x100000c8, size 32</span>
+<span class="go">mm_malloc: Allocated 0x100000e8, size 208</span>
+<span class="go">mm_malloc: Allocated 0x100001b8, size 2056</span>
+<span class="go">mm_malloc: Allocated 0x100009c0, size 48</span>
+<span class="go">mm_malloc: Allocated 0x100009f0, size 896</span>
+<span class="go">mm_malloc: Allocated 0x10000d70, size 32</span>
+<span class="go">mm_malloc: Allocated 0x10000d90, size 16</span>
+<span class="go">mm_malloc: Allocated 0x10000da0, size 2056</span>
+<span class="go">mm_free: Freeing 0x100001b8</span>
+<span class="go">mm_free: Freeing 0x100000e8</span>
+<span class="go">mm_malloc: Allocated 0x100000e8, size 768</span>
+<span class="go">mm_free: Freeing 0x100000e8</span>
+<span class="go">mm_free: Freeing 0x10000d90</span>
+<span class="go">mm_free: Freeing 0x10000d70</span>
+<span class="go">mm_free: Freeing 0x10000da0</span>
+<span class="go">mm_free: Freeing 0x100009f0</span>
+</pre></div>
+</div>
+</section>
+<section id="semihosting-files">
+<h3>Semihosting files<a class="headerlink" href="#semihosting-files" title="Permalink to this heading"></a></h3>
 <p>Relevant files:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>fs/hostfs/
 arch/arm/include/armv7-m/syscall.h
@@ -242,6 +409,8 @@ arch/arm/src/common/up_hostfs.c
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mount<span class="w"> </span>-t<span class="w"> </span>hostfs<span class="w"> </span>-o<span class="w"> </span><span class="nv">fs</span><span class="o">=</span>/host/path<span class="w"> </span>/local/path
 </pre></div>
 </div>
+</section>
+</section>
 </section>
 
 
