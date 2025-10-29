@@ -213,7 +213,7 @@
              
   <section id="raspberry-pi-4b">
 <h1>Raspberry Pi 4B<a class="headerlink" href="#raspberry-pi-4b" title="Permalink to this heading"></a></h1>
-<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-bcm2711.html"><span class="doc">chip:bcm2711</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning reference internal" href="../../../../../_tags/experimental.html"><span class="doc">experimental</span></a></p>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-arm64.html"><span class="doc">arch:arm64</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-bcm2711.html"><span class="doc">chip:bcm2711</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/vendor-raspberry-pi.html"><span class="doc">vendor:raspberry-pi</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning reference internal" href="../../../../../_tags/experimental.html"><span class="doc">experimental</span></a></p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The board support for this device is experimental. Not all features are
@@ -221,16 +221,6 @@ implemented and they have not been extensively tested by many users.</p>
 <p>Help is wanted if you are interested in supporting a feature or if you’ve
 found an issue with any of the implementation! See <a class="reference internal" href="../../../../../contributing/index.html"><span class="doc">the contributing
 guidelines</span></a>.</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The SPI driver implemented for the <a class="reference internal" href="../../index.html"><span class="doc">BCM2711</span></a> has only been
-tested on SPI0. It appears that even using the special <a class="reference external" href="https://github.com/raspberrypi/linux/blob/stable/arch/arm/boot/dts/overlays/README">overlays</a>
-for the device tree passed to the proprietary firmware does not properly
-initialize the remaining SPI interfaces, and thus they have not been working
-properly. More effort is required to reverse engineer the magic incantations
-required to initialize these interfaces, at which point it is assumed that
-the driver implementation should extend to SPI3-6.</p>
 </div>
 <p>The <a class="reference external" href="https://www.raspberrypi.com/products/raspberry-pi-4-model-b/specifications/">Raspberry Pi 4B</a> is an ARM64
 hobbyist board created by Raspberry Pi.</p>
@@ -254,8 +244,67 @@ hobbyist board created by Raspberry Pi.</p>
 <li><p>Micro SD card slot</p></li>
 </ul>
 </section>
-<section id="arm64-toolchain">
-<h2>ARM64 Toolchain<a class="headerlink" href="#arm64-toolchain" title="Permalink to this heading"></a></h2>
+<section id="board-peripheral-support">
+<h2>Board Peripheral Support<a class="headerlink" href="#board-peripheral-support" title="Permalink to this heading"></a></h2>
+<p>SMP is currently unsupported. To see support for chip peripherals (I2C, SPI,
+UART, etc), see the <a class="reference internal" href="../../index.html"><span class="doc">BCM2711 page</span></a></p>
+<p>NuttX for the Raspberry Pi 4 supports these on-board peripherals:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Peripheral</p></th>
+<th class="head"><p>Support</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>AV port</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>HDMI</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>WiFi</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ethernet</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>USB 3.0</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>USB 2.0</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>Bluetooth</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>microSD card</p></td>
+<td><p>Yes (see notes in BCM2711 page)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="buttons-and-leds">
+<h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
+<p>The board has two LEDs:</p>
+<ul class="simple">
+<li><p>SD card activity (green)</p></li>
+<li><p>Power (red)</p></li>
+</ul>
+<p>These LEDs are controlled by proprietary firmware at the beginning of the boot
+process. Afterwards, NuttX controls them with the <code class="docutils literal notranslate"><span class="pre">autoleds</span></code> framework. At
+this time:</p>
+<ul class="simple">
+<li><p>Red LED is solid for assertion failure, or blinks on panic</p></li>
+<li><p>Green LED is solid when NuttX has started</p></li>
+</ul>
+</section>
+<section id="power-supply">
+<h2>Power Supply<a class="headerlink" href="#power-supply" title="Permalink to this heading"></a></h2>
+<p>The board can be supplied power either through the USB-C connection (5V) or via
+the 5V power input pin.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>Before building NuttX for the Raspberry Pi 4B, download the ARM64 Toolchain for
 <strong>AArch64 Bare-Metal Target</strong> <code class="docutils literal notranslate"><span class="pre">aarch64-none-elf</span></code> from
 <a class="reference external" href="https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads">Arm GNU Toolchain Downloads</a>.
@@ -270,19 +319,8 @@ hobbyist board created by Raspberry Pi.</p>
 </pre></div>
 </div>
 </section>
-<section id="building">
-<h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
-<p>To build NuttX for the Raspberry Pi 4B, <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">install the prerequisites</span></a> and <a class="reference internal" href="../../../../../quickstart/install.html"><span class="doc">clone the git
-repositories</span></a> for <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> and <code class="docutils literal notranslate"><span class="pre">apps</span></code>.</p>
-<p>Configure the NuttX project to use the Raspberry Pi 4B and build it (this example uses the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration).</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nutxx
-<span class="gp">$ </span>tools/configure.sh<span class="w"> </span>raspberrypi-4b:nsh
-<span class="gp">$ </span>make
-</pre></div>
-</div>
-</section>
-<section id="booting">
-<h2>Booting<a class="headerlink" href="#booting" title="Permalink to this heading"></a></h2>
+<section id="flashing">
+<h2>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h2>
 <p>In order to boot NuttX on the Raspberry Pi 4B, you will need to have a formatted micro SD card. The SD card should
 contain a FAT32 partition that is marked as bootable and which contains the generated <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> and <code class="docutils literal notranslate"><span class="pre">config.txt</span></code>
 files from the build process. In addition to those files, you will also need the following files from the Raspberry Pi
@@ -341,42 +379,33 @@ appear onscreen:</p>
 </div>
 </section>
 </section>
-<section id="board-peripheral-support">
-<h2>Board Peripheral Support<a class="headerlink" href="#board-peripheral-support" title="Permalink to this heading"></a></h2>
-<p>SMP is currently unsupported.</p>
-<p>To see support for general chip peripherals (I2C, SPI, UART, etc), see the
-<a class="reference internal" href="../../index.html"><span class="doc">BCM2711 page</span></a></p>
-<p>NuttX for the Raspberry Pi 4 supports these on-board peripherals:</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Peripheral</p></th>
-<th class="head"><p>Support</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>AV port</p></td>
-<td><p>No</p></td>
-</tr>
-<tr class="row-odd"><td><p>HDMI</p></td>
-<td><p>No</p></td>
-</tr>
-<tr class="row-even"><td><p>WiFi</p></td>
-<td><p>No</p></td>
-</tr>
-<tr class="row-odd"><td><p>Ethernet</p></td>
-<td><p>No</p></td>
-</tr>
-<tr class="row-even"><td><p>USB 3.0</p></td>
-<td><p>No</p></td>
-</tr>
-<tr class="row-odd"><td><p>USB 2.0</p></td>
-<td><p>No</p></td>
-</tr>
-<tr class="row-even"><td><p>Bluetooth</p></td>
-<td><p>No</p></td>
-</tr>
-</tbody>
-</table>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>You can configure NuttX for the Raspberry Pi 4B using the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>raspberrypi-4b:&lt;config&gt;
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;config&gt;</span></code> is one of the configurations listed below.</p>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>A simple configuration with NSH on the Mini-UART console, accessible using a TTL
+cable connected to GPIO 14 &amp; 15.</p>
+</section>
+<section id="sd">
+<h3>sd<a class="headerlink" href="#sd" title="Permalink to this heading"></a></h3>
+<p>Configuration which supports the microSD card peripheral on EMMC2. At boot time,
+the microSD card is identified and the boot partition is mounted as a FAT file
+system to <code class="docutils literal notranslate"><span class="pre">/sd</span></code>. It can be written to and read from.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>There is some instability with the microSD card functionality. Please see
+<a class="reference internal" href="../../index.html"><span class="doc">BCM2711</span></a> for more information.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This configuration enables BSD components since the <a class="reference internal" href="../../../../../applications/testing/sd_stress/index.html"><span class="doc">sdstress</span></a> application is BSD licensed.</p>
+</div>
+</section>
 </section>
 </section>
 

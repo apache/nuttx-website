@@ -212,7 +212,7 @@
              
   <section id="bcm2711">
 <h1>BCM2711<a class="headerlink" href="#bcm2711" title="Permalink to this heading"></a></h1>
-<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../_tags/chip-bcm2711.html"><span class="doc">chip:bcm2711</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning reference internal" href="../../../_tags/experimental.html"><span class="doc">experimental</span></a></p>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../_tags/arch-arm64.html"><span class="doc">arch:arm64</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../_tags/chip-bcm2711.html"><span class="doc">chip:bcm2711</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../_tags/vendor-broadcom.html"><span class="doc">vendor:broadcom</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning reference internal" href="../../../_tags/experimental.html"><span class="doc">experimental</span></a></p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The support for this chip is experimental. Not all features are
@@ -237,7 +237,7 @@ is a Broadcom SoC used for the Raspberry Pi 4B board.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>I2C</p></td>
-<td><p>Full interrupt-based support, all interfaces work and tested.</p></td>
+<td><p>Full interrupt-based support. No 10b addressing.</p></td>
 </tr>
 <tr class="row-odd"><td><p>UART</p></td>
 <td><p>Mini UART yes, PL011 no</p></td>
@@ -245,17 +245,58 @@ is a Broadcom SoC used for the Raspberry Pi 4B board.</p>
 <tr class="row-even"><td><p>GPIO</p></td>
 <td><p>Partial</p></td>
 </tr>
-<tr class="row-odd"><td><p>PWM</p></td>
+<tr class="row-odd"><td><p>MAILBOX</p></td>
+<td><p>Partial (polled method, only commands used by firmware are implemented)</p></td>
+</tr>
+<tr class="row-even"><td><p>EMMC2</p></td>
+<td><p>Interrupt-based support, no DMA.</p></td>
+</tr>
+<tr class="row-odd"><td><p>EMMC</p></td>
+<td><p>Supported alongside EMMC2 in theory, but untested.</p></td>
+</tr>
+<tr class="row-even"><td><p>PWM</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>SPI</p></td>
+<tr class="row-odd"><td><p>SPI</p></td>
 <td><p>Interrupt-based driver (no DMA) for all SPI except 1 &amp; 2 (auxiliary)</p></td>
 </tr>
-<tr class="row-odd"><td><p>PCM</p></td>
+<tr class="row-even"><td><p>PCM</p></td>
 <td><p>No</p></td>
 </tr>
 </tbody>
 </table>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The SPI driver implemented for the <a class="reference internal" href="../../index.html"><span class="doc">BCM2711</span></a> has only been
+tested on SPI0. It appears that even using the special <a class="reference external" href="https://github.com/raspberrypi/linux/blob/stable/arch/arm/boot/dts/overlays/README">overlays</a>
+for the device tree passed to the proprietary firmware does not properly
+initialize the remaining SPI interfaces, and thus they have not been working
+properly. More effort is required to reverse engineer the magic incantations
+required to initialize these interfaces, at which point it is assumed that
+the driver implementation should extend to SPI3-6.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The EMMC2 peripheral connects to the microSD card slot on the <a class="reference internal" href="boards/raspberrypi-4b/index.html"><span class="doc">Raspberry
+Pi 4B</span></a>. Currently, it
+has been tested using a 32GB Samsung microSD card and it has passed testing
+with that. The only quirks are:</p>
+<ul class="simple">
+<li><p>No card insertion/removal interrupts work, so hotswapping isn’t possible</p></li>
+<li><p>The <a class="reference internal" href="../../../applications/testing/sd_stress/index.html"><span class="doc">sdstress</span></a> example works
+unless the ‘number of bytes’ option is greater than 1023. I suspect this is
+something to do with the FIFO depth being only 1023 bytes.</p></li>
+</ul>
+<p>However, the 64GB microSD card exhibits very strange behaviour. There are
+often data CRC errors that prevent the boot filesystem from mounting. When
+that somehow passes (intermittent), running <code class="docutils literal notranslate"><span class="pre">ls</span></code> on the filesystem repeatedly
+sometimes causes certain files to disappear from the listing (they are not
+deleted and appear again on next boot), or causes their filenames to be shown
+in all caps. Writing to the card with <code class="docutils literal notranslate"><span class="pre">echo</span></code> often fails with data CRC
+error or timeout, and then the card is buggy for the remainder of the
+session. <strong>It is not recommended to use 64GB cards with this implementation
+for the time being.</strong></p>
+</div>
 </section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>
