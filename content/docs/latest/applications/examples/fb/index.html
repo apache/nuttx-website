@@ -197,7 +197,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../embedlog/index.html"><code class="docutils literal notranslate"><span class="pre">embedlog</span></code> embedlog example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../esp32_himem/index.html"><code class="docutils literal notranslate"><span class="pre">esp32_himem</span></code> ESP32 HIMEM Example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../etl/index.html"><code class="docutils literal notranslate"><span class="pre">etl</span></code> Embedded Template Library (ETL) C++ example</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">fb</span></code> Framebuffer</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">fb</span></code> Framebuffer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#feature-support">Feature support</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../fboverlay/index.html"><code class="docutils literal notranslate"><span class="pre">fboverlay</span></code> Framebuffer overlay test tool</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../flash_test/index.html"><code class="docutils literal notranslate"><span class="pre">flash_test</span></code> SMART Flash test</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../flowc/index.html"><code class="docutils literal notranslate"><span class="pre">flowc</span></code> Serial Hardware Flow Control</a></li>
@@ -390,7 +393,61 @@
              
   <section id="fb-framebuffer">
 <h1><code class="docutils literal notranslate"><span class="pre">fb</span></code> Framebuffer<a class="headerlink" href="#fb-framebuffer" title="Permalink to this heading"></a></h1>
-<p>A simple test of the framebuffer character driver.</p>
+<p>This application is a simple demonstration which serves to test the
+<a class="reference internal" href="../../../components/nxgraphics/framebuffer_char_driver.html"><span class="doc">framebuffer character driver</span></a>.</p>
+<p>The program interacts with the framebuffer through the interfaces described in
+the linked page in order to render a very simple image consisting of 6
+concentric, colourful rectangles. Note that between each rectangle, the program
+sleeps for 500 milliseconds. Rectangle are drawn from outermost to innermost, in
+descending size.</p>
+<figure class="align-center" id="id1" style="width: 80%">
+<img alt="The Pinephone displaying concentric, colourful rectangles after running the ``fb`` example." src="../../../_images/fb-image.jpg" />
+<figcaption>
+<p><span class="caption-text">The image displayed by the <code class="docutils literal notranslate"><span class="pre">fb</span></code> example, shown on the Pinephone. Credit to
+Lup Yuen Lee.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The application renders directly to the framebuffer provided by the character
+driver. On some devices, the entire rendering operation may not be complete
+in time for the video synchronization, causing screen tearing or skips. This
+is the case for the <a class="reference internal" href="../../../platforms/arm64/bcm2711/boards/raspberrypi-4b/index.html"><span class="doc">Raspberry Pi 4B</span></a>, and the results can
+be seen below.</p>
+</div>
+<figure class="align-center" id="id2" style="width: 40%">
+<img alt="The framebuffer example output, but with skipped pixels." src="../../../_images/fb-skip.png" />
+<figcaption>
+<p><span class="caption-text">The framebuffer example output, but with skipped pixels.</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<p>Skipping issues like this one can generally be avoided by rendering to a
+separate buffer first, and then copying that buffer to the framebuffer in one
+operation.</p>
+<section id="feature-support">
+<h2>Feature support<a class="headerlink" href="#feature-support" title="Permalink to this heading"></a></h2>
+<p>The application ignores the pixel format provided by the framebuffer character
+driver, and only inspects the ‘bits per pixel’ (depth) field. Currently, only
+the following bits per pixel are supported (with the corresponding formats
+assumed):</p>
+<ul class="simple">
+<li><p>1: Monochrome</p></li>
+<li><p>8: RGB_332</p></li>
+<li><p>16: RGB_565</p></li>
+<li><p>24: RGB</p></li>
+<li><p>32: ARGB</p></li>
+</ul>
+<p>The program supports different features depending on the characteristics of the
+framebuffer driver. If the framebuffer requires <code class="docutils literal notranslate"><span class="pre">FB_UPDATE</span></code>, this example
+behaves accordingly.</p>
+<p>If the framebuffer supports <code class="docutils literal notranslate"><span class="pre">FB_OVERLAY</span></code>, then the application also supports
+getting and displaying the overlay information.</p>
+<p>If the virtual y resolution is double that of the y resolution when the
+framebuffer is initially queried, the application will attempt to use
+double-buffer rendering by fetching a second framebuffer corresponding to the
+<code class="docutils literal notranslate"><span class="pre">display</span> <span class="pre">+</span> <span class="pre">1</span></code>, where <code class="docutils literal notranslate"><span class="pre">display</span></code> is the display number that was associated
+with the first framebuffer.</p>
+</section>
 </section>
 
 
