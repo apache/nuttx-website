@@ -997,6 +997,44 @@ interrupt</p>
 </li>
 </ol>
 </section>
+<section id="gdbstub-demo">
+<h2>Gdbstub demo<a class="headerlink" href="#gdbstub-demo" title="Permalink to this heading"></a></h2>
+<p>The Qemu version must be above 9.2 to support two serial ports.</p>
+<p>One window:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh qemu-armv8a:gdbstub; make -j25
+$ qemu-system-aarch64 -cpu cortex-a53 -nographic -machine virt,virtualization=on,gic-version=3 -net none -kernel ./nuttx -serial mon:stdio -serial pty
+char device redirected to /dev/pts/27 (label serial1)
+- Ready to Boot Primary CPU
+- Boot from EL2
+- Boot from EL1
+- Boot to C runtime for OS Initialize
+</pre></div>
+</div>
+<p>Another window:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ gdb-multiarch nuttx -ex &quot;target remote /dev/pts/27&quot;
+GNU gdb (Ubuntu 15.0.50.20240403-0ubuntu1) 15.0.50.20240403-git
+Copyright (C) 2024 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type &quot;show copying&quot; and &quot;show warranty&quot; for details.
+This GDB was configured as &quot;x86_64-linux-gnu&quot;.
+Type &quot;show configuration&quot; for configuration details.
+For bug reporting instructions, please see:
+&lt;https://www.gnu.org/software/gdb/bugs/&gt;.
+Find the GDB manual and other documentation resources online at:
+&lt;http://www.gnu.org/software/gdb/documentation/&gt;.
+
+For help, type &quot;help&quot;.
+Type &quot;apropos word&quot; to search for commands related to &quot;word&quot;...
+Reading symbols from nuttx...
+Remote debugging using /dev/pts/26
+gdb_get_registers (state=0x403e1590) at gdbstub/lib_gdbstub.c:1020
+1020              reg = state-&gt;running_regs;
+(gdb) c
+</pre></div>
+</div>
+</section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
 <ol class="arabic simple">
