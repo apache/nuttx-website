@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>snake Snake &mdash; NuttX latest documentation</title>
+  <title>Conway’s Game of Life &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Graphics Support" href="../../graphics/index.html" />
-    <link rel="prev" title="match4 Match4" href="../match4/index.html" /> 
+    <link rel="next" title="match4 Match4" href="../match4/index.html" />
+    <link rel="prev" title="brickmatch Brickmatch" href="../brickmatch/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -141,12 +141,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../fsutils/index.html">File System Utilities</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Games</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../brickmatch/index.html"><code class="docutils literal notranslate"><span class="pre">brickmatch</span></code> Brickmatch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../cgol/index.html">Conway’s Game of Life</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../match4/index.html"><code class="docutils literal notranslate"><span class="pre">match4</span></code> Match4</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">snake</span></code> Snake</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#basic-test">Basic Test</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Conway’s Game of Life</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#implementation">Implementation</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../match4/index.html"><code class="docutils literal notranslate"><span class="pre">match4</span></code> Match4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../snake/index.html"><code class="docutils literal notranslate"><span class="pre">snake</span></code> Snake</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../graphics/index.html">Graphics Support</a></li>
@@ -194,9 +197,9 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Games</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">snake</span></code> Snake</li>
+      <li class="breadcrumb-item active">Conway’s Game of Life</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/games/snake/index.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/games/cgol/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -204,28 +207,134 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="snake-snake">
-<h1><code class="docutils literal notranslate"><span class="pre">snake</span></code> Snake<a class="headerlink" href="#snake-snake" title="Permalink to this heading"></a></h1>
-<p>Snake is a classic game, especially popular on old phones. The game is played on a
-matrix (e.g., 6x6, 8x8) with blocks (cells) of different colors to represent
-the snake and food objects.</p>
-<p>The goal of the game is to eat food as much as possible without running into yourself.
-After eating food, the snake’s tail increases by one until the size of the snake
-equals the size of the game board.</p>
-<p>The game starts with a one-length snake, and the player can move through the board’s edges.
-When the snake reaches the edge, it reappears on the opposite side.</p>
-<section id="basic-test">
-<h2>Basic Test<a class="headerlink" href="#basic-test" title="Permalink to this heading"></a></h2>
-<p>To play game, you need to have a led matrix (e.g. ws2812) for output
-and four gpio pins to input.</p>
-<p>Alternatively, you can give inputs using serial console by changing settings.</p>
-<p>Then you can configure and compile the game to play in your board,
-i.e. for ESP32-Devkitc there is already an example:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh esp32-devkitc:snake
-$ make -j flash ESPTOOL_PORT=/dev/ttyUSB0
-$ minicom
-nsh&gt; snake
+  <section id="conway-s-game-of-life">
+<h1>Conway’s Game of Life<a class="headerlink" href="#conway-s-game-of-life" title="Permalink to this heading"></a></h1>
+<p>A classic “game” is Conway’s Game of Life (CGOL). It is not a game in the
+playable sense, but is an entertaining curiosity. CGOL is a type of cellular
+automata: complex behaviour arising from a simplistic set of rules. It has been
+widely studied, especially by mathematicians. Conway himself was a
+mathematician.</p>
+<figure class="align-center" id="id2" style="width: 80%">
+<img alt="An example of rendered output from the CGOL game." src="../../../_images/cgol.jpg" />
+<figcaption>
+<p><span class="caption-text">An example of rendered output from the CGOL game.</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
+<p>The CGOL implementation for NuttX relies on a frame buffer driver, that is:
+<a class="reference internal" href="../../../components/nxgraphics/framebuffer_char_driver.html"><span class="doc">Framebuffer Character Driver</span></a>. If you have
+<code class="docutils literal notranslate"><span class="pre">VIDEO_FB</span></code> enabled, you should be able to use the app. The visuals for the
+game are rendered to a display through the provided frame buffer.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>CGOL currently only supports devices with 32, 24, 16 or 8 bpp rendering.
+Since the game is only two colours, 1 bpp rendering can be supported as well,
+I just didn’t want to bother playing with individual bit operations any more
+by the time I got to the end of writing the application. By all means, please
+send patches!</p>
+<p>The implementation was only tested on a 32bpp frame buffer device.</p>
+</div>
+<p>This game works for frame buffers that require <code class="docutils literal notranslate"><span class="pre">FB_UPDATE</span></code> as well. It does
+nothing special with overlays.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>The game can be played by simply running it in the NSH console:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; cgol</span>
 </pre></div>
+</div>
+<p>The game will use the frame buffer device specified by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_CGOL_FBDEV</span></code> to render the image. By default, that is
+<code class="docutils literal notranslate"><span class="pre">/dev/fb0</span></code>. If you wish to use a different device at run-time, you can pass
+the frame buffer device path as the first argument:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; cgol /dev/fb1</span>
+</pre></div>
+</div>
+<p>Note that the game will loop forever and render the output to the screen. After
+a certain point, CGOL reaches a “stable” configuration and there is not really
+anything interesting to watch. At this point, you can terminate the application
+with <code class="docutils literal notranslate"><span class="pre">CTRL</span> <span class="pre">+</span> <span class="pre">C</span></code>. You can also run the app in the background by adding the
+<code class="docutils literal notranslate"><span class="pre">&amp;</span></code> character after the command in NSH, which is recommended if you want to do
+things in the console after running it.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This program has not been tested with <code class="docutils literal notranslate"><span class="pre">bpp</span></code> values other than 32. It may
+have unknown bugs.</p>
+<p>It has also not been tested with devices that have a word size
+(<code class="docutils literal notranslate"><span class="pre">sizeof(unsigned</span> <span class="pre">int)</span></code>) other than 32 bits.</p>
+</div>
+</section>
+<section id="configuration-options">
+<h2>Configuration options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
+<p>There are a few options you can customize in order to modify the game. The first
+two are very obvious: the map width and map height.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_CGOL_MAPWIDTH</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_CGOL_MAPHEIGHT</span></code></p></li>
+</ul>
+<p>These options select the width and height of the game map in cells. You must
+pick a width which is a multiple of <code class="docutils literal notranslate"><span class="pre">sizeof(unsigned</span> <span class="pre">int)</span> <span class="pre">*</span> <span class="pre">8</span></code>. This is a
+necessary evil in order to implement CGOL efficiently on embedded device. Often
+times, this value is your device’s natural word size in bits. So, if you’re
+using a 32 bit machine, pick a map width that is a multiple of 32. There is no
+such restriction for the map height.</p>
+<p>To change the amount of cells used to populate the map initially, you can modify
+the density: <code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_CGOL_DENSITY</span></code>. The number of cells that are
+generated at start is then <code class="docutils literal notranslate"><span class="pre">TOTAL_CELLS</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">/</span> <span class="pre">density)</span></code>, where total cells
+is the map area.</p>
+<p>The next thing you can change is the delay between frames in microseconds, using
+the option: <code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_CGOL_FRAMEDELAY</span></code>. By default this value is 0 (no
+delay). Use this if the rendering is too fast for you to appreciate each frame.</p>
+<p>Purely for rendering reasons, the last option you can change is
+<code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_CGOL_DBLBUF</span></code>. This enables double buffering for rendering, which
+allocates a RAM buffer of equal size to the actual framebuffer. All rendering is
+performed directly on the RAM buffer, and then copied to the framebuffer once
+done. This is only necessary on some devices. For instance, the <a class="reference internal" href="../../../platforms/arm64/bcm2711/boards/raspberrypi-4b/index.html"><span class="doc">Raspberry
+Pi 4b</span></a> experiences
+significant artifacts and completely incorrect rendering if double buffering is
+not used.</p>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this heading"></a></h2>
+<p>The game itself is implemented using bit-fields to represent living and dead
+cells. A <code class="docutils literal notranslate"><span class="pre">1</span></code> bit is alive, and a <code class="docutils literal notranslate"><span class="pre">0</span></code> is dead. I used the natural word size
+of the machine to store the bits, which is why I impose the restriction that the
+map width must be a multiple of the number of bits in an <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>.</p>
+<p>More bits in a word equates to more parallelism. When rendering living cells, I
+can skip over 32 cells at once on a 32-bit machine if the word evaluates to 0.
+This saves 32 iterations. The bit-fields themselves are also a space saver, as
+opposed to using 1 byte per cell, for instance. Even representing living cells
+as (x, y) pairs consumes more memory, and also takes significantly more CPU
+power to advance the game state at each step.</p>
+<p>The main loop consists of the following steps:</p>
+<ol class="arabic simple">
+<li><p>Render living cells</p></li>
+<li><p>Sleep if user configured frame delay</p></li>
+<li><p>Display render</p></li>
+<li><p>Advance the state of the game</p></li>
+<li><p>Clear the render</p></li>
+</ol>
+<p>The map is randomly initialized with living cells using <code class="docutils literal notranslate"><span class="pre">rand()</span></code>, which is a
+uniform distribution. This isn’t always the best for CGOL; a certain density
+needs to be achieved for interesting evolutions. I have settled on a density of
+1/6 of the map.</p>
+<p>The game is auto-scaled to fill as much of the frame buffer as possible. The
+minimum resolution is one pixel per cell. If the configuration has a map size
+larger than the frame buffer, the program will exit with an error.</p>
+<p>Finally, the map wraps around from right to left. It does not wrap from top to
+bottom to allow a more memory efficient method of buffering the next state as it
+is calculated.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>This program could be improved with:</p>
+<ul class="simple">
+<li><p>1 bit support</p></li>
+<li><p>Optional input device support for re-initializing the game, maybe drawing
+cells</p></li>
+<li><p>Optional ability to load seeds</p></li>
+<li><p>Runtime speed controls</p></li>
+</ul>
 </div>
 </section>
 </section>
@@ -234,8 +343,8 @@ nsh&gt; snake
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../match4/index.html" class="btn btn-neutral float-left" title="match4 Match4" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../graphics/index.html" class="btn btn-neutral float-right" title="Graphics Support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../brickmatch/index.html" class="btn btn-neutral float-left" title="brickmatch Brickmatch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../match4/index.html" class="btn btn-neutral float-right" title="match4 Match4" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
