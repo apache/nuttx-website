@@ -27,17 +27,17 @@ limitations under the License.
 
 <br/><br/><br/>
 
-## {{ site.data.project.name }} Articles & Publications
+### {{ site.data.project.name }} Articles & Publications
 
 Here we have a list of articles and publications about NuttX.
 If you have a suggestion of article to be included to this page,
 please send an email to: private@nuttx.apache.org
 
 
-### Low power embedded software optimization for the NuttX RTOS
+Low power embedded software optimization for the NuttX RTOS
+===========================================================
 
-Abstract
-========
+## Abstract
 
 This paper presents the study of the implementation for a new feature that
 allows the NuttX RTOS, handling the power consumption in order to optimize it.
@@ -57,17 +57,16 @@ in order to verify the functionality of this new feature, in the document is
 explained not only how this application works, but also all the hardware used
 in order to acquire the data that were used in the analysis
 
-Author(s)
-=========
+## Author(s)
 
 Diego Sánchez López
 
 [Download](./files/nuttx_pm.pdf)
 
-### iplite: a lightweight packet filter for NuttX
+iplite: a lightweight packet filter for NuttX
+=============================================
 
-Abstract
-========
+## Abstract
 
 The project proposes a lightweight packet filter in a Real-Time
 Operating System (RTOS), aiming to provide an additional security layer to
@@ -81,8 +80,7 @@ responsible for providing the APIs. As an open-source project, our solution
 allows the reproducibility of the experiments and the firewall core adaptation
 to other operating systems.
 
-Author(s)
-=========
+## Author(s)
 
 Eduardo Menezes Moraes
 Rodrigo Teixeira de Souza
@@ -91,10 +89,10 @@ Lourenc¸o Alves Pereira Jr.
 
 [Download](./files/iplite.pdf)
 
-### NuttX RTOS Driver for Single Unshielded Twisted Pair Communication
+NuttX RTOS Driver for Single Unshielded Twisted Pair Communication
+==================================================================
 
-Abstract
-========
+## Abstract
 
 The thesis aims to evaluate and integrate a low-cost solution for a small
 area multidrop communication with focus on reliability and real-time
@@ -112,8 +110,7 @@ At the end, the methods used for an evaluation and testing of the implemented
 driver are discussed. The system properties are then verified on a simple
 drive-by-wire demonstrator.
 
-Author(s)
-=========
+## Author(s)
 
 Michal Matiáš
 
