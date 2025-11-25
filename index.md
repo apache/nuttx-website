@@ -27,23 +27,57 @@ limitations under the License.
 
 ## Apache NuttX
 
-NuttX is a real-time operating system (RTOS) with an emphasis on standards
-compliance and small footprint. Scalable from 8-bit to 64-bit microcontroller
-environments, the primary governing standards in NuttX are POSIX and ANSI
-standards. Additional standard APIs from Unix and other common RTOS's (such as
-VxWorks) are adopted for functionality not available under these standards, or
-for functionality that is not appropriate for deeply-embedded environments (such
-as fork()).
+NuttX is a free and open-source (FOSS) real-time operating system (RTOS)
+with an emphasis on standards compliance and small footprint.
+Scalable from 8-bit to 64-bit microcontroller environments,
+the primary governing standards in NuttX are POSIX and ANSI standards.
+Additional standard APIs from Unix and other common RTOS's (such as VxWorks)
+are adopted for functionality not available under these standards,
+or for functionality that is not appropriate for deeply-embedded environments
+(such as fork()).
+
+
+## Get NuttX
+
+Release packages are available [here]({{ site.baseurl }}/download).
+We use three GIT repositories to develop the project:
+[RTOS]({{ site.data.project.source_repository_os_mirror }}),
+[Applications]({{ site.data.project.source_repository_apps_mirror }}),
+and [Website]({{ site.data.project.source_repository_website_mirror }}).
+Documentation is part of the RTOS repository and then built and hosted online.
+
+
+## Join Us
+
+NuttX is developed and maintained by an international
+[group of volunteers]({{ site.baseurl }}/community-members) from all around the
+world.  Please take a look at our [community]({{ site.baseurl }}/community)
+page to see how to join us and contribute to the project.
+
+[Mailing list]({{ site.data.project.dev_list_archive_mailarchive }}) is our
+main communication channel, but we are also present on various social media
+platforms such as
+[Discord]({{ site.data.project.socialmedia_discord }}),
+[Hackster]({{ site.data.project.socialmedia_hackster }}),
+[LinkedIn]({{ site.data.project.socialmedia_linkedin_company }}),
+[Reddit]({{ site.data.project.socialmedia_reddit }}).
+
+[NuttX Channel on YouTube]({{ site.data.project.socialmedia_youtube }}) contains
+many demos, tutorials, and hands-on exercises, as well as events videos.
 
 
 ## Documentation
 
-Extensive documentation can be found [here]({{ site.baseurl }}/docs/latest).
+Full project documentation can be found [here]({{ site.baseurl }}/docs/latest).
+Scientific papers are [here]({{ site.baseurl }}/articles).
 
 
 ## Online Demo
 
-Try the online demo [here]({{ site.baseurl }}/demo).
+NuttX is incredibly portable. It runs on over 15 different CPU architectures,
+over 300 popular embedded hardware boards and development kits, provides
+more than 1500 ready to use firmware configuration templates for your project.
+See yourself, try out the [NuttX WebAssembly demo]({{ site.baseurl }}/demo).
 
 
 ## Community Events
