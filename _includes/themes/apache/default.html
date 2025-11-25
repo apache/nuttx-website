@@ -26,7 +26,7 @@
     <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
     <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
   -->
-
+   
   </head>
 
   <body>
@@ -46,7 +46,138 @@
     <script src="{{ ASSET_PATH }}/jquery/jquery-2.1.1.min.js"></script>
 
     <script src="{{ ASSET_PATH }}/bootstrap/js/bootstrap.min.js"></script>
+    <style>
+    /* Theme CSS Variables */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --text-primary: #212529;
+      --link-color: #007bff;
+      --border-color: #dee2e6;
+      --header-bg: #343a40;
+      --header-text: #ffffff;
+    }
 
+    [data-theme="dark"] {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --text-primary: #e9ecef;
+      --link-color: #4dabf7;
+      --border-color: #495057;
+      --header-bg: #212529;
+      --header-text: #f8f9fa;
+    }
 
+    /* Apply theme variables */
+    body {
+      background-color: var(--bg-primary) !important;
+      color: var(--text-primary) !important;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .navbar-inverse {
+      background-color: var(--header-bg) !important;
+    }
+
+    .navbar-inverse .navbar-nav > li > a {
+      color: var(--header-text) !important;
+    }
+
+    a {
+      color: var(--link-color) !important;
+    }
+
+    /* Toggle button styles */
+    .theme-toggle-item {
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+    }
+
+    .theme-toggle-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    .theme-toggle {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      color: var(--text-primary);
+      padding: 0;
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg-primary);
+      transform: scale(1.05);
+    }
+
+    .theme-icon-dark {
+      display: none;
+    }
+
+    [data-theme="dark"] .theme-icon-light {
+      display: none;
+    }
+
+    [data-theme="dark"] .theme-icon-dark {
+      display: block;
+    }
+    </style>
+
+    <script>
+    console.log('Simple theme script loaded');
+    
+    // Simple theme toggle function
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const newTheme = current === 'dark' ? 'light' : 'dark';
+      
+      console.log('Toggling theme to:', newTheme);
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('nuttx-theme', newTheme);
+      
+      return false;
+    }
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM ready - initializing theme');
+      
+      // Set initial theme
+      const saved = localStorage.getItem('nuttx-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      console.log('Initial theme set to:', saved);
+      
+      // Add click handler
+      const btn = document.getElementById('themeToggle');
+      if (btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleTheme();
+        });
+        console.log('Click handler added to button');
+      } else {
+        console.error('Theme toggle button not found!');
+      }
+    });
+
+    // Fallback: also work on any element with theme-toggle class
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.theme-toggle') || e.target.closest('#themeToggle')) {
+        e.preventDefault();
+        toggleTheme();
+      }
+    });
+    </script>
   </body>
 </html>
