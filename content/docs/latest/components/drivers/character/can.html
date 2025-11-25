@@ -166,7 +166,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../block/index.html">Block Device Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../special/index.html">Specialized Device Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../thermal/index.html">Thermal Framework</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../timers/oneshot/index.html">Oneshot Timer Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../index.html#lower-half-and-upper-half">Lower-half and upper-half</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../index.html#subdirectories-of-nuttx-drivers">Subdirectories of <code class="docutils literal notranslate"><span class="pre">nuttx/drivers</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../index.html#skeleton-files">Skeleton Files</a></li>
@@ -261,14 +260,46 @@ the specific <code class="docutils literal notranslate"><span class="pre">&lt;ch
 <p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timeval</span> <span class="pre">ch_ts</span></code>: This member variable that store in the
 <code class="docutils literal notranslate"><span class="pre">can_hdr_s</span></code> structure depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_CAN_TIMESTAMP</span></code> and
 is used to store the timestamp of the CAN message.</p>
-<p><strong>Usage Note</strong>: When reading from the CAN driver multiple messages
-may be returned, depending on (1) the size the returned can
-messages, and (2) the size of the buffer provided to receive CAN
-messages. <em>Never assume that a single message will be returned</em>…
-if you do this, <em>you will lose CAN data</em> under conditions where
-your read buffer can hold more than one small message. Below is an
-example about how you should think of the CAN read operation:
-<strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/can/mcp2515.c</span></code>.</p>
+<p>The upper half driver supports the following <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands:</p>
+<ul class="simple">
+<li><p><strong>CANIOC_RTR</strong>: Send the given message (passed as <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> argument) as a
+remote request. On successful return, the passed message structure is updated
+with the contents of the received message; i.e. the message ID and the
+standard/extended ID indication bit stay the same, but the DLC and data bits
+are updated with the contents of the received message.  If no response is
+received after the specified timeout, ioctl will return.</p></li>
+<li><p><strong>CANIOC_GET_BITTIMING</strong>: Return the current bit timing settings.</p></li>
+<li><p><strong>CANIOC_SET_BITTIMING</strong>: Set new current bit timing values.</p></li>
+<li><p><strong>CANIOC_ADD_STDFILTER</strong>: Add an address filter for a standard 11 bit address.</p></li>
+<li><p><strong>CANIOC_ADD_EXTFILTER</strong>: Add an address filter for a extended 29 bit address.</p></li>
+<li><p><strong>CANIOC_DEL_STDFILTER</strong>: Remove an address filter for a standard 11 bit
+address.</p></li>
+<li><p><strong>CANIOC_DEL_EXTFILTER</strong>: Remove an address filter for a standard 29 bit
+address.</p></li>
+<li><p><strong>CANIOC_GET_CONNMODES</strong>: Get the current bus connection modes.</p></li>
+<li><p><strong>CANIOC_SET_CONNMODES</strong>: Set new bus connection modes values.</p></li>
+<li><p><strong>CANIOC_BUSOFF_RECOVERY</strong>: Initiates the BUS-OFF recovery sequence.</p></li>
+<li><p><strong>CANIOC_SET_NART</strong>: Enable/Disable NART (No Automatic Retry).</p></li>
+<li><p><strong>CANIOC_SET_ABOM</strong>: Enable/Disable ABOM (Automatic Bus-off Management).</p></li>
+<li><p><strong>CANIOC_IFLUSH</strong>: Flush data received but not read.</p></li>
+<li><p><strong>CANIOC_OFLUSH</strong>: Flush data written but not transmitted.</p></li>
+<li><p><strong>CANIOC_IOFLUSH</strong>: Flush data received but not read and data written but not
+transmitted.</p></li>
+<li><p><strong>CANIOC_SET_STATE</strong>: Set specific can controller state.</p></li>
+<li><p><strong>CANIOC_GET_STATE</strong>: Get specific can controller state.</p></li>
+<li><p><strong>CANIOC_SET_TRANSVSTATE</strong>: Set specific can transceiver state.</p></li>
+<li><p><strong>CANIOC_GET_TRANSVSTATE</strong>: Get specific can transceiver state.</p></li>
+<li><p><strong>CANIOC_SET_MSGALIGN</strong>: Set messages alignment. Read and written messages can
+be configured to be aligned to multiple of given bytes by this. The default
+value is 1. The alignment affects both read and write operation. The value 0
+has a special meaning where write behaves the same way as with 1, but read
+will always provide only a single message.</p></li>
+<li><p><strong>CANIOC_GET_MSGALIGN</strong>: Get messages alignment. See CANIOC_SET_MSGALIGN for
+explanation.</p></li>
+</ul>
+<p><strong>Usage Note</strong>: The default behavior of the upper half driver is to return
+multiple messages on <code class="docutils literal notranslate"><span class="pre">read</span></code>. See the <a class="reference external" href="/guides/reading_can_msgs.html">guide on this subject</a>.</p>
+<p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/can/mcp2515.c</span></code>.</p>
 </section>
 
 

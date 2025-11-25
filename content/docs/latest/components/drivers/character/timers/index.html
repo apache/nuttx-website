@@ -160,6 +160,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../serial.html">Serial Device Drivers</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">Timers Drivers</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="timer.html">Timer Drivers</a></li>
+<li class="toctree-l5"><a class="reference internal" href="oneshot.html">Oneshot Timer Drivers</a></li>
 <li class="toctree-l5"><a class="reference internal" href="pwm.html">PWM Drivers</a></li>
 <li class="toctree-l5"><a class="reference internal" href="watchdog.html">Watchdog Timer Drivers</a></li>
 <li class="toctree-l5"><a class="reference internal" href="rtc.html">RTC Drivers</a></li>
@@ -173,7 +174,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../block/index.html">Block Device Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../special/index.html">Specialized Device Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../thermal/index.html">Thermal Framework</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../timers/oneshot/index.html">Oneshot Timer Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../index.html#lower-half-and-upper-half">Lower-half and upper-half</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../index.html#subdirectories-of-nuttx-drivers">Subdirectories of <code class="docutils literal notranslate"><span class="pre">nuttx/drivers</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../index.html#skeleton-files">Skeleton Files</a></li>
@@ -249,6 +249,12 @@
 <li class="toctree-l2"><a class="reference internal" href="timer.html#application-level-interface">Application Level Interface</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="oneshot.html">Oneshot Timer Drivers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oneshot.html#background">Background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oneshot.html#oneshot-drivers-api">Oneshot Drivers API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oneshot.html#clockcount">ClockCount</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="pwm.html">PWM Drivers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pwm.html#application-level-interface">Application Level Interface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="pwm.html#application-example">Application Example</a></li>
@@ -277,6 +283,41 @@
 </li>
 </ul>
 </div>
+<p>The NuttX timing subsystem consists of four layers:</p>
+<blockquote>
+<div><figure class="align-default">
+<img alt="../../../../_images/timer.svg" src="../../../../_images/timer.svg" /></figure>
+<ul class="simple">
+<li><dl class="simple">
+<dt>1 Hardware Timer Drivers: Includes implementations of various hardware</dt><dd><p>timer drivers.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>2 Timer Driver Abstraction: Such as Oneshot and Timer, which provide</dt><dd><p>oneshot/periodical timer hardware abstraction.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>3 OS Timer Interfaces: Arch_Timer(up_timer_*) and Arch_Alarm(up_alarm_*),</dt><dd><p>offering relative timer (trigger an event with a certain delay)
+and absolute timer (trigger an event at a certain time)
+interfaces.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>4 OS Timer Abstraction: The wdog timer manages software timers</dt><dd><p>and provides a unified timer API to upper layers.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>The Timer Driver Abstraction is not mandatory. If the driver is simple enough
+(e.g.,just providing a periodic tick), the OS Timer interfaces Arch_Timer
+can be implemented directly, bypassing the timer driver abstraction layer.</p>
+<p>The design purpose of the Timer Driver Abstraction is to simplify driver
+implementation, improve performance, and enhance the reusability of driver
+code.</p>
 </section>
 
 
