@@ -41,7 +41,7 @@ limitations under the License.
     </tr>
     {% for member in site.data.contributors %}
         <tr>
-       <td><a href="https://github.com/{{ member.githubId }}"><img width="64" src="/static/images/community/avatars/{{ member.githubId }}.png" alt="{{ member.name }}"></a></td>
+       <td><a href="https://github.com/{{ member.githubId }}"><img width="64" src="/static/images/community/avatars/{{ member.githubId }}.jpg" alt="{{ member.name }}"></a></td>
         <td>{{member.name}}</td>
         <td>{{member.apacheId}}</td>
         <td><a href="http://github.com/{{ member.githubId }}">{{ member.githubId }}</a></td>
