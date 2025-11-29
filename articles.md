@@ -115,3 +115,25 @@ drive-by-wire demonstrator.
 Michal Matiáš
 
 [Download](./files/nuttx_10baset1s.pdf)
+
+mnemofs: A NAND flash file-system for Apache NuttX
+==================================================
+
+## Abstract
+
+NAND flash memory is a key enabler for modern sensor systems due to its low cost,
+compact size, and low power consumption. However, its unique characteristics such
+as erase-before-write requirements, bad block management and randomized bit-flips
+demand a specialized file system design. This letter proposes mnemofs, a file
+system that incorporates wear leveling, power-loss resilience, block garbage
+collection, low RAM consumption and small binary size to maintain reliability
+while utilizing NAND flash’s advantages in embedded systems. We analyze tradeoffs
+propose enhancements for sensor applications where robust, long-term data storage
+is critical.
+
+## Author(s)
+
+Saurav Pal
+Alan C. Assis
+
+[Download](./files/mnemofs_nand_fs_nuttx.pdf)
