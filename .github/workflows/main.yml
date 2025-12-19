@@ -16,18 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Site
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - run: |
         git fetch --prune --unshallow
 
     - name: Checkout NuttX repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: apache/nuttx
         fetch-depth: 0
         ref: master
         path: nuttx
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.8'
     - name: Build docs
@@ -36,6 +36,9 @@ jobs:
         echo " Install Pipenv"
         echo "======================================================="
 
+        python3 -m venv .venv
+        source .venv/bin/activate
+        export PIPENV_VERBOSITY=-1
         pip3 install pipenv
 
         echo "======================================================="
@@ -90,8 +93,8 @@ jobs:
 
           echo " ====> PIPENV CLEANUP."
 
-          # Uninstall pipenv packages (cached packages are preserved).
-          pipenv uninstall --all
+          # Clear caches (pipenv, pip)
+          pipenv --clear install
 
         done
 
@@ -103,7 +106,7 @@ jobs:
     - name: Install Ruby tools
       run: |
         sudo apt-get -y install rubygems ruby-dev zlib1g-dev
-    
+
     - name: Build Site
       run: |
         export GEM_HOME=$HOME/.gem
@@ -115,7 +118,7 @@ jobs:
         ./publish.sh
 
     - name: Upload artifact of staged site
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: static-site
         path: content
