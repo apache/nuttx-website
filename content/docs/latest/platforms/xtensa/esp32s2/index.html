@@ -186,8 +186,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#wi-fi-softap">Wi-Fi SoftAP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mcuboot-and-ota-update">MCUBoot and OTA Update</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#executing-ota-update">Executing OTA Update</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#flash-encryption">Flash Encryption</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#flash-allocation-for-mcuboot">Flash Allocation for MCUBoot</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#secure-boot-and-flash-encryption">Secure Boot and Flash Encryption</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#ulp-risc-v-coprocessor">ULP RISC-V Coprocessor</a><ul>
@@ -1346,6 +1346,133 @@ nsh&gt;
 To make sure it won’t rollback to the previous image, you must confirm with <code class="docutils literal notranslate"><span class="pre">mcuboot_confirm</span></code> and reboot the board.
 The OTA is now complete.</p>
 </section>
+<section id="flash-encryption">
+<h3>Flash Encryption<a class="headerlink" href="#flash-encryption" title="Permalink to this heading"></a></h3>
+<p>Flash encryption is intended for encrypting the contents of the ESP32-S2’s off-chip flash memory. Once this feature is enabled,
+firmware is flashed as plaintext, and then the data is encrypted in place on the first boot. As a result, physical readout
+of flash will not be sufficient to recover most flash contents.</p>
+<p>The current state of flash encryption for ESP32-S2 allows the use of Virtual E-Fuses and development mode, which permit users to evaluate and test the firmware before making definitive changes such as burning E-Fuses.</p>
+<p>Flash encryption supports the following features:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Flash Encryption with Virtual E-Fuses</strong></p></td>
+<td><p>Use flash encryption without burning E-Fuses. Default selection when flash encryption is enabled.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Flash Encryption in Development mode</strong></p></td>
+<td><p>Allows reflashing an encrypted device by appending the <code class="docutils literal notranslate"><span class="pre">--encrypt</span></code> argument to the <code class="docutils literal notranslate"><span class="pre">esptool.py</span> <span class="pre">write_flash</span></code> command. This is done automatically if <code class="docutils literal notranslate"><span class="pre">ESP32S2_SECURE_FLASH_ENC_FLASH_DEVICE_ENCRYPTED</span></code> is set.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Flash Encryption in Release mode</strong></p></td>
+<td><p>Does not allow reflashing the device. This is a permanent setting.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Flash Encryption key</strong></p></td>
+<td><p>A user-generated key is required by default. Alternatively, a device-generated key is possible, but it will not be recoverable by the user (not recommended). See <code class="docutils literal notranslate"><span class="pre">ESP32S2_SECURE_FLASH_ENC_USE_HOST_KEY</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Encrypted MTD Partition</strong></p></td>
+<td><p>If SPI Flash is enabled, an empty user MTD partition will be automatically encrypted on first flash.</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is <strong>strongly suggested</strong> to read the following before working on flash encryption:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.mcuboot.com/readme-espressif.html#flash-encryption">MCUBoot Flash Encryption</a></p></li>
+<li><p><a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/system/efuse.html">General E-Fuse documentation</a></p></li>
+<li><p><a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/security/flash-encryption.html#relevant-efuses">Flash Encryption Relevant E-Fuses</a></p></li>
+</ul>
+</div>
+<section id="flash-encryption-requirements">
+<h4>Flash Encryption Requirements<a class="headerlink" href="#flash-encryption-requirements" title="Permalink to this heading"></a></h4>
+<p>Flash encryption requires burning E-Fuses to enable it on chip. This is not a reversible operation and should be done with caution.
+There is, however, a way to test the flash encryption by simulating them on flash. Both paths are described below.</p>
+<section id="build-system-features">
+<h5>Build System Features<a class="headerlink" href="#build-system-features" title="Permalink to this heading"></a></h5>
+<p>The build system contains some safeguards to avoid accidentally burning E-Fuses and automations for convenience. Those are summarized below:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>A yellow warning will show up during build alerting that flash encryption is enabled (same for Virtual E-Fuses).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">ESP32S2_SECURE_FLASH_ENC_USE_HOST_KEY</span></code> is set, build will fail if the flash encryption key is not found.</p></li>
+<li><p>If SPI Flash is enabled, the user MTD partition is automatically encrypted with the provided encryption key.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code> command will prompt the user for confirmation before burning the E-Fuse, if Virtual E-Fuses are disabled.</p></li>
+</ol>
+</div></blockquote>
+</section>
+<section id="simulating-flash-encryption-with-virtual-e-fuses">
+<h5>Simulating Flash Encryption with Virtual E-Fuses<a class="headerlink" href="#simulating-flash-encryption-with-virtual-e-fuses" title="Permalink to this heading"></a></h5>
+<p>It is highly recommended to use this method for testing the flash encryption before actually burning the E-Fuses.
+The E-Fuses are stored in flash and persist between reboots. No real E-Fuses are changed.</p>
+<dl>
+<dt>To enable virtual E-Fuses for flash encryption testing, open <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> and:</dt><dd><ol class="arabic simple">
+<li><p>Enable flash encryption on boot on: <span class="menuselection">System Type ‣ Bootloader and Image Configuration</span></p></li>
+<li><p>Verify Virtual E-Fuses are enabled (this is done by default): <span class="menuselection">System Type ‣ ESP32-S2 Peripheral Support ‣ E-Fuse support</span></p></li>
+</ol>
+</dd>
+<dt>Now build the bootloader and the firmware. Flashing the device will trigger the following:</dt><dd><ol class="arabic">
+<li><p>On the first boot, the bootloader will encrypt the flash:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>...
+[esp32s2] [WRN] eFuse virtual mode is enabled. If Secure boot or Flash encryption is enabled then it does not provide any security. FOR TESTING ONLY!
+[esp32s2] [WRN] [efuse] [Virtual] try loading efuses from flash: 0x10000 (offset)
+...
+[esp32s2] [INF] [flash_encrypt] Encrypting bootloader...
+[esp32s2] [INF] [flash_encrypt] Bootloader encrypted successfully
+[esp32s2] [INF] [flash_encrypt] Encrypting primary slot...
+[esp32s2] [INF] [flash_encrypt] Encrypting remaining flash...
+[esp32s2] [INF] [flash_encrypt] Flash encryption completed
+...
+[esp32s2] [INF] Resetting with flash encryption enabled...
+</pre></div>
+</div>
+</li>
+<li><p>Device will reset and it should be now operating similar to an actual encrypted device:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>...
+[esp32s2] [INF] Checking flash encryption...
+[esp32s2] [INF] [flash_encrypt] flash encryption is enabled (1 plaintext flashes left)
+[esp32s2] [INF] Disabling RNG early entropy source...
+[esp32s2] [INF] br_image_off = 0x20000
+[esp32s2] [INF] ih_hdr_size = 0x20
+[esp32s2] [INF] Loading image 0 - slot 0 from flash, area id: 1
+...
+NuttShell (NSH) NuttX-12.8.0
+nsh&gt;
+</pre></div>
+</div>
+</li>
+</ol>
+</dd>
+</dl>
+</section>
+<section id="actual-encryption-and-burning-e-fuses">
+<h5>Actual encryption and burning E-Fuses<a class="headerlink" href="#actual-encryption-and-burning-e-fuses" title="Permalink to this heading"></a></h5>
+<p>E-Fuses are burned by esptool and the bootloader on the first boot after flashing with encryption enabled.
+This process is automated on NuttX build system.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Burning E-Fuses is NOT a reversible operation and should be done with caution.</p>
+</div>
+<dl class="simple">
+<dt>To build a firmware with E-Fuse support and flash encryption enabled, open <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> and:</dt><dd><ol class="arabic simple">
+<li><p>Enable flash encryption on boot on: <span class="menuselection">System Type ‣ Bootloader and Image Configuration</span></p></li>
+<li><p>Disable Virtual E-Fuses <span class="menuselection">System Type ‣ ESP32-S2 Peripheral Selection ‣ E-Fuse support</span></p></li>
+<li><p>Check usage mode is Development (this allows reflashing, while Release mode does not).</p></li>
+</ol>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If using development mode of flash encryption (see menuconfig and documentation above), it is still possible to re-flash the device with esptool by
+setting <code class="docutils literal notranslate"><span class="pre">ESP32S2_SECURE_FLASH_ENC_FLASH_DEVICE_ENCRYPTED</span></code> which adds <code class="docutils literal notranslate"><span class="pre">--encrypt</span></code> argument to the <code class="docutils literal notranslate"><span class="pre">esptool.py</span> <span class="pre">write_flash</span></code> command.
+This will apply the burned encryption key to the image while flashing.</p>
+</div>
+</section>
+</section>
+</section>
 <section id="flash-allocation-for-mcuboot">
 <h3>Flash Allocation for MCUBoot<a class="headerlink" href="#flash-allocation-for-mcuboot" title="Permalink to this heading"></a></h3>
 <p>When MCUBoot is enabled on ESP32-S2, the flash memory is organized as follows
@@ -1458,114 +1585,6 @@ virtual E-Fuses are later enabled.</p>
 <li><p>The <strong>Scratch Partition</strong> is used by MCUBoot for image swapping during updates</p></li>
 <li><p>MCUBoot manages image validation, confirmation, and rollback functionality</p></li>
 </ul>
-</section>
-<section id="secure-boot-and-flash-encryption">
-<h3>Secure Boot and Flash Encryption<a class="headerlink" href="#secure-boot-and-flash-encryption" title="Permalink to this heading"></a></h3>
-<section id="secure-boot">
-<h4>Secure Boot<a class="headerlink" href="#secure-boot" title="Permalink to this heading"></a></h4>
-<p>Secure Boot protects a device from running any unauthorized (i.e., unsigned) code by checking that
-each piece of software that is being booted is signed. On an ESP32-S2, these pieces of software include
-the second stage bootloader and each application binary. Note that the first stage bootloader does not
-require signing as it is ROM code thus cannot be changed. This is achieved using specific hardware in
-conjunction with MCUboot (read more about MCUboot <a class="reference external" href="https://docs.mcuboot.com/">here</a>).</p>
-<p>The Secure Boot process on the ESP32-S2 involves the following steps performed:</p>
-<ol class="arabic simple">
-<li><p>The first stage bootloader verifies the second stage bootloader’s RSA-PSS signature. If the verification is successful,
-the first stage bootloader loads and executes the second stage bootloader.</p></li>
-<li><p>When the second stage bootloader loads a particular application image, the application’s signature (RSA, ECDSA or ED25519) is verified
-by MCUboot.
-If the verification is successful, the application image is executed.</p></li>
-</ol>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Once enabled, Secure Boot will not boot a modified bootloader. The bootloader will only boot an
-application firmware image if it has a verified digital signature. There are implications for reflashing
-updated images once Secure Boot is enabled. You can find more information about the ESP32-S2’s Secure boot
-<a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/security/secure-boot-v2.html">here</a>.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>As the bootloader image is built on top of the Hardware Abstraction Layer component
-of <a class="reference external" href="https://github.com/espressif/esp-idf">ESP-IDF</a>, the
-<a class="reference external" href="https://docs.mcuboot.com/readme-espressif.html">API port by Espressif</a> will be used
-by MCUboot rather than the original NuttX port.</p>
-</div>
-</section>
-<section id="flash-encryption">
-<h4>Flash Encryption<a class="headerlink" href="#flash-encryption" title="Permalink to this heading"></a></h4>
-<p>Flash encryption is intended for encrypting the contents of the ESP32-S2’s off-chip flash memory. Once this feature is enabled,
-firmware is flashed as plaintext, and then the data is encrypted in place on the first boot. As a result, physical readout
-of flash will not be sufficient to recover most flash contents.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>After enabling Flash Encryption, an encryption key is generated internally by the device and
-cannot be accessed by the user for re-encrypting data and re-flashing the system, hence it will be permanently encrypted.
-Re-flashing an encrypted system is complicated and not always possible. You can find more information about the ESP32-S2’s Flash Encryption
-<a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/security/flash-encryption.html">here</a>.</p>
-</div>
-</section>
-<section id="prerequisites">
-<h4>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h4>
-<p>First of all, we need to install <code class="docutils literal notranslate"><span class="pre">imgtool</span></code> (a MCUboot utility application to manipulate binary
-images) and <code class="docutils literal notranslate"><span class="pre">esptool</span></code> (the ESP32-S2 toolkit):</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pip install imgtool esptool==4.8.dev4
-</pre></div>
-</div>
-<p>We also need to make sure that the python modules are added to <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ echo &quot;PATH=$PATH:/home/$USER/.local/bin&quot; &gt;&gt; ~/.bashrc
-</pre></div>
-</div>
-<p>Now, we will create a folder to store the generated keys (such as <code class="docutils literal notranslate"><span class="pre">~/signing_keys</span></code>):</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ mkdir ~/signing_keys &amp;&amp; cd ~/signing_keys
-</pre></div>
-</div>
-<p>With all set up, we can now generate keys to sign the bootloader and application binary images,
-respectively, of the compiled project:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ espsecure.py generate_signing_key --version 2 bootloader_signing_key.pem
-$ imgtool keygen --key app_signing_key.pem --type rsa-3072
-</pre></div>
-</div>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>The contents of the key files must be stored securely and kept secret.</p>
-</div>
-</section>
-<section id="enabling-secure-boot-and-flash-encryption">
-<h4>Enabling Secure Boot and Flash Encryption<a class="headerlink" href="#enabling-secure-boot-and-flash-encryption" title="Permalink to this heading"></a></h4>
-<p>To enable Secure Boot for the current project, go to the project’s NuttX directory, execute <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> and the following steps:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>Enable experimental features in <span class="menuselection">Build Setup ‣ Show experimental options</span>;</p></li>
-<li><p>Enable MCUboot in <span class="menuselection">Application Configuration ‣ Bootloader Utilities ‣ MCUboot</span>;</p></li>
-<li><p>Change image type to <code class="docutils literal notranslate"><span class="pre">MCUboot-bootable</span> <span class="pre">format</span></code> in <span class="menuselection">System Type ‣ Application Image Configuration ‣ Application Image Format</span>;</p></li>
-<li><p>Enable building MCUboot from the source code by selecting <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">binaries</span> <span class="pre">from</span> <span class="pre">source</span></code>;
-in <span class="menuselection">System Type ‣ Application Image Configuration ‣ Source for bootloader binaries</span>;</p></li>
-<li><p>Enable Secure Boot in <span class="menuselection">System Type ‣ Application Image Configuration ‣ Enable hardware Secure Boot in bootloader</span>;</p></li>
-<li><p>If you want to protect the SPI Bus against data sniffing, you can enable Flash Encryption in
-<span class="menuselection">System Type ‣ Application Image Configuration ‣ Enable Flash Encryption on boot</span>.</p></li>
-</ol>
-</div></blockquote>
-<p>Now you can design an update and confirm agent to your application. Check the <a class="reference external" href="https://docs.mcuboot.com/design.html">MCUboot design guide</a> and the
-<a class="reference external" href="https://docs.mcuboot.com/readme-espressif.html">MCUboot Espressif port documentation</a> for
-more information on how to apply MCUboot. Also check some <a class="reference external" href="https://github.com/mcu-tools/mcuboot/blob/main/docs/readme-nuttx.md">notes about the NuttX MCUboot port</a>,
-the <a class="reference external" href="https://github.com/mcu-tools/mcuboot/blob/main/docs/PORTING.md">MCUboot porting guide</a> and some
-<a class="reference external" href="https://github.com/apache/nuttx-apps/tree/master/examples/mcuboot">examples of MCUboot applied in NuttX applications</a>.</p>
-<p>After you developed an application which implements all desired functions, you need to flash it into the primary image slot
-of the device (it will automatically be in the confirmed state, you can learn more about image
-confirmation <a class="reference external" href="https://docs.mcuboot.com/design.html#image-swapping">here</a>).
-To flash to the primary image slot, select <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">image</span> <span class="pre">primary</span> <span class="pre">slot</span></code> in
-<span class="menuselection">System Type ‣ Application Image Configuration ‣ Target slot for image flashing</span>
-and compile it using <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-j</span> <span class="pre">ESPSEC_KEYDIR=~/signing_keys</span></code>.</p>
-<p>When creating update images, make sure to change <span class="menuselection">System Type ‣ Application Image Configuration ‣ Target slot for image flashing</span>
-to <code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">image</span> <span class="pre">secondary</span> <span class="pre">slot</span></code>.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>When deploying your application, make sure to disable UART Download Mode by selecting <code class="docutils literal notranslate"><span class="pre">Permanently</span> <span class="pre">disabled</span></code> in
-<span class="menuselection">System Type ‣ Application Image Configuration ‣ UART ROM download mode</span>
-and change usage mode to <code class="docutils literal notranslate"><span class="pre">Release</span></code> in <cite>System Type –&gt; Application Image Configuration –&gt; Enable usage mode</cite>.
-<strong>After disabling UART Download Mode you will not be able to flash other images through UART.</strong></p>
-</div>
-</section>
 </section>
 </section>
 <section id="ulp-risc-v-coprocessor">

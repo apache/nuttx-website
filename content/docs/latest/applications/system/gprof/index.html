@@ -173,9 +173,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../gdbstub/index.html"><code class="docutils literal notranslate"><span class="pre">gdbstub</span></code> GDBSTUB</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> GNU Profile tool</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#build">Build</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#using-in-nuttx">Using in NuttX</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#analyzing-on-host">Analyzing on Host</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#qemu-example">QEMU example</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#real-board-example">Real board example</a></li>
 </ul>
 </li>
 </ul>
@@ -287,77 +286,117 @@ frequency of functions within a program.</p>
 </ol>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
-<section id="build">
-<h3>Build<a class="headerlink" href="#build" title="Permalink to this heading"></a></h3>
-<p>Enable the following configuration in NuttX:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_SYSTEM_GPROF
+<section id="qemu-example">
+<h3>QEMU example<a class="headerlink" href="#qemu-example" title="Permalink to this heading"></a></h3>
+<p>For this example, we’re using <strong>QEMU</strong> and <strong>aarch64-none-elf-gcc</strong> with the <strong>qemu-armv8a</strong> board.</p>
+<ol class="arabic">
+<li><p>Configure <code class="docutils literal notranslate"><span class="pre">./tools/configure.sh</span> <span class="pre">-E</span> <span class="pre">qemu-armv8a:nsh</span></code> and make sure <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_GPROF</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_PROFILE_MINI</span></code> are enabled</p></li>
+<li><p>Build <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-j</span></code></p></li>
+<li><p>Launch qemu:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-aarch64 -cpu cortex-a53 -smp 4 -nographic \
+  -machine virt,virtualization=on,gic-version=3 \
+  -chardev stdio,id=con,mux=on -serial chardev:con \
+  -mon chardev=con,mode=readline -semihosting -kernel ./nuttx
 </pre></div>
 </div>
-</section>
-<section id="using-in-nuttx">
-<h3>Using in NuttX<a class="headerlink" href="#using-in-nuttx" title="Permalink to this heading"></a></h3>
-<ol class="arabic">
+</li>
+<li><p>Mount hostfs for saving data later:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t hostfs -o fs=. /mnt
+</pre></div>
+</div>
+</li>
 <li><p>Start profiling:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gprof start
 </pre></div>
 </div>
 </li>
-<li><p>Stop profiling:</p>
+<li><p>Do some test and stop profiling:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gprof stop
 </pre></div>
 </div>
 </li>
 <li><p>Dump profiling data:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gprof dump /tmp/gmon.out
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gprof dump /mnt/gmon.out
+</pre></div>
+</div>
+</li>
+<li><p>Analyze the data on host using gprof tool:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ aarch64-none-elf-gprof nuttx gmon.out -b
 </pre></div>
 </div>
 </li>
 </ol>
-</section>
-<section id="analyzing-on-host">
-<h3>Analyzing on Host<a class="headerlink" href="#analyzing-on-host" title="Permalink to this heading"></a></h3>
-<ol class="arabic">
-<li><p>Pull the profiling data to host:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>adb pull /tmp/gmon.out ./gmon.out
-</pre></div>
-</div>
-</li>
-<li><p>Analyze the data using gprof tool:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>The saved file format complies with the standard gprof format.
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The saved file format complies with the standard gprof format.
 For detailed instructions on gprof command usage, please refer to the GNU gprof manual:
-https://ftp.gnu.org/old-gnu/Manuals/gprof-2.9.1/html_mono/gprof.html
-
-arm-none-eabi-gprof ./nuttx/nuttx gmon.out -b
-
-Example output:
-
-```
-arm-none-eabi-gprof nuttx/nuttx gmon.out -b
+<a class="reference external" href="https://ftp.gnu.org/old-gnu/Manuals/gprof-2.9.1/html_mono/gprof.html">https://ftp.gnu.org/old-gnu/Manuals/gprof-2.9.1/html_mono/gprof.html</a></p>
+</div>
+<p>Example output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ aarch64-none-elf-gprof nuttx gmon.out -b
 Flat profile:
 
 Each sample counts as 0.001 seconds.
   %   cumulative   self              self     total
  time   seconds   seconds    calls   s/call   s/call  name
- 66.41      3.55     3.55       43     0.08     0.08  sdelay
- 33.44      5.34     1.79       44     0.04     0.04  delay
-  0.07      5.34     0.00                             up_idle
-  0.04      5.34     0.00                             nx_start
-  0.02      5.34     0.00                             fdtdump_main
-  0.02      5.34     0.00                             nxsem_wait
-  0.00      5.34     0.00        1     0.00     5.34  hello_main
-  0.00      5.34     0.00        1     0.00     0.00  singal_handler
-
-```
-
-This output shows the performance profile of the program,
+ 75.58     12.44    12.44    12462     0.00     0.00  up_idle
+ 24.30     16.44     4.00        4     1.00     1.00  up_ndelay
+  0.05     16.45     0.01      177     0.00     0.00  pl011_txint
+  0.02     16.45     0.00       35     0.00     0.00  uart_readv
+</pre></div>
+</div>
+<p>This output shows the performance profile of the program,
 including execution time and call counts for each function.
 The flat profile table provides a quick overview of where the program spends most of its time.
-In this example, `sdelay` and `delay` functions consume the majority of execution time.
-This information can be used to identify performance bottlenecks and optimize critical parts of the code.
+This information can be used to identify performance bottlenecks and optimize critical parts of the code.</p>
+</section>
+<section id="real-board-example">
+<h3>Real board example<a class="headerlink" href="#real-board-example" title="Permalink to this heading"></a></h3>
+<p>Let take <strong>esp32s3-devkit</strong> as an example.</p>
+<section id="test-the-flat-profile">
+<h4>Test the flat profile<a class="headerlink" href="#test-the-flat-profile" title="Permalink to this heading"></a></h4>
+<ol class="arabic">
+<li><p>Configure <code class="docutils literal notranslate"><span class="pre">./tools/configure.sh</span> <span class="pre">-E</span> <span class="pre">esp32s3-devkit:nsh</span></code> and make sure these items are enabled:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># for gprof
+CONFIG_PROFILE_MINI=y
+CONFIG_SYSTEM_GPROF=y
+
+# save and transfer data
+CONFIG_FS_TMPFS=y
+CONFIG_SYSTEM_YMODEM=y
+</pre></div>
+</div>
+</li>
+<li><p>Build and flash <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span> <span class="pre">ESPTOOL_PORT=/dev/ttyUSB0</span> <span class="pre">-j</span></code></p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">minicom</span> <span class="pre">-D</span> <span class="pre">/dev/ttyUSB0</span> <span class="pre">-b</span> <span class="pre">115200</span></code> to connect to the board</p></li>
+<li><p>Start profiling:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gprof start
+
+# do some test here, such as ostest
+
+nsh&gt; gprof stop
+nsh&gt; gprof dump /tmp/gmon.out
+nsh&gt; sb /tmp/gmon.out
+</pre></div>
+</div>
+</li>
+<li><p>Receive the file on PC, and analyze the data on host:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cp nuttx nuttx_prof
+$ xtensa-esp32s3-elf-objcopy -I elf32-xtensa-le --rename-section .flash.text=.text nuttx_prof
+$ xtensa-esp32s3-elf-gprof nuttx_prof gmon.out
 </pre></div>
 </div>
 </li>
 </ol>
+</section>
+<section id="test-the-call-graph-profile">
+<h4>Test the call graph profile<a class="headerlink" href="#test-the-call-graph-profile" title="Permalink to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p>Add compiler option <code class="docutils literal notranslate"><span class="pre">-pg</span></code> to the component, such as ostest Makefile, like: <code class="docutils literal notranslate"><span class="pre">CFLAGS</span> <span class="pre">+=</span> <span class="pre">-pg</span></code></p></li>
+<li><p>Enable the configuration item <code class="docutils literal notranslate"><span class="pre">CONFIG_FRAME_POINTER</span></code></p></li>
+</ol>
+<p>The other steps are the same as the flat profile.</p>
+</section>
 </section>
 </section>
 </section>

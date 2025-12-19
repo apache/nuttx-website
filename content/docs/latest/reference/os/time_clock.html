@@ -163,6 +163,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#watchdog-timer-interfaces">Watchdog Timer Interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#high-resolution-timer-interfaces">High-resolution Timer Interfaces</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="wqueue.html">Work Queues</a></li>
@@ -703,12 +704,12 @@ disabled internally to assure non-reentrancy.</p>
 <h2>Watchdog Timer Interfaces<a class="headerlink" href="#watchdog-timer-interfaces" title="Permalink to this heading"></a></h2>
 <p>NuttX provides a general watchdog timer facility. This facility
 allows the NuttX user to specify a watchdog timer function that
-will run after a specified delay. The watchdog timer function will
-run in the context of the timer interrupt handler. Because of
-this, a limited number of NuttX interfaces are available to he
-watchdog timer function. However, the watchdog timer function may
-use <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code>, <code class="docutils literal notranslate"><span class="pre">sigqueue()</span></code>, or <code class="docutils literal notranslate"><span class="pre">kill()</span></code> to communicate
-with NuttX tasks.</p>
+will run after a specified delay in tick level resolution. The
+watchdog timer function will run in the context of the timer
+interrupt handler. Because of this, a limited number of NuttX
+interfaces are available to he watchdog timer function. However,
+the watchdog timer function may use <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code>, <code class="docutils literal notranslate"><span class="pre">sigqueue()</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">kill()</span></code> to communicate with NuttX tasks.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#c.wd_start" title="wd_start"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_start()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.wd_start_next" title="wd_start_next"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_start_next()</span></code></a></p></li>
@@ -918,6 +919,121 @@ definition.</p>
 <span class="cp">#endif</span>
 </pre></div>
 </div>
+</dd></dl>
+
+</section>
+<section id="high-resolution-timer-interfaces">
+<h2>High-resolution Timer Interfaces<a class="headerlink" href="#high-resolution-timer-interfaces" title="Permalink to this heading"></a></h2>
+<p>Hard real-time applications, such as motor control, often
+require nanosecond-level task timing, which tick-based timers
+like wdog cannot provide. Reducing the tick interval to micro-
+or nanoseconds is impractical, as it would overload the CPU with interrupts.</p>
+<p>To address this, NuttX provides a high-resolution timer (hrtimer),
+which delivers true nanosecond-level precision. Unlike wdog’s list-based timers,
+hrtimer uses a red-black tree for efficient management of large numbers of timers,
+an important advantage in hard real-time systems like vehicle control.</p>
+<p>A user can register an hrtimer callback to execute after a specified delay.
+The callback runs in the timer interrupt context, so only limited NuttX interfaces
+are available, such as <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code>, <code class="docutils literal notranslate"><span class="pre">sigqueue()</span></code>, <code class="docutils literal notranslate"><span class="pre">nxevent_post()</span></code>, or <code class="docutils literal notranslate"><span class="pre">kill()</span></code>,
+to communicate with tasks.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#c.hrtimer_init" title="hrtimer_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_init()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.hrtimer_cancel" title="hrtimer_cancel"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_cancel()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.hrtimer_cancel_sync" title="hrtimer_cancel_sync"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_cancel_sync()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.hrtimer_start" title="hrtimer_start"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_start()</span></code></a></p></li>
+<li><p>High-resolution Timer Callback</p></li>
+</ul>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.hrtimer_init">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_init</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span>, <a class="reference internal" href="#c.hrtentry_t" title="hrtentry_t"><span class="n"><span class="pre">hrtentry_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">func</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_init" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function initializes a high-resolution timer instance.
+Sets the expiration callback and its argument. The timer is
+not started by this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hrtimer</strong> – Pointer to hrtimer instance</p></li>
+<li><p><strong>func</strong> – Expiration callback function</p></li>
+<li><p><strong>arg</strong> – Callback argument</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.hrtimer_cancel">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_cancel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_cancel" title="Permalink to this definition"></a><br /></dt>
+<dd><p>If the timer is armed but has not yet expired, it will be removed from
+the timer queue and the callback will not be invoked.</p>
+<p>If the timer callback is currently executing, this function will mark
+the timer as canceled and return immediately. The running callback is
+allowed to complete, but it will not be invoked again.</p>
+<p>This function is non-blocking and does not wait for a running callback
+to finish.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hrtimer</strong> – Timer instance to cancel</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">OK</span></code> on success; negated errno on failure.</p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.hrtimer_cancel_sync">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_cancel_sync</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_cancel_sync" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cancel a high-resolution timer and wait synchronously until the timer
+becomes inactive.</p>
+<p>This function first calls hrtimer_cancel() to request cancellation of
+the timer.  If the timer callback is currently executing, this function
+will wait until the callback has completed and the timer state has
+transitioned to HRTIMER_STATE_INACTIVE.</p>
+<p>This function may sleep and must not be called from interrupt context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hrtimer</strong> – Timer instance to cancel</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">OK</span></code> on success; negated errno on failure.</p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.hrtimer_start">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ns</span></span>, <span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">hrtimer_mode_e</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_start" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This function starts a high-resolution timer in absolute or relative mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hrtimer</strong> – Timer instance to cancel</p></li>
+<li><p><strong>ns</strong> – Timer expiration in nanoseconds (absolute or relative)</p></li>
+<li><p><strong>mode</strong> – HRTIMER_MODE_ABS or HRTIMER_MODE_REL</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">OK</span></code> on success; negated errno on failure.</p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface.</p>
+</dd></dl>
+
+<dl class="c type">
+<dt class="sig sig-object c" id="c.hrtentry_t">
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">hrtentry_t</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">hrtimer_s</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.hrtentry_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p><strong>High-resolution Timer Callback</strong>: when a hrtimer expires,
+the callback function with this type is called.</p>
 </dd></dl>
 
 </section>

@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocketCAN Device Drivers &mdash; NuttX latest documentation</title>
+  <title>SocketCAN &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
@@ -142,7 +142,18 @@
 <li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Network Support</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="sixlowpan.html">6LoWPAN</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">SocketCAN Device Drivers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">SocketCAN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#socketcan-device-drivers">SocketCAN Device Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#socketcan-protocol-stack">SocketCAN protocol stack</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#architecture">Architecture</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#file-locations">File Locations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#usage-notes">Usage Notes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#features">Features</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="pkt.html">“Raw” packet socket support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ipfilter.html">IP Packet Filter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
@@ -197,7 +208,7 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
           <li class="breadcrumb-item"><a href="index.html">Network Support</a></li>
-      <li class="breadcrumb-item active">SocketCAN Device Drivers</li>
+      <li class="breadcrumb-item active">SocketCAN</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/net/socketcan.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -207,23 +218,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="socketcan-device-drivers">
-<h1>SocketCAN Device Drivers<a class="headerlink" href="#socketcan-device-drivers" title="Permalink to this heading"></a></h1>
+  <section id="socketcan">
+<h1>SocketCAN<a class="headerlink" href="#socketcan" title="Permalink to this heading"></a></h1>
+<section id="socketcan-device-drivers">
+<h2>SocketCAN Device Drivers<a class="headerlink" href="#socketcan-device-drivers" title="Permalink to this heading"></a></h2>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/net/netdev.h</span></code>. All structures and APIs
 needed to work with drivers are provided in this header file.
 The structure struct net_driver_s defines the interface and is
 passed to the network via <code class="docutils literal notranslate"><span class="pre">netdev_register()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/can.h</span></code>. CAN &amp; CAN FD frame data structures.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">netdev_register(FAR</span> <span class="pre">struct</span> <span class="pre">net_driver_s</span> <span class="pre">*dev,</span> <span class="pre">enum</span> <span class="pre">net_lltype_e</span> <span class="pre">lltype)'</span></code>.
-Each driver registers itself by calling <code class="docutils literal notranslate"><span class="pre">netdev_register()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Include/nuttx/net/can.h</span></code>. contains lookup tables for CAN
-dlc to CAN FD len sizes named</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">g_can_dlc_to_len</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
-<span class="k">extern</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">g_len_to_can_dlc</span><span class="p">[</span><span class="mi">65</span><span class="p">];</span>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/can.h</span></code>. CAN &amp; CAN FD frame data structures and dlc to len size</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint8_t</span><span class="w"> </span><span class="nf">can_bytes2dlc</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">nbytes</span><span class="p">);</span>
+<span class="kt">uint8_t</span><span class="w"> </span><span class="nf">can_dlc2bytes</span><span class="p">(</span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">dlc</span><span class="p">);</span>
 </pre></div>
 </div>
 </li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">netdev_register(FAR</span> <span class="pre">struct</span> <span class="pre">net_driver_s</span> <span class="pre">*dev,</span> <span class="pre">enum</span> <span class="pre">net_lltype_e</span> <span class="pre">lltype)'</span></code>.
+Each driver registers itself by calling <code class="docutils literal notranslate"><span class="pre">netdev_register()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Include/nuttx/net/can.h</span></code>. contains lookup tables for CAN
+dlc to CAN FD len sizes named</p></li>
 <li><p><strong>Initialization sequence is as follows</strong>.</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">xxx_netinitialize(void)</span></code> is called on startup of NuttX in this
@@ -268,6 +281,91 @@ matches the size of a <code class="docutils literal notranslate"><span class="pr
 </ol>
 </li>
 </ul>
+</section>
+<section id="socketcan-protocol-stack">
+<h2>SocketCAN protocol stack<a class="headerlink" href="#socketcan-protocol-stack" title="Permalink to this heading"></a></h2>
+<p>SocketCAN is a CAN protocol stack implementation based on the BSD socket API,
+providing a more standardized and flexible CAN communication interface.
+SocketCAN uses the network protocol stack framework, allowing applications
+to use standard socket system calls (such as <code class="docutils literal notranslate"><span class="pre">socket()</span></code>, <code class="docutils literal notranslate"><span class="pre">bind()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">send()</span></code>, <code class="docutils literal notranslate"><span class="pre">recv()</span></code>, etc.) for CAN communication.</p>
+<section id="architecture">
+<h3>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading"></a></h3>
+<p>The SocketCAN implementation follows the standard network layer hierarchy:</p>
+<ol class="arabic simple">
+<li><p><strong>Application Layer Interface</strong>: Uses standard socket API
+(AF_CAN address family)</p></li>
+<li><p><strong>Protocol Layer</strong>: CAN protocol processing (located in <code class="docutils literal notranslate"><span class="pre">net/can/</span></code>)</p></li>
+<li><p><strong>Device Layer</strong>: CAN network device drivers</p></li>
+</ol>
+</section>
+<section id="file-locations">
+<h3>File Locations<a class="headerlink" href="#file-locations" title="Permalink to this heading"></a></h3>
+<p>Files supporting SocketCAN can be found in the following locations:</p>
+<ul class="simple">
+<li><p><strong>Protocol Implementation</strong>: The SocketCAN protocol stack is located in
+the <code class="docutils literal notranslate"><span class="pre">net/can/</span></code> directory</p></li>
+<li><p><strong>Header File</strong>: <code class="docutils literal notranslate"><span class="pre">include/nuttx/net/can.h</span></code></p></li>
+<li><p><strong>Main Modules</strong>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">can_conn.c</span></code> - Connection management</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">can_sockif.c</span></code> - Socket interface implementation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">can_sendmsg.c</span></code> - Message transmission</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">can_sendmsg_buffered.c</span></code> - Message transmission with buffering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">can_recvmsg.c</span></code> - Message reception</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">can_poll.c</span></code> - Polling support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">can_callback.c</span></code> - Callback handling</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="configuration-options">
+<h3>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h3>
+<p>To enable SocketCAN, configure the following options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_CAN</span></code> - Enable SocketCAN support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_CAN_NOTIFIER</span></code> - Enable CAN notifier (optional)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_CAN_NBUFFERS</span></code> - Number of CAN buffers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_RECV_BUFSIZE</span></code> - Receive buffer size</p></li>
+</ul>
+</section>
+<section id="usage-notes">
+<h3>Usage Notes<a class="headerlink" href="#usage-notes" title="Permalink to this heading"></a></h3>
+<p>SocketCAN uses the standard socket programming model:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Create CAN socket */</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">sock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">socket</span><span class="p">(</span><span class="n">AF_CAN</span><span class="p">,</span><span class="w"> </span><span class="n">SOCK_RAW</span><span class="p">,</span><span class="w"> </span><span class="n">CAN_RAW</span><span class="p">);</span>
+
+<span class="cm">/* Bind to CAN interface */</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr_can</span><span class="w"> </span><span class="n">addr</span><span class="p">;</span>
+<span class="n">addr</span><span class="p">.</span><span class="n">can_family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AF_CAN</span><span class="p">;</span>
+<span class="n">addr</span><span class="p">.</span><span class="n">can_ifindex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">if_nametoindex</span><span class="p">(</span><span class="s">&quot;can0&quot;</span><span class="p">);</span>
+<span class="n">bind</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">addr</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">addr</span><span class="p">));</span>
+
+<span class="cm">/* Send CAN frame */</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">can_frame</span><span class="w"> </span><span class="n">frame</span><span class="p">;</span>
+<span class="n">frame</span><span class="p">.</span><span class="n">can_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0x123</span><span class="p">;</span>
+<span class="n">frame</span><span class="p">.</span><span class="n">can_dlc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
+<span class="cm">/* Fill data */</span>
+<span class="n">send</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">frame</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="cm">/* Receive CAN frame */</span>
+<span class="n">recv</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">frame</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="features">
+<h3>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Standard Socket API</strong>: Uses familiar socket programming interface</p></li>
+<li><p><strong>Filtering Support</strong>: Set CAN ID filters via socket options</p></li>
+<li><p><strong>Non-blocking I/O</strong>: Supports non-blocking mode and polling</p></li>
+<li><p><strong>Multiple Connections</strong>: Supports multiple sockets accessing the same CAN bus simultaneously</p></li>
+<li><p><strong>Read Buffering</strong>: Supports data read buffering to prevent data loss</p></li>
+<li><p><strong>CAN FD Support</strong>: Supports CAN FD frames if enabled in configuration</p></li>
+<li><p><strong>Extensible</strong>: Easy to extend for additional CAN protocols</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 
