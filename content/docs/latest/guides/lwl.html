@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Device Tree &mdash; NuttX latest documentation</title>
+  <title>Console over Lightweight Link &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Changing the System Clock Configuration" href="changing_systemclockconfig.html" />
-    <link rel="prev" title="Thread Local Storage" href="thread_local_storage.html" /> 
+    <link rel="next" title="Standards" href="../standards/index.html" />
+    <link rel="prev" title="QEMU Tips" href="qemu_tips.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -159,11 +159,7 @@
 <li class="toctree-l2"><a class="reference internal" href="stm32ccm.html">STM32 CCM Allocator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="etcromfs.html">etc romfs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thread_local_storage.html">Thread Local Storage</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Device Tree</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#how-to-use">How to use</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="devicetree.html">Device Tree</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changing_systemclockconfig.html">Changing the System Clock Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usingkernelthreads.html">Using Kernel Threads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="armv7m_runtimestackcheck.html">ARMv7-M Run Time Stack Checking</a></li>
@@ -197,7 +193,18 @@
 <li class="toctree-l2"><a class="reference internal" href="rust.html">Rust in NuttX</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optee.html">Interfacing with OP-TEE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qemu_tips.html">QEMU Tips</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lwl.html">Console over Lightweight Link</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Console over Lightweight Link</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bit-configuration">Bit configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#downword-host-to-target">Downword (Host to target)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#upword-target-to-host">Upword (Target to Host)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#future-work-improvements">Future work/Improvements</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../standards/index.html">Standards</a></li>
@@ -221,9 +228,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
-      <li class="breadcrumb-item active">Device Tree</li>
+      <li class="breadcrumb-item active">Console over Lightweight Link</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/guides/devicetree.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/guides/lwl.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -231,38 +238,118 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="device-tree">
-<h1>Device Tree<a class="headerlink" href="#device-tree" title="Permalink to this heading"></a></h1>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
-<p>Currently, NuttX supports parsing of FDT(Flattened Device Tree) using libfdt, a
-utility library for reading and manipulating the binary format:</p>
-<p><a class="reference external" href="https://github.com/dgibson/dtc/">https://github.com/dgibson/dtc/</a></p>
-<p>Based on that, NuttX has implemented some common functions to get properties.
-Device Tree support in NuttX will reduce the configuration of chips/boards,
-it is not used in NuttX kernel framework yet.</p>
+  <section id="console-over-lightweight-link">
+<h1>Console over Lightweight Link<a class="headerlink" href="#console-over-lightweight-link" title="Permalink to this heading"></a></h1>
+<p>LWL is a Lightweight bidirectional communication between target and debug host
+without any need for additional hardware.</p>
+<p>It works with openOCD and other debuggers that are capable of reading and
+writing memory while the target is running…it should run with JLink
+for example, if you’ve got the SDK and modify this file accordingly.</p>
+<p>Principle of operation is simple; An <cite>‘upword’</cite> of 32 bits communicates
+from the target to the host, a <cite>‘downword’</cite> of the same size runs in the
+opposite direction. These two words can be in any memory that is
+read/write access for both the target and the debug host. A simple ping
+pong handshake protocol over these words allows up/down link communication.
+On the upside no additional integration is needed. On the downside it may be
+necessary to feed lwl with cycles to poll for changes in the downword,
+depending on the use case. For the case of a simple console, that’s not
+needed.</p>
+<p>For convenience these communication locations are automatically discovered
+from the RAM by searching through it. Just define downwordaddr and
+upwordaddr if you want to work with fixed locations.</p>
+<section id="bit-configuration">
+<h2>Bit configuration<a class="headerlink" href="#bit-configuration" title="Permalink to this heading"></a></h2>
+<section id="downword-host-to-target">
+<h3>Downword (Host to target)<a class="headerlink" href="#downword-host-to-target" title="Permalink to this heading"></a></h3>
+<p>A D U VV XXX O2 O1 O0</p>
+<p>A   31    1 - Service Active (Set by host)
+D   30    1 - Downsense (Toggled when there is data)
+U   29    1 - Upsense ack (Toggled to acknowledge receipt of uplink data)
+VV  28-27 2 - Valid Octets (Number of octets valid in the message)
+XXX 26-24 3 - Port in use (Type of the message)
+O2  23-16 8 - Octet 2
+O1  15-08 8 - Octet 1
+O0  07-00 8 - Octet 0</p>
 </section>
-<section id="how-to-use">
-<h2>How to use<a class="headerlink" href="#how-to-use" title="Permalink to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p>Enable Device Tree and libfdt</p></li>
-</ol>
-<p>Enable the Kconfig settings:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">CONFIG_DEVICE_TREE=y                        /* Enable Device Tree */</span>
-<span class="go">CONFIG_LIBFDT=y                             /* Enable utility library */</span>
+<section id="upword-target-to-host">
+<h3>Upword (Target to Host)<a class="headerlink" href="#upword-target-to-host" title="Permalink to this heading"></a></h3>
+<p>A   31    1 - Service Active (Set by device)
+D   30    1 - Downsense ack (Toggled to acknowledge receipt of downlink data)
+U   29    1 - Upsense (Toggled when there is data)
+VV  28-27 2 - Valid upword octets
+XXX 26-24 3 - Port in use (Type of the message)
+O2  23-16 8 - Octet 2
+O1  15-08 8 - Octet 1
+O0  07-00 8 - Octet 0</p>
+<p>Port 1 is used for Console. No other ports are currently defined.</p>
+<section id="usage">
+<h4>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h4>
+<p>No special python modules are needed, it should be possible to run the
+application simply as shown below:</p>
+<p>In the first terminal execute the openocd command to connect to the board.
+Assuming that you already flashed to firmware (nuttx.bin) with the LWL
+console support. For stm32f4discovery board I use this command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>openocd<span class="w"> </span>-f<span class="w"> </span>board/stm32f4discovery.cfg
+<span class="go">Open On-Chip Debugger  v0.10.0-esp32-20200526-6-g4c41a632 (2020-06-23-10:12)</span>
+<span class="go">Licensed under GNU GPL v2</span>
+<span class="go">For bug reports, read</span>
+<span class="go">      http://openocd.org/doc/doxygen/bugs.html</span>
+<span class="go">Info : The selected transport took over low-level target control. The results might differ compared to plain JTAG/SWD</span>
+<span class="go">srst_only separate srst_nogate srst_open_drain connect_deassert_srst</span>
+
+<span class="go">Info : Listening on port 6666 for tcl connections</span>
+<span class="go">Info : Listening on port 4444 for telnet connections</span>
+<span class="go">Info : clock speed 2000 kHz</span>
+<span class="go">Info : STLINK V2J17S0 (API v2) VID:PID 0483:3748</span>
+<span class="go">Info : Target voltage: 3.216252</span>
+<span class="go">Info : stm32f4x.cpu: hardware has 6 breakpoints, 4 watchpoints</span>
+<span class="go">Info : Listening on port 3333 for gdb connections</span>
+<span class="go">Info : accepting &#39;tcl&#39; connection on tcp/6666</span>
+<span class="go">invalid command name &quot;ocd_mdw&quot;</span>
+<span class="go">0x20000000: 000000ff</span>
+
+<span class="go">0x20000000: 000000ff</span>
+
+<span class="go">0x20000004: 7216a318</span>
+
+<span class="go">0x2000000c: 994b5b1b</span>
+
+<span class="go">0x2000000c: 994b5b1b</span>
+
+<span class="go">0x2000000c: 994b5b1b</span>
+
+<span class="go">...</span>
 </pre></div>
 </div>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Register the DTB address</p></li>
-</ol>
-<p>Use fdt_register to set the DTB Address in NuttX</p>
-<ol class="arabic simple" start="3">
-<li><p>Parse the DTB</p></li>
-</ol>
-<p>Chip/board will use fdt_get to get the DTB Address, and then use fdt_* APIs to
-parse the DTB properties.</p>
+<p>Now in another terminal execute:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./ocdconsole.py
+<span class="go">==Link Activated</span>
+
+<span class="go">nsh&gt;</span>
+<span class="go">nsh&gt; help</span>
+<span class="go">help usage:  help [-v] [&lt;cmd&gt;]</span>
+
+<span class="go"> ?        echo     exit     hexdump  ls       mh       sleep    xd</span>
+<span class="go"> cat      exec     help     kill     mb       mw       usleep</span>
+<span class="go">nsh&gt;</span>
+</pre></div>
+</div>
+<p>This code is designed to be <cite>‘hardy’</cite> and will survive a shutdown and
+restart of the openocd process. When your target application
+changes then the location of the upword and downword may change,
+so they are re-searched for again. To speed up the start process
+consider putting those words at fixed locations (e.g. via the
+linker file) and referencing them directly.</p>
+</section>
+<section id="future-work-improvements">
+<h4>Future work/Improvements<a class="headerlink" href="#future-work-improvements" title="Permalink to this heading"></a></h4>
+<p>Currently the lwl driver on NuttX side is doing polling, but for
+better performance it could use interrupts to detect when the memory
+position was modified to read the data.</p>
+<p>It also will avoid using busy waiting inside the driver, look at
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/arm_lwl_console.c</span></code> for more information.</p>
+</section>
+</section>
 </section>
 </section>
 
@@ -270,8 +357,8 @@ parse the DTB properties.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="thread_local_storage.html" class="btn btn-neutral float-left" title="Thread Local Storage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="changing_systemclockconfig.html" class="btn btn-neutral float-right" title="Changing the System Clock Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="qemu_tips.html" class="btn btn-neutral float-left" title="QEMU Tips" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../standards/index.html" class="btn btn-neutral float-right" title="Standards" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

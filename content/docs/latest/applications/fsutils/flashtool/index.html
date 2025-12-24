@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mkfatfs mkfatfs utility &mdash; NuttX latest documentation</title>
+  <title>flashtool Flash Device Utility &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="mkgpt mkgpt utility" href="../mkgpt/index.html" />
-    <link rel="prev" title="libtinycbor TinyCBOR Library (RFC 8949)" href="../libtinycbor/index.html" /> 
+    <link rel="next" title="inifile INI File Parser" href="../inifile/index.html" />
+    <link rel="prev" title="flash_eraseall flash_eraseall() function" href="../flash_eraseall/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -140,12 +140,24 @@
 <li class="toctree-l2"><a class="reference internal" href="../../crypto/index.html">Cryptography Library Support</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">File System Utilities</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../flash_eraseall/index.html"><code class="docutils literal notranslate"><span class="pre">flash_eraseall</span></code> flash_eraseall() function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../flashtool/index.html"><code class="docutils literal notranslate"><span class="pre">flashtool</span></code> Flash Device Utility</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">flashtool</span></code> Flash Device Utility</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#flashtool-manage-mtd-flash-devices"><code class="docutils literal notranslate"><span class="pre">flashtool</span></code> Manage MTD Flash Devices</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#display-device-information">Display Device Information</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#read-flash-pages">Read Flash Pages</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#write-flash-pages">Write Flash Pages</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#erase-flash-blocks">Erase Flash Blocks</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bulk-erase">Bulk Erase</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#check-bad-blocks">Check Bad Blocks</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../inifile/index.html"><code class="docutils literal notranslate"><span class="pre">inifile</span></code> INI File Parser</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inih/index.html"><code class="docutils literal notranslate"><span class="pre">inih</span></code> inih ini file parser</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ipcfg/index.html"><code class="docutils literal notranslate"><span class="pre">ipcfg</span></code> IP Configuration File Support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../libtinycbor/index.html"><code class="docutils literal notranslate"><span class="pre">libtinycbor</span></code> TinyCBOR Library (RFC 8949)</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">mkfatfs</span></code> mkfatfs utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mkfatfs/index.html"><code class="docutils literal notranslate"><span class="pre">mkfatfs</span></code> mkfatfs utility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../mkgpt/index.html"><code class="docutils literal notranslate"><span class="pre">mkgpt</span></code> mkgpt utility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../mkmbr/index.html"><code class="docutils literal notranslate"><span class="pre">mkmbr</span></code> mkmbr utility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../mksmartfs/index.html"><code class="docutils literal notranslate"><span class="pre">mksmartfs</span></code> mksmartfs utility</a></li>
@@ -198,9 +210,9 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">File System Utilities</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">mkfatfs</span></code> mkfatfs utility</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">flashtool</span></code> Flash Device Utility</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/fsutils/mkfatfs/index.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/fsutils/flashtool/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -208,16 +220,165 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="mkfatfs-mkfatfs-utility">
-<h1><code class="docutils literal notranslate"><span class="pre">mkfatfs</span></code> mkfatfs utility<a class="headerlink" href="#mkfatfs-mkfatfs-utility" title="Permalink to this heading"></a></h1>
+  <section id="flashtool-flash-device-utility">
+<h1><code class="docutils literal notranslate"><span class="pre">flashtool</span></code> Flash Device Utility<a class="headerlink" href="#flashtool-flash-device-utility" title="Permalink to this heading"></a></h1>
+<section id="flashtool-manage-mtd-flash-devices">
+<span id="cmdflashtools"></span><h2><code class="docutils literal notranslate"><span class="pre">flashtool</span></code> Manage MTD Flash Devices<a class="headerlink" href="#flashtool-manage-mtd-flash-devices" title="Permalink to this heading"></a></h2>
+<p><strong>Command Syntax</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>flashtool [OPTION [ARG]] ...
+</pre></div>
+</div>
+<p><strong>Synopsis</strong>. The <code class="docutils literal notranslate"><span class="pre">flashtool</span></code> command is a utility for managing MTD
+(Memory Technology Device) flash devices in NuttX. It provides operations
+for reading, writing, erasing flash pages and blocks, as well as querying
+device information and checking for bad blocks.</p>
+<p><strong>Options</strong></p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td><p>Show help statement with all available options.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
+<td><p>Display device geometry information (page size,
+erase block size, number of blocks).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span> <span class="pre">&lt;page&gt;</span></code></p></td>
+<td><p>Read the specified page(s) from flash and display
+contents in hexadecimal dump format.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span> <span class="pre">&lt;page&gt;</span></code></p></td>
+<td><p>Write data to the specified page(s) from a file
+(requires <code class="docutils literal notranslate"><span class="pre">-f</span></code> option).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">&lt;block&gt;</span></code></p></td>
+<td><p>Erase the specified block(s).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">&lt;num&gt;</span></code></p></td>
+<td><p>Specify the number of pages or blocks to operate on
+(default: 1).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">&lt;file&gt;</span></code></p></td>
+<td><p>Specify the source file for write operations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-b</span></code></p></td>
+<td><p>Check for bad blocks across the entire device.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<td><p>Erase all flash content (bulk erase).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">&lt;device&gt;</span></code></p></td>
+<td><p>Specify the MTD device name (required for all
+operations).</p></td>
+</tr>
+</tbody>
+</table>
+<section id="display-device-information">
+<h3>Display Device Information<a class="headerlink" href="#display-device-information" title="Permalink to this heading"></a></h3>
+<p>To display the geometry information of a flash device:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -i -d /dev/mtd0
+Size of one read/write page: 2048
+Size of one erase block:     131072
+Number of erase blocks:      1024
+</pre></div>
+</div>
+<p>This displays:</p>
+<ul class="simple">
+<li><p><strong>Page size</strong>: The size of one read/write page in bytes</p></li>
+<li><p><strong>Erase block size</strong>: The size of one erase block in bytes</p></li>
+<li><p><strong>Number of blocks</strong>: Total number of erase blocks in the device</p></li>
+</ul>
+</section>
+<section id="read-flash-pages">
+<h3>Read Flash Pages<a class="headerlink" href="#read-flash-pages" title="Permalink to this heading"></a></h3>
+<p>To read a single page from flash and display its contents:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -r 0 -d /dev/mtd0
+Flash pages contents:
+Flash page 0:
+0000: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ................
+0010: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ................
+...
+</pre></div>
+</div>
+<p>To read multiple consecutive pages:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -r 10 -n 5 -d /dev/mtd0
+</pre></div>
+</div>
+<p>This reads 5 pages starting from page 10 and displays each page’s content
+in hexadecimal dump format.</p>
+</section>
+<section id="write-flash-pages">
+<h3>Write Flash Pages<a class="headerlink" href="#write-flash-pages" title="Permalink to this heading"></a></h3>
+<p>To write data from a file to flash pages:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -w 0 -n 10 -f /tmp/firmware.bin -d /dev/mtd0
+Write data from /tmp/firmware.bin...
+</pre></div>
+</div>
+<p>This writes data from <code class="docutils literal notranslate"><span class="pre">/tmp/firmware.bin</span></code> to 10 pages starting from page 0.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls -l /tmp
+/tmp:
+ -rw-rw-rw-    8192 firmware.bin
+nsh&gt; flashtool -e 0 -n 1 -d /dev/mtd0
+Erase block from 0 to 0!
+nsh&gt; flashtool -w 0 -n 4 -f /tmp/firmware.bin -d /dev/mtd0
+Write data from /tmp/firmware.bin...
+nsh&gt;
+</pre></div>
+</div>
+</section>
+<section id="erase-flash-blocks">
+<h3>Erase Flash Blocks<a class="headerlink" href="#erase-flash-blocks" title="Permalink to this heading"></a></h3>
+<p>To erase a single block:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -e 5 -d /dev/mtd0
+Erase block from 5 to 5!
+</pre></div>
+</div>
+<p>To erase multiple consecutive blocks:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -e 0 -n 8 -d /dev/mtd0
+Erase block from 0 to 7!
+</pre></div>
+</div>
+<p>This erases 8 blocks starting from block 0.</p>
+</section>
+<section id="bulk-erase">
+<h3>Bulk Erase<a class="headerlink" href="#bulk-erase" title="Permalink to this heading"></a></h3>
+<p>To erase the entire flash device:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -c -d /dev/mtd0
+</pre></div>
+</div>
+</section>
+<section id="check-bad-blocks">
+<h3>Check Bad Blocks<a class="headerlink" href="#check-bad-blocks" title="Permalink to this heading"></a></h3>
+<p>To check for bad blocks across the entire device:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -b -d /dev/mtd0
+Check bad blocks in flash......
+Block 42 is bad!
+Block 157 is bad!
+</pre></div>
+</div>
+<p>Or if no bad blocks are found:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; flashtool -b -d /dev/mtd0
+Check bad blocks in flash......
+No bad blocks!
+</pre></div>
+</div>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">flashtool</span></code> command can be enabled in the NuttX configuration:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_FSUTILS_FLASHTOOL=y
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../libtinycbor/index.html" class="btn btn-neutral float-left" title="libtinycbor TinyCBOR Library (RFC 8949)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../mkgpt/index.html" class="btn btn-neutral float-right" title="mkgpt mkgpt utility" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../flash_eraseall/index.html" class="btn btn-neutral float-left" title="flash_eraseall flash_eraseall() function" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../inifile/index.html" class="btn btn-neutral float-right" title="inifile INI File Parser" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
