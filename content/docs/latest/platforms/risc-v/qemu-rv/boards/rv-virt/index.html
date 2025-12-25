@@ -361,6 +361,42 @@ testing on CI of 32-bit RISC-V using QEMU.</p>
 </pre></div>
 </div>
 </section>
+<section id="lvgl64-vector">
+<h3>lvgl64_vector<a class="headerlink" href="#lvgl64-vector" title="Permalink to this heading"></a></h3>
+<p>This configuration uses the LVGL graphics framework with RISC-V 64-bit support
+and Vector Extension (V-extension) enabled. It allows developers to create
+graphical applications with LVGL on RISC-V QEMU while leveraging the Vector
+extension for potential SIMD optimization.</p>
+<p>Features:</p>
+<ul class="simple">
+<li><p>64-bit RISC-V architecture (RV64)</p></li>
+<li><p>RISC-V Vector Extension (RVV/V-extension) support</p></li>
+<li><p>LVGL graphics framework with 32-bit color depth</p></li>
+<li><p>VirtIO GPU device for framebuffer access</p></li>
+<li><p>NSH shell with built-in applications</p></li>
+</ul>
+<p>To build it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh rv-virt:lvgl64_vector
+$ make -j$(nproc)
+</pre></div>
+</div>
+<p>To run it with QEMU with graphics output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv64 -semihosting -M virt,aclint=on -cpu rv64,v=true -smp 1 \
+  -chardev stdio,id=con,mux=on \
+  -serial chardev:con \
+  -device virtio-gpu-device,xres=640,yres=480,bus=virtio-mmio-bus.0 \
+  -device virtio-mouse-device,bus=virtio-mmio-bus.1 \
+  -mon chardev=con,mode=readline \
+  -bios none -kernel nuttx
+</pre></div>
+</div>
+<p>After booting into the NSH shell, you can run the LVGL demo with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; lvgldemo
+</pre></div>
+</div>
+<p>This configuration is suitable for developing and testing LVGL applications
+on 64-bit RISC-V targets with Vector extension support.</p>
+</section>
 <section id="knetnsh64">
 <h3>knetnsh64<a class="headerlink" href="#knetnsh64" title="Permalink to this heading"></a></h3>
 <p>Similar to the <a class="reference internal" href="#knsh">knsh</a> configuration, but with networking support and 64-bit RISC-V.</p>
