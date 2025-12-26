@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ntpclient NTP client &mdash; NuttX latest documentation</title>
+  <title>paho_mqtt Eclipse Paho MQTT C Library &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="paho_mqtt Eclipse Paho MQTT C Library" href="../paho_mqtt/index.html" />
-    <link rel="prev" title="nng Nanomsg NG" href="../nng/index.html" /> 
+    <link rel="next" title="ping ICMP ping support" href="../ping/index.html" />
+    <link rel="prev" title="ntpclient NTP client" href="../ntpclient/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -168,21 +168,23 @@
 <li class="toctree-l3"><a class="reference internal" href="../netinit/index.html"><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network initialization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../netlib/index.html"><code class="docutils literal notranslate"><span class="pre">netlib</span></code> Network support library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nng/index.html"><code class="docutils literal notranslate"><span class="pre">nng</span></code> Nanomsg NG</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#what-is-ntp">What is NTP?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#ntp-protocol-overview">NTP Protocol Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#implementation-details">Implementation Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#source-code-structure">Source Code Structure</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#key-functions">Key Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ntpclient/index.html"><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">paho_mqtt</span></code> Eclipse Paho MQTT C Library</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#library-configuration">Library Configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#utility-configuration">Utility Configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#mqtt-pub-publish-messages">mqtt_pub - Publish Messages</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#mqtt-sub-subscribe-to-topics">mqtt_sub - Subscribe to Topics</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../paho_mqtt/index.html"><code class="docutils literal notranslate"><span class="pre">paho_mqtt</span></code> Eclipse Paho MQTT C Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#library-api">Library API</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../ping/index.html"><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP ping support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../pppd/index.html"><code class="docutils literal notranslate"><span class="pre">pppd</span></code> PPP server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ptpd/index.html"><code class="docutils literal notranslate"><span class="pre">ptpd</span></code> PTPD client/server</a></li>
@@ -237,9 +239,9 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Network Utilities</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">paho_mqtt</span></code> Eclipse Paho MQTT C Library</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/netutils/ntpclient/index.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/netutils/paho_mqtt/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -247,181 +249,185 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="ntpclient-ntp-client">
-<h1><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client<a class="headerlink" href="#ntpclient-ntp-client" title="Permalink to this heading"></a></h1>
-<p>The NTP (Network Time Protocol) client is a network utility that synchronizes
-the system clock with time servers over the Internet. This implementation
-provides a minimal but functional NTP client for NuttX.</p>
-<section id="what-is-ntp">
-<h2>What is NTP?<a class="headerlink" href="#what-is-ntp" title="Permalink to this heading"></a></h2>
-<p>The Network Time Protocol (NTP) is a networking protocol designed to
-synchronize clocks of computer systems over packet-switched, variable-latency
-data networks. NTP is one of the oldest Internet protocols still in use,
-originally designed by David L. Mills of the University of Delaware.</p>
-<p>Key features of NTP:</p>
+  <section id="paho-mqtt-eclipse-paho-mqtt-c-library">
+<h1><code class="docutils literal notranslate"><span class="pre">paho_mqtt</span></code> Eclipse Paho MQTT C Library<a class="headerlink" href="#paho-mqtt-eclipse-paho-mqtt-c-library" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">paho_mqtt</span></code> package provides integration of the Eclipse Paho MQTT C
+library into NuttX. This library enables MQTT client functionality, supporting
+MQTT protocol versions 3.1, 3.1.1, and 5.0. The package includes both a library
+for programmatic access and command-line utilities for publishing and
+subscribing to MQTT topics.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The Eclipse Paho MQTT C library is a client implementation of the MQTT
+protocol. It provides both synchronous and asynchronous APIs for connecting to
+MQTT brokers, publishing messages, and subscribing to topics.</p>
+<p>This NuttX integration includes:</p>
 <ul class="simple">
-<li><p><strong>High Precision</strong>: NTP can achieve sub-millisecond accuracy on local area
-networks and typically 10-100 millisecond accuracy over the Internet</p></li>
-<li><p><strong>Robust Algorithm</strong>: Uses sophisticated algorithms to filter out network
-jitter and select the best time sources</p></li>
-<li><p><strong>Hierarchical Structure</strong>: Uses a stratum system where stratum 0 devices
-are atomic clocks, stratum 1 servers sync with stratum 0, and so on</p></li>
-<li><p><strong>Fault Tolerance</strong>: Can handle multiple time sources and automatically
-switch between them</p></li>
+<li><p><strong>MQTT 5.0 Client Library</strong> (<code class="docutils literal notranslate"><span class="pre">LIB_MQTT5</span></code>): A library providing MQTT client
+functionality through C API calls.</p></li>
+<li><p><strong>Command-line Tools</strong> (<code class="docutils literal notranslate"><span class="pre">UTILS_MQTT5</span></code>):
+- <code class="docutils literal notranslate"><span class="pre">mqtt_pub</span></code>: A utility for publishing messages to MQTT topics
+- <code class="docutils literal notranslate"><span class="pre">mqtt_sub</span></code>: A utility for subscribing to MQTT topics and receiving messages</p></li>
 </ul>
+<p>The library is automatically downloaded from the Eclipse Paho GitHub repository
+during the build process if not already present.</p>
 </section>
-<section id="ntp-protocol-overview">
-<h2>NTP Protocol Overview<a class="headerlink" href="#ntp-protocol-overview" title="Permalink to this heading"></a></h2>
-<p>NTP uses UDP port 123 and follows a client-server model. The protocol
-exchanges timestamps to calculate:</p>
-<ul class="simple">
-<li><p><strong>Offset</strong>: The difference between the client’s clock and the server’s clock</p></li>
-<li><p><strong>Delay</strong>: The round-trip network delay</p></li>
-<li><p><strong>Dispersion</strong>: The maximum error due to clock frequency tolerance</p></li>
-</ul>
-<p>The NTP packet format (version 3) includes:</p>
-<ul class="simple">
-<li><p><strong>Leap Indicator</strong>: Warns of an impending leap second</p></li>
-<li><p><strong>Version Number</strong>: NTP version (3 in this implementation)</p></li>
-<li><p><strong>Mode</strong>: Client, server, broadcast, etc.</p></li>
-<li><p><strong>Stratum</strong>: Clock level (0-15)</p></li>
-<li><p><strong>Poll Interval</strong>: Maximum interval between successive messages</p></li>
-<li><p><strong>Precision</strong>: Clock precision</p></li>
-<li><p><strong>Root Delay/Dispersion</strong>: Total delay and dispersion to the reference clock</p></li>
-<li><p><strong>Reference Identifier</strong>: Identifies the reference source</p></li>
-<li><p><strong>Reference Timestamp</strong>: Time when the system clock was last set</p></li>
-<li><p><strong>Originate Timestamp</strong>: Time when the request departed the client</p></li>
-<li><p><strong>Receive Timestamp</strong>: Time when the request arrived at the server</p></li>
-<li><p><strong>Transmit Timestamp</strong>: Time when the reply departed the server</p></li>
-</ul>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<section id="library-configuration">
+<h3>Library Configuration<a class="headerlink" href="#library-configuration" title="Permalink to this heading"></a></h3>
+<p>Enable the MQTT 5.0 library:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_LIB_MQTT5=y
+</pre></div>
+</div>
 </section>
-<section id="implementation-details">
-<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h2>
-<p>The NuttX NTP client implementation consists of several key components:</p>
-<section id="source-code-structure">
-<h3>Source Code Structure<a class="headerlink" href="#source-code-structure" title="Permalink to this heading"></a></h3>
-<p><strong>ntpclient.c</strong> - Main implementation file containing:</p>
-<ul class="simple">
-<li><p><strong>Daemon Management</strong>: Functions to start, stop, and manage the NTP daemon</p></li>
-<li><p><strong>Time Synchronization</strong>: Core algorithms for calculating clock offset and delay</p></li>
-<li><p><strong>Network Communication</strong>: UDP socket handling and NTP packet exchange</p></li>
-<li><p><strong>Sample Collection</strong>: Gathering multiple time samples for statistical filtering</p></li>
-</ul>
-<p><strong>ntpv3.h</strong> - NTP version 3 packet format definitions:</p>
-<ul class="simple">
-<li><p><strong>ntp_datagram_s</strong>: Complete NTP packet structure</p></li>
-<li><p><strong>ntp_timestamp_s</strong>: 64-bit NTP timestamp format</p></li>
-<li><p><strong>Protocol Constants</strong>: NTP version, modes, and stratum definitions</p></li>
-</ul>
-</section>
-<section id="key-functions">
-<h3>Key Functions<a class="headerlink" href="#key-functions" title="Permalink to this heading"></a></h3>
-<ul class="simple">
-<li><p><strong>ntpc_start_with_list()</strong>: Starts the NTP daemon with a list of servers</p></li>
-<li><p><strong>ntpc_start()</strong>: Starts the NTP daemon with default configuration</p></li>
-<li><p><strong>ntpc_stop()</strong>: Stops the running NTP daemon</p></li>
-<li><p><strong>ntpc_status()</strong>: Retrieves current synchronization status and samples</p></li>
-<li><p><strong>ntpc_daemon()</strong>: Main daemon loop that:</p>
-<ul>
-<li><p>Connects to configured NTP servers</p></li>
-<li><p>Sends NTP requests and processes responses</p></li>
-<li><p>Calculates clock offset and delay</p></li>
-<li><p>Applies time corrections to the system clock</p></li>
-<li><p>Continues polling at configured intervals</p></li>
-</ul>
-</li>
-<li><p><strong>ntpc_get_ntp_sample()</strong>: Performs a single NTP transaction:</p>
-<ul>
-<li><p>Creates UDP socket to NTP server</p></li>
-<li><p>Sends NTP request packet with current timestamp</p></li>
-<li><p>Receives and validates NTP response</p></li>
-<li><p>Calculates offset and delay using NTP algorithms</p></li>
-</ul>
-</li>
-<li><p><strong>ntpc_calculate_offset()</strong>: Implements the NTP clock filter algorithm</p>
-<ul>
-<li><p>Uses four timestamps, calculates offset and delay</p></li>
-<li><p>Applies statistical filtering to reduce jitter</p></li>
-</ul>
-</li>
-<li><p><strong>ntpc_settime()</strong>: Applies time correction to system clock:</p>
-<ul>
-<li><p>Uses calculated offset to adjust system time</p></li>
-<li><p>Handles both positive and negative time adjustments</p></li>
-<li><p>Maintains monotonic clock consistency</p></li>
-</ul>
-</li>
-</ul>
-</section>
+<section id="utility-configuration">
+<h3>Utility Configuration<a class="headerlink" href="#utility-configuration" title="Permalink to this heading"></a></h3>
+<p>Enable the MQTT command-line utilities:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_UTILS_MQTT5=y
+CONFIG_UTILS_MQTT5_PRIORITY=100
+CONFIG_UTILS_MQTT5_STACKSIZE=16384
+</pre></div>
+</div>
 </section>
 <section id="configuration-options">
-<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
-<p>The NTP client can be configured through Kconfig options:</p>
+<h3>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h3>
 <ul class="simple">
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_SERVER</strong>: List of NTP server hostnames</p></li>
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_PORTNO</strong>: NTP server port (default: 123)</p></li>
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_STACKSIZE</strong>: Daemon task stack size</p></li>
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_SERVERPRIO</strong>: Daemon task priority</p></li>
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_STAY_ON</strong>: Keep polling continuously</p></li>
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_POLLDELAYSEC</strong>: Polling interval in seconds</p></li>
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_NUM_SAMPLES</strong>: Number of samples for filtering</p></li>
-<li><p><strong>CONFIG_NETUTILS_NTPCLIENT_TIMEOUT_MS</strong>: Network timeout in milliseconds</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIB_MQTT5</span></code>: Enable the MQTT 5.0 client library</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UTILS_MQTT5</span></code>: Enable MQTT command-line utilities (requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIB_MQTT5</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UTILS_MQTT5_PRIORITY</span></code>: Task priority for MQTT utilities (default: 100)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UTILS_MQTT5_STACKSIZE</span></code>: Stack size for MQTT utilities (default: 16384)</p></li>
 </ul>
+</section>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
-<p>The NTP client is typically used through the system commands:</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The NTP client functionality requires enabling the <code class="code docutils literal notranslate"><span class="pre">SYSTEM_NTPC</span></code> option in your configuration.
-Make sure to select this option in menuconfig or your Kconfig fragment before building.</p>
+<section id="mqtt-pub-publish-messages">
+<h3>mqtt_pub - Publish Messages<a class="headerlink" href="#mqtt-pub-publish-messages" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">mqtt_pub</span></code> utility publishes messages to MQTT topics.</p>
+<section id="mqtt-pub-syntax">
+<h4>mqtt_pub Syntax<a class="headerlink" href="#mqtt-pub-syntax" title="Permalink to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_pub<span class="w"> </span><span class="o">[</span>topicname<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</pre></div>
 </div>
-<ul class="simple">
-<li><p><strong>ntpcstart</strong>: Start the NTP daemon</p></li>
-<li><p><strong>ntpcstop</strong>: Stop the NTP daemon</p></li>
-<li><p><strong>ntpcstatus</strong>: Display synchronization status</p></li>
-</ul>
-<p>Example workflow:</p>
-<ol class="arabic simple">
-<li><p>Configure network connectivity</p></li>
-<li><p>Start NTP client: <code class="docutils literal notranslate"><span class="pre">ntpcstart</span></code></p></li>
-<li><p>Check status: <code class="docutils literal notranslate"><span class="pre">ntpcstatus</span></code></p></li>
-<li><p>Verify time: <code class="docutils literal notranslate"><span class="pre">date</span></code> command</p></li>
-<li><p>Stop when needed: <code class="docutils literal notranslate"><span class="pre">ntpcstop</span></code></p></li>
-</ol>
-<p>The client will automatically:
-- Connect to configured NTP servers
-- Exchange time information
-- Calculate and apply clock corrections
-- Continue periodic synchronization</p>
 </section>
-<section id="limitations">
-<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading"></a></h2>
-<p>This is a minimal NTP client implementation with some limitations:</p>
-<ul class="simple">
-<li><p><strong>No Authentication</strong>: Does not support NTP authentication (MD5/SHA1)</p></li>
-<li><p><strong>Basic Filtering</strong>: Uses simple statistical filtering, not full NTP algorithms</p></li>
-<li><p><strong>Single Reference</strong>: Does not implement full NTP reference clock selection</p></li>
-<li><p><strong>No Leap Seconds</strong>: Does not handle leap second announcements</p></li>
-<li><p><strong>Limited Error Handling</strong>: Basic error recovery and retry mechanisms</p></li>
+<section id="mqtt-pub-options">
+<h4>mqtt_pub Options<a class="headerlink" href="#mqtt-pub-options" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>Connection Options:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-h,</span> <span class="pre">--host</span> <span class="pre">&lt;host&gt;</span></code>: MQTT broker hostname (default: localhost)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-p,</span> <span class="pre">--port</span> <span class="pre">&lt;port&gt;</span></code>: Network port (default: 1883)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c,</span> <span class="pre">--connection</span> <span class="pre">&lt;url&gt;</span></code>: Connection string (overrides host/port)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-i,</span> <span class="pre">--clientid</span> <span class="pre">&lt;id&gt;</span></code>: Client ID (default: paho-c-pub)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-u,</span> <span class="pre">--username</span> <span class="pre">&lt;user&gt;</span></code>: Username for authentication</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-P,</span> <span class="pre">--password</span> <span class="pre">&lt;pass&gt;</span></code>: Password for authentication</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-k,</span> <span class="pre">--keepalive</span> <span class="pre">&lt;seconds&gt;</span></code>: Keepalive timeout (default: 10)</p></li>
 </ul>
-<p>Despite these limitations, the implementation provides sufficient accuracy
-for most embedded applications requiring network time synchronization.</p>
+</dd>
+<dt>Message Options:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-t,</span> <span class="pre">--topic</span> <span class="pre">&lt;topic&gt;</span></code>: MQTT topic to publish to</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-m,</span> <span class="pre">--message</span> <span class="pre">&lt;message&gt;</span></code>: Message payload to send</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-f,</span> <span class="pre">--filename</span> <span class="pre">&lt;file&gt;</span></code>: Read message from file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-q,</span> <span class="pre">--qos</span> <span class="pre">&lt;0|1|2&gt;</span></code>: Quality of Service level (default: 0)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-r,</span> <span class="pre">--retained</span></code>: Set retained message flag</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-n,</span> <span class="pre">--null-message</span></code>: Send zero-length message</p></li>
+</ul>
+</dd>
+<dt>MQTT Version:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-V,</span> <span class="pre">--MQTTversion</span> <span class="pre">&lt;31|311|5&gt;</span></code>: MQTT protocol version (default: 311)</p></li>
+</ul>
+</dd>
+</dl>
 </section>
-<section id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h2>
-<p>The NTP client requires:</p>
-<ul class="simple">
-<li><p><strong>CONFIG_NET</strong>: Network support</p></li>
-<li><p><strong>CONFIG_NET_UDP</strong>: UDP protocol support</p></li>
-<li><p><strong>CONFIG_NET_SOCKOPTS</strong>: Socket options support</p></li>
-<li><p><strong>CONFIG_LIBC_NETDB</strong>: DNS resolution (recommended)</p></li>
-<li><p><strong>CONFIG_HAVE_LONG_LONG</strong>: 64-bit integer support</p></li>
+<section id="mqtt-pub-examples">
+<h4>mqtt_pub Examples<a class="headerlink" href="#mqtt-pub-examples" title="Permalink to this heading"></a></h4>
+<p>Publish a simple message:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_pub<span class="w"> </span>-h<span class="w"> </span><span class="m">192</span>.168.1.100<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;test/topic&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Hello MQTT&quot;</span>
+</pre></div>
+</div>
+<p>Publish with QoS 1 and retained flag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_pub<span class="w"> </span>-h<span class="w"> </span><span class="m">192</span>.168.1.100<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;test/topic&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Retained message&quot;</span><span class="w"> </span>-q<span class="w"> </span><span class="m">1</span><span class="w"> </span>-r
+</pre></div>
+</div>
+<p>Publish from a file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_pub<span class="w"> </span>-h<span class="w"> </span><span class="m">192</span>.168.1.100<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;test/topic&quot;</span><span class="w"> </span>-f<span class="w"> </span>message.txt
+</pre></div>
+</div>
+</section>
+</section>
+<section id="mqtt-sub-subscribe-to-topics">
+<h3>mqtt_sub - Subscribe to Topics<a class="headerlink" href="#mqtt-sub-subscribe-to-topics" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">mqtt_sub</span></code> utility subscribes to MQTT topics and receives messages.</p>
+<section id="mqtt-sub-syntax">
+<h4>mqtt_sub Syntax<a class="headerlink" href="#mqtt-sub-syntax" title="Permalink to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_sub<span class="w"> </span><span class="o">[</span>topicname<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section id="mqtt-sub-options">
+<h4>mqtt_sub Options<a class="headerlink" href="#mqtt-sub-options" title="Permalink to this heading"></a></h4>
+<dl class="simple">
+<dt>Connection Options:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-h,</span> <span class="pre">--host</span> <span class="pre">&lt;host&gt;</span></code>: MQTT broker hostname (default: localhost)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-p,</span> <span class="pre">--port</span> <span class="pre">&lt;port&gt;</span></code>: Network port (default: 1883)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c,</span> <span class="pre">--connection</span> <span class="pre">&lt;url&gt;</span></code>: Connection string (overrides host/port)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-i,</span> <span class="pre">--clientid</span> <span class="pre">&lt;id&gt;</span></code>: Client ID (default: paho-c-sub)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-u,</span> <span class="pre">--username</span> <span class="pre">&lt;user&gt;</span></code>: Username for authentication</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-P,</span> <span class="pre">--password</span> <span class="pre">&lt;pass&gt;</span></code>: Password for authentication</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-k,</span> <span class="pre">--keepalive</span> <span class="pre">&lt;seconds&gt;</span></code>: Keepalive timeout (default: 10)</p></li>
 </ul>
-<p>For best results, ensure:
-- Stable network connectivity
-- Access to reliable NTP servers
-- Sufficient system resources for daemon operation</p>
+</dd>
+<dt>Subscription Options:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-t,</span> <span class="pre">--topic</span> <span class="pre">&lt;topic&gt;</span></code>: MQTT topic to subscribe to (supports wildcards)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-q,</span> <span class="pre">--qos</span> <span class="pre">&lt;0|1|2&gt;</span></code>: Quality of Service level (default: 0)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-R,</span> <span class="pre">--no-retained</span></code>: Do not print retained messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--no-delimiter</span></code>: Do not use delimiter between messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--delimiter</span> <span class="pre">&lt;string&gt;</span></code>: Custom delimiter (default: \n)</p></li>
+</ul>
+</dd>
+<dt>MQTT Version:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-V,</span> <span class="pre">--MQTTversion</span> <span class="pre">&lt;31|311|5&gt;</span></code>: MQTT protocol version (default: 311)</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="topic-wildcards">
+<h4>Topic Wildcards<a class="headerlink" href="#topic-wildcards" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">+</span></code>: Single-level wildcard (matches one topic level)
+- Example: <code class="docutils literal notranslate"><span class="pre">sensor/+/temperature</span></code> matches <code class="docutils literal notranslate"><span class="pre">sensor/room1/temperature</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#</span></code>: Multi-level wildcard (matches multiple levels, must be at end)
+- Example: <code class="docutils literal notranslate"><span class="pre">sensor/#</span></code> matches all topics under <code class="docutils literal notranslate"><span class="pre">sensor/</span></code></p></li>
+</ul>
+</section>
+<section id="mqtt-sub-examples">
+<h4>mqtt_sub Examples<a class="headerlink" href="#mqtt-sub-examples" title="Permalink to this heading"></a></h4>
+<p>Subscribe to a topic:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_sub<span class="w"> </span>-h<span class="w"> </span><span class="m">192</span>.168.1.100<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;test/topic&quot;</span>
+</pre></div>
+</div>
+<p>Subscribe with wildcard:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_sub<span class="w"> </span>-h<span class="w"> </span><span class="m">192</span>.168.1.100<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;sensor/#&quot;</span>
+</pre></div>
+</div>
+<p>Subscribe with QoS 1:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mqtt_sub<span class="w"> </span>-h<span class="w"> </span><span class="m">192</span>.168.1.100<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;test/topic&quot;</span><span class="w"> </span>-q<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="library-api">
+<h2>Library API<a class="headerlink" href="#library-api" title="Permalink to this heading"></a></h2>
+<p>The MQTT 5.0 library provides both synchronous and asynchronous APIs. The main
+header files are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MQTTAsync.h</span></code>: Asynchronous MQTT client API</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MQTTClient.h</span></code>: Synchronous MQTT client API</p></li>
+</ul>
+<p>For detailed API documentation, refer to the Eclipse Paho MQTT C library
+documentation at <a class="reference external" href="https://www.eclipse.org/paho/clients/c/">https://www.eclipse.org/paho/clients/c/</a>.</p>
 </section>
 </section>
 
@@ -429,8 +435,8 @@ for most embedded applications requiring network time synchronization.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../nng/index.html" class="btn btn-neutral float-left" title="nng Nanomsg NG" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../paho_mqtt/index.html" class="btn btn-neutral float-right" title="paho_mqtt Eclipse Paho MQTT C Library" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../ntpclient/index.html" class="btn btn-neutral float-left" title="ntpclient NTP client" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../ping/index.html" class="btn btn-neutral float-right" title="ping ICMP ping support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -173,6 +173,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#ipv4-address-management">IPv4 Address Management</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ipv6-address-management">IPv6 Address Management</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#network-interface-management">Network Interface Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#network-buffer-statistics">Network Buffer Statistics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#arp-table-support">ARP Table Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#routing-table-support">Routing Table Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dhcp-support">DHCP Support</a></li>
@@ -186,6 +187,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../nng/index.html"><code class="docutils literal notranslate"><span class="pre">nng</span></code> Nanomsg NG</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ntpclient/index.html"><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../paho_mqtt/index.html"><code class="docutils literal notranslate"><span class="pre">paho_mqtt</span></code> Eclipse Paho MQTT C Library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ping/index.html"><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP ping support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../pppd/index.html"><code class="docutils literal notranslate"><span class="pre">pppd</span></code> PPP server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ptpd/index.html"><code class="docutils literal notranslate"><span class="pre">ptpd</span></code> PTPD client/server</a></li>
@@ -777,6 +779,50 @@ which is populated by the ARP Address Conflict Detection (ACD) module.</p>
 value on error with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set appropriately.</p>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="network-buffer-statistics">
+<h2>Network Buffer Statistics<a class="headerlink" href="#network-buffer-statistics" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#c.netlib_get_iobinfo" title="netlib_get_iobinfo"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_get_iobinfo()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.netlib_get_iobinfo">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">netlib_get_iobinfo</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">iob_stats_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">iob</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.netlib_get_iobinfo" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the network IOB (I/O Buffer) statistics. This function reads IOB usage
+information from the procfs file system (<code class="docutils literal notranslate"><span class="pre">/proc/iobinfo</span></code>) which provides
+details about the network packet buffer pool.</p>
+<p>IOB buffers are used by the NuttX network stack to buffer network packets
+during transmission and reception. This function allows monitoring the IOB
+buffer pool to detect potential buffer exhaustion or throttling conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>iob</strong> – <p>Pointer to an <code class="docutils literal notranslate"><span class="pre">iob_stats_s</span></code> structure to receive the IOB
+statistics. The structure contains the following fields:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ntotal</span></code>: Total number of IOB buffers configured
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_NBUFFERS</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nfree</span></code>: Current number of free IOB buffers available</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nwait</span></code>: Number of tasks waiting for IOB buffers (when
+<code class="docutils literal notranslate"><span class="pre">nfree</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nthrottle</span></code>: Number of IOB buffers that are throttled (when
+below <code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_THROTTLE</span></code> threshold)</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>0 on success; a negative value on failure with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set
+appropriately.</p>
+</dd>
+</dl>
+<p><strong>Note:</strong> This function requires <code class="docutils literal notranslate"><span class="pre">CONFIG_MM_IOB</span></code> to be enabled. The IOB
+statistics are provided by the kernel’s IOB buffer management system and
+reflect the current state of the network packet buffer pool.</p>
 </dd></dl>
 
 </section>

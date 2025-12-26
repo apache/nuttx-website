@@ -228,7 +228,9 @@ buffer of the network interface driver.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_MAX_CONNS</span></code></dt><dd><p>Maximum number of packet connections.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">NET_PKT_WRITE_BUFFERS</span></code></dt><dd><p>Use write buffers for packet sockets, support SOCK_NONBLOCK mode.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKT_WRITE_BUFFERS</span></code></dt><dd><p>Use write buffers for packet sockets, support SOCK_NONBLOCK mode.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PKTPROTO_OPTIONS</span></code></dt><dd><p>Enable setting protocol options on packet sockets.</p>
 </dd>
 </dl>
 </section>
@@ -266,6 +268,23 @@ buffer of the network interface driver.</p>
 <span class="w">       </span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">addr</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">addr</span><span class="p">));</span>
 
 <span class="n">close</span><span class="p">(</span><span class="n">sd</span><span class="p">);</span><span class="w"> </span><span class="cm">/* Close the socket */</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">sd</span><span class="p">;</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">packet_mreq</span><span class="w"> </span><span class="n">mreq</span><span class="p">;</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">macaddr</span><span class="p">[</span><span class="n">ETH_ALEN</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mh">0x91</span><span class="p">,</span><span class="w"> </span><span class="mh">0xe0</span><span class="p">,</span><span class="w"> </span><span class="mh">0xf0</span><span class="p">,</span><span class="w"> </span><span class="mh">0x00</span><span class="p">,</span><span class="w"> </span><span class="mh">0x0e</span><span class="p">,</span><span class="w"> </span><span class="mh">0x01</span><span class="p">};</span>
+
+<span class="n">sd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">socket</span><span class="p">(</span><span class="n">AF_PACKET</span><span class="p">,</span><span class="w"> </span><span class="n">SOCK_RAW</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="n">mreq</span><span class="p">.</span><span class="n">mr_ifindex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">if_nametoindex</span><span class="p">(</span><span class="s">&quot;eth0&quot;</span><span class="p">);</span>
+<span class="n">mreq</span><span class="p">.</span><span class="n">mr_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PACKET_MR_MULTICAST</span><span class="p">;</span>
+<span class="n">mreq</span><span class="p">.</span><span class="n">mr_alen</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ETH_ALEN</span><span class="p">;</span>
+<span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mreq</span><span class="p">.</span><span class="n">mr_address</span><span class="p">,</span><span class="w"> </span><span class="n">macaddr</span><span class="p">,</span><span class="w"> </span><span class="n">ETH_ALEN</span><span class="p">);</span>
+
+<span class="n">setsockopt</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">SOL_PACKET</span><span class="p">,</span><span class="w"> </span><span class="n">PACKET_ADD_MEMBERSHIP</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mreq</span><span class="p">,</span>
+<span class="w">           </span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">packet_mreq</span><span class="p">));</span>
+
+<span class="n">close</span><span class="p">(</span><span class="n">sd</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
