@@ -1,0 +1,754 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NuttX TCP State Machine Notes &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx_collapse.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+      <script src="../../_static/doctools.js"></script>
+      <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/clipboard.min.js"></script>
+      <script src="../../_static/copybutton.js"></script>
+      <script src="../../_static/design-tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Memory Management" href="../mm/index.html" />
+    <link rel="prev" title="Delayed ACK and TCP Performance" href="delay_act_and_tcp_perf.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../../latest" selected="selected">latest</option>
+    
+    <option value="../../../10.0.0" >10.0.0</option>
+    
+    <option value="../../../10.0.1" >10.0.1</option>
+    
+    <option value="../../../10.1.0" >10.1.0</option>
+    
+    <option value="../../../10.2.0" >10.2.0</option>
+    
+    <option value="../../../10.3.0" >10.3.0</option>
+    
+    <option value="../../../11.0.0" >11.0.0</option>
+    
+    <option value="../../../12.0.0" >12.0.0</option>
+    
+    <option value="../../../12.1.0" >12.1.0</option>
+    
+    <option value="../../../12.2.0" >12.2.0</option>
+    
+    <option value="../../../12.2.1" >12.2.1</option>
+    
+    <option value="../../../12.3.0" >12.3.0</option>
+    
+    <option value="../../../12.4.0" >12.4.0</option>
+    
+    <option value="../../../12.5.0" >12.5.0</option>
+    
+    <option value="../../../12.5.1" >12.5.1</option>
+    
+    <option value="../../../12.6.0" >12.6.0</option>
+    
+    <option value="../../../12.7.0" >12.7.0</option>
+    
+    <option value="../../../12.8.0" >12.8.0</option>
+    
+    <option value="../../../12.9.0" >12.9.0</option>
+    
+    <option value="../../../12.10.0" >12.10.0</option>
+    
+    <option value="../../../12.11.0" >12.11.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">OS Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../binfmt.html">Binary Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../concurrency/index.html">Concurrency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../drivers/index.html">Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nxflat.html">NXFLAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nxgraphics/index.html">NX Graphics Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../paging.html">On-Demand Paging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../audio/index.html">Audio Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../filesystem/index.html">NuttX File System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Network Support</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="sixlowpan.html">6LoWPAN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="socketcan.html">SocketCAN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pkt.html">“Raw” packet socket support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ipfilter.html">IP Packet Filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netdev.html">Network Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netdriver.html">Network Drivers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdio.html">MDIO Bus Driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netguardsize.html">CONFIG_NET_GUARDSIZE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netlink.html">Netlink Route support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="slip.html">SLIP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wqueuedeadlocks.html">Work Queue Deadlocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tcp_network_perf.html">TCP Network Performance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="delay_act_and_tcp_perf.html">Delayed ACK and TCP Performance</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">NuttX TCP State Machine Notes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scope">Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#state-representation">State Representation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#supported-vs-unsupported-rfc-state-view">Supported vs Unsupported (RFC State View)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#note-on-tcp-allocated">Note on <code class="docutils literal notranslate"><span class="pre">TCP_ALLOCATED</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#high-level-transition-summary">High-level Transition Summary</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#active-open-connect">Active open (connect)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#passive-open-listen-accept">Passive open (listen/accept)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#graceful-close-active-close">Graceful close (active close)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#simultaneous-close">Simultaneous close</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#passive-close-peer-closes-first">Passive close (peer closes first)</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#detailed-state-handling">Detailed State Handling</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-syn-sent">TCP_SYN_SENT</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-syn-rcvd">TCP_SYN_RCVD</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-established">TCP_ESTABLISHED</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-close-wait">TCP_CLOSE_WAIT</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-fin-wait-1">TCP_FIN_WAIT_1</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-fin-wait-2">TCP_FIN_WAIT_2</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-closing">TCP_CLOSING</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-last-ack">TCP_LAST_ACK</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#tcp-time-wait">TCP_TIME_WAIT</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#timers-retransmissions-and-failure-handling">Timers, Retransmissions, and Failure Handling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#deviations-and-notable-simplifications">Deviations and Notable Simplifications</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#where-to-look-in-the-code">Where to Look in the Code</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../mm/index.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../syscall.html">Syscall Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../arch/index.html">Architecture-Specific Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../boards.html">Boards Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cmake.html">CMake Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../openamp.html">OpenAMP Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../video.html">Video Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../crypto.html">Crypto API Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../wireless.html">Wireless Subsystem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../standards/index.html">Standards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Network Support</a></li>
+      <li class="breadcrumb-item active">NuttX TCP State Machine Notes</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/net/tcp_state_machine.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="nuttx-tcp-state-machine-notes">
+<h1>NuttX TCP State Machine Notes<a class="headerlink" href="#nuttx-tcp-state-machine-notes" title="Permalink to this heading"></a></h1>
+<p>This document describes how the current NuttX TCP stack implements TCP
+state transitions. It is based on the in-tree implementation (primarily
+in <code class="docutils literal notranslate"><span class="pre">net/tcp</span></code>) and focuses on <em>what the code does today</em> rather than a
+generic RFC 793 description.</p>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Permalink to this heading"></a></h2>
+<ul>
+<li><p>TCP connection state is tracked per <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tcp_conn_s</span></code>.</p></li>
+<li><p>State transitions happen mainly in:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_input.c</span></code> (incoming segments and most transitions)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_timer.c</span></code> (timeouts and retransmissions)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_conn.c</span></code> (connect/listen-side allocation and initial state)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_close.c</span></code> (active close initiation)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="state-representation">
+<h2>State Representation<a class="headerlink" href="#state-representation" title="Permalink to this heading"></a></h2>
+<p>NuttX stores TCP state in <code class="docutils literal notranslate"><span class="pre">tcp_conn_s::tcpstateflags</span></code>.</p>
+<ul class="simple">
+<li><p>Bits 0-3 are the state (<code class="docutils literal notranslate"><span class="pre">TCP_STATE_MASK</span></code>).</p></li>
+<li><p>Bit 4 is a flag (<code class="docutils literal notranslate"><span class="pre">TCP_STOPPED</span></code>) used by the socket layer to stop data flow.</p></li>
+</ul>
+<p>The state values are defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/net/tcp.h</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_CLOSED</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_ALLOCATED</span></code> (NuttX-internal: allocated but not yet connected)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_SYN_RCVD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_SYN_SENT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_ESTABLISHED</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_CLOSE_WAIT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_CLOSING</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_TIME_WAIT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_LAST_ACK</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_STOPPED</span></code></p></li>
+</ul>
+</section>
+<section id="supported-vs-unsupported-rfc-state-view">
+<h2>Supported vs Unsupported (RFC State View)<a class="headerlink" href="#supported-vs-unsupported-rfc-state-view" title="Permalink to this heading"></a></h2>
+<p>NuttX largely follows the classic TCP state machine, the table below maps the traditional RFC 793 state names to what exists in
+NuttX today.</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">RFC TCP states and their NuttX support</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><dl class="simple">
+<dt>RFC state name</dt><dd><ul class="simple">
+<li><p>NuttX representation</p></li>
+<li><p>Supported</p></li>
+<li><p>Notes</p></li>
+</ul>
+</dd>
+</dl>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><dl class="simple">
+<dt>CLOSED</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_CLOSED</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Connection is unused/available.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt>LISTEN</dt><dd><ul class="simple">
+<li><p>No <code class="docutils literal notranslate"><span class="pre">tcpstateflags</span></code> state</p></li>
+<li><p>Partially</p></li>
+<li><p>Listening is implemented via the listener table in <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_listen.c``(``tcp_listenports[]</span></code>) rather than a per-connection LISTEN state.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt>SYN-SENT</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_SYN_SENT</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Set by <code class="docutils literal notranslate"><span class="pre">tcp_connect()</span></code> in <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_conn.c</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt>SYN-RECEIVED</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_SYN_RCVD</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Set when accepting an incoming SYN (new connection allocated for a listener).</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt>ESTABLISHED</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_ESTABLISHED</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Data transfer state.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt>FIN-WAIT-1</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_1</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Entered on active close (local FIN sent). However, it is currently unable to continue receiving data in this state</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt>FIN-WAIT-2</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_2</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Entered after ACK for local FIN (when peer hasn’t closed yet). However, it is currently unable to continue receiving data in this state</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt>CLOSE-WAIT</dt><dd><ul class="simple">
+<li><p>Not implemented</p></li>
+<li><p>Yes</p></li>
+<li><p>The TCP input path explicitly notes CLOSE_WAIT is not implemented; NuttX forces the application to close when FIN is received and moves directly toward <code class="docutils literal notranslate"><span class="pre">TCP_LAST_ACK</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt>CLOSING</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_CLOSING</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Used for simultaneous close handling.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt>LAST-ACK</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_LAST_ACK</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Used after receiving FIN and sending FIN in response.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt>TIME-WAIT</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_TIME_WAIT</span></code></p></li>
+<li><p>Yes</p></li>
+<li><p>Used after the close handshake; timer-driven cleanup.</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<section id="note-on-tcp-allocated">
+<h3>Note on <code class="docutils literal notranslate"><span class="pre">TCP_ALLOCATED</span></code><a class="headerlink" href="#note-on-tcp-allocated" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">TCP_ALLOCATED</span></code> is NuttX-specific and has no direct RFC state name.
+It is the pre-connect/pre-accept state for a newly created socket connection.</p>
+</section>
+</section>
+<section id="high-level-transition-summary">
+<h2>High-level Transition Summary<a class="headerlink" href="#high-level-transition-summary" title="Permalink to this heading"></a></h2>
+<p>This section summarizes the most common state paths.</p>
+<section id="active-open-connect">
+<h3>Active open (connect)<a class="headerlink" href="#active-open-connect" title="Permalink to this heading"></a></h3>
+<p>Typical client-side flow:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>TCP_ALLOCATED
+        -&gt; TCP_SYN_SENT        (tcp_connect() prepares SYN)
+        -&gt; TCP_ESTABLISHED     (tcp_input receives SYN|ACK and replies ACK)
+</pre></div>
+</div>
+</section>
+<section id="passive-open-listen-accept">
+<h3>Passive open (listen/accept)<a class="headerlink" href="#passive-open-listen-accept" title="Permalink to this heading"></a></h3>
+<p>Listening sockets are registered in the listener table (not a LISTEN state).
+When a SYN arrives:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>listener in tcp_listenports[]
+        -&gt; new conn: TCP_SYN_RCVD  (tcp_allocaccept() in tcp_conn.c)
+        -&gt; TCP_ESTABLISHED         (tcp_input receives final ACK)
+        -&gt; accept() wakes up       (tcp_accept_connection())
+</pre></div>
+</div>
+</section>
+<section id="graceful-close-active-close">
+<h3>Graceful close (active close)<a class="headerlink" href="#graceful-close-active-close" title="Permalink to this heading"></a></h3>
+<p>When the application initiates a close (or <code class="docutils literal notranslate"><span class="pre">shutdown(SHUT_WR)</span></code>), the stack
+sends FIN and transitions:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>TCP_ESTABLISHED
+        -&gt; TCP_FIN_WAIT_1
+        -&gt; TCP_FIN_WAIT_2          (ACK of our FIN)
+        -&gt; TCP_TIME_WAIT           (FIN from peer)
+        -&gt; TCP_CLOSED              (timer expiry)
+</pre></div>
+</div>
+</section>
+<section id="simultaneous-close">
+<h3>Simultaneous close<a class="headerlink" href="#simultaneous-close" title="Permalink to this heading"></a></h3>
+<p>If FIN is received while we are in <code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_1</span></code> and our FIN has not been
+fully ACKed, NuttX can enter <code class="docutils literal notranslate"><span class="pre">TCP_CLOSING</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>TCP_FIN_WAIT_1
+        -&gt; TCP_CLOSING
+        -&gt; TCP_TIME_WAIT           (ACK of our FIN)
+</pre></div>
+</div>
+</section>
+<section id="passive-close-peer-closes-first">
+<h3>Passive close (peer closes first)<a class="headerlink" href="#passive-close-peer-closes-first" title="Permalink to this heading"></a></h3>
+<p>When FIN is received in ESTABLISHED, the application is notified
+via callbacks. the stack sends ACK and goes to <code class="docutils literal notranslate"><span class="pre">TCP_CLOSE_WAIT</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>TCP_ESTABLISHED
+        -&gt; TCP_CLOSE_WAIT          (FIN received)
+        -&gt; TCP_CLOSED              (ACK of our FIN)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="detailed-state-handling">
+<h2>Detailed State Handling<a class="headerlink" href="#detailed-state-handling" title="Permalink to this heading"></a></h2>
+<section id="tcp-syn-sent">
+<h3>TCP_SYN_SENT<a class="headerlink" href="#tcp-syn-sent" title="Permalink to this heading"></a></h3>
+<ul>
+<li><p>Entered by <code class="docutils literal notranslate"><span class="pre">tcp_connect()</span></code> (<code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_conn.c</span></code>).</p></li>
+<li><p>On receiving <code class="docutils literal notranslate"><span class="pre">SYN|ACK</span></code> with a valid ACK:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Parses options (e.g., MSS).</p></li>
+<li><p>Sets <code class="docutils literal notranslate"><span class="pre">TCP_ESTABLISHED</span></code>.</p></li>
+<li><p>Updates <code class="docutils literal notranslate"><span class="pre">rcvseq</span></code> and window tracking.</p></li>
+<li><p>Notifies the socket layer using <code class="docutils literal notranslate"><span class="pre">TCP_CONNECTED</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>On unexpected control segments or failure:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The connection is aborted (<code class="docutils literal notranslate"><span class="pre">TCP_ABORT</span></code> callback) and a RST may be sent.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="tcp-syn-rcvd">
+<h3>TCP_SYN_RCVD<a class="headerlink" href="#tcp-syn-rcvd" title="Permalink to this heading"></a></h3>
+<ul>
+<li><dl class="simple">
+<dt>Entered for a newly accepted connection when a SYN matches a listener.</dt><dd><p>Allocation and initialization occur in <code class="docutils literal notranslate"><span class="pre">tcp_allocaccept()</span></code>
+(<code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_conn.c</span></code>).</p>
+</dd>
+</dl>
+</li>
+<li><p>A SYN-ACK is sent. The retransmission is handled by <code class="docutils literal notranslate"><span class="pre">tcp_timer.c</span></code>.</p></li>
+<li><p>On receiving the final ACK (<code class="docutils literal notranslate"><span class="pre">TCP_ACKDATA</span></code>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Transition to <code class="docutils literal notranslate"><span class="pre">TCP_ESTABLISHED</span></code>.</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">tcp_accept_connection()</span></code> is called to hand the connection to the</dt><dd><p>listening socket/accept logic.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="tcp-established">
+<h3>TCP_ESTABLISHED<a class="headerlink" href="#tcp-established" title="Permalink to this heading"></a></h3>
+<ul>
+<li><p>Normal data transfer occurs here.</p></li>
+<li><p>Incoming data and ACK processing is handled in <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_input.c</span></code>.</p></li>
+<li><p>If a FIN is received:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The application is notified (<code class="docutils literal notranslate"><span class="pre">TCP_CLOSE</span></code> flag is included in callback).</p></li>
+<li><p>NuttX transitions to <code class="docutils literal notranslate"><span class="pre">TCP_CLOSE_WAIT</span></code> and sends <code class="docutils literal notranslate"><span class="pre">ACK</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="tcp-close-wait">
+<h3>TCP_CLOSE_WAIT<a class="headerlink" href="#tcp-close-wait" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Only entered when a FIN is received in ESTABLISHED.</p></li>
+<li><p>The application is notified (<code class="docutils literal notranslate"><span class="pre">TCP_CLOSE</span></code> flag in callback).</p></li>
+<li><p>NuttX can send data until the application initiates close.</p></li>
+<li><dl class="simple">
+<dt>On application close request:</dt><dd><ul>
+<li><p>NuttX sends FIN and transitions to <code class="docutils literal notranslate"><span class="pre">TCP_LAST_ACK</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="tcp-fin-wait-1">
+<h3>TCP_FIN_WAIT_1<a class="headerlink" href="#tcp-fin-wait-1" title="Permalink to this heading"></a></h3>
+<ul>
+<li><dl class="simple">
+<dt>Entered when the application requests a graceful close.</dt><dd><p>This is initiated in <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_appsend.c</span></code> when the callback result
+contains <code class="docutils literal notranslate"><span class="pre">TCP_CLOSE</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><p>On receiving FIN:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>If the FIN also ACKs our FIN and <code class="docutils literal notranslate"><span class="pre">tx_unacked</span> <span class="pre">==</span> <span class="pre">0</span></code>: transition to</dt><dd><p><code class="docutils literal notranslate"><span class="pre">TCP_TIME_WAIT</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><p>Otherwise: transition to <code class="docutils literal notranslate"><span class="pre">TCP_CLOSING</span></code>.</p></li>
+<li><p>In both cases, ACK the peer FIN.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>On receiving an ACK that completes ACK of our FIN (and no FIN from peer):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Transition to <code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_2</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Data received in FIN_WAIT_1:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Current behavior is to send a RST and force <code class="docutils literal notranslate"><span class="pre">TCP_CLOSED</span></code>.</p></li>
+<li><p>The implementation notes this as a TODO to improve shutdown behavior.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="tcp-fin-wait-2">
+<h3>TCP_FIN_WAIT_2<a class="headerlink" href="#tcp-fin-wait-2" title="Permalink to this heading"></a></h3>
+<ul>
+<li><p>Waiting for the peer FIN after our FIN was ACKed.</p></li>
+<li><p>On receiving FIN:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Transition to <code class="docutils literal notranslate"><span class="pre">TCP_TIME_WAIT</span></code>.</p></li>
+<li><p>ACK the FIN and notify close.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Data received in FIN_WAIT_2:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Current behavior is to send a RST and force <code class="docutils literal notranslate"><span class="pre">TCP_CLOSED</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="tcp-closing">
+<h3>TCP_CLOSING<a class="headerlink" href="#tcp-closing" title="Permalink to this heading"></a></h3>
+<ul>
+<li><p>Simultaneous close case.</p></li>
+<li><p>When the ACK for our FIN is received (<code class="docutils literal notranslate"><span class="pre">TCP_ACKDATA</span></code>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Transition to <code class="docutils literal notranslate"><span class="pre">TCP_TIME_WAIT</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="tcp-last-ack">
+<h3>TCP_LAST_ACK<a class="headerlink" href="#tcp-last-ack" title="Permalink to this heading"></a></h3>
+<ul>
+<li><dl class="simple">
+<dt>Entered after FIN is received in ESTABLISHED and the application chooses</dt><dd><p>to close, causing the stack to send FIN.</p>
+</dd>
+</dl>
+</li>
+<li><p>On receiving ACK for our FIN (<code class="docutils literal notranslate"><span class="pre">TCP_ACKDATA</span></code>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Transition to <code class="docutils literal notranslate"><span class="pre">TCP_CLOSED</span></code>.</p></li>
+<li><p>Notify close via callback.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="tcp-time-wait">
+<h3>TCP_TIME_WAIT<a class="headerlink" href="#tcp-time-wait" title="Permalink to this heading"></a></h3>
+<ul>
+<li><p>NuttX responds to segments by sending an ACK.</p></li>
+<li><p>Cleanup is timer-driven (see <code class="docutils literal notranslate"><span class="pre">tcp_timer.c</span></code>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_TIME_WAIT</span></code> are handled as “wait for timeout” states.</p></li>
+<li><p>When the per-connection timer expires, the state becomes <code class="docutils literal notranslate"><span class="pre">TCP_CLOSED</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+</section>
+<section id="timers-retransmissions-and-failure-handling">
+<h2>Timers, Retransmissions, and Failure Handling<a class="headerlink" href="#timers-retransmissions-and-failure-handling" title="Permalink to this heading"></a></h2>
+<p>The TCP timer handler in <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_timer.c</span></code> drives:</p>
+<ul>
+<li><p>Retransmission for connections with <code class="docutils literal notranslate"><span class="pre">tx_unacked</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>.</p></li>
+<li><p>State-specific retransmit behavior:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_SYN_RCVD</span></code>: retransmit SYN-ACK.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_SYN_SENT</span></code>: retransmit SYN.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_ESTABLISHED</span></code>: request retransmit via callback (<code class="docutils literal notranslate"><span class="pre">TCP_REXMIT</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_1</span></code>, <code class="docutils literal notranslate"><span class="pre">TCP_CLOSING</span></code>, <code class="docutils literal notranslate"><span class="pre">TCP_LAST_ACK</span></code>: retransmit FIN|ACK.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Timeout cleanup:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">TCP_SYN_RCVD</span></code>: if SYN-ACK retransmits exceed limit, the half-open</dt><dd><p>connection is closed and freed.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">TCP_SYN_SENT</span></code> and established cases: if retransmits exceed limit, the</dt><dd><p>connection is closed, the socket is notified (<code class="docutils literal notranslate"><span class="pre">TCP_TIMEDOUT</span></code>), and a
+RST may be sent.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="deviations-and-notable-simplifications">
+<h2>Deviations and Notable Simplifications<a class="headerlink" href="#deviations-and-notable-simplifications" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>LISTEN is not an explicit TCP state; it is represented by listener table entries.</p></li>
+<li><dl class="simple">
+<dt>FIN_WAIT_* data handling is currently strict: received payload data in</dt><dd><p>FIN_WAIT_1/2 results in sending RST and closing the connection.</p>
+</dd>
+</dl>
+</li>
+<li><p>RST processing is intentionally simple (accept RST and close).</p></li>
+</ul>
+</section>
+<section id="where-to-look-in-the-code">
+<h2>Where to Look in the Code<a class="headerlink" href="#where-to-look-in-the-code" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>State definitions: <code class="docutils literal notranslate"><span class="pre">include/nuttx/net/tcp.h</span></code></p></li>
+<li><p>Incoming-segment state logic: <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_input.c</span></code></p></li>
+<li><p>Retransmission/timeout logic: <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_timer.c</span></code></p></li>
+<li><p>Connect path / SYN_SENT setup: <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_conn.c</span></code></p></li>
+<li><p>Accept path / SYN_RCVD allocation: <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_conn.c</span></code></p></li>
+<li><p>Active close initiation: <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_close.c</span></code> and <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_shutdown.c</span></code></p></li>
+<li><p>Listener table (LISTEN semantics): <code class="docutils literal notranslate"><span class="pre">net/tcp/tcp_listen.c</span></code></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="delay_act_and_tcp_perf.html" class="btn btn-neutral float-left" title="Delayed ACK and TCP Performance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../mm/index.html" class="btn btn-neutral float-right" title="Memory Management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
