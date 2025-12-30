@@ -174,6 +174,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#ipv6-address-management">IPv6 Address Management</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#network-interface-management">Network Interface Management</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#network-buffer-statistics">Network Buffer Statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#network-connectivity">Network Connectivity</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#arp-table-support">ARP Table Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#routing-table-support">Routing Table Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dhcp-support">DHCP Support</a></li>
@@ -823,6 +824,42 @@ appropriately.</p>
 <p><strong>Note:</strong> This function requires <code class="docutils literal notranslate"><span class="pre">CONFIG_MM_IOB</span></code> to be enabled. The IOB
 statistics are provided by the kernel’s IOB buffer management system and
 reflect the current state of the network packet buffer pool.</p>
+</dd></dl>
+
+</section>
+<section id="network-connectivity">
+<h2>Network Connectivity<a class="headerlink" href="#network-connectivity" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#c.netlib_check_ipconnectivity" title="netlib_check_ipconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_ipconnectivity()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.netlib_check_ipconnectivity">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">netlib_check_ipconnectivity</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ip</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">timeout</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">retry</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.netlib_check_ipconnectivity" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check network connectivity to a specified IPv4 address using ICMP ping. This
+function sends ICMP echo requests to the target address and counts the number
+of replies received.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ip</strong> – IPv4 address string to check (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;192.168.1.1&quot;</span></code>). If <code class="docutils literal notranslate"><span class="pre">NULL</span></code>,
+the function will use the default DNS server address configured via
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSSERVER_IPv4ADDR</span></code> (if available).</p></li>
+<li><p><strong>timeout</strong> – Maximum timeout for each ping attempt in milliseconds.</p></li>
+<li><p><strong>retry</strong> – Number of ping attempts to send.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of replies received (0 or positive) on success. A value of 0
+indicates that no replies were received (network unreachable or timeout).
+A negative value indicates an error occurred (e.g., <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> if <code class="docutils literal notranslate"><span class="pre">ip</span></code>
+is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and no DNS server is configured).</p>
+</dd>
+</dl>
+<p><strong>Note:</strong> This function requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_PING</span></code> to be enabled. The
+function is blocking and will wait for all ping attempts to complete before
+returning.</p>
 </dd></dl>
 
 </section>

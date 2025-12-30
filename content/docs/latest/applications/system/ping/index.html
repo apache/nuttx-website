@@ -192,7 +192,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../nxplayer/index.html"><code class="docutils literal notranslate"><span class="pre">nxplayer</span></code> NxPlayer Media Player</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxrecorder/index.html"><code class="docutils literal notranslate"><span class="pre">nxrecorder</span></code> NxRecorder pcm raw data Recorder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ofloader/index.html"><code class="docutils literal notranslate"><span class="pre">ofloader</span></code> Open flash loader</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP “ping” command</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP “ping” command</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output">Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exit-status">Exit Status</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#implementation-details">Implementation Details</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../ping6/index.html"><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 “ping6” command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../popen/index.html"><code class="docutils literal notranslate"><span class="pre">popen</span></code> popen()/pclose() Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../psmq/index.html"><code class="docutils literal notranslate"><span class="pre">psmq</span></code> Publish Subscribe Message Queue</a></li>
@@ -266,6 +278,122 @@
              
   <section id="ping-icmp-ping-command">
 <h1><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP “ping” command<a class="headerlink" href="#ping-icmp-ping-command" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ping</span></code> application sends ICMPv4 Echo Request packets to a target host
+and reports replies, packet loss, round-trip time (RTT) statistics, and
+basic errors. It is useful for verifying IP connectivity and measuring
+latency.</p>
+</section>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Networking enabled: <code class="docutils literal notranslate"><span class="pre">CONFIG_NET=y</span></code></p></li>
+<li><p>ICMP and raw socket support in the OS</p></li>
+<li><p>Build the app: <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_PING=y</span></code></p></li>
+<li><p>Optional DNS resolution: <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT</span></code></p></li>
+<li><p>Optional device binding support for <code class="docutils literal notranslate"><span class="pre">-I</span></code>: <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE</span></code></p></li>
+</ul>
+</section>
+<section id="synopsis">
+<h2>Synopsis<a class="headerlink" href="#synopsis" title="Permalink to this heading"></a></h2>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ping [-c &lt;count&gt;] [-i &lt;interval&gt;] [-W &lt;timeout&gt;] [-s &lt;size&gt;] [-I &lt;interface&gt;] &lt;hostname|ip-address&gt;
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;hostname&gt;</span></code> may be a DNS name (with DNS client enabled) or an IPv4
+address. Without DNS, an IPv4 address is required.</p>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">&lt;count&gt;</span></code>: Number of echo requests to send (default: implementation-defined, typically 10).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">&lt;interval&gt;</span></code>: Delay between requests in milliseconds (default: 1000 ms).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-W</span> <span class="pre">&lt;timeout&gt;</span></code>: Per-reply timeout in milliseconds (default: 1000 ms).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;size&gt;</span></code>: Number of ICMP payload bytes to send (default: 56).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-I</span> <span class="pre">&lt;interface&gt;</span></code>: Bind socket traffic to a specific network device name (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-h</span></code>: Show help and exit.</p></li>
+</ul>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Permalink to this heading"></a></h2>
+<p>For each reply, <code class="docutils literal notranslate"><span class="pre">ping</span></code> prints a line similar to:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>56 bytes from 10.0.2.2: icmp_seq=3 time=6.0 ms
+</pre></div>
+</div>
+<p>On timeout:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>No response from 10.0.2.2: icmp_seq=3 time=1000 ms
+</pre></div>
+</div>
+<p>At completion, summary statistics are printed, including packets transmitted,
+received, loss percentage, total time, and RTT min/avg/max/mdev:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>10 packets transmitted, 10 received, 0% packet loss, time 10011 ms
+rtt min/avg/max/mdev = 0.000/0.600/6.000/1.800 ms
+</pre></div>
+</div>
+</section>
+<section id="exit-status">
+<h2>Exit Status<a class="headerlink" href="#exit-status" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Success (0): Completed without fatal errors.</p></li>
+<li><p>Failure (!=0): A fatal error was reported (e.g., socket/DNS error, invalid arguments).</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Basic connectivity to an IP:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ping<span class="w"> </span><span class="m">1</span>.1.1.1
+</pre></div>
+</div>
+<p>Ping a hostname with custom request count and payload size:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>-s<span class="w"> </span><span class="m">100</span><span class="w"> </span>example.com
+</pre></div>
+</div>
+<p>Reduce the interval and timeout for faster probing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ping<span class="w"> </span>-i<span class="w"> </span><span class="m">500</span><span class="w"> </span>-W<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">10</span>.0.2.2
+</pre></div>
+</div>
+<p>Bind traffic to a specific interface (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ping<span class="w"> </span>-I<span class="w"> </span>wlan0<span class="w"> </span><span class="m">10</span>.0.2.2
+</pre></div>
+</div>
+<p>If the device name is invalid, <code class="docutils literal notranslate"><span class="pre">ping</span></code> reports a bind error and terminates.</p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Device binding (<code class="docutils literal notranslate"><span class="pre">-I</span></code>) is useful when multiple interfaces exist or during</dt><dd><p>early network setup when routing is ambiguous. It forces traffic to use the
+specified device.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>DNS resolution of <code class="docutils literal notranslate"><span class="pre">&lt;hostname&gt;</span></code> requires the DNS client configuration;</dt><dd><p>otherwise, provide an IPv4 address.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>ICMPv6 support is provided by a separate <code class="docutils literal notranslate"><span class="pre">ping6</span></code> application when enabled</dt><dd><p>(<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_PING6</span></code>) with similar options and output.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ERROR:</span> <span class="pre">ping_gethostip(...)</span> <span class="pre">failed</span></code>: DNS lookup failed or invalid address.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ERROR:</span> <span class="pre">socket()</span> <span class="pre">failed:</span> <span class="pre">&lt;errno&gt;</span></code>: Raw socket creation failed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ERROR:</span> <span class="pre">setsockopt</span> <span class="pre">error:</span> <span class="pre">&lt;errno&gt;</span></code>: Device bind (<code class="docutils literal notranslate"><span class="pre">-I</span></code>) failed; check interface name and <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ERROR:</span> <span class="pre">poll/recvfrom</span> <span class="pre">failed</span></code>: Link issues or network stack errors.</p></li>
+</ul>
+</section>
+<section id="implementation-details">
+<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h2>
+<p>Internally, the app uses <code class="docutils literal notranslate"><span class="pre">apps/netutils/ping/icmp_ping.c</span></code> to drive ICMP
+Echo requests and parse replies. The command-line interface and printing
+logic are implemented in <code class="docutils literal notranslate"><span class="pre">apps/system/ping/ping.c</span></code>.</p>
+</section>
 </section>
 
 
