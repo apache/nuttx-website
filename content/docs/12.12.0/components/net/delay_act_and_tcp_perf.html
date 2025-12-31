@@ -1,0 +1,429 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delayed ACK and TCP Performance &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx_collapse.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+      <script src="../../_static/doctools.js"></script>
+      <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/clipboard.min.js"></script>
+      <script src="../../_static/copybutton.js"></script>
+      <script src="../../_static/design-tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Memory Management" href="../mm/index.html" />
+    <link rel="prev" title="TCP Network Performance" href="tcp_network_perf.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../../latest" selected="selected">latest</option>
+    
+    <option value="../../../10.0.0" >10.0.0</option>
+    
+    <option value="../../../10.0.1" >10.0.1</option>
+    
+    <option value="../../../10.1.0" >10.1.0</option>
+    
+    <option value="../../../10.2.0" >10.2.0</option>
+    
+    <option value="../../../10.3.0" >10.3.0</option>
+    
+    <option value="../../../11.0.0" >11.0.0</option>
+    
+    <option value="../../../12.0.0" >12.0.0</option>
+    
+    <option value="../../../12.1.0" >12.1.0</option>
+    
+    <option value="../../../12.2.0" >12.2.0</option>
+    
+    <option value="../../../12.2.1" >12.2.1</option>
+    
+    <option value="../../../12.3.0" >12.3.0</option>
+    
+    <option value="../../../12.4.0" >12.4.0</option>
+    
+    <option value="../../../12.5.0" >12.5.0</option>
+    
+    <option value="../../../12.5.1" >12.5.1</option>
+    
+    <option value="../../../12.6.0" >12.6.0</option>
+    
+    <option value="../../../12.7.0" >12.7.0</option>
+    
+    <option value="../../../12.8.0" >12.8.0</option>
+    
+    <option value="../../../12.9.0" >12.9.0</option>
+    
+    <option value="../../../12.10.0" >12.10.0</option>
+    
+    <option value="../../../12.11.0" >12.11.0</option>
+    
+    <option value="../../../12.12.0" >12.12.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">OS Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../binfmt.html">Binary Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../drivers/index.html">Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nxflat.html">NXFLAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nxgraphics/index.html">NX Graphics Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../paging.html">On-Demand Paging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../audio/index.html">Audio Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../filesystem/index.html">NuttX File System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../libs/index.html">NuttX libraries</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Network Support</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="sixlowpan.html">6LoWPAN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="socketcan.html">SocketCAN Device Drivers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pkt.html">“Raw” packet socket support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ipfilter.html">IP Packet Filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nat.html">Network Address Translation (NAT)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netdev.html">Network Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netdriver.html">Network Drivers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdio.html">MDIO Bus Driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netguardsize.html">CONFIG_NET_GUARDSIZE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="netlink.html">Netlink Route support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="slip.html">SLIP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wqueuedeadlocks.html">Work Queue Deadlocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tcp_network_perf.html">TCP Network Performance</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Delayed ACK and TCP Performance</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#uip-and-nuttx">uIP and NuttX</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#uip-delayed-acks-and-split-packets">uIP, Delayed ACKs, and Split Packets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-nuttx-tcp-ip-stack-and-delay-acks">The NuttX TCP/IP Stack and Delay ACKs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-nuttx-split-packet-configuration">The NuttX Split Packet Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#write-buffering">Write Buffering</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../mm/index.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../syscall.html">Syscall Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../arch/index.html">Architecture-Specific Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../boards.html">Boards Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cmake.html">CMake Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../openamp.html">OpenAMP Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../video.html">Video Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../crypto.html">Crypto API Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../wireless.html">Wireless Subsystem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation/index.html">Implementation Details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../standards/index.html">Standards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Network Support</a></li>
+      <li class="breadcrumb-item active">Delayed ACK and TCP Performance</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/net/delay_act_and_tcp_perf.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="delayed-ack-and-tcp-performance">
+<h1>Delayed ACK and TCP Performance<a class="headerlink" href="#delayed-ack-and-tcp-performance" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Migrated from:
+<a class="reference external" href="https://cwiki.apache.org/confluence/display/NUTTX/Delayed+ACK+and+TCP+Performance">https://cwiki.apache.org/confluence/display/NUTTX/Delayed+ACK+and+TCP+Performance</a></p>
+</div>
+<section id="uip-and-nuttx">
+<h2>uIP and NuttX<a class="headerlink" href="#uip-and-nuttx" title="Permalink to this heading"></a></h2>
+<p>The heart of the NuttX IP stack derived from Adam Dunkel’s tiny <a class="reference external" href="http://sourceforge.net/projects/uip-stack/">uIP
+stack</a> back at version 1.0.
+The NuttX TCP/IP stack contains the uIP TCP state machine and
+some uIP “ways of doing things,” but otherwise, there is
+now little in common between these two designs.</p>
+<p><strong>NOTE</strong>: uIP is also built into Adam Dunkel’s
+<a class="reference external" href="http://contiki.sourceforge.net/docs/2.6/a01793.html">Contiki</a>
+operating system.</p>
+</section>
+<section id="uip-delayed-acks-and-split-packets">
+<h2>uIP, Delayed ACKs, and Split Packets<a class="headerlink" href="#uip-delayed-acks-and-split-packets" title="Permalink to this heading"></a></h2>
+<p>In uIP, TCP packets are sent and ACK’ed one at a time.
+That is, after one TCP packet is sent, the next packet cannot
+be sent until the previous packet has been ACKed by the
+receiving side.
+The TCP protocol, of course, supports sending multiple packets
+which can be ACKed be the receiving time asynchronously.
+This one-packet-at-a-time logic is a simplification in the
+uIP design; because of this, uIP needs only a single packet
+buffer any you can use uIP in even the tiniest environments.
+This is a good thing for the objectives of uIP.</p>
+<p>Improvements in packet buffering is the essential improvement
+that you get if upgrade from Adam Dunkel’s uIP to his
+<a class="reference external" href="http://savannah.nongnu.org/projects/lwip/">lwIP</a> stack.
+The price that you pay is in memory usage.</p>
+<p>This one-at-a-time packet transfer does create a performance
+problem for uIP:
+RFC 1122 states that a host may delay ACKing a packet for up
+to 500ms but must respond with an ACK to every second segment.
+In the baseline uIP, the effectively adds a one half second
+delay between the transfer of every packet to a recipient
+that employs this delayed ACK policy!</p>
+<p>uIP has an option to work around this:
+It has logic that can be enable to split each packet into half,
+sending half as much data in each packet.
+Sending more, smaller packets does not sound like a performance
+improvement.
+This tricks the recipient that follows RFC 1122 into receiving
+the two, smaller back-to-back packets and ACKing the second
+immediately.
+References: <a class="reference external" href="http://contiki.sourceforge.net/docs/2.6/a00427_source.html">uip-split.c</a>
+and <a class="reference external" href="http://contiki.sourceforge.net/docs/2.6/a00428.html">uip-split.h</a>.</p>
+</section>
+<section id="the-nuttx-tcp-ip-stack-and-delay-acks">
+<h2>The NuttX TCP/IP Stack and Delay ACKs<a class="headerlink" href="#the-nuttx-tcp-ip-stack-and-delay-acks" title="Permalink to this heading"></a></h2>
+<p>The NuttX, low-level TCP/IP stack does not have the
+limitations of the uIP TCP/IP stack.
+It can send numerous TCP/IP packets regardless of
+whether they have been ACKed or not.
+That is because in NuttX, the accounting for which
+packets have been ACKed and which have not has been
+moved to a higher level in the architecture.</p>
+<p>NuttX includes a standard, BSD socket interface on top
+of the low-level TCP/IP stack.
+It is in this higer-level, socket layer where the ACK
+accounting is done, specifically in the function
+<a class="reference external" href="http://pubs.opengroup.org/onlinepubs/009695399/functions/send.html">send()</a>.
+If you send a large, multi-packet buffer via <code class="docutils literal notranslate"><span class="pre">send()</span></code>,
+it will be broken up into individual packets and each
+packet will be sent as quickly as possible, with no
+concern for whether the previous packet has been ACKed or not.</p>
+<p>However, the NuttX <code class="docutils literal notranslate"><span class="pre">send()</span></code> function will not return to
+the caller until the final packet has been ACKed.
+It does this to assure that the callers data was sent
+successfully (or not).
+This behavior means that if an odd number of packets
+were sent, there could still be a delay after the final
+packet before <code class="docutils literal notranslate"><span class="pre">send()</span></code> receives the ACK and returns.</p>
+<p>So the NuttX approach is similar to the uIP way of doing
+things, but does add one more buffer, the user provided
+buffer to <code class="docutils literal notranslate"><span class="pre">send()</span></code>, that can be used to improve TCP/IP
+performance (of course, this user provided buffer is
+also required by in order to be compliant with <code class="docutils literal notranslate"><span class="pre">send()</span></code>””
+<a class="reference external" href="http://pubs.opengroup.org/onlinepubs/009695399/functions/send.html">specification</a>.</p>
+</section>
+<section id="the-nuttx-split-packet-configuration">
+<h2>The NuttX Split Packet Configuration<a class="headerlink" href="#the-nuttx-split-packet-configuration" title="Permalink to this heading"></a></h2>
+<p>But what happens if all of the user buffer is smaller than
+the MSS of one TCP packet?
+Suppose the MTU is 1500 and the user I/O buffer is only
+512 bytes?
+In this case, <code class="docutils literal notranslate"><span class="pre">send()</span></code> performance degenerates to the same
+behavior as uIP:
+An ACK is required for each packet before <code class="docutils literal notranslate"><span class="pre">send()</span></code> can
+return and before <code class="docutils literal notranslate"><span class="pre">send()</span></code> can be called again to send
+the next packet.</p>
+<p>And the fix? A fix has recently been contributed by
+Yan T that works in a similar way to uIP split
+packet logic:
+In <code class="docutils literal notranslate"><span class="pre">send()</span></code>, the logic normally tries to send a full packet
+of data each time it has the opportunity to do so.
+However, if the configuration option <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_SPLIT=y</span></code>
+is defined, the behavior of <code class="docutils literal notranslate"><span class="pre">send()</span></code> will change in the
+following way:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">send()</span></code> will keep track of <cite>even</cite> and <cite>odd</cite> packets; <cite>even</cite>
+packets being those that we do not expect to be ACKed
+and <cite>odd</cite> packets being the those that we do expect to
+be ACKed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">send()</span></code> will then reduce the size of even packets as
+necessary to assure that an even number of packets is
+always sent. Every call to send will result in an even
+number of packets being sent.</p></li>
+</ul>
+<p>This clever solution tricks the RFC 1122 recipient in the
+same way that uIP split logic does.
+So if you are working with hosts the following the RFC 1122
+ACKing behavior and you have MSS sizes that are larger that
+the average size of the user buffers, then your throughput
+can probably be greatly improved by enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_SPLIT=y</span></code></p>
+<p>NOTE: NuttX is <cite>not</cite> an RFC 1122 recipient; NuttX will ACK
+every TCP/IP packet that it receives.</p>
+</section>
+<section id="write-buffering">
+<h2>Write Buffering<a class="headerlink" href="#write-buffering" title="Permalink to this heading"></a></h2>
+<p>The best technical solution to the delayed ACK problem
+would be to support <cite>write buffering</cite>.
+Write buffering is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_WRITE_BUFFERS</span></code>.
+If this option is selected, the NuttX networking layer will
+pre-allocate several write buffers at system initialization
+time. The sending a buffer of data then works like this:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">send()</span></code> (1) obtains a pre-allocated write buffer from a free
+list, and then (2) simply copies the buffer of data that the
+user wishes to send into the allocated write buffer. If no
+write buffer is available, <code class="docutils literal notranslate"><span class="pre">send()</span></code> would have to block waiting
+for free write buffer space.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">send()</span></code> then (3) adds the write buffer to a queue of outgoing
+data for a TCP socket. Each open TCP socket has to support
+such a queue. <code class="docutils literal notranslate"><span class="pre">send()</span></code> could then (4) return success to the
+caller (even thought the transfer could still fail later).</p></li>
+<li><p>Logic outside of the <code class="docutils literal notranslate"><span class="pre">send()</span></code> implementation manages the actual
+transfer of data from the write buffer. When the Ethernet
+driver is able to send a packet on the TCP connection, this
+external logic (5) copies a packet of data from the write
+buffer so that the Ethernet driver can perform the
+transmission (a <cite>zero-copy</cite> implementation would be preferable).
+Note that the data has to remain in the write buffer for now;
+it may need to be re-transmitted.</p></li>
+<li><p>This external logic would also manage the receipt TCP ACKs.
+When TCP peer acknowledges the receipt of data, the
+acknowledged portion of the data can the (6) finally
+be deleted from the write buffer.</p></li>
+</ul>
+<p>The following options configure TCP write buffering:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_WRITE_BUFSIZE</span></code>: The size of one TCP write buffer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NTCP_WRITE_BUFFERS</span></code>: The number of TCP
+write buffers (may be zero to disable TCP/IP write buffering)</p></li>
+</ul>
+<p>NuttX also supports TCP read-ahead buffering. This option
+is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_READAHEAD</span></code>. TCP read-ahead
+buffer is necessary on TCP connections; otherwise data
+received while there is no <code class="docutils literal notranslate"><span class="pre">recv()</span></code> in place would be lost.
+For consistency, it would be best if such a TCP write
+buffer implementation worked in a manner similar to the
+existing TCP read-ahead buffering.</p>
+<p>The following lists the NuttX configuration options
+available to configure the TCP read-ahead buffering feature:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_READAHEAD_BUFSIZE</span></code>: The size of one TCP read-ahead buffer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NTCP_READAHEAD_BUFFERS</span></code>: The number of TCP
+read-ahead buffers (may be zero to disable TCP/IP read-ahead buffering)</p></li>
+</ul>
+<p>A future enhancement is to combine the TCP write buffer
+management logic and the TCP read-ahead buffer management
+so that one common pool of buffers can be used for both
+functions (this would probably also require additional logic
+to <cite>throttle</cite> read-buffering so that received messages do not
+consume all of the buffers).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tcp_network_perf.html" class="btn btn-neutral float-left" title="TCP Network Performance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../mm/index.html" class="btn btn-neutral float-right" title="Memory Management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
