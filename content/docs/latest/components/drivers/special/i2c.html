@@ -147,6 +147,11 @@
 <li class="toctree-l4"><a class="reference internal" href="dma.html">DMA Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="framebuffer.html">Frame Buffer Drivers</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">I2C Device Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#i2c-bit-bang-driver">I2C Bit-Bang Driver</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#io-expander-based-i2c-bit-bang">IO Expander-Based I2C Bit-Bang</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#i2c-slave-device-drivers">I2C Slave Device Drivers</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#i2c-slave-driver-api">I2C Slave Driver API</a></li>
 </ul>
@@ -268,6 +273,139 @@ higher level device driver.</p></li>
 <li><p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">arch/z80/src/ez80/ez80_i2c.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">arch/z80/src/z8/z8_i2c.c</span></code>, etc.</p></li>
 </ul>
+</section>
+<section id="i2c-bit-bang-driver">
+<h1>I2C Bit-Bang Driver<a class="headerlink" href="#i2c-bit-bang-driver" title="Permalink to this heading"></a></h1>
+<p>The I2C bit-bang driver provides a software implementation of the I2C
+protocol using GPIO pins. This is useful when hardware I2C peripherals
+are not available or when additional I2C buses are needed.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/i2c/i2c_bitbang.h</span></code>
+Generic upper-half I2C bit-bang driver interface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/i2c/i2c_bitbang.c</span></code>
+Generic upper-half implementation that handles the I2C protocol timing.</p></li>
+<li><p>Platform-specific lower-half drivers control the GPIO pins (SDA and SCL).</p></li>
+</ul>
+</section>
+<section id="io-expander-based-i2c-bit-bang">
+<h2>IO Expander-Based I2C Bit-Bang<a class="headerlink" href="#io-expander-based-i2c-bit-bang" title="Permalink to this heading"></a></h2>
+<p>A generic lower-half implementation is provided for systems using IO expanders
+to control GPIO pins. This eliminates the need for platform-specific code when
+implementing I2C bit-bang via IO expander pins.</p>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_BITBANG</span></code> - Enable I2C bit-bang driver framework</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_BITBANG_IOEXPANDER</span></code> - Enable IO expander-based lower-half
+(depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_IOEXPANDER</span></code>)</p></li>
+</ul>
+</section>
+<section id="header-files">
+<h3>Header Files<a class="headerlink" href="#header-files" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/i2c/i2c_bitbang_ioexpander.h</span></code>
+IO expander-based lower-half driver interface.</p></li>
+</ul>
+</section>
+<section id="api">
+<h3>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.i2c_bitbang_ioexpander_initialize">
+<span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">i2c_master_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">i2c_bitbang_ioexpander_initialize</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">ioexpander_dev_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ioe</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">scl_pin</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">sda_pin</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">busnum</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.i2c_bitbang_ioexpander_initialize" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize an I2C bit-bang driver using IO expander pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ioe</strong> – Pointer to the IO expander device</p></li>
+<li><p><strong>scl_pin</strong> – IO expander pin number for SCL (clock line)</p></li>
+<li><p><strong>sda_pin</strong> – IO expander pin number for SDA (data line)</p></li>
+<li><p><strong>busnum</strong> – I2C bus number to register (use negative value to skip registration)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_master_s</span></code> on success, NULL on failure</p>
+</dd>
+</dl>
+<p>The pins will be configured as open-drain outputs, which is required
+for proper I2C operation. If busnum &gt;= 0, the I2C bus is automatically
+registered and accessible via standard I2C APIs.</p>
+</dd></dl>
+
+</section>
+<section id="usage-example">
+<h3>Usage Example<a class="headerlink" href="#usage-example" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/ioexpander/ioexpander.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/i2c/i2c_bitbang_ioexpander.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/i2c/i2c_master.h&gt;</span>
+
+<span class="cm">/* Assume we have an IO expander device */</span>
+<span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ioexpander_dev_s</span><span class="w"> </span><span class="o">*</span><span class="n">ioe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="cm">/* ... get IO expander ... */</span><span class="p">;</span>
+<span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">i2c_master_s</span><span class="w"> </span><span class="o">*</span><span class="n">i2c</span><span class="p">;</span>
+
+<span class="cm">/* Initialize I2C bit-bang using IO expander pins 10 (SCL) and 11 (SDA) */</span>
+<span class="cm">/* Register as I2C bus 0 */</span>
+<span class="n">i2c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i2c_bitbang_ioexpander_initialize</span><span class="p">(</span><span class="n">ioe</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i2c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* Initialization failed */</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="cm">/* Now use the I2C master device normally */</span>
+<span class="cm">/* For example, with I2C character driver or directly */</span>
+
+<span class="cm">/* If registered (busnum &gt;= 0), can also access via /dev/i2c0 */</span>
+</pre></div>
+</div>
+</section>
+<section id="use-cases">
+<h3>Use Cases<a class="headerlink" href="#use-cases" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>GPIO Expansion</strong>: When using I2C or SPI IO expanders for GPIO expansion,
+and need to implement additional I2C buses using those expanded pins.</p></li>
+<li><p><strong>Multi-Master Scenarios</strong>: Software bit-bang can be useful in multi-master
+configurations where hardware I2C has limitations.</p></li>
+<li><p><strong>Pin Flexibility</strong>: Implement I2C on any GPIO pins, not limited to
+hardware I2C peripheral pins.</p></li>
+<li><p><strong>Testing and Debugging</strong>: Use IO expander pins for I2C communication
+during prototyping and debugging.</p></li>
+<li><p><strong>Hardware I2C Unavailable</strong>: When hardware I2C peripherals are exhausted
+or not available on specific pins.</p></li>
+</ul>
+</section>
+<section id="features">
+<h3>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Uses standard IO expander API (<code class="docutils literal notranslate"><span class="pre">IOEXP_WRITEPIN</span></code>, <code class="docutils literal notranslate"><span class="pre">IOEXP_READPIN</span></code>)</p></li>
+<li><p>Automatic open-drain configuration</p></li>
+<li><p>Supports clock stretching (via pin reading)</p></li>
+<li><p>Platform-independent implementation</p></li>
+<li><p>Works with any IO expander that implements the standard interface</p></li>
+<li><p>Automatic I2C bus registration</p></li>
+</ul>
+</section>
+<section id="limitations">
+<h3>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Software timing (slower than hardware I2C)</p></li>
+<li><p>Timing accuracy depends on system load and IO expander response time</p></li>
+<li><p>Limited to standard I2C speeds (fast-mode and high-speed may not be reliable)</p></li>
+</ul>
+</section>
+<section id="implementation-details">
+<h3>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h3>
+<p>The IO expander-based implementation provides these callbacks:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initialize</span></code>: Configures SCL and SDA pins as open-drain outputs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_scl/set_sda</span></code>: Controls pin output values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_scl/get_sda</span></code>: Reads current pin states (for clock stretching detection)</p></li>
+</ul>
+<p>The driver automatically manages the IO expander pin states and handles
+the bit-bang protocol timing according to I2C specifications.</p>
+</section>
+</section>
 </section>
 <section id="i2c-slave-device-drivers">
 <h1>I2C Slave Device Drivers<a class="headerlink" href="#i2c-slave-device-drivers" title="Permalink to this heading"></a></h1>
