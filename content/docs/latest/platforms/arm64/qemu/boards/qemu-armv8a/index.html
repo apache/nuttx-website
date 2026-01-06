@@ -163,6 +163,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../sim/index.html">Simulators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../sim/network_linux.html">Network Support on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../sim/network_vpnkit.html">Network support with VPNKit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../sim/sim_gpiochip.html">Sim GPIO Chip Driver (Linux Host GPIO)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../sparc/index.html">SPARC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../tricore/index.html">TriCore</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../x86/index.html">Intel 80x86</a></li>
@@ -181,6 +182,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../testing/index.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../standards/index.html">Standards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../logos/index.html">NuttX Logos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../_tags/tagsindex.html">Tags</a></li>
@@ -550,24 +552,24 @@ core limit is 32.</p></li>
 <p>This implementation is for <code class="docutils literal notranslate"><span class="pre">ivshmem-v1</span></code> which is compatible with QEMU and ACRN
 hypervisor but won’t work with Jailhouse hypervisor which uses <code class="docutils literal notranslate"><span class="pre">ivshmem-v2</span></code>.</p>
 <p>Please refer to the official <a class="reference external" href="https://www.qemu.org/docs/master/system/devices/ivshmem.html">Qemu ivshmem documentation</a> for more information.</p>
-<p>This is an example implementation for OpenAMP based on the Inter-VM share
-memory(ivshmem):</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rpproxy_ivshmem:  Remote slave(client) proxy process.
-rpserver_ivshmem: Remote master(host) server process.
+<p>This is an example implementation for OpenAMP that supports multiple transport
+mechanisms including Inter-VM shared memory (ivshmem) and RPMSG port UART:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rpproxy:  Remote slave(client) proxy process.
+rpserver: Remote master(host) server process.
 </pre></div>
 </div>
-<p>Steps for Using NuttX as IVSHMEM host and guest</p>
+<p>Steps for Using NuttX as OpenAMP host and guest</p>
 <ol class="arabic">
 <li><p>Build images</p>
 <ol class="loweralpha">
-<li><p>Build <code class="docutils literal notranslate"><span class="pre">rpserver_ivshmem</span></code></p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cmake<span class="w"> </span>-B<span class="w"> </span>server<span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>qemu-armv8a:rpserver_ivshmem<span class="w"> </span>-GNinja
+<li><p>Build <code class="docutils literal notranslate"><span class="pre">rpserver</span></code></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cmake<span class="w"> </span>-B<span class="w"> </span>server<span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>qemu-armv8a:rpserver<span class="w"> </span>-GNinja
 <span class="gp">$ </span>cmake<span class="w"> </span>--build<span class="w"> </span>server
 </pre></div>
 </div>
 </li>
-<li><p>Build <code class="docutils literal notranslate"><span class="pre">rpproxy_ivshmem</span></code></p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cmake<span class="w"> </span>-B<span class="w"> </span>proxy<span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>qemu-armv8a:rpproxy_ivshmem<span class="w"> </span>-GNinja
+<li><p>Build <code class="docutils literal notranslate"><span class="pre">rpproxy</span></code></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cmake<span class="w"> </span>-B<span class="w"> </span>proxy<span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>qemu-armv8a:rpproxy<span class="w"> </span>-GNinja
 <span class="gp">$ </span>cmake<span class="w"> </span>--build<span class="w"> </span>proxy
 </pre></div>
 </div>
@@ -575,23 +577,31 @@ rpserver_ivshmem: Remote master(host) server process.
 </ol>
 </li>
 <li><p>Bringup firmware via Qemu:</p>
-<p>The Inter-VM Shared Memory device basic syntax is:</p>
+<p>The configuration supports both ivshmem and RPMSG port UART transports.
+For ivshmem, use the following device syntax:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
 -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes
 </pre></div>
 </div>
+<p>For RPMSG port UART, the virtconsole device is used as shown in the examples below.</p>
 <ol class="loweralpha">
-<li><p>Start <code class="docutils literal notranslate"><span class="pre">rpserver_ivshmem</span></code></p>
+<li><p>Start <code class="docutils literal notranslate"><span class="pre">rpserver</span></code></p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-aarch64<span class="w"> </span>-cpu<span class="w"> </span>cortex-a53<span class="w"> </span>-nographic<span class="w"> </span>-machine<span class="w"> </span>virt,virtualization<span class="o">=</span>on,gic-version<span class="o">=</span><span class="m">3</span><span class="w"> </span>-kernel<span class="w"> </span>server/nuttx<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-device<span class="w"> </span>ivshmem-plain,id<span class="o">=</span>shmem0,memdev<span class="o">=</span>shmmem-shmem0,addr<span class="o">=</span>0xb<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-object<span class="w"> </span>memory-backend-file,id<span class="o">=</span>shmmem-shmem0,mem-path<span class="o">=</span>/dev/shm/ivshmem0,size<span class="o">=</span><span class="m">4194304</span>,share<span class="o">=</span>yes
+<span class="w">  </span>-object<span class="w"> </span>memory-backend-file,id<span class="o">=</span>shmmem-shmem0,mem-path<span class="o">=</span>/dev/shm/ivshmem0,size<span class="o">=</span><span class="m">4194304</span>,share<span class="o">=</span>yes<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span>virtio-serial-device,bus<span class="o">=</span>virtio-mmio-bus.0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-chardev<span class="w"> </span>socket,path<span class="o">=</span>/tmp/rpmsg_port_uart_socket,server<span class="o">=</span>on,wait<span class="o">=</span>off,id<span class="o">=</span>foo<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span>virtconsole,chardev<span class="o">=</span>foo
 </pre></div>
 </div>
 </li>
-<li><p>Start <code class="docutils literal notranslate"><span class="pre">rpproxy_ivshmem</span></code></p>
+<li><p>Start <code class="docutils literal notranslate"><span class="pre">rpproxy</span></code></p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-aarch64<span class="w"> </span>-cpu<span class="w"> </span>cortex-a53<span class="w"> </span>-nographic<span class="w"> </span>-machine<span class="w"> </span>virt,virtualization<span class="o">=</span>on,gic-version<span class="o">=</span><span class="m">3</span><span class="w"> </span>-kernel<span class="w"> </span>proxy/nuttx<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-device<span class="w"> </span>ivshmem-plain,id<span class="o">=</span>shmem0,memdev<span class="o">=</span>shmmem-shmem0,addr<span class="o">=</span>0xb<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-object<span class="w"> </span>memory-backend-file,discard-data<span class="o">=</span>on,id<span class="o">=</span>shmmem-shmem0,mem-path<span class="o">=</span>/dev/shm/ivshmem0,size<span class="o">=</span><span class="m">4194304</span>,share<span class="o">=</span>yes
+<span class="w">  </span>-object<span class="w"> </span>memory-backend-file,discard-data<span class="o">=</span>on,id<span class="o">=</span>shmmem-shmem0,mem-path<span class="o">=</span>/dev/shm/ivshmem0,size<span class="o">=</span><span class="m">4194304</span>,share<span class="o">=</span>yes<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span>virtio-serial-device,bus<span class="o">=</span>virtio-mmio-bus.0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-chardev<span class="w"> </span>socket,path<span class="o">=</span>/tmp/rpmsg_port_uart_socket,server<span class="o">=</span>off,id<span class="o">=</span>foo<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span>virtconsole,chardev<span class="o">=</span>foo
 </pre></div>
 </div>
 </li>

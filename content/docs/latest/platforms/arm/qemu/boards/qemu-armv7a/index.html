@@ -224,6 +224,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../sim/index.html">Simulators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../sim/network_linux.html">Network Support on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../sim/network_vpnkit.html">Network support with VPNKit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../sim/sim_gpiochip.html">Sim GPIO Chip Driver (Linux Host GPIO)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../sparc/index.html">SPARC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../tricore/index.html">TriCore</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../x86/index.html">Intel 80x86</a></li>
@@ -242,6 +243,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../testing/index.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../standards/index.html">Standards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../logos/index.html">NuttX Logos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../_tags/tagsindex.html">Tags</a></li>
@@ -339,25 +341,26 @@ nsh&gt;
 <p>This implementation is for <code class="docutils literal notranslate"><span class="pre">ivshmem-v1</span></code> which is compatible with QEMU and
 ACRN hypervisor but won’t work with Jailhouse hypervisor which uses <code class="docutils literal notranslate"><span class="pre">ivshmem-v2</span></code>.</p>
 <p>Please refer to the official <a class="reference external" href="https://www.qemu.org/docs/master/system/devices/ivshmem.html">Qemu ivshmem documentation</a> for more information.</p>
-<p>This is an example implementation for OpenAMP based on the Inter-VM share memory(ivshmem):</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rpproxy_ivshmem:  Remote slave(client) proxy process.
-rpserver_ivshmem: Remote master(host) server process.
+<p>This is an example implementation for OpenAMP that supports multiple transport
+mechanisms including Inter-VM shared memory (ivshmem) and RPMSG port UART:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rpproxy:  Remote slave(client) proxy process.
+rpserver: Remote master(host) server process.
 </pre></div>
 </div>
-<p>Steps for Using NuttX as IVSHMEM host and guest</p>
+<p>Steps for Using NuttX as OpenAMP host and guest</p>
 <ol class="arabic simple">
 <li><p>Build images</p></li>
 </ol>
 <blockquote>
 <div><ol class="loweralpha">
-<li><p>Build rpserver_ivshmem:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B server -DBOARD_CONFIG=qemu-armv7a:rpserver_ivshmem -GNinja
+<li><p>Build rpserver:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B server -DBOARD_CONFIG=qemu-armv7a:rpserver -GNinja
 $ cmake --build server
 </pre></div>
 </div>
 </li>
-<li><p>Build rpproxy_ivshmem:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B proxy -DBOARD_CONFIG=qemu-armv7a:rpproxy_ivshmem -GNinja
+<li><p>Build rpproxy:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B proxy -DBOARD_CONFIG=qemu-armv7a:rpproxy -GNinja
 $ cmake --build proxy
 </pre></div>
 </div>
@@ -368,24 +371,31 @@ $ cmake --build proxy
 <li><p>Bringup firmware via Qemu:</p></li>
 </ol>
 <blockquote>
-<div><p>The Inter-VM Shared Memory device basic syntax is:</p>
+<div><p>The configuration supports both ivshmem and RPMSG port UART transports.
+For ivshmem, use the following device syntax:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
 -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes
 </pre></div>
 </div>
 <ol class="loweralpha">
-<li><p>Start rpserver_ivshmem:</p>
+<li><p>Start rpserver:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
   -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
   -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
+  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
+  -chardev socket,path=/tmp/rpmsg_port_uart_socket,server=on,wait=off,id=foo \
+  -device virtconsole,chardev=foo \
   -kernel server/nuttx -nographic
 </pre></div>
 </div>
 </li>
-<li><p>Start rpproxy_ivshmem:</p>
+<li><p>Start rpproxy:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
   -object memory-backend-file,discard-data=on,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
   -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
+  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
+  -chardev socket,path=/tmp/rpmsg_port_uart_socket,server=off,id=foo \
+  -device virtconsole,chardev=foo \
   -kernel proxy/nuttx -nographic
 </pre></div>
 </div>
