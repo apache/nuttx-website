@@ -939,6 +939,16 @@ an important advantage in hard real-time systems like vehicle control.</p>
 The callback runs in the timer interrupt context, so only limited NuttX interfaces
 are available, such as <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code>, <code class="docutils literal notranslate"><span class="pre">sigqueue()</span></code>, <code class="docutils literal notranslate"><span class="pre">nxevent_post()</span></code>, or <code class="docutils literal notranslate"><span class="pre">kill()</span></code>,
 to communicate with tasks.</p>
+<p>High-resolution timers (hrtimers) use a spinlock to protect internal timer data structures,
+allowing them to be safely accessed from interrupt context. This design makes hrtimers
+suitable for high-frequency timer operations.</p>
+<p>However, in SMP systems, a potential issue arises when a user cancels a timer that is currently
+executing: the timer instance may be freed prematurely while its callback is still running.
+To address this problem, a state machine is introduced in the hrtimer implementation:</p>
+<img alt="hrtimer state machine" src="../../_images/hrtimer_state_machine.png" />
+<p>Users may call <code class="docutils literal notranslate"><span class="pre">hrtimer_cancel_sync()</span></code> to synchronously cancel a timer and wait until the
+timer becomes fully inactive. In contrast, <code class="docutils literal notranslate"><span class="pre">hrtimer_cancel()</span></code> is a non-blocking variant
+that returns immediately without waiting for the timer to stop executing.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#c.hrtimer_init" title="hrtimer_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_init()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.hrtimer_cancel" title="hrtimer_cancel"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_cancel()</span></code></a></p></li>
@@ -948,7 +958,7 @@ to communicate with tasks.</p>
 </ul>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.hrtimer_init">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_init</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span>, <a class="reference internal" href="#c.hrtentry_t" title="hrtentry_t"><span class="n"><span class="pre">hrtentry_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">func</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_init" title="Permalink to this definition"></a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_init</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span>, <span class="n"><span class="pre">hrtentry_t</span></span><span class="w"> </span><span class="n"><span class="pre">func</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_init" title="Permalink to this definition"></a><br /></dt>
 <dd><p>This function initializes a high-resolution timer instance.
 Sets the expiration callback and its argument. The timer is
 not started by this function.</p>
@@ -957,7 +967,6 @@ not started by this function.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>hrtimer</strong> – Pointer to hrtimer instance</p></li>
 <li><p><strong>func</strong> – Expiration callback function</p></li>
-<li><p><strong>arg</strong> – Callback argument</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1033,8 +1042,8 @@ transitioned to HRTIMER_STATE_INACTIVE.</p>
 </dd></dl>
 
 <dl class="c type">
-<dt class="sig sig-object c" id="c.hrtentry_t">
-<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">hrtentry_t</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">hrtimer_s</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.hrtentry_t" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object c" id="c.hrtimer_cb">
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_cb</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">expired</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.hrtimer_cb" title="Permalink to this definition"></a><br /></dt>
 <dd><p><strong>High-resolution Timer Callback</strong>: when a hrtimer expires,
 the callback function with this type is called.</p>
 </dd></dl>
