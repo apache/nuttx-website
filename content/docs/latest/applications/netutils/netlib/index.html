@@ -202,6 +202,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../telnetd/index.html"><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet server daemon</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../tftpc/index.html"><code class="docutils literal notranslate"><span class="pre">tftpc</span></code> TFTP client</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../thttpd/index.html"><code class="docutils literal notranslate"><span class="pre">thttpd</span></code> THTTPD webserver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../vconfig/index.html"><code class="docutils literal notranslate"><span class="pre">vconfig</span></code> VLAN Config Tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../wakaama/index.html"><code class="docutils literal notranslate"><span class="pre">wakaama</span></code> Eclipse Wakaama (formerly liblwm2m) - LWM2M protocol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../wakeonlan/index.html"><code class="docutils literal notranslate"><span class="pre">wakeonlan</span></code> WakeOnLAN support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../webclient/index.html"><code class="docutils literal notranslate"><span class="pre">webclient</span></code> uIP web client</a></li>
@@ -836,6 +837,7 @@ reflect the current state of the network packet buffer pool.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#c.netlib_check_ipconnectivity" title="netlib_check_ipconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_ipconnectivity()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.netlib_check_ifconnectivity" title="netlib_check_ifconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_ifconnectivity()</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <dl class="c function">
@@ -864,6 +866,35 @@ is <code class="docutils literal notranslate"><span class="pre">NULL</span></cod
 <p><strong>Note:</strong> This function requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_PING</span></code> to be enabled. The
 function is blocking and will wait for all ping attempts to complete before
 returning.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.netlib_check_ifconnectivity">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">netlib_check_ifconnectivity</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ifname</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">timeout</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">retry</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.netlib_check_ifconnectivity" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check network interface connectivity by pinging the gateway. This function
+retrieves the default gateway address for the specified network interface and
+then sends ICMP echo requests to the gateway to verify connectivity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ifname</strong> – Network interface name (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;eth0&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;wlan0&quot;</span></code>).</p></li>
+<li><p><strong>timeout</strong> – Maximum timeout for each ping attempt in milliseconds.</p></li>
+<li><p><strong>retry</strong> – Number of ping attempts to send.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of gateway ping replies received (0 or positive) on success.
+A value of 0 indicates that no replies were received (gateway unreachable
+or timeout). A negative value indicates an error occurred (e.g., if the
+gateway address cannot be retrieved for the interface, or if the gateway
+address is invalid).</p>
+</dd>
+</dl>
+<p><strong>Note:</strong> This function requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_PING</span></code> to be enabled. The
+function is blocking and will wait for all ping attempts to complete before
+returning. The function internally calls <a class="reference internal" href="#c.netlib_get_dripv4addr" title="netlib_get_dripv4addr"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_get_dripv4addr()</span></code></a> to
+retrieve the gateway address and then uses <a class="reference internal" href="#c.netlib_check_ipconnectivity" title="netlib_check_ipconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_ipconnectivity()</span></code></a>
+to perform the actual ping test.</p>
 </dd></dl>
 
 </section>
