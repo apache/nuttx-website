@@ -69,7 +69,8 @@ many demos, tutorials, and hands-on exercises, as well as events videos.
 ## Documentation
 
 Full project documentation can be found [here]({{ site.baseurl }}/docs/latest).
-Scientific papers are [here]({{ site.baseurl }}/articles).
+Security documentation is [here]({{ site.data.project.website_security }}).
+NuttX related articles and scientific papers are [here]({{ site.baseurl }}/articles).
 
 
 ## Online Demo

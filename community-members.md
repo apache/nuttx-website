@@ -25,9 +25,7 @@ limitations under the License.
 
 {% include JB/setup %}
 
-<br/><br/><br/>
-
-### {{ site.data.project.short_name }} Team Members
+## {{ site.data.project.short_name }} Team Members
 
 {% if site.data.contributors %}
 <table class="table table-hover">
