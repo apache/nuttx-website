@@ -25,19 +25,95 @@ limitations under the License.
 
 {% include JB/setup %}
 
-<br/><br/><br/>
-
-### {{ site.data.project.name }} Articles & Publications
+## {{ site.data.project.name }} Articles & Publications
 
 Here we have a list of articles and publications about NuttX.
 If you have a suggestion of article to be included to this page,
 please send an email to: private@nuttx.apache.org
 
 
-Low power embedded software optimization for the NuttX RTOS
-===========================================================
+### NuttX RTOS Driver for Single Unshielded Twisted Pair Communication
 
-## Abstract
+#### Abstract
+
+The thesis aims to evaluate and integrate a low-cost solution for a small
+area multidrop communication with focus on reliability and real-time
+predictability usable in embedded systems. Based on a review of applicable
+standards, an integration of cheap MCU devices with 10BASE-T1S Ethernet SPI
+MAC-PHYs is proposed.
+
+The Apache NuttX RTOS is proposed as a suitable operating system for the MCU
+devices. An overview of NuttX network driver internals is provided in a
+dedicated chapter to provide background for the major outcome of the project
+– the implementation of Onsemi NCV7410 SPI MAC-PHY NuttX driver for the NuttX
+operating system.
+
+At the end, the methods used for an evaluation and testing of the implemented
+driver are discussed. The system properties are then verified on a simple
+drive-by-wire demonstrator.
+
+#### Author(s)
+
+Michal Matiáš
+
+[PDF]({{ site.baseurl }}/static/articles/NuttX-2025-Matias-NuttXRTOSDriverForSingleUnshieldedTwistedPairCommunication.pdf)
+/
+[CVUT](https://dspace.cvut.cz/handle/10467/123231)
+
+
+### iplite: a lightweight packet filter for NuttX
+
+#### Abstract
+
+The project proposes a lightweight packet filter in a Real-Time
+Operating System (RTOS), aiming to provide an additional security layer to
+embedded systems, allowing the users to create their security policies
+through the filtering process of the ingress network packets. The iplite
+firewall was implemented on NuttX OS based on the best practices of the
+Linux Netfilter firewall and consists basically of two parts: an
+application on user space, homonymously called iplite, which serves to
+provide the user CLI, besides a module on kernel space, netfilterlite,
+responsible for providing the APIs. As an open-source project, our solution
+allows the reproducibility of the experiments and the firewall core adaptation
+to other operating systems.
+
+#### Author(s)
+
+Eduardo Menezes Moraes
+Rodrigo Teixeira de Souza
+Rafael Oliveira da Rocha
+Lourenc¸o Alves Pereira Jr.
+
+[PDF]({{ site.baseurl }}/static/articles/NuttX-2022-MoraesSouzaRochaPereira-IpliteALightweightPacketFilterForNuttX.pdf)
+/
+[DOI](https://doi.org/10.5753/sbseg_estendido.2022.227059)
+
+
+### mnemofs: A NAND flash file-system for Apache NuttX
+
+#### Abstract
+
+NAND flash memory is a key enabler for modern sensor systems due to its low cost,
+compact size, and low power consumption. However, its unique characteristics such
+as erase-before-write requirements, bad block management and randomized bit-flips
+demand a specialized file system design. This letter proposes mnemofs, a file
+system that incorporates wear leveling, power-loss resilience, block garbage
+collection, low RAM consumption and small binary size to maintain reliability
+while utilizing NAND flash’s advantages in embedded systems. We analyze tradeoffs
+propose enhancements for sensor applications where robust, long-term data storage
+is critical.
+
+#### Author(s)
+
+Saurav Pal
+Alan C. Assis
+
+[PDF]({{ site.baseurl }}/static/articles/NuttX-2021-PalAssis-MenmofsANANDFlashFilesystemForApacheNuttX.pdf)
+
+
+### Low power embedded software optimization for the NuttX RTOS
+
+#### Abstract
 
 This paper presents the study of the implementation for a new feature that
 allows the NuttX RTOS, handling the power consumption in order to optimize it.
@@ -57,83 +133,11 @@ in order to verify the functionality of this new feature, in the document is
 explained not only how this application works, but also all the hardware used
 in order to acquire the data that were used in the analysis
 
-## Author(s)
+#### Author(s)
 
 Diego Sánchez López
 
-[Download](./files/nuttx_pm.pdf)
+[PDF]({{ site.baseurl }}/static/articles/NuttX-2013-Lopez-LowPowerEmbeddedSoftwareOptimizationForTheNuttXRTOS.pdf)
+/
+[CorpusID](https://api.semanticscholar.org/CorpusID:67682927)
 
-iplite: a lightweight packet filter for NuttX
-=============================================
-
-## Abstract
-
-The project proposes a lightweight packet filter in a Real-Time
-Operating System (RTOS), aiming to provide an additional security layer to
-embedded systems, allowing the users to create their security policies
-through the filtering process of the ingress network packets. The iplite
-firewall was implemented on NuttX OS based on the best practices of the
-Linux Netfilter firewall and consists basically of two parts: an
-application on user space, homonymously called iplite, which serves to
-provide the user CLI, besides a module on kernel space, netfilterlite,
-responsible for providing the APIs. As an open-source project, our solution
-allows the reproducibility of the experiments and the firewall core adaptation
-to other operating systems.
-
-## Author(s)
-
-Eduardo Menezes Moraes
-Rodrigo Teixeira de Souza
-Rafael Oliveira da Rocha
-Lourenc¸o Alves Pereira Jr.
-
-[Download](./files/iplite.pdf)
-
-NuttX RTOS Driver for Single Unshielded Twisted Pair Communication
-==================================================================
-
-## Abstract
-
-The thesis aims to evaluate and integrate a low-cost solution for a small
-area multidrop communication with focus on reliability and real-time
-predictability usable in embedded systems. Based on a review of applicable
-standards, an integration of cheap MCU devices with 10BASE-T1S Ethernet SPI
-MAC-PHYs is proposed.
-
-The Apache NuttX RTOS is proposed as a suitable operating system for the MCU
-devices. An overview of NuttX network driver internals is provided in a
-dedicated chapter to provide background for the major outcome of the project
-– the implementation of Onsemi NCV7410 SPI MAC-PHY NuttX driver for the NuttX
-operating system.
-
-At the end, the methods used for an evaluation and testing of the implemented
-driver are discussed. The system properties are then verified on a simple
-drive-by-wire demonstrator.
-
-## Author(s)
-
-Michal Matiáš
-
-[Download](./files/nuttx_10baset1s.pdf)
-
-mnemofs: A NAND flash file-system for Apache NuttX
-==================================================
-
-## Abstract
-
-NAND flash memory is a key enabler for modern sensor systems due to its low cost,
-compact size, and low power consumption. However, its unique characteristics such
-as erase-before-write requirements, bad block management and randomized bit-flips
-demand a specialized file system design. This letter proposes mnemofs, a file
-system that incorporates wear leveling, power-loss resilience, block garbage
-collection, low RAM consumption and small binary size to maintain reliability
-while utilizing NAND flash’s advantages in embedded systems. We analyze tradeoffs
-propose enhancements for sensor applications where robust, long-term data storage
-is critical.
-
-## Author(s)
-
-Saurav Pal
-Alan C. Assis
-
-[Download](./files/mnemofs_nand_fs_nuttx.pdf)
