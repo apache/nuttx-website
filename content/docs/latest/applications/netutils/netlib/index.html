@@ -838,6 +838,7 @@ reflect the current state of the network packet buffer pool.</p>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#c.netlib_check_ipconnectivity" title="netlib_check_ipconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_ipconnectivity()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.netlib_check_ifconnectivity" title="netlib_check_ifconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_ifconnectivity()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.netlib_check_httpconnectivity" title="netlib_check_httpconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_httpconnectivity()</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <dl class="c function">
@@ -895,6 +896,46 @@ function is blocking and will wait for all ping attempts to complete before
 returning. The function internally calls <a class="reference internal" href="#c.netlib_get_dripv4addr" title="netlib_get_dripv4addr"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_get_dripv4addr()</span></code></a> to
 retrieve the gateway address and then uses <a class="reference internal" href="#c.netlib_check_ipconnectivity" title="netlib_check_ipconnectivity"><code class="xref c c-func docutils literal notranslate"><span class="pre">netlib_check_ipconnectivity()</span></code></a>
 to perform the actual ping test.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.netlib_check_httpconnectivity">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">netlib_check_httpconnectivity</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">host</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">getmsg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">port</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">expect_code</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.netlib_check_httpconnectivity" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check HTTP service connectivity by sending an HTTP GET request and verifying
+the response status code. This function establishes a TCP connection to the
+specified host and port, sends an HTTP/1.1 GET request for the specified path,
+and validates that the server returns the expected HTTP status code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>host</strong> – Remote hostname or IP address (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;www.example.com&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;192.168.1.1&quot;</span></code>). The function supports DNS resolution if
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code> is enabled, otherwise it expects a numeric
+IPv4 address.</p></li>
+<li><p><strong>getmsg</strong> – URL path for the HTTP GET request (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;index.html&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;api/health&quot;</span></code>). An empty string (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>) requests the root path
+(<code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code>). The function automatically prepends a forward slash
+to the path.</p></li>
+<li><p><strong>port</strong> – TCP port number of the HTTP server (typically 80 for HTTP, or
+8080 for alternative HTTP services).</p></li>
+<li><p><strong>expect_code</strong> – Expected HTTP status code (e.g., <code class="docutils literal notranslate"><span class="pre">200</span></code> for success,
+<code class="docutils literal notranslate"><span class="pre">404</span></code> for not found). The function returns success only
+if the server returns this exact status code.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>0 on success (HTTP status code matches expected value). A negative
+value on failure, which may be a negative HTTP status code (e.g.,
+<code class="docutils literal notranslate"><span class="pre">-404</span></code>) if the server returned a different status code than expected,
+or a negative error code (e.g., <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code>, <code class="docutils literal notranslate"><span class="pre">-ENETUNREACH</span></code>) if
+connection, DNS resolution, or other errors occurred.</p>
+</dd>
+</dl>
+<p><strong>Note:</strong> This function is blocking and will wait for the HTTP request and
+response to complete. The function only reads the first 256 bytes of the HTTP
+response to extract the status code. It does not support HTTPS (TLS/SSL) and
+only works with HTTP/1.1 servers. The function is useful for HTTP service
+health checks, network diagnostics, and automated service monitoring.</p>
 </dd></dl>
 
 </section>
