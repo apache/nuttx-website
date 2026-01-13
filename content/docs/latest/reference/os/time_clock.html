@@ -562,7 +562,7 @@ and a free-running counter with the same timer!</p>
 following interfaces for use by the platform-specific interval
 timer implementation:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code>: called by the platform-specific logic when the interval time expires.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code>: called by the platform-specific logic when the interval time expires.</p></li>
 </ul>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.archname_timer_initialize">
@@ -612,7 +612,7 @@ order to assure atomic register operations.</p>
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_alarm_cancel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_alarm_cancel" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Cancel the alarm and return the time of cancellation of the alarm.
 These two steps need to be as nearly atomic as possible.
-<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will not be called unless the alarm
+<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will not be called unless the alarm
 is restarted with <code class="docutils literal notranslate"><span class="pre">up_alarm_start()</span></code>. If, as a race condition,
 the alarm has already expired when this function is called, then
 time returned is the current time.</p>
@@ -636,7 +636,7 @@ internally to assure non-reentrancy.</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.up_alarm_start">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_alarm_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_alarm_start" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Start the alarm. <code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will be called
+<dd><p>Start the alarm. <code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will be called
 when the alarm occurs (unless <code class="docutils literal notranslate"><span class="pre">up_alarm_cancel</span></code> is called to
 stop it).</p>
 <dl class="field-list simple">
@@ -644,7 +644,7 @@ stop it).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ts</strong> – The time in the future at the alarm is expected to
 occur. When the alarm occurs the timer logic will call
-<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -663,11 +663,11 @@ disabled internally to assure non-reentrancy.</p>
 
 <p>Cancel the interval timer and return the time remaining on the
 timer. These two steps need to be as nearly atomic as possible.
-<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will not be called unless the timer
+<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will not be called unless the timer
 is restarted with <code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code>. If, as a race condition,
 the timer has already expired when this function is called, then
 that pending interrupt must be cleared so that
-<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> is not called spuriously and the
+<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> is not called spuriously and the
 remaining time of zero should be returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param ts<span class="colon">:</span></dt>
@@ -686,13 +686,13 @@ disabled internally to assure non-reentrancy.</p>
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_timer_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_timer_start" title="Permalink to this definition"></a><br /></dt>
 <dd></dd></dl>
 
-<p>Start the interval timer. <code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> will be
+<p>Start the interval timer. <code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will be
 called at the completion of the timeout (unless
 <code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code> is called to stop the timing).</p>
 <dl class="field-list simple">
 <dt class="field-odd">param ts<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Provides the time interval until
-<code class="docutils literal notranslate"><span class="pre">nxsched_timer_expiration()</span></code> is called.</p>
+<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> is called.</p>
 </dd>
 <dt class="field-even">return<span class="colon">:</span></dt>
 <dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
