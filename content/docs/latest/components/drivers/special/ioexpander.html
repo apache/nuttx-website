@@ -150,7 +150,10 @@
 <li class="toctree-l4"><a class="reference internal" href="i2c.html#i2c-bit-bang-driver">I2C Bit-Bang Driver</a></li>
 <li class="toctree-l4"><a class="reference internal" href="i2c.html#i2c-slave-device-drivers">I2C Slave Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="i3c.html">I3C Device Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">IO Expander Device Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">IO Expander Device Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#further-details">Further details</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="lcd.html">LCD Character Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mtd/index.html">Memory Technology Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="regmap.html">drivers/regmap</a></li>
@@ -248,29 +251,42 @@
              
   <section id="io-expander-device-drivers">
 <h1>IO Expander Device Drivers<a class="headerlink" href="#io-expander-device-drivers" title="Permalink to this heading"></a></h1>
+<p>The IO Expander subsystem is defined in the following headers:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/ioexpander/ioexpander.h</span></code> and <code class="docutils literal notranslate"><span class="pre">include/nuttx/ioexpander/gpio.h</span></code>.
-All structures and APIs needed to work with ioexpander drivers are provided in
-this header file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ioexpander_ops_s</span></code>. Each ioexpand device driver must implement
-an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ioexpander_ops_s</span></code>. That structure defines a
-call table with the methods, and we also provide macros to help access methods.</p></li>
-<li><p>we also provide method <code class="docutils literal notranslate"><span class="pre">gpio_lower_half</span></code> to make ioexpander compatible with normal gpio.</p></li>
-<li><p><strong>Binding ioexpander Drivers</strong>. ioexpander drivers are not normally directly
-accessed by user code, we should always get lower level drivers, for example I2C,
-and map extended gpio feature same asa normal gpio. See for example,
-<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">nrf52_sx1509_initialize(void)</span></code>
-in <code class="docutils literal notranslate"><span class="pre">boards/arm/nrf52/thingy52/src/nrf52_sx1509.c</span></code>. In general, the binding
-sequence is:</p>
-<ol class="arabic simple">
-<li><p>Get an instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_master_s</span></code> from the
-hardware-specific I2C device driver, and</p></li>
-<li><p>Provide that instance and configurations to the ioexpander initialization method
-to get the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ioexpander_dev_s</span></code> ioe device instance.</p></li>
-<li><p>Then use ioe device instance to do ioexpander operations, or use <code class="docutils literal notranslate"><span class="pre">gpio_lower_half</span></code>
-to make ioexpand compatible with normal gpio.</p></li>
-</ol>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">include/nuttx/ioexpander/ioexpander.h</span></code> — defines the public IO expander</dt><dd><p>interface: macros, types, and helper access macros used by drivers and
+consumers.</p>
+</dd>
+</dl>
 </li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">include/nuttx/ioexpander/gpio.h</span></code> — provides the “gpio lower half”</dt><dd><p>helper that allows registering an IO expander pin as a standard GPIO
+character device (see <code class="docutils literal notranslate"><span class="pre">gpio_lower_half</span></code> and <code class="docutils literal notranslate"><span class="pre">gpio_lower_half_byname</span></code>).</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Each IO expander driver must implement an instance of <code class="docutils literal notranslate"><span class="pre">struct</span>
+<span class="pre">ioexpander_ops_s</span></code>. That structure defines the lower-half call table and
+the operations a driver must provide; the public header also includes
+helper macros that dispatch to the lower-half operations table.</p>
+<p>The helper <code class="docutils literal notranslate"><span class="pre">gpio_lower_half</span></code> can be used to register individual expander
+pins as standard GPIO devices so that upper-half GPIO consumers can access
+expander pins through the common GPIO character driver.</p>
+<p><strong>Binding IO expander drivers</strong></p>
+<p>IO expander drivers are usually bound by board-specific code rather than
+accessed directly from application code. For I2C- or SPI-connected
+expanders the typical sequence is:</p>
+<ol class="arabic simple">
+<li><p>Obtain the bus instance (for example, a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_master_s</span> <span class="pre">*</span></code>) from
+the hardware-specific bus driver.</p></li>
+<li><p>Call the expander driver’s initialization routine with the bus instance
+and device-specific configuration; the init routine returns a
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ioexpander_dev_s</span> <span class="pre">*</span></code> instance.</p></li>
+<li><p>Use the returned <code class="docutils literal notranslate"><span class="pre">ioe</span></code> instance directly, or register individual
+expander pins with the upper-half GPIO driver via <code class="docutils literal notranslate"><span class="pre">gpio_lower_half</span></code>.</p></li>
+</ol>
+<ul class="simple">
 <li><p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/ioexpander/pca9555.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">drivers/input/aw86225.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">drivers/analog/lmp92001.c</span></code>,
@@ -278,6 +294,240 @@ to make ioexpand compatible with normal gpio.</p></li>
 <code class="docutils literal notranslate"><span class="pre">boards/sim/sim/sim/src/sim_ioexpander.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">boards/arm/nrf52/thingy52/src/nrf52_sx1509.c</span></code> etc.</p></li>
 </ul>
+<section id="further-details">
+<h2>Further details<a class="headerlink" href="#further-details" title="Permalink to this heading"></a></h2>
+<section id="header-files">
+<h3>Header files<a class="headerlink" href="#header-files" title="Permalink to this heading"></a></h3>
+<p>The relevant header files are:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">include/nuttx/ioexpander/ioexpander.h</span></code> — defines macros, types and access</dt><dd><p>macros used to interact with IO expanders.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">include/nuttx/ioexpander/gpio.h</span></code> — provides the “gpio lower half” helper</dt><dd><p>that allows registering an IO expander pin as a standard GPIO device.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="overview-of-key-macros-and-options">
+<h3>Overview of key macros and options<a class="headerlink" href="#overview-of-key-macros-and-options" title="Permalink to this heading"></a></h3>
+<p>The following is a concise reference of the important macros defined in the
+header. These are the options you will typically use through <code class="docutils literal notranslate"><span class="pre">IOEXP_SETOPTION</span></code>
+and the various access macros. The primary preprocessor definitions are
+listed below (C syntax):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Direction definitions */</span>
+<span class="cp">#define IOEXPANDER_DIRECTION_IN            0  </span><span class="cm">/* float */</span>
+<span class="cp">#define IOEXPANDER_DIRECTION_IN_PULLUP     1</span>
+<span class="cp">#define IOEXPANDER_DIRECTION_IN_PULLDOWN   2</span>
+<span class="cp">#define IOEXPANDER_DIRECTION_OUT           3  </span><span class="cm">/* push-pull */</span>
+<span class="cp">#define IOEXPANDER_DIRECTION_OUT_OPENDRAIN 4</span>
+<span class="cp">#define IOEXPANDER_DIRECTION_OUT_LED       5  </span><span class="cm">/* LED output */</span>
+
+<span class="cm">/* Pinset mask helpers */</span>
+<span class="cp">#define IOEXPANDER_PINMASK  (((ioe_pinset_t)1 &lt;&lt; CONFIG_IOEXPANDER_NPINS) - 1)</span>
+<span class="cp">#define PINSET_ALL          (~((ioe_pinset_t)0))</span>
+
+<span class="cm">/* Common option values (used with IOEXP_SETOPTION) */</span>
+<span class="cm">/* Invert (active level) */</span>
+<span class="cp">#define IOEXPANDER_OPTION_INVERT      1</span>
+<span class="cp">#define IOEXPANDER_VAL_NORMAL         0  </span><span class="cm">/* normal polarity */</span>
+<span class="cp">#define IOEXPANDER_VAL_INVERT         1  </span><span class="cm">/* inverted polarity */</span>
+
+<span class="cm">/* Interrupt configuration (level/edge and high/low/rising/falling/both) */</span>
+<span class="cp">#define IOEXPANDER_OPTION_INTCFG      2</span>
+<span class="cp">#define IOEXPANDER_VAL_DISABLE        0  </span><span class="cm">/* 0000 disable interrupts */</span>
+<span class="cp">#define IOEXPANDER_VAL_LEVEL          1  </span><span class="cm">/* xx01: level triggered */</span>
+<span class="cp">#define IOEXPANDER_VAL_EDGE           2  </span><span class="cm">/* xx10: edge triggered */</span>
+<span class="cp">#define IOEXPANDER_VAL_HIGH           5  </span><span class="cm">/* 0101: high level */</span>
+<span class="cp">#define IOEXPANDER_VAL_LOW            9  </span><span class="cm">/* 1001: low level */</span>
+<span class="cp">#define IOEXPANDER_VAL_RISING         6  </span><span class="cm">/* 0110: rising edge */</span>
+<span class="cp">#define IOEXPANDER_VAL_FALLING        10 </span><span class="cm">/* 1010: falling edge */</span>
+<span class="cp">#define IOEXPANDER_VAL_BOTH           14 </span><span class="cm">/* 1110: both edges */</span>
+
+<span class="cm">/* LED configuration */</span>
+<span class="cp">#define IOEXPANDER_OPTION_LEDCFG      3  </span><span class="cm">/* assign an LED number to a pin */</span>
+
+<span class="cm">/* Non-generic (driver-specific) option */</span>
+<span class="cp">#define IOEXPANDER_OPTION_NONGENERIC  4  </span><span class="cm">/* pass driver-specific struct */</span>
+
+<span class="cm">/* Wakeup configuration (configure pin as SoC wake-up source) */</span>
+<span class="cp">#define IOEXPANDER_OPTION_WAKEUPCFG   5</span>
+<span class="cp">#define IOEXPANDER_WAKEUP_DISABLE     0</span>
+<span class="cp">#define IOEXPANDER_WAKEUP_ENABLE      1</span>
+
+<span class="cm">/* Debounce and interrupt mask (recent additions) */</span>
+<span class="cp">#define IOEXPANDER_OPTION_SETDEBOUNCE 6  </span><span class="cm">/* configure debounce */</span>
+<span class="cp">#define IOEXPANDER_DEBOUNCE_DISABLE  0</span>
+<span class="cp">#define IOEXPANDER_DEBOUNCE_ENABLE   1</span>
+
+<span class="cp">#define IOEXPANDER_OPTION_SETMASK     7  </span><span class="cm">/* control interrupt masking */</span>
+<span class="cp">#define IOEXPANDER_MASK_DISABLE       0  </span><span class="cm">/* unmask (enable) interrupts */</span>
+<span class="cp">#define IOEXPANDER_MASK_ENABLE        1  </span><span class="cm">/* mask (suppress) interrupts */</span>
+</pre></div>
+</div>
+</section>
+<section id="access-macros-api">
+<h3>Access macros (API)<a class="headerlink" href="#access-macros-api" title="Permalink to this heading"></a></h3>
+<p>The header exposes a set of helper macros that dispatch to the underlying
+driver operations table (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ioexpander_ops_s</span></code>):</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.IOEXP_SETDIRECTION">
+<span class="sig-name descname"><span class="n"><span class="pre">IOEXP_SETDIRECTION</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dev</span></span>, <span class="n"><span class="pre">pin</span></span>, <span class="n"><span class="pre">dir</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.IOEXP_SETDIRECTION" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set a pin direction (input, output, open-drain, LED, pull-up/down).
+Returns 0 on success or a negative errno on failure.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.IOEXP_SETOPTION">
+<span class="sig-name descname"><span class="n"><span class="pre">IOEXP_SETOPTION</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dev</span></span>, <span class="n"><span class="pre">pin</span></span>, <span class="n"><span class="pre">opt</span></span>, <span class="n"><span class="pre">val</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.IOEXP_SETOPTION" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Generic option setting interface used to configure the options listed
+above. Note that <code class="docutils literal notranslate"><span class="pre">val</span></code> is a <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">*</span></code>; drivers may accept an integer
+casted to a pointer or a pointer to a driver-specific structure.</p>
+<p>Examples:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/* Invert pin polarity */
+IOEXP_SETOPTION(dev, 3, IOEXPANDER_OPTION_INVERT,
+                (FAR void *)IOEXPANDER_VAL_INVERT);
+
+/* Enable debounce on pin 2 */
+IOEXP_SETOPTION(dev, 2, IOEXPANDER_OPTION_SETDEBOUNCE,
+                (FAR void *)IOEXPANDER_DEBOUNCE_ENABLE);
+
+/* Mask interrupts for pin 5 */
+IOEXP_SETOPTION(dev, 5, IOEXPANDER_OPTION_SETMASK,
+                (FAR void *)IOEXPANDER_MASK_ENABLE);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.IOEXP_WRITEPIN">
+<span class="sig-name descname"><span class="n"><span class="pre">IOEXP_WRITEPIN</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dev</span></span>, <span class="n"><span class="pre">pin</span></span>, <span class="n"><span class="pre">val</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.IOEXP_WRITEPIN" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set the pin level. Returns 0 on success or a negative errno on error.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.IOEXP_READPIN">
+<span class="sig-name descname"><span class="n"><span class="pre">IOEXP_READPIN</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dev</span></span>, <span class="n"><span class="pre">pin</span></span>, <span class="n"><span class="pre">valptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.IOEXP_READPIN" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Read the actual physical pin level. The value is returned via <code class="docutils literal notranslate"><span class="pre">valptr</span></code>.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.IOEXP_READBUF">
+<span class="sig-name descname"><span class="n"><span class="pre">IOEXP_READBUF</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dev</span></span>, <span class="n"><span class="pre">pin</span></span>, <span class="n"><span class="pre">valptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.IOEXP_READBUF" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Read the buffered/register value cached by the expander.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">IOEXP_WRITEPIN</span></code> sets the pin level (TRUE typically means high).
+Drivers handle polarity inversion if configured.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IOEXP_READPIN</span></code> reads the actual physical pin level.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IOEXP_READBUF</span></code> reads the buffered/register value cached by the
+expander.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="multi-pin-operations">
+<h3>Multi-pin operations<a class="headerlink" href="#multi-pin-operations" title="Permalink to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_IOEXPANDER_MULTIPIN</span></code> is enabled, batch operations are
+available that may be more efficient than repeated single-pin calls:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">IOEXP_MULTIWRITEPIN(dev,</span> <span class="pre">pins,</span> <span class="pre">vals,</span> <span class="pre">count)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IOEXP_MULTIREADPIN(dev,</span> <span class="pre">pins,</span> <span class="pre">vals,</span> <span class="pre">count)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IOEXP_MULTIREADBUF(dev,</span> <span class="pre">pins,</span> <span class="pre">vals,</span> <span class="pre">count)</span></code></p></li>
+</ul>
+</section>
+<section id="interrupts-and-callbacks">
+<h3>Interrupts and callbacks<a class="headerlink" href="#interrupts-and-callbacks" title="Permalink to this heading"></a></h3>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_IOEXPANDER_INT_ENABLE</span></code> is enabled the header defines the
+callback type and attach/detach helper macros. The callback signature
+is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>typedef CODE int (*ioe_callback_t)(FAR struct ioexpander_dev_s *dev,
+                                                    ioe_pinset_t pinset, FAR void *arg);
+</pre></div>
+</div>
+<p>The callback is invoked when events occur for the monitored pinset. The
+attach/detach helpers are provided as macros that dispatch to the lower-half
+driver when <code class="docutils literal notranslate"><span class="pre">CONFIG_IOEXPANDER_INT_ENABLE</span></code> is enabled:</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.IOEP_ATTACH">
+<span class="sig-name descname"><span class="n"><span class="pre">IOEP_ATTACH</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dev</span></span>, <span class="n"><span class="pre">pinset</span></span>, <span class="n"><span class="pre">callback</span></span>, <span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.IOEP_ATTACH" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Attach and enable a pin interrupt callback. Returns a non-NULL opaque
+handle on success. <code class="docutils literal notranslate"><span class="pre">pinset</span></code> selects which pin(s) will generate the
+callback; <code class="docutils literal notranslate"><span class="pre">callback</span></code> is a function of type <code class="docutils literal notranslate"><span class="pre">ioe_callback_t</span></code> and
+<code class="docutils literal notranslate"><span class="pre">arg</span></code> is passed through to the callback.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.IOEP_DETACH">
+<span class="sig-name descname"><span class="n"><span class="pre">IOEP_DETACH</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dev</span></span>, <span class="n"><span class="pre">handle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.IOEP_DETACH" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Detach and disable a previously attached callback referenced by <code class="docutils literal notranslate"><span class="pre">handle</span></code>.</p>
+</dd></dl>
+
+<p>Note: when <code class="docutils literal notranslate"><span class="pre">CONFIG_IOEXPANDER_NPINS</span></code> &gt; 64, <code class="docutils literal notranslate"><span class="pre">ioe_pinset_t</span></code> represents a
+single interrupt pin number rather than a bitmask.</p>
+</section>
+<section id="driver-interface-lower-half">
+<h3>Driver interface (lower-half)<a class="headerlink" href="#driver-interface-lower-half" title="Permalink to this heading"></a></h3>
+<p>Each IO expander driver must implement the operations table
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ioexpander_ops_s</span></code>. At minimum the driver should provide:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ioe_direction</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ioe_option</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ioe_writepin</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ioe_readpin</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ioe_readbuf</span></code></p></li>
+</ul>
+<p>Optional multi-pin and interrupt attach/detach methods should be provided
+when the corresponding configuration options are enabled.</p>
+</section>
+<section id="binding-to-the-upper-layer-gpio-lower-half">
+<h3>Binding to the upper layer (gpio_lower_half)<a class="headerlink" href="#binding-to-the-upper-layer-gpio-lower-half" title="Permalink to this heading"></a></h3>
+<p>Applications normally do not access IO expander drivers directly. Typical
+binding steps are:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Obtain the bus instance (for example, <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_master_s</span> <span class="pre">*</span></code>) from</dt><dd><p>the hardware-specific bus driver.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Call the expander driver’s initialization routine with the bus instance</dt><dd><p>and device configuration to obtain a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ioexpander_dev_s</span> <span class="pre">*</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Use the returned <code class="docutils literal notranslate"><span class="pre">ioe</span></code> instance directly, or register individual</dt><dd><p>expander pins as standard GPIO devices via <code class="docutils literal notranslate"><span class="pre">gpio_lower_half</span></code> or
+<code class="docutils literal notranslate"><span class="pre">gpio_lower_half_byname</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<p>Example (pseudocode):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/* Get the I2C bus */
+struct i2c_master_s *i2c = up_i2cinitialize(0);
+
+/* Initialize the expander (driver-specific init) */
+struct ioexpander_dev_s *ioe = pca9555_initialize(i2c, CONFIG_PCA9555_ADDR);
+
+/* Configure pin 0 as input with pull-up and enable debounce */
+IOEXP_SETDIRECTION(ioe, 0, IOEXPANDER_DIRECTION_IN_PULLUP);
+IOEXP_SETOPTION(ioe, 0, IOEXPANDER_OPTION_SETDEBOUNCE,
+                        (FAR void *)IOEXPANDER_DEBOUNCE_ENABLE);
+</pre></div>
+</div>
+</section>
+<section id="examples-and-references">
+<h3>Examples and references<a class="headerlink" href="#examples-and-references" title="Permalink to this heading"></a></h3>
+<p>See the following drivers and board examples for concrete usage:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/ioexpander/pca9555.c</span></code> — I2C IO expander implementation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/ioexpander/ioe_rpmsg.c</span></code> — RPMSG-based IO expander.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">boards/arm/nrf52/thingy52/src/nrf52_sx1509.c</span></code> — binding example.</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 

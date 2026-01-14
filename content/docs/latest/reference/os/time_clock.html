@@ -562,7 +562,7 @@ and a free-running counter with the same timer!</p>
 following interfaces for use by the platform-specific interval
 timer implementation:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code>: called by the platform-specific logic when the interval time expires.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code>: called by the platform-specific logic when the interval time expires.</p></li>
 </ul>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.archname_timer_initialize">
@@ -612,7 +612,7 @@ order to assure atomic register operations.</p>
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_alarm_cancel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_alarm_cancel" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Cancel the alarm and return the time of cancellation of the alarm.
 These two steps need to be as nearly atomic as possible.
-<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will not be called unless the alarm
+<code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code> will not be called unless the alarm
 is restarted with <code class="docutils literal notranslate"><span class="pre">up_alarm_start()</span></code>. If, as a race condition,
 the alarm has already expired when this function is called, then
 time returned is the current time.</p>
@@ -636,7 +636,7 @@ internally to assure non-reentrancy.</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.up_alarm_start">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_alarm_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_alarm_start" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Start the alarm. <code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will be called
+<dd><p>Start the alarm. <code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code> will be called
 when the alarm occurs (unless <code class="docutils literal notranslate"><span class="pre">up_alarm_cancel</span></code> is called to
 stop it).</p>
 <dl class="field-list simple">
@@ -644,7 +644,7 @@ stop it).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ts</strong> – The time in the future at the alarm is expected to
 occur. When the alarm occurs the timer logic will call
-<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -663,11 +663,11 @@ disabled internally to assure non-reentrancy.</p>
 
 <p>Cancel the interval timer and return the time remaining on the
 timer. These two steps need to be as nearly atomic as possible.
-<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will not be called unless the timer
+<code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code> will not be called unless the timer
 is restarted with <code class="docutils literal notranslate"><span class="pre">up_timer_start()</span></code>. If, as a race condition,
 the timer has already expired when this function is called, then
 that pending interrupt must be cleared so that
-<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> is not called spuriously and the
+<code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code> is not called spuriously and the
 remaining time of zero should be returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param ts<span class="colon">:</span></dt>
@@ -686,13 +686,13 @@ disabled internally to assure non-reentrancy.</p>
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">up_timer_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="../user/structures.html#c.timespec" title="timespec"><span class="n"><span class="pre">timespec</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.up_timer_start" title="Permalink to this definition"></a><br /></dt>
 <dd></dd></dl>
 
-<p>Start the interval timer. <code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> will be
+<p>Start the interval timer. <code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code> will be
 called at the completion of the timeout (unless
 <code class="docutils literal notranslate"><span class="pre">up_timer_cancel()</span></code> is called to stop the timing).</p>
 <dl class="field-list simple">
 <dt class="field-odd">param ts<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Provides the time interval until
-<code class="docutils literal notranslate"><span class="pre">nxsched_tick_expiration()</span></code> is called.</p>
+<code class="docutils literal notranslate"><span class="pre">nxsched_process_timer()</span></code> is called.</p>
 </dd>
 <dt class="field-even">return<span class="colon">:</span></dt>
 <dd class="field-even"><p>Zero (OK) on success; a negated errno value on failure.</p>
@@ -716,8 +716,8 @@ or <code class="docutils literal notranslate"><span class="pre">kill()</span></c
 <ul class="simple">
 <li><p><a class="reference internal" href="#c.wd_start" title="wd_start"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_start()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.wd_start_next" title="wd_start_next"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_start_next()</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.wd_restart" title="wd_restart"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_restart()</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.wd_restart_next" title="wd_restart_next"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_restart_next()</span></code></a></p></li>
+<li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_restart()</span></code></p></li>
+<li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_restart_next()</span></code></p></li>
 <li><p><a class="reference internal" href="#c.wd_cancel" title="wd_cancel"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_cancel()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.wd_gettime" title="wd_gettime"><code class="xref c c-func docutils literal notranslate"><span class="pre">wd_gettime()</span></code></a></p></li>
 <li><p>Watchdog Timer Callback</p></li>
@@ -799,58 +799,6 @@ is return to indicate the nature of any failure.</p>
 <p><strong>Assumptions/Limitations:</strong> The watchdog routine runs in the
 context of the timer interrupt handler and is subject to all ISR
 restrictions.</p>
-</dd></dl>
-
-<dl class="c function">
-<dt class="sig sig-object c" id="c.wd_restart">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wd_restart</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">wdog_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wdog</span></span>, <span class="n"><span class="pre">clock_t</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.wd_restart" title="Permalink to this definition"></a><br /></dt>
-<dd><p>This function restarts the specified watchdog timer using the same
-function and argument that were specified in the previous wd_start()
-call, but with a new delay value. It can be used when the user wants
-to restart the same watchdog with a different timeout value, or to
-refresh (feed) an existing watchdog before it expires.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>wdog</strong> – Pointer to the watchdog timer to restart</p></li>
-<li><p><strong>delay</strong> – Delay count in clock ticks</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>NOTE</strong>: The parameter must be of type <code class="docutils literal notranslate"><span class="pre">wdparm_t</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Zero (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> value
-is return to indicate the nature of any failure.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="c function">
-<dt class="sig sig-object c" id="c.wd_restart_next">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wd_restart_next</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">wdog_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wdog</span></span>, <span class="n"><span class="pre">clock_t</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.wd_restart_next" title="Permalink to this definition"></a><br /></dt>
-<dd><p>This function restarts the specified watchdog timer using a new delay
-value, but schedules the next expiration based on the previous
-expiration time (wdog-&gt;expired + delay).  This allows the watchdog to
-maintain a consistent periodic interval even if there is some delay in
-handling the expiration callback.</p>
-<p>It can be used when the user wants to restart a watchdog for a different
-purpose or continue periodic timing based on the previous timeout point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>wdog</strong> – Pointer to the watchdog timer to restart</p></li>
-<li><p><strong>delay</strong> – Delay count in clock ticks</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>NOTE</strong>: The parameter must be of type <code class="docutils literal notranslate"><span class="pre">wdparm_t</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Zero (<code class="docutils literal notranslate"><span class="pre">OK</span></code>) is returned on success; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> value
-is return to indicate the nature of any failure.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="c function">
@@ -1024,12 +972,13 @@ transitioned to HRTIMER_STATE_INACTIVE.</p>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.hrtimer_start">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ns</span></span>, <span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">hrtimer_mode_e</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_start" title="Permalink to this definition"></a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_start</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span>, <a class="reference internal" href="#c.hrtimer_entry_t" title="hrtimer_entry_t"><span class="n"><span class="pre">hrtimer_entry_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">func</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">expired</span></span>, <span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="n"><span class="pre">hrtimer_mode_e</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_start" title="Permalink to this definition"></a><br /></dt>
 <dd><p>This function starts a high-resolution timer in absolute or relative mode.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>hrtimer</strong> – Timer instance to cancel</p></li>
+<li><p><strong>func</strong> – Expiration callback function</p></li>
 <li><p><strong>ns</strong> – Timer expiration in nanoseconds (absolute or relative)</p></li>
 <li><p><strong>mode</strong> – HRTIMER_MODE_ABS or HRTIMER_MODE_REL</p></li>
 </ul>
@@ -1042,8 +991,8 @@ transitioned to HRTIMER_STATE_INACTIVE.</p>
 </dd></dl>
 
 <dl class="c type">
-<dt class="sig sig-object c" id="c.hrtimer_cb">
-<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_cb</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">expired</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.hrtimer_cb" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object c" id="c.hrtimer_entry_t">
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_entry_t</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">expired</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.hrtimer_entry_t" title="Permalink to this definition"></a><br /></dt>
 <dd><p><strong>High-resolution Timer Callback</strong>: when a hrtimer expires,
 the callback function with this type is called.</p>
 </dd></dl>
