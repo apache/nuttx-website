@@ -148,6 +148,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../syscall.html">Syscall Layer</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cmpconfig-c">cmpconfig.c</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checkkconfig-py">checkkconfig.py</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#checkpatch-sh">checkpatch.sh</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configure-sh-configure-bat-configure-c-cfgparser-c-and-cfgparser-h">configure.sh configure.bat configure.c, cfgparser.c, and cfgparser.h</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#convert-comments-c">convert-comments.c</a></li>
@@ -251,6 +252,45 @@ that are necessary parts of the NuttX build system.</p>
 <h2>cmpconfig.c<a class="headerlink" href="#cmpconfig-c" title="Permalink to this heading"></a></h2>
 <p>This C file can be used to build a utility for comparing two NuttX
 configuration files.</p>
+</section>
+<section id="checkkconfig-py">
+<h2>checkkconfig.py<a class="headerlink" href="#checkkconfig-py" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">checkkconfig.py</span></code> is a Python script that simulates the effects of modifying a CONFIG item.
+It can be used to check whether my config changes are what I expected.</p>
+<p>Help message:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ tools/checkkconfig.py -h
+usage: checkkconfig.py [-h] -f FILE (-s CONFIG VALUE | -d DIFF)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FILE, --file FILE  Path to the input defconfig file
+  -s CONFIG_XXX VALUE, --single CONFIG VALUE
+                        Analyze single change: CONFIG_NAME y/m/n
+  -d DIFF, --diff DIFF  Analyze changes from diff file
+
+example: ./tools/checkkconfig.py -f defconfig -s ELF n
+
+outputs:
+Change report for ELF=n
+Config Option                            Old                  New
+----------------------------------------------------------------------
+BINFMT_LOADABLE                          y                    n
+ELF                                      y                    n
+ELF_STACKSIZE                            8192                 &lt;unset&gt;
+LIBC_ARCH_ELF                            y                    n
+LIBC_MODLIB                              y                    n
+MODLIB_ALIGN_LOG2                        2                    &lt;unset&gt;
+MODLIB_BUFFERINCR                        32                   &lt;unset&gt;
+MODLIB_BUFFERSIZE                        32                   &lt;unset&gt;
+MODLIB_MAXDEPEND                         2                    &lt;unset&gt;
+MODLIB_RELOCATION_BUFFERCOUNT            256                  &lt;unset&gt;
+MODLIB_SYMBOL_CACHECOUNT                 256                  &lt;unset&gt;
+</pre></div>
+</div>
+<p>As we can see, we can clearly know that
+if I turn off ELF in defconfig at this time,
+it will bring about the following configuration linkage changes</p>
+<p>It can also parse diff files, which can be used to check the changes of multiple configs.</p>
 </section>
 <section id="checkpatch-sh">
 <h2>checkpatch.sh<a class="headerlink" href="#checkpatch-sh" title="Permalink to this heading"></a></h2>
