@@ -152,7 +152,21 @@
 <li class="toctree-l2"><a class="reference internal" href="cmake.html">CMake Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="openamp.html">OpenAMP Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="video.html">Video Subsystem</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Crypto API Subsystem</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Crypto API Subsystem</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supported-algorithms">Supported Algorithms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#symmetric-encryption-algorithms">Symmetric Encryption Algorithms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#authentication-and-hashing-algorithms">Authentication and Hashing Algorithms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#integrity-and-checksums">Integrity and Checksums</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compression">Compression</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#basic-usage-pattern">Basic Usage Pattern</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="wireless.html">Wireless Subsystem</a></li>
 </ul>
 </li>
@@ -197,7 +211,124 @@
              
   <section id="crypto-api-subsystem">
 <h1>Crypto API Subsystem<a class="headerlink" href="#crypto-api-subsystem" title="Permalink to this heading"></a></h1>
-<p>In the future this page will contain details about the Crypto API in NuttX.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The NuttX Crypto API subsystem provides a unified interface for cryptographic operations, supporting various encryption, decryption, hashing, and authentication algorithms. The subsystem abstracts hardware and software crypto implementations through a common interface.</p>
+</section>
+<section id="supported-algorithms">
+<h2>Supported Algorithms<a class="headerlink" href="#supported-algorithms" title="Permalink to this heading"></a></h2>
+<section id="symmetric-encryption-algorithms">
+<h3>Symmetric Encryption Algorithms<a class="headerlink" href="#symmetric-encryption-algorithms" title="Permalink to this heading"></a></h3>
+<p><strong>AES (Advanced Encryption Standard)</strong></p>
+<ul class="simple">
+<li><p>AES-CBC Mode:
+- CRYPTO_AES_CBC (128-bit key size)
+- CRYPTO_AES_192_CBC (192-bit key size)
+- CRYPTO_AES_256_CBC (256-bit key size)</p></li>
+<li><p>AES-CTR Mode (Counter mode):
+- CRYPTO_AES_CTR</p></li>
+<li><p>AES-XTS Mode (XEX-based Tweaked CodeBook):
+- CRYPTO_AES_XTS</p></li>
+<li><p>AES-GCM Mode (Galois/Counter Mode):
+- CRYPTO_AES_GCM_16</p></li>
+<li><p>AES-OFB Mode (Output Feedback):
+- CRYPTO_AES_OFB</p></li>
+<li><p>AES-CFB Mode (Cipher Feedback):
+- CRYPTO_AES_CFB_8 (8-bit)
+- CRYPTO_AES_CFB_128 (128-bit)</p></li>
+</ul>
+<p><strong>Other Block Cipher Modes</strong></p>
+<ul class="simple">
+<li><p>Blowfish (BLF):
+- CRYPTO_BLF_CBC</p></li>
+<li><p>CAST (CAST-128):
+- CRYPTO_CAST_CBC</p></li>
+<li><p>Rijndael (128-bit):
+- CRYPTO_RIJNDAEL128_CBC</p></li>
+<li><p>Null (No encryption):
+- CRYPTO_NULL</p></li>
+</ul>
+</section>
+<section id="authentication-and-hashing-algorithms">
+<h3>Authentication and Hashing Algorithms<a class="headerlink" href="#authentication-and-hashing-algorithms" title="Permalink to this heading"></a></h3>
+<p><strong>HMAC (Hash-based Message Authentication Code)</strong></p>
+<ul class="simple">
+<li><p>MD5-HMAC:
+- CRYPTO_MD5_HMAC</p></li>
+<li><p>SHA-1 HMAC:
+- CRYPTO_SHA1_HMAC</p></li>
+<li><p>SHA-2 HMAC:
+- CRYPTO_SHA2_256_HMAC (256-bit)
+- CRYPTO_SHA2_384_HMAC (384-bit)
+- CRYPTO_SHA2_512_HMAC (512-bit)</p></li>
+</ul>
+<p><strong>Hash Functions</strong></p>
+<ul class="simple">
+<li><p>MD5:
+- CRYPTO_MD5</p></li>
+<li><p>SHA-1:
+- CRYPTO_SHA1</p></li>
+<li><p>SHA-2:
+- CRYPTO_SHA2_224 (224-bit)
+- CRYPTO_SHA2_256 (256-bit)
+- CRYPTO_SHA2_384 (384-bit)
+- CRYPTO_SHA2_512 (512-bit)</p></li>
+<li><p>RIPEMD-160:
+- CRYPTO_RIPEMD160 (as hash function)
+- CRYPTO_RIPEMD160_HMAC</p></li>
+</ul>
+<p><strong>Message Authentication Codes</strong></p>
+<ul class="simple">
+<li><p>AES-GMAC (Galois Message Authentication Code):
+- CRYPTO_AES_128_GMAC (128-bit key)
+- CRYPTO_AES_192_GMAC (192-bit key)
+- CRYPTO_AES_256_GMAC (256-bit key)
+- CRYPTO_AES_GMAC (generic)</p></li>
+<li><p>AES-CMAC (Cipher-based Message Authentication Code):
+- CRYPTO_AES_CMAC
+- CRYPTO_AES_128_CMAC (128-bit)</p></li>
+<li><p>Poly1305:
+- CRYPTO_POLY1305
+- CRYPTO_CHACHA20_POLY1305
+- CRYPTO_CHACHA20_POLY1305_MAC</p></li>
+</ul>
+<p><strong>Stream Ciphers</strong></p>
+<ul class="simple">
+<li><p>ChaCha20:
+- CRYPTO_CHACHA20_POLY1305 (with Poly1305 MAC)</p></li>
+</ul>
+</section>
+<section id="integrity-and-checksums">
+<h3>Integrity and Checksums<a class="headerlink" href="#integrity-and-checksums" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>CRC-32:
+- CRYPTO_CRC32</p></li>
+<li><p>Extended Sequence Numbers (ESN):
+- CRYPTO_ESN</p></li>
+</ul>
+</section>
+<section id="compression">
+<h3>Compression<a class="headerlink" href="#compression" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Deflate Compression:
+- CRYPTO_DEFLATE_COMP</p></li>
+</ul>
+</section>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>The Crypto API is accessed through the cryptodev interface, which provides ioctl commands for initializing cryptographic sessions and performing operations.</p>
+<section id="basic-usage-pattern">
+<h3>Basic Usage Pattern<a class="headerlink" href="#basic-usage-pattern" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Open the cryptodev device (/dev/crypto)</p></li>
+<li><p>Initialize a cryptographic session with desired algorithm</p></li>
+<li><p>Submit crypto operations (encrypt/decrypt/hash)</p></li>
+<li><p>Close the session when done</p></li>
+</ol>
+<p>For more details, refer to the cryptodev.h header file and specific driver documentation.</p>
+</section>
+</section>
 </section>
 
 
