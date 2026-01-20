@@ -157,6 +157,10 @@
 <li class="toctree-l5"><a class="reference internal" href="#ioctls-for-ip-addresses">Ioctls for IP Addresses</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#hardware-checksum-offload">Hardware Checksum Offload</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#implementation-details">Implementation Details</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="netdriver.html">Network Drivers</a></li>
@@ -435,10 +439,38 @@ limit, the new addresses will replace addresses with same scope.</p>
 <p>Note: Recommend to use <a class="reference internal" href="#c.SIOCSIFADDR" title="SIOCSIFADDR"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SIOCSIFADDR</span></code></a> and <a class="reference internal" href="#c.SIOCDIFADDR" title="SIOCDIFADDR"><code class="xref c c-macro docutils literal notranslate"><span class="pre">SIOCDIFADDR</span></code></a>
 to manage IPv6 addresses, by which you don’t need to care about the
 slot it stored.</p>
-<p>[1]: <a class="reference external" href="https://man7.org/linux/man-pages/man7/netdevice.7.html">https://man7.org/linux/man-pages/man7/netdevice.7.html</a>
-[2]: e.g. ‘eth0:0’ stands for the secondary address on eth0</p>
 </dd></dl>
 
+</section>
+</section>
+<section id="hardware-checksum-offload">
+<h2>Hardware Checksum Offload<a class="headerlink" href="#hardware-checksum-offload" title="Permalink to this heading"></a></h2>
+<p>The structure <a class="reference internal" href="#c.net_driver_s" title="net_driver_s"><code class="xref c c-struct docutils literal notranslate"><span class="pre">net_driver_s</span></code></a> includes fields to support hardware
+checksum offloading. This feature allows the network stack to delegate
+checksum calculation to the network device hardware, improving performance.</p>
+<section id="implementation-details">
+<h3>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h3>
+<p>Drivers that support hardware checksum offloading should use the
+following helper functions to retrieve checksum offload information:</p>
+<ul class="simple">
+<li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">netdev_checksum_start()</span></code>: Get the offset from the beginning of the
+packet to the start of the L4 header (checksum calculation start).</p></li>
+<li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">netdev_checksum_offset()</span></code>: Get the offset from the start of the L4
+header to the checksum field.</p></li>
+<li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">netdev_upperlayer_header_checksum()</span></code>: Calculate the pseudo-header
+checksum.</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">netdev_checksum_start</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">net_driver_s</span><span class="w"> </span><span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">netdev_checksum_offset</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">net_driver_s</span><span class="w"> </span><span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+<span class="kt">uint16_t</span><span class="w"> </span><span class="nf">netdev_upperlayer_header_checksum</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">net_driver_s</span><span class="w"> </span><span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Drivers that support hardware checksum offloading should use these functions
+to configure the hardware accordingly before transmitting the packet.</p>
+<blockquote>
+<div><p>[1]: <a class="reference external" href="https://man7.org/linux/man-pages/man7/netdevice.7.html">https://man7.org/linux/man-pages/man7/netdevice.7.html</a>
+[2]: e.g. ‘eth0:0’ stands for the secondary address on eth0</p>
+</div></blockquote>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.SIOCGIFNETMASK">
 <span class="sig-name descname"><span class="n"><span class="pre">SIOCGIFNETMASK</span></span></span><a class="headerlink" href="#c.SIOCGIFNETMASK" title="Permalink to this definition"></a><br /></dt>
