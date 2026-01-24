@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>dumpstack dumpstack tool for show the task backtrace &mdash; NuttX latest documentation</title>
+  <title>dumpstack Task Call Stack Backtrace &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -167,7 +167,21 @@
 <li class="toctree-l3"><a class="reference internal" href="../debugpoint/index.html"><code class="docutils literal notranslate"><span class="pre">debugpoint</span></code> Debug Utility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../dhcp6c/index.html"><code class="docutils literal notranslate"><span class="pre">dhcp6c</span></code> DHCP IPv6 Address Renewal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../dhcpc/index.html"><code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> DHCP Address Renewal</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> dumpstack tool for show the task backtrace</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> Task Call Stack Backtrace</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#basic-syntax">Basic Syntax</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../fastboot/index.html"><code class="docutils literal notranslate"><span class="pre">fastboot</span></code> fastbootd</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fdt/index.html"><code class="docutils literal notranslate"><span class="pre">fdt</span></code> fdt utility tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flash_eraseall/index.html"><code class="docutils literal notranslate"><span class="pre">flash_eraseall</span></code> FLASH Erase-all Command</a></li>
@@ -259,7 +273,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">System Libraries and NSH Add-Ons</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> dumpstack tool for show the task backtrace</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> Task Call Stack Backtrace</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/system/dumpstack/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -269,8 +283,91 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="dumpstack-dumpstack-tool-for-show-the-task-backtrace">
-<h1><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> dumpstack tool for show the task backtrace<a class="headerlink" href="#dumpstack-dumpstack-tool-for-show-the-task-backtrace" title="Permalink to this heading"></a></h1>
+  <section id="dumpstack-task-call-stack-backtrace">
+<h1><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> Task Call Stack Backtrace<a class="headerlink" href="#dumpstack-task-call-stack-backtrace" title="Permalink to this heading"></a></h1>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> application is a debugging utility that displays the call stack
+backtrace information for one or more tasks (threads) in the NuttX system. It helps
+developers understand the execution path and function call hierarchy of tasks, which
+is particularly useful for debugging crashes, deadlocks, or abnormal behavior.</p>
+<p>The application leverages the <code class="docutils literal notranslate"><span class="pre">sched_dumpstack()</span></code> function from the NuttX kernel
+to retrieve and display backtrace information. Depending on the configuration, the
+backtrace can display either raw memory addresses or symbolic function names.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Dump backtrace for a single task by PID</p></li>
+<li><p>Dump backtrace for a range of tasks by PID range</p></li>
+<li><p>Support for symbolic backtrace display (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_ALLSYMS</span></code>)</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<section id="basic-syntax">
+<h3>Basic Syntax<a class="headerlink" href="#basic-syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dumpstack<span class="w"> </span><span class="o">[</span>start_pid<span class="o">]</span><span class="w"> </span><span class="o">[</span>end_pid<span class="o">]</span>
+</pre></div>
+</div>
+<p><strong>No arguments</strong> - Dump backtrace of the current task:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>dumpstack
+</pre></div>
+</div>
+<p><strong>Single PID</strong> - Dump backtrace of a specific task:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>dumpstack<span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+<p><strong>PID range</strong> - Dump backtrace of all tasks from start_pid to end_pid (inclusive):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>dumpstack<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">10</span>
+</pre></div>
+</div>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h3>
+<ol class="arabic">
+<li><p><strong>Dump backtrace for tasks PID 4 to 6 (without CONFIG_ALLSYMS):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>dumpstack<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">6</span>
+sched_dumpstack:<span class="w"> </span>backtrace<span class="p">|</span><span class="w"> </span><span class="m">4</span>:<span class="w"> </span>0x0000000010024fe8<span class="w"> </span>0x000000001000cccc<span class="w"> </span>0x000000001002504c<span class="w"> </span>0x000000001002759c<span class="w"> </span>0x000000001002a870
+sched_dumpstack:<span class="w"> </span>backtrace<span class="p">|</span><span class="w"> </span><span class="m">5</span>:<span class="w"> </span>0x0000000010024fe8<span class="w"> </span>0x000000001000cccc<span class="w"> </span>0x000000001002504c<span class="w"> </span>0x000000001002759c<span class="w"> </span>0x000000001002a870
+sched_dumpstack:<span class="w"> </span>backtrace<span class="p">|</span><span class="w"> </span><span class="m">6</span>:<span class="w"> </span>0x000000001002bbb4<span class="w"> </span>0x000000001002bd70<span class="w"> </span>0x00000000100d3890<span class="w"> </span>0x00000000100d3908<span class="w"> </span>0x000000001005193c<span class="w"> </span>0x000000001004fc74<span class="w"> </span>0x0000000010051514<span class="w"> </span>0x000000001005160c
+sched_dumpstack:<span class="w"> </span>backtrace<span class="p">|</span><span class="w"> </span><span class="m">6</span>:<span class="w"> </span>0x0000000010051870<span class="w"> </span>0x0000000010047fa8<span class="w"> </span>0x000000001002cd50<span class="w"> </span>0x000000001003d5ec<span class="w"> </span>0x000000001002a888
+</pre></div>
+</div>
+</li>
+<li><p><strong>Dump backtrace for task PID 4 (with CONFIG_ALLSYMS enabled):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>dumpstack<span class="w"> </span><span class="m">4</span>
+sched_dumpstack:<span class="w"> </span>backtrace:
+sched_dumpstack:<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">4</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;0x10025174&gt;<span class="o">]</span><span class="w"> </span>nxsem_wait_slow+0x158/0x1ac
+sched_dumpstack:<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">4</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;0x1000cccc&gt;<span class="o">]</span><span class="w"> </span>nxsem_wait+0x94/0xb0
+sched_dumpstack:<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">4</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;0x100251d8&gt;<span class="o">]</span><span class="w"> </span>nxsem_wait_uninterruptible+0x10/0x2c
+sched_dumpstack:<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">4</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;0x10027728&gt;<span class="o">]</span><span class="w"> </span>work_thread+0x1b4/0x238
+sched_dumpstack:<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">4</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;0x1002a9fc&gt;<span class="o">]</span><span class="w"> </span>nxtask_start+0x7c/0xa4
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p><strong>CONFIG_SYSTEM_DUMPSTACK</strong></p>
+<section id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h3>
+<p>The dumpstack application requires the following kernel configurations:</p>
+<ul class="simple">
+<li><p><strong>CONFIG_SCHED_BACKTRACE</strong> - Must be enabled to provide the <code class="docutils literal notranslate"><span class="pre">sched_backtrace()</span></code> function</p></li>
+<li><p><strong>CONFIG_ALLSYMS</strong> - Optional, enables symbolic function names in backtrace output</p></li>
+</ul>
+</section>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Maximum backtrace depth is 16 frames per iteration</p></li>
+<li><p>Some architectures may have limited or no backtrace support (known issue: sim environment cannot view stack of other threads)</p></li>
+</ul>
+</section>
 </section>
 
 
