@@ -146,7 +146,7 @@
 <li class="toctree-l2"><a class="reference internal" href="net/index.html">Network Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mm/index.html">Memory Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="syscall.html">Syscall Layer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools/index.html"><code class="docutils literal notranslate"><span class="pre">/tools</span></code> Host Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/index.html">Host Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arch/index.html">Architecture-Specific Code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="boards.html">Boards Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake.html">CMake Support</a></li>
@@ -165,10 +165,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#basic-usage-pattern">Basic Usage Pattern</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#asymmetric-cryptography-and-key-management">Asymmetric Cryptography and Key Management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#asymmetric-cryptography">Asymmetric Cryptography</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#public-key-algorithms">Public Key Algorithms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ecc-ecdsa-software">ECC / ECDSA (Software)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#key-management-operations">Key Management Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rsa-digital-signature-operations">RSA Digital Signature Operations</a></li>
 </ul>
 </li>
 </ul>
@@ -335,15 +335,18 @@
 <p>For more details, refer to the cryptodev.h header file and specific driver documentation.</p>
 </section>
 </section>
-<section id="asymmetric-cryptography-and-key-management">
-<h2>Asymmetric Cryptography and Key Management<a class="headerlink" href="#asymmetric-cryptography-and-key-management" title="Permalink to this heading"></a></h2>
+<section id="asymmetric-cryptography">
+<h2>Asymmetric Cryptography<a class="headerlink" href="#asymmetric-cryptography" title="Permalink to this heading"></a></h2>
 <section id="public-key-algorithms">
 <h3>Public Key Algorithms<a class="headerlink" href="#public-key-algorithms" title="Permalink to this heading"></a></h3>
 <p><strong>RSA (Rivest-Shamir-Adleman)</strong></p>
 <ul class="simple">
 <li><p>RSA key pair generation for variable key sizes</p></li>
-<li><p>Digital signature generation and verification</p></li>
+<li><p>Digital signature generation and verification with multiple padding schemes:
+- PKCS#1 v1.5 padding (CRK_RSA_PKCS15_SIGN, CRK_RSA_PKCS15_VERIFY)
+- PSS (Probabilistic Signature Scheme) padding (CRK_RSA_PSS_SIGN, CRK_RSA_PSS_VERIFY)</p></li>
 <li><p>Public key encryption and decryption</p></li>
+<li><p>RSA operations accessible via /dev/crypto cryptodev interface</p></li>
 </ul>
 <p><strong>ECDSA (Elliptic Curve Digital Signature Algorithm)</strong></p>
 <ul class="simple">
@@ -358,40 +361,24 @@
 secret computation, and ECDSA sign/verify. Public key export is available in
 compressed form (<code class="docutils literal notranslate"><span class="pre">ECC_BYTES</span> <span class="pre">+</span> <span class="pre">1</span></code>) as well as X/Y uncompressed form.</p>
 </section>
-<section id="key-management-operations">
-<h3>Key Management Operations<a class="headerlink" href="#key-management-operations" title="Permalink to this heading"></a></h3>
-<p>The cryptodev module provides comprehensive key management interfaces:</p>
-<p><strong>Key Allocation and Validation</strong></p>
+<section id="rsa-digital-signature-operations">
+<h3>RSA Digital Signature Operations<a class="headerlink" href="#rsa-digital-signature-operations" title="Permalink to this heading"></a></h3>
+<p>The cryptodev module supports RSA digital signatures via the cryptokey interface:</p>
 <ul class="simple">
-<li><p>CRK_ALLOCATE_KEY: Request an available key ID from the driver</p></li>
-<li><p>CRK_VALIDATE_KEYID: Check if a specified key ID is available in the driver</p></li>
+<li><p><strong>CRK_RSA_PKCS15_SIGN</strong>: Generate RSA signature with PKCS#1 v1.5 padding
+- Input: message hash, private key ID
+- Output: RSA signature</p></li>
+<li><p><strong>CRK_RSA_PKCS15_VERIFY</strong>: Verify RSA signature with PKCS#1 v1.5 padding
+- Input: message hash, signature, public key ID
+- Output: verification result</p></li>
+<li><p><strong>CRK_RSA_PSS_SIGN</strong>: Generate RSA signature with PSS padding
+- Input: message hash, private key ID
+- Output: RSA signature</p></li>
+<li><p><strong>CRK_RSA_PSS_VERIFY</strong>: Verify RSA signature with PSS padding
+- Input: message hash, signature, public key ID
+- Output: verification result</p></li>
 </ul>
-<p><strong>Key Import and Export</strong></p>
-<ul class="simple">
-<li><p>CRK_IMPORT_KEY: Import key data into the driver for use in cryptographic operations</p></li>
-<li><p>CRK_EXPORT_KEY: Export raw key data or private key from a keypair</p></li>
-<li><p>CRK_EXPORT_PUBLIC_KEY: Export only the public key portion of a keypair</p></li>
-</ul>
-<p><strong>Key Generation</strong></p>
-<ul class="simple">
-<li><p>CRK_GENERATE_AES_KEY: Generate AES key data with specified key ID</p></li>
-<li><p>CRK_GENERATE_RSA_KEY: Generate RSA keypair (public and private) with specified key ID</p></li>
-<li><p>CRK_GENERATE_SECP256R1_KEY: Generate ECDSA keypair on SECP256R1 curve with specified key ID</p></li>
-</ul>
-<p><strong>Key Lifecycle Management</strong></p>
-<ul class="simple">
-<li><p>CRK_DELETE_KEY: Remove key with specified key ID from the driver</p></li>
-<li><p>CRK_SAVE_KEY: Persist key data to FLASH storage for non-volatile storage</p></li>
-<li><p>CRK_LOAD_KEY: Load previously saved key data from FLASH into RAM</p></li>
-</ul>
-<p><strong>Cryptographic Operations Using Keys</strong></p>
-<p>Once keys are allocated, generated, or imported, they can be used for:</p>
-<ul class="simple">
-<li><p>Symmetric encryption/decryption operations (AES)</p></li>
-<li><p>RSA signature generation and verification</p></li>
-<li><p>ECDSA digital signature operations</p></li>
-<li><p>Key exchange protocols</p></li>
-</ul>
+<p>Both padding schemes are supported via the cryptokey ioctl interface accessible through <code class="docutils literal notranslate"><span class="pre">/dev/crypto</span></code>.</p>
 </section>
 </section>
 </section>
