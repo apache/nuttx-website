@@ -879,29 +879,123 @@ definition.</p>
 require nanosecond-level task timing, which tick-based timers
 like wdog cannot provide. Reducing the tick interval to micro-
 or nanoseconds is impractical, as it would overload the CPU with interrupts.</p>
+<p>High-resolution Timer (HRTimer) is a timer abstraction capable of achieving
+nanosecond-level timing resolution, primarily used in scenarios requiring
+high-resolution clock events. With the advancement of integrated circuit
+technology, modern high-resolution timer hardware, such as the typical x86
+HPET, can already meet sub-nanosecond timing requirements and offer
+femtosecond-level jitter control.</p>
+<p>Although the current hardware timer abstraction (<cite>up_alarm/up_timer</cite>)
+in the NuttX kernel already supports nanosecond-level timing, its software
+timer abstraction, wdog, and the timer timeout interrupt handling process
+remain at microsecond-level (tick) resolution, which falls short of
+high-resolution timing demands.</p>
 <p>To address this, NuttX provides a high-resolution timer (hrtimer),
-which delivers true nanosecond-level precision. Unlike wdog’s list-based timers,
-hrtimer uses a red-black tree for efficient management of large numbers of timers,
-an important advantage in hard real-time systems like vehicle control.</p>
+which delivers true nanosecond-level precision. HRTimer primarily provides
+the following functional interfaces:</p>
+<dl class="simple">
+<dt><strong>Set a timer in nanoseconds</strong>: Configure a software timer to trigger at</dt><dd><p>a specified nanosecond time.</p>
+</dd>
+</dl>
+<p><strong>Cancel a timer</strong>: Cancel the software timer.</p>
+<dl class="simple">
+<dt><strong>Handle timer timeout</strong>: Execute timeout processing after the timer event</dt><dd><p>is triggered.</p>
+</dd>
+</dl>
 <p>A user can register an hrtimer callback to execute after a specified delay.
 The callback runs in the timer interrupt context, so only limited NuttX interfaces
 are available, such as <code class="docutils literal notranslate"><span class="pre">mq_send()</span></code>, <code class="docutils literal notranslate"><span class="pre">sigqueue()</span></code>, <code class="docutils literal notranslate"><span class="pre">nxevent_post()</span></code>, or <code class="docutils literal notranslate"><span class="pre">kill()</span></code>,
 to communicate with tasks.</p>
-<p>High-resolution timers (hrtimers) use a spinlock to protect internal timer data structures,
-allowing them to be safely accessed from interrupt context. This design makes hrtimers
-suitable for high-frequency timer operations.</p>
-<p>However, in SMP systems, a potential issue arises when a user cancels a timer that is currently
-executing: the timer instance may be freed prematurely while its callback is still running.
-To address this problem, a state machine is introduced in the hrtimer implementation:</p>
-<img alt="hrtimer state machine" src="../../_images/hrtimer_state_machine.png" />
-<p>Users may call <code class="docutils literal notranslate"><span class="pre">hrtimer_cancel_sync()</span></code> to synchronously cancel a timer and wait until the
-timer becomes fully inactive. In contrast, <code class="docutils literal notranslate"><span class="pre">hrtimer_cancel()</span></code> is a non-blocking variant
-that returns immediately without waiting for the timer to stop executing.</p>
+<p>The hrtimer implementation mainly includes the following interfaces:</p>
+<dl class="simple">
+<dt><strong>hrtimer_start(timer, func, arg, delay)</strong>: Asynchronously starts a</dt><dd><p>timer that has completed or has been asynchronously canceled (its
+callback function might still be executing).</p>
+</dd>
+<dt><strong>hrtimer_cancel(timer)</strong>: Asynchronously cancels a timer. Note that</dt><dd><p>the semantics of this interface are completely different from Linux’s
+<cite>try_to_cancel</cite>. It ensures that the timer can definitely be canceled
+successfully, but may need to wait for its callback function to finish
+execution.</p>
+</dd>
+<dt><strong>hrtimer_cancel_sync(timer)</strong>: Synchronously cancels a timer. If the timer’s</dt><dd><p>callback function is still executing, this function will spin-wait until
+the callback completes. It ensures that the user can always obtain
+ownership of the timer.</p>
+</dd>
+</dl>
+<p>The state-machine diagram of the HRTimer is as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+------------------------------------------------------+
+|                 HRTIMER State Diagram                |
++------------------------------------------------------+
+|                                                      |
+|     +----------------------+                         |
+|     | HRTIMER_COMPLETED    |                         |
+|     |      (private)       |                         |
+|     +----------------------+                         |
+|                |                                     |
+|                | hrtimer_start                       |
+|                |                                     |
+|                |                                     |
+|                v                                     |
+|     +----------------------+                         |
+|     | HRTIMER_PENDING      |---------------------+   |
+| +--&gt;|      (shared)        |&lt;---+                |   |
+| |   +----------------------+    |                |   |
+| |            |                  |timer callback  |   |
+| |            |hrtimer_expiry    |return non-zero |   |
+| |            |                  |                |   |
+| |            v                  |                |   |
+| |   +----------------------+    |                |   |
+| |   | HRTIMER_RUNNING      |----+                |   |
+| |   |      (shared)        |                     |   |
+| |   +----------------------+                     |   |
+| |                    |                           |   |
+| |                    |                           |   |
+| |                    |timer return zero          |   |
+| |                    |or                         |   |
+| |                    |hrtimer_cancel             |   |
+| |                    |                           |   |
+| |                    v                           |   |
+| |               +----------------------+         |   |
+| |               | HRTIMER_CANCELED     |&lt;--------+   |
+| +---------------|    (half_shared)     |             |
+| hrtimer_start   +----------------------+             |
+|                        |                             |
+|     hrtimer_cancel_sync|                             |
+|         wait all cores |                             |
+|                        v                             |
+|     +----------------------+                         |
+|     | HRTIMER_COMPLETED    |                         |
+|     |      (private)       |                         |
+|     +----------------------+                         |
+|             ^  |                                     |
+|             |  |                                     |
+|             +--+                                     |
+|            hrtimer_cancel                            |
++------------------------------------------------------+
+</pre></div>
+</div>
+<p>The specific definitions of the states are as follows:</p>
+<p><strong>HRTIMER_PENDING|shared</strong>: <cite>hrtimer-&gt;func != NULL</cite>. That is, the hrtimer has
+been inserted into the hrtimer queue and is waiting to be executed.</p>
+<p><strong>HRTIMER_COMPLETED|private</strong>: <cite>hrtimer-&gt;func == NULL</cite> ∧
+<cite>∀c ∈ [0, CONFIG_SMP_NCPUS), (g_hrtimer_running[c] &amp; ~(1u)) != hrtimer</cite>
+That is, the hrtimer is not in a pending state, and no core is currently
+executing the hrtimer’s callback function.</p>
+<p><strong>HRTIMER_RUNNING|shared</strong>: <cite>hrtimer-&gt;func == NULL</cite> ∧
+<cite>∃c ∈ [0, CONFIG_SMP_NCPUS), g_hrtimer_running[c] == hrtimer</cite>.
+That is, the hrtimer is not in a pending state, and there exists at least one
+core that is currently executing the hrtimer’s callback function.</p>
+<p><strong>HRTIMER_CANCELED|half_shared</strong>: <cite>hrtimer-&gt;func == NULL</cite> ∧
+<cite>∀c ∈ [0, CONFIG_SMP_NCPUS), g_hrtimer_running[c] != hrtimer</cite>.
+That is, the hrtimer is not in a pending state, and all cores have lost
+ownership of the hrtimer—meaning they can no longer read from or write to the
+hrtimer—though its callback function may still be in the process of being
+executed.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#c.hrtimer_init" title="hrtimer_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_init()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.hrtimer_cancel" title="hrtimer_cancel"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_cancel()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.hrtimer_cancel_sync" title="hrtimer_cancel_sync"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_cancel_sync()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.hrtimer_start" title="hrtimer_start"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_start()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.hrtimer_gettime" title="hrtimer_gettime"><code class="xref c c-func docutils literal notranslate"><span class="pre">hrtimer_gettime()</span></code></a></p></li>
 <li><p>High-resolution Timer Callback</p></li>
 </ul>
 <dl class="c function">
@@ -927,13 +1021,15 @@ not started by this function.</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.hrtimer_cancel">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_cancel</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_cancel" title="Permalink to this definition"></a><br /></dt>
-<dd><p>If the timer is armed but has not yet expired, it will be removed from
+<dd><p>Cancel a high-resolution timer asynchronously.</p>
+<p>If the timer is armed but has not yet expired, it will be removed from
 the timer queue and the callback will not be invoked.</p>
 <p>If the timer callback is currently executing, this function will mark
 the timer as canceled and return immediately. The running callback is
 allowed to complete, but it will not be invoked again.</p>
-<p>This function is non-blocking and does not wait for a running callback
-to finish.</p>
+<p>After the function completes, the caller acquires limited ownership,
+allowing timer restart but not freeing. Callback may still be executing
+on another CPU. Use with caution to avoid concurrency issues.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -953,9 +1049,9 @@ to finish.</p>
 <dd><p>Cancel a high-resolution timer and wait synchronously until the timer
 becomes inactive.</p>
 <p>This function first calls hrtimer_cancel() to request cancellation of
-the timer.  If the timer callback is currently executing, this function
-will wait until the callback has completed and the timer state has
-transitioned to HRTIMER_STATE_INACTIVE.</p>
+the timer. It sets timer to canceled state and waits for all
+references to be released. Caller acquires full ownership and can
+safely deallocate the timer after this function returns.</p>
 <p>This function may sleep and must not be called from interrupt context.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -990,11 +1086,46 @@ transitioned to HRTIMER_STATE_INACTIVE.</p>
 <p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface.</p>
 </dd></dl>
 
+<dl class="c function">
+<dt class="sig sig-object c" id="c.hrtimer_gettime">
+<span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_gettime</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">timer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.hrtimer_gettime" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the remaining time until timer expiration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timer</strong> – Timer instance to query</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Remaining time in nanoseconds until next expiration.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt><strong>Assumptions:</strong></dt><dd><ul class="simple">
+<li><p>Timer is not NULL.</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> This is a NON-POSIX interface.</p>
+</dd></dl>
+
 <dl class="c type">
 <dt class="sig sig-object c" id="c.hrtimer_entry_t">
 <span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">hrtimer_entry_t</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="pre">FAR</span><span class="w"> </span><span class="n"><span class="pre">hrtimer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">hrtimer</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n"><span class="pre">expired</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.hrtimer_entry_t" title="Permalink to this definition"></a><br /></dt>
 <dd><p><strong>High-resolution Timer Callback</strong>: when a hrtimer expires,
 the callback function with this type is called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param timer<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The hrtimer pointer passed to callback function,
+do not modify the hrtimer when executing callback function.</p>
+</dd>
+<dt class="field-even">Param expired<span class="colon">:</span></dt>
+<dd class="field-even"><p>Time in nanoseconds when timer expired</p>
+</dd>
+<dt class="field-odd">Return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Next delay in nanoseconds until next expiration.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
