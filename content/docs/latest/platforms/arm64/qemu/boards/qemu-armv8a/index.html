@@ -285,7 +285,7 @@ hardware platform and provides support for these devices:</p>
 <span class="gp">$ </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/zero<span class="w"> </span><span class="nv">of</span><span class="o">=</span>./mydisk-1gb.img<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>1M<span class="w"> </span><span class="nv">count</span><span class="o">=</span><span class="m">1024</span>
 </pre></div>
 </div>
-<p>Running with QEMU:</p>
+<p>Running with QEMU (VirtIO-MMIO transport):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-aarch64<span class="w"> </span>-cpu<span class="w"> </span>cortex-a53<span class="w"> </span>-nographic<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-machine<span class="w"> </span>virt,virtualization<span class="o">=</span>on,gic-version<span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-chardev<span class="w"> </span>stdio,id<span class="o">=</span>con,mux<span class="o">=</span>on<span class="w"> </span>-serial<span class="w"> </span>chardev:con<span class="w"> </span><span class="se">\</span>
@@ -300,6 +300,26 @@ hardware platform and provides support for these devices:</p>
 <span class="w">  </span>-device<span class="w"> </span>virtio-blk-device,bus<span class="o">=</span>virtio-mmio-bus.3,drive<span class="o">=</span>hd<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-mon<span class="w"> </span><span class="nv">chardev</span><span class="o">=</span>con,mode<span class="o">=</span>readline<span class="w"> </span>-kernel<span class="w"> </span>./nuttx
 </pre></div>
+</div>
+<p>Running with QEMU (VirtIO-PCI transport):</p>
+<p>The netnsh configuration also supports VirtIO-PCI transport. To use VirtIO-PCI
+instead of VirtIO-MMIO, run QEMU with PCI devices:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-aarch64<span class="w"> </span>-cpu<span class="w"> </span>cortex-a53<span class="w"> </span>-nographic<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-machine<span class="w"> </span>virt,virtualization<span class="o">=</span>on,gic-version<span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-chardev<span class="w"> </span>stdio,id<span class="o">=</span>con,mux<span class="o">=</span>on<span class="w"> </span>-serial<span class="w"> </span>chardev:con<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-netdev<span class="w"> </span>user,id<span class="o">=</span>u1,hostfwd<span class="o">=</span>tcp:127.0.0.1:10023-10.0.2.15:23,hostfwd<span class="o">=</span>tcp:127.0.0.1:15001-10.0.2.15:5001<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span>virtio-net-pci,netdev<span class="o">=</span>u1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span>virtio-rng-pci<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-drive<span class="w"> </span><span class="nv">file</span><span class="o">=</span>./mydisk-1gb.img,if<span class="o">=</span>none,format<span class="o">=</span>raw,id<span class="o">=</span>hd<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span>virtio-blk-pci,drive<span class="o">=</span>hd<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-mon<span class="w"> </span><span class="nv">chardev</span><span class="o">=</span>con,mode<span class="o">=</span>readline<span class="w"> </span>-kernel<span class="w"> </span>./nuttx
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The VirtIO-PCI transport uses PCI bus for device discovery and communication,
+which is different from the memory-mapped VirtIO-MMIO transport. Both transports
+are supported simultaneously in the netnsh configuration</p>
 </div>
 </section>
 <section id="single-core-with-virtio-gpu-driver-gicv3">
