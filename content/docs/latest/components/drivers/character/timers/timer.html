@@ -754,6 +754,72 @@ stored.</p>
 <p>Those snippets were taken from the Example which provides a great resource to
 demonstrate how to use those <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands.</p>
 </section>
+<section id="software-timer-implementation-timer-wdog">
+<h2>Software Timer Implementation (timer_wdog)<a class="headerlink" href="#software-timer-implementation-timer-wdog" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">CONFIG_TIMER_WDOG</span></code> option enables a software-based implementation
+of the timer driver interface. Instead of using hardware timer peripherals,
+this implementation leverages the NuttX internal watchdog (wdog) timer
+subsystem to provide timer functionality.</p>
+<p><strong>Concept</strong></p>
+<p>The wdog subsystem is a kernel-level software timer mechanism that
+maintains a queue of pending timeouts. When <code class="docutils literal notranslate"><span class="pre">timer_wdog</span></code> is enabled,
+it creates a standard timer device (e.g., <code class="docutils literal notranslate"><span class="pre">/dev/timer0</span></code>) that internally
+uses <code class="docutils literal notranslate"><span class="pre">wd_start()</span></code> and related wdog APIs to schedule and manage timeouts.
+This allows platforms without dedicated hardware timers to still provide
+the standard timer driver interface to applications.</p>
+<p><strong>Enabling timer_wdog</strong></p>
+<p>To enable this feature, set the following configuration options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_TIMER=y
+CONFIG_TIMER_WDOG=y
+</pre></div>
+</div>
+<p>Then call <code class="docutils literal notranslate"><span class="pre">timer_wdog_initialize()</span></code> from your board initialization code
+(typically in <code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> or <code class="docutils literal notranslate"><span class="pre">board_app_initialize()</span></code>):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/timers/timer_wdog.h&gt;</span>
+
+<span class="cp">#ifdef CONFIG_TIMER_WDOG</span>
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer_wdog_initialize</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">  </span><span class="cm">/* Creates /dev/timer0 */</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">syslog</span><span class="p">(</span><span class="n">LOG_ERR</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ERROR: timer_wdog_initialize failed: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ret</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p><strong>Pros</strong></p>
+<ul class="simple">
+<li><p><strong>No hardware dependency</strong>: Works on any platform that supports the
+NuttX wdog subsystem, including the simulator (sim).</p></li>
+<li><p><strong>Easy to enable</strong>: Requires minimal board-level code; just a single
+initialization call.</p></li>
+<li><p><strong>Standard interface</strong>: Applications use the same timer ioctl commands
+as hardware-based timers, ensuring portability.</p></li>
+<li><p><strong>Useful for testing</strong>: Ideal for testing timer-dependent application
+code on the simulator or platforms lacking hardware timers.</p></li>
+<li><p><strong>Multiple instances</strong>: Multiple software timers can be created by
+calling <code class="docutils literal notranslate"><span class="pre">timer_wdog_initialize()</span></code> with different IDs.</p></li>
+</ul>
+<p><strong>Cons</strong></p>
+<ul class="simple">
+<li><p><strong>Resolution limited by system tick</strong>: The timer resolution is bound
+to the system tick rate (<code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>). For example, with
+a 10ms tick, the minimum timeout granularity is 10ms.</p></li>
+<li><p><strong>Less accurate than hardware timers</strong>: Software timers depend on the
+scheduler and may experience jitter, especially under heavy system load.</p></li>
+<li><p><strong>Runs in interrupt context</strong>: The timeout callback executes in the
+context of the system timer interrupt, which may introduce latency for
+signal delivery to applications.</p></li>
+<li><p><strong>Not suitable for high-precision timing</strong>: Applications requiring
+microsecond-level precision should use hardware timer implementations.</p></li>
+</ul>
+<p><strong>Use Cases</strong></p>
+<ul class="simple">
+<li><p>Simulator-based development and testing</p></li>
+<li><p>Platforms without available hardware timer peripherals</p></li>
+<li><p>Prototyping timer-based application logic</p></li>
+<li><p>Educational purposes and learning the NuttX timer interface</p></li>
+</ul>
+</section>
 </section>
 
 
