@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>qemu-armv7a &mdash; NuttX latest documentation</title>
+  <title>qemu-armv7r &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="qemu-armv7r" href="../qemu-armv7r/index.html" />
-    <link rel="prev" title="QEMU" href="../../index.html" /> 
+    <link rel="next" title="Renesas RA4M1" href="../../../ra4m1/index.html" />
+    <link rel="prev" title="qemu-armv7a" href="../qemu-armv7a/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -173,8 +173,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../phy62xx/index.html">PHY+ PHY62</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">QEMU</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
-<li class="toctree-l5 current"><a class="current reference internal" href="#">qemu-armv7a</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../qemu-armv7r/index.html">qemu-armv7r</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../qemu-armv7a/index.html">qemu-armv7a</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">qemu-armv7r</a></li>
 </ul>
 </li>
 </ul>
@@ -267,9 +267,9 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">ARM</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">QEMU</a></li>
-      <li class="breadcrumb-item active">qemu-armv7a</li>
+      <li class="breadcrumb-item active">qemu-armv7r</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/arm/qemu/boards/qemu-armv7a/index.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/arm/qemu/boards/qemu-armv7r/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -277,187 +277,73 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="qemu-armv7a">
-<h1>qemu-armv7a<a class="headerlink" href="#qemu-armv7a" title="Permalink to this heading"></a></h1>
-<p>This board configuration will use QEMU to emulate generic ARM v7-A series
+  <section id="qemu-armv7r">
+<h1>qemu-armv7r<a class="headerlink" href="#qemu-armv7r" title="Permalink to this heading"></a></h1>
+<p>This board configuration will use QEMU to emulate generic ARM v7-R series
 hardware platform and provides support for these devices:</p>
 <ul class="simple">
-<li><p>GICv2 interrupt controllers</p></li>
 <li><p>ARM Generic Timer</p></li>
 <li><p>PL011 UART controller</p></li>
-<li><p>PCI ECAM</p></li>
 <li><p>VirtIO Device</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The upstream QEMU does not support ARM Cortex-R virtual machine. This board
+uses the OpenVela QEMU fork which adds ARM Cortex-R support. You can find
+the source code and prebuilt binaries at:
+<a class="reference external" href="https://github.com/open-vela/platform_external_qemu/commits/trunk/">https://github.com/open-vela/platform_external_qemu/commits/trunk/</a></p>
+</div>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<p>Download and extract the prebuilt QEMU from OpenVela. For Linux x86_64, download from:
+<a class="reference external" href="https://github.com/open-vela/prebuilts_qemu_linux-x86_64">https://github.com/open-vela/prebuilts_qemu_linux-x86_64</a></p>
+<p>The QEMU binary path will be referred to as <code class="docutils literal notranslate"><span class="pre">&lt;QEMU_PATH&gt;</span></code> in the following sections:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Example path structure after extraction:
+# &lt;QEMU_PATH&gt;/bin/qemu-system-arm
+# &lt;QEMU_PATH&gt;/share/qemu/
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-L</span></code> option is required because the QEMU shared resources are not
+installed to system directories. It specifies the directory for the QEMU
+BIOS and device tree files.</p>
+</div>
+</section>
 <section id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
-<section id="nsh-single-core">
-<h3>NSH (Single Core)<a class="headerlink" href="#nsh-single-core" title="Permalink to this heading"></a></h3>
+<section id="nsh-flat-build">
+<h3>NSH (Flat Build)<a class="headerlink" href="#nsh-flat-build" title="Permalink to this heading"></a></h3>
 <p>Configuring NuttX and compile:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l qemu-armv7a:nsh
-$ make
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l qemu-armv7r:nsh
+$ make -j`nproc`
 </pre></div>
 </div>
 <p>Running with qemu:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic \
--machine virt,virtualization=off,gic-version=2 \
--net none -chardev stdio,id=con,mux=on -serial chardev:con \
--mon chardev=con,mode=readline -kernel ./nuttx
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ &lt;QEMU_PATH&gt;/bin/qemu-system-arm \
+  -L &lt;QEMU_PATH&gt;/share/qemu \
+  -M virt -semihosting -nographic -cpu cortex-r5f \
+  -kernel ./nuttx
 </pre></div>
 </div>
 </section>
-<section id="knsh-single-core">
-<h3>KNSH (Single Core)<a class="headerlink" href="#knsh-single-core" title="Permalink to this heading"></a></h3>
-<p>This is a configuration of testing the BUILD_KERNEL configuration:</p>
+<section id="pnsh-protected-build">
+<h3>PNSH (Protected Build)<a class="headerlink" href="#pnsh-protected-build" title="Permalink to this heading"></a></h3>
+<p>This is a configuration for testing the BUILD_PROTECTED configuration
+with MPU support:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd nuttx
-$ ./tools/configure.sh qemu-armv7a:knsh
-$ make V=1 -j7
-$ make export V=1
-$ cd ../apps
-$ ./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
-$ make import V=1
-$ cd ../nuttx
-$ qemu-system-arm -semihosting -M virt -m 1024 -nographic -kernel ./nuttx
-
-NuttShell (NSH) NuttX-12.3.0-RC0
-nsh&gt; uname -a
-NuttX 12.3.0-RC0 28dee592a3-dirty Oct 12 2023 03:03:07 arm qemu-armv7a
-nsh&gt; ps
-  PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK           STACK   USED  FILLED COMMAND
-    0     0   0 FIFO     Kthread N-- Ready              0000000000000000 004088 000896  21.9%  Idle_Task
-    1     1 100 RR       Kthread --- Waiting  Semaphore 0000000000000000 004040 000304   7.5%  lpwork 0x40119398 0x401193ac
-    2     2 100 RR       Task    --- Running            0000000000000000 003032 001032  34.0%  /system/bin/init
-nsh&gt; free
-                   total       used       free    largest  nused  nfree
-        Kmem:  133058556      16644  133041912  133041152     41      3
-        Page:  134217728    1105920  133111808  133111808
-nsh&gt; /system/bin/hello
-Hello, World!!
-nsh&gt;
+$ ./tools/configure.sh qemu-armv7r:pnsh
+$ make -j`nproc`
 </pre></div>
 </div>
-</section>
-<section id="inter-vm-share-memory-device-ivshmem">
-<h3>Inter-VM share memory Device (ivshmem)<a class="headerlink" href="#inter-vm-share-memory-device-ivshmem" title="Permalink to this heading"></a></h3>
-<p>Inter-VM shared memory support support can be found in <code class="docutils literal notranslate"><span class="pre">drivers/pci/pci_ivshmem.c</span></code>.</p>
-<p>This implementation is for <code class="docutils literal notranslate"><span class="pre">ivshmem-v1</span></code> which is compatible with QEMU and
-ACRN hypervisor but won’t work with Jailhouse hypervisor which uses <code class="docutils literal notranslate"><span class="pre">ivshmem-v2</span></code>.</p>
-<p>Please refer to the official <a class="reference external" href="https://www.qemu.org/docs/master/system/devices/ivshmem.html">Qemu ivshmem documentation</a> for more information.</p>
-<p>This is an example implementation for OpenAMP that supports multiple transport
-mechanisms including Inter-VM shared memory (ivshmem) and RPMSG port UART:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rpproxy:  Remote slave(client) proxy process.
-rpserver: Remote master(host) server process.
+<p>Running with qemu (note: both nuttx and nuttx_user must be loaded):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ &lt;QEMU_PATH&gt;/bin/qemu-system-arm \
+  -L &lt;QEMU_PATH&gt;/share/qemu \
+  -M virt -semihosting -nographic -cpu cortex-r5f \
+  -device loader,file=./nuttx_user \
+  -device loader,file=./nuttx
 </pre></div>
 </div>
-<p>Steps for Using NuttX as OpenAMP host and guest</p>
-<ol class="arabic simple">
-<li><p>Build images</p></li>
-</ol>
-<blockquote>
-<div><ol class="loweralpha">
-<li><p>Build rpserver:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B server -DBOARD_CONFIG=qemu-armv7a:rpserver -GNinja
-$ cmake --build server
-</pre></div>
-</div>
-</li>
-<li><p>Build rpproxy:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B proxy -DBOARD_CONFIG=qemu-armv7a:rpproxy -GNinja
-$ cmake --build proxy
-</pre></div>
-</div>
-</li>
-</ol>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Bringup firmware via Qemu:</p></li>
-</ol>
-<blockquote>
-<div><p>The configuration supports both ivshmem and RPMSG port UART transports.
-For ivshmem, use the following device syntax:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
--object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes
-</pre></div>
-</div>
-<ol class="loweralpha">
-<li><p>Start rpserver:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
-  -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
-  -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
-  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
-  -chardev socket,path=/tmp/rpmsg_port_uart_socket,server=on,wait=off,id=foo \
-  -device virtconsole,chardev=foo \
-  -kernel server/nuttx -nographic
-</pre></div>
-</div>
-</li>
-<li><p>Start rpproxy:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
-  -object memory-backend-file,discard-data=on,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
-  -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
-  -device virtio-serial-device,bus=virtio-mmio-bus.0 \
-  -chardev socket,path=/tmp/rpmsg_port_uart_socket,server=off,id=foo \
-  -device virtconsole,chardev=foo \
-  -kernel proxy/nuttx -nographic
-</pre></div>
-</div>
-</li>
-<li><p>Check the RPMSG Syslog in rpserver shell:</p></li>
-</ol>
-<blockquote>
-<div><p>In the current configuration, the proxy syslog will be sent to the server by default.
-You can check whether there is proxy startup log in the server shell.</p>
-<p>RpServer bring up:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic -machine virt,highmem=off \
-  -object memory-backend-file,id=shmmem-shmem0,mem-path=/dev/shm/ivshmem0,size=4194304,share=yes \
-  -device ivshmem-plain,id=shmem0,memdev=shmmem-shmem0,addr=0xb \
-  -kernel server/nuttx -nographic
-[    0.000000] [ 0] [  INFO] [server] pci_register_rptun_ivshmem_driver: Register ivshmem driver, id=0, cpuname=proxy, master=0
-...
-[    0.306127] [ 3] [  INFO] [server] rptun_ivshmem_probe: Start the wdog
-</pre></div>
-</div>
-<p>After rpproxy bring up, check the log from rpserver:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>NuttShell (NSH) NuttX-10.4.0
-server&gt;
-[    0.000000] [ 0] [  INFO] [proxy] pci_register_rptun_ivshmem_driver: Register ivshmem driver, id=0, cpuname=server, master=1
-...
-[    0.314039] [ 3] [  INFO] [proxy] ivshmem_probe: shmem addr=0x10400000 size=4194304 reg=0x10008000
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="loweralpha simple" start="4">
-<li><p>IPC test via RPMSG socket:</p></li>
-</ol>
-<blockquote>
-<div><p>Start rpmsg socket server:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>server&gt; rpsock_server stream block test
-server: create socket SOCK_STREAM nonblock 0
-server: bind cpu , name test ...
-server: listen ...
-server: try accept ...
-server: Connection accepted -- 4
-server: try accept ...
-</pre></div>
-</div>
-<p>Switch to proxy shell and start rpmsg socket client, test start:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>proxy&gt; rpsock_client stream block test server
-client: create socket SOCK_STREAM nonblock 0
-client: Connecting to server,test...
-client: Connected
-client send data, cnt 0, total len 64, BUFHEAD process0007, msg0000, name:test
-client recv data process0007, msg0000, name:test
-...
-client recv done, total 4096000, endflags, send total 4096000
-client: Terminating
-</pre></div>
-</div>
-<p>Check the log on rpserver shell:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>server recv data normal exit
-server Complete ret 0, errno 0
-</pre></div>
-</div>
-</div></blockquote>
-</div></blockquote>
 </section>
 </section>
 <section id="debugging-with-qemu">
@@ -465,16 +351,24 @@ server Complete ret 0, errno 0
 <p>The nuttx ELF image can be debugged with QEMU.</p>
 <ol class="arabic">
 <li><p>To debug the nuttx (ELF) with symbols, make sure the following change have
-applied to defconfig:</p>
+been applied to defconfig:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>+CONFIG_DEBUG_SYMBOLS=y
 </pre></div>
 </div>
 </li>
-<li><p>Run QEMU (Single Core) at shell terminal 1:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -cpu cortex-a7 -nographic \
--machine virt,virtualization=off,gic-version=2 \
--net none -chardev stdio,id=con,mux=on -serial chardev:con \
--mon chardev=con,mode=readline -kernel ./nuttx -S -s
+<li><p>Run QEMU at shell terminal 1 (for NSH flat build):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ &lt;QEMU_PATH&gt;/bin/qemu-system-arm \
+  -L &lt;QEMU_PATH&gt;/share/qemu \
+  -M virt -semihosting -nographic -cpu cortex-r5f \
+  -kernel ./nuttx -S -s
+</pre></div>
+</div>
+<p>Or for PNSH protected build:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ &lt;QEMU_PATH&gt;/bin/qemu-system-arm \
+  -L &lt;QEMU_PATH&gt;/share/qemu \
+  -M virt -semihosting -nographic -cpu cortex-r5f \
+  -device loader,file=./nuttx_user \
+  -device loader,file=./nuttx -S -s
 </pre></div>
 </div>
 </li>
@@ -484,69 +378,17 @@ applied to defconfig:</p>
 Continuing.
 ^C
 Program received signal SIGINT, Interrupt.
-nx_start () at armv7-a/arm_head.S:209
 (gdb)
+</pre></div>
+</div>
+<p>For PNSH protected build, you need to load the user space symbols as well:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ arm-none-eabi-gdb -tui --eval-command=&#39;target remote localhost:1234&#39; nuttx
+(gdb) add-symbol-file nuttx_user
+(gdb) c
 </pre></div>
 </div>
 </li>
 </ol>
-</section>
-<section id="pci-support">
-<h2>PCI support<a class="headerlink" href="#pci-support" title="Permalink to this heading"></a></h2>
-<p>To enable PCI support, set the following options:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_DEVICE_TREE=y
-CONFIG_PCI=y
-CONFIG_PCI=y
-</pre></div>
-</div>
-<p>Then run qemu with:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-machine virt,highmem=off,virtualization=off,gic-version=2
-</pre></div>
-</div>
-<p>The command that starts QEMU and enables the QEMU EDU device looks like this:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-arm -cpu cortex-a7 -nographic \
--machine virt,highmem=off,virtualization=off,gic-version=2 \
--chardev stdio,id=con,mux=on -serial chardev:con -mon chardev=con,mode=readline \
--kernel nuttx -device edu
-</pre></div>
-</div>
-</section>
-<section id="gdbstub-support">
-<h2>Gdbstub support<a class="headerlink" href="#gdbstub-support" title="Permalink to this heading"></a></h2>
-<p>The Qemu version must be above 9.2 to support two serial ports.</p>
-<p>One window:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh qemu-armv7a:gdbstub; make -j25
-qemu-system-arm -cpu cortex-a7 -nographic -machine virt,virtualization=off,gic-version=2 -net none -kernel ./nuttx  -serial mon:stdio -serial pty
-char device redirected to /dev/pts/26 (label serial1)
-nx_start: Entry
-uart_register: Registering /dev/console
-uart_register: Registering /dev/ttyS0
-</pre></div>
-</div>
-<p>Another window:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ gdb-multiarch nuttx -ex &quot;target remote /dev/pts/26&quot;
-GNU gdb (Ubuntu 15.0.50.20240403-0ubuntu1) 15.0.50.20240403-git
-Copyright (C) 2024 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-Type &quot;show copying&quot; and &quot;show warranty&quot; for details.
-This GDB was configured as &quot;x86_64-linux-gnu&quot;.
-Type &quot;show configuration&quot; for configuration details.
-For bug reporting instructions, please see:
-&lt;https://www.gnu.org/software/gdb/bugs/&gt;.
-Find the GDB manual and other documentation resources online at:
-&lt;http://www.gnu.org/software/gdb/documentation/&gt;.
-
-For help, type &quot;help&quot;.
-Type &quot;apropos word&quot; to search for commands related to &quot;word&quot;...
-Reading symbols from nuttx...
-Remote debugging using /dev/pts/26
-gdb_get_registers (state=0x402052f8) at gdbstub/lib_gdbstub.c:1020
-1020              reg = state-&gt;running_regs;
-(gdb) c
-</pre></div>
-</div>
 </section>
 </section>
 
@@ -554,8 +396,8 @@ gdb_get_registers (state=0x402052f8) at gdbstub/lib_gdbstub.c:1020
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../index.html" class="btn btn-neutral float-left" title="QEMU" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../qemu-armv7r/index.html" class="btn btn-neutral float-right" title="qemu-armv7r" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../qemu-armv7a/index.html" class="btn btn-neutral float-left" title="qemu-armv7a" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../../ra4m1/index.html" class="btn btn-neutral float-right" title="Renesas RA4M1" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
