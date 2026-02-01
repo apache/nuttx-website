@@ -144,7 +144,12 @@
 <li class="toctree-l3"><a class="reference internal" href="04_message_queue.html">Named Message Queue Interfaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="05_counting_semaphore.html">Counting Semaphore Interfaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="06_clocks_timers.html">Clocks and Timers</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Signal Interfaces</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Signal Interfaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#abnormal-termination-signals">Abnormal Termination Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#job-control-signals">Job Control Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ignored-by-default">Ignored By Default</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="08_pthread.html">Pthread Interfaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="09_env_vars.html">Environment Variables</a></li>
 <li class="toctree-l3"><a class="reference internal" href="10_filesystem.html">File System Interfaces</a></li>
@@ -206,13 +211,20 @@ task-specified signal handler function the next time that the task has
 priority. The signal handler is a user-supplied function that is bound
 to a specific signal and performs whatever actions are necessary
 whenever the signal is received.</p>
-<p>By default, here are no predefined actions for any signal. The default
+<p>By default, there are no predefined actions for any signal. The default
 action for all signals (i.e., when no signal handler has been supplied
 by the user) is to ignore the signal. In this sense, all NuttX are <em>real
 time</em> signals by default. If the configuration option
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_DEFAULT=y</span></code> is included, some signals will perform their
-default actions dependent upon addition configuration settings as
-summarized in the following table:</p>
+default actions dependent upon additional configuration settings as
+summarized in the following tables:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The default actions listed below reflect the current implementation in
+<code class="docutils literal notranslate"><span class="pre">sched/signal/sig_default.c</span></code>.</p>
+</div>
+<section id="abnormal-termination-signals">
+<h2>Abnormal Termination Signals<a class="headerlink" href="#abnormal-termination-signals" title="Permalink to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Signal</p></th>
@@ -221,6 +233,62 @@ summarized in the following table:</p>
 </tr>
 </thead>
 <tbody>
+<tr class="row-even"><td><p>SIGHUP</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGINT</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGQUIT</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGILL</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGTRAP</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGABRT</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGBUS</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGFPE</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGKILL</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGSEGV</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGTERM</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGXCPU</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGXFSZ</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGSYS</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tr>
 <tr class="row-even"><td><p>SIGUSR1</p></td>
 <td><p>Abnormal Termination</p></td>
 <td><p>CONFIG_SIG_SIGUSR1_ACTION</p></td>
@@ -229,33 +297,75 @@ summarized in the following table:</p>
 <td><p>Abnormal Termination</p></td>
 <td><p>CONFIG_SIG_SIGUSR2_ACTION</p></td>
 </tr>
-<tr class="row-even"><td><p>SIGALRM</p></td>
+<tr class="row-even"><td><p>SIGPIPE</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGPIPE_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGALRM</p></td>
 <td><p>Abnormal Termination</p></td>
 <td><p>CONFIG_SIG_SIGALRM_ACTION</p></td>
 </tr>
-<tr class="row-odd"><td><p>SIGPOLL</p></td>
+<tr class="row-even"><td><p>SIGVTALRM</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGALRM_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGPROF</p></td>
+<td><p>Abnormal Termination</p></td>
+<td><p>CONFIG_SIG_SIGPROF_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGPOLL</p></td>
 <td><p>Abnormal Termination</p></td>
 <td><p>CONFIG_SIG_SIGPOLL_ACTION</p></td>
 </tr>
+</tbody>
+</table>
+</section>
+<section id="job-control-signals">
+<h2>Job Control Signals<a class="headerlink" href="#job-control-signals" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Action</p></th>
+<th class="head"><p>Additional Configuration</p></th>
+</tr>
+</thead>
+<tbody>
 <tr class="row-even"><td><p>SIGSTOP</p></td>
-<td><p>Suspend task</p></td>
+<td><p>Suspend Task</p></td>
 <td><p>CONFIG_SIG_SIGSTOP_ACTION</p></td>
 </tr>
 <tr class="row-odd"><td><p>SIGTSTP</p></td>
-<td><p>Suspend task</p></td>
+<td><p>Suspend Task</p></td>
+<td><p>CONFIG_SIG_SIGSTOP_ACTION</p></td>
+</tr>
+<tr class="row-even"><td><p>SIGTTIN</p></td>
+<td><p>Suspend Task</p></td>
+<td><p>CONFIG_SIG_SIGSTOP_ACTION</p></td>
+</tr>
+<tr class="row-odd"><td><p>SIGTTOU</p></td>
+<td><p>Suspend Task</p></td>
 <td><p>CONFIG_SIG_SIGSTOP_ACTION</p></td>
 </tr>
 <tr class="row-even"><td><p>SIGCONT</p></td>
-<td><p>Resume task</p></td>
+<td><p>Resume Task</p></td>
 <td><p>CONFIG_SIG_SIGSTOP_ACTION</p></td>
 </tr>
-<tr class="row-odd"><td><p>SIGINT</p></td>
-<td><p>Abnormal Termination</p></td>
-<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</tbody>
+</table>
+</section>
+<section id="ignored-by-default">
+<h2>Ignored By Default<a class="headerlink" href="#ignored-by-default" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Action</p></th>
+<th class="head"><p>Additional Configuration</p></th>
 </tr>
-<tr class="row-even"><td><p>SIGKILL</p></td>
-<td><p>Abnormal Termination</p></td>
-<td><p>CONFIG_SIG_SIGKILL_ACTION</p></td>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SIGURG</p></td>
+<td><p>Ignore Signal</p></td>
+<td><p>CONFIG_SIG_SIGURG_ACTION</p></td>
 </tr>
 </tbody>
 </table>
@@ -868,6 +978,7 @@ or to terminate the process. This implementation only waits for any
 non-blocked signal to be received.</p>
 </dd></dl>
 
+</section>
 </section>
 
 
