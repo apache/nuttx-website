@@ -175,6 +175,7 @@
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="../qemu-armv7a/index.html">qemu-armv7a</a></li>
 <li class="toctree-l5 current"><a class="current reference internal" href="#">qemu-armv7r</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#userspace-pmu-access">Userspace PMU Access</a></li>
 </ul>
 </li>
 </ul>
@@ -316,7 +317,7 @@ BIOS and device tree files.</p>
 <h3>NSH (Flat Build)<a class="headerlink" href="#nsh-flat-build" title="Permalink to this heading"></a></h3>
 <p>Configuring NuttX and compile:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l qemu-armv7r:nsh
-$ make -j`nproc`
+$ make -j$(nproc)
 </pre></div>
 </div>
 <p>Running with qemu:</p>
@@ -333,7 +334,7 @@ $ make -j`nproc`
 with MPU support:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd nuttx
 $ ./tools/configure.sh qemu-armv7r:pnsh
-$ make -j`nproc`
+$ make -j$(nproc)
 </pre></div>
 </div>
 <p>Running with qemu (note: both nuttx and nuttx_user must be loaded):</p>
@@ -389,6 +390,93 @@ Program received signal SIGINT, Interrupt.
 </div>
 </li>
 </ol>
+</section>
+</section>
+<section id="userspace-pmu-access">
+<h1>Userspace PMU Access<a class="headerlink" href="#userspace-pmu-access" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>This document describes how to enable and use Performance Monitoring Unit (PMU)
+access from userspace applications on the ARM v7-R QEMU board. The PMU provides
+hardware performance counters that can be used to analyze and profile application
+performance.</p>
+<ol class="arabic simple">
+<li><p>ARM v7-R QEMU board support</p></li>
+<li><p>NuttX kernel with PMU support enabled</p></li>
+<li><p>User-space access permissions configured</p></li>
+</ol>
+<section id="kernel-configuration">
+<h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this heading"></a></h3>
+<p>To enable PMU support and userspace access, add the following configuration
+options to your defconfig:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>+CONFIG_ARCH_PERF_EVENTS_USER_ACCESS=y
++CONFIG_ARCH_PERF_EVENTS=y
+</pre></div>
+</div>
+<p>Userspace API</p>
+</section>
+</section>
+<section id="perf-gettime">
+<h2><strong>perf_gettime</strong><a class="headerlink" href="#perf-gettime" title="Permalink to this heading"></a></h2>
+<section id="basic-usage">
+<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">clock_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">end</span><span class="p">;</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">frequency</span><span class="p">;</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">cycles</span><span class="p">;</span>
+
+<span class="n">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">perf_getfreq</span><span class="p">();</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">frequency</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;ERROR: Performance frequency not available</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;Operation Profiling Results:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;CPU Frequency: %lu Hz</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">frequency</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;%-40s | %-12s | %-12s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Operation&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cycles&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Time (us)&quot;</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;%-40s-+-%-12s-+-%-12s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">       </span><span class="s">&quot;----------------------------------------&quot;</span><span class="p">,</span>
+<span class="w">       </span><span class="s">&quot;------------&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;------------&quot;</span><span class="p">);</span>
+
+<span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">perf_gettime</span><span class="p">();</span>
+<span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">result</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">perf_gettime</span><span class="p">();</span>
+<span class="n">cycles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">;</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;%-40s | %12lu | %12lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Multiplication (1K times)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cycles</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">cycles</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000000UL</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">frequency</span><span class="p">);</span>
+
+<span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">perf_gettime</span><span class="p">();</span>
+<span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000000</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">result</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">perf_gettime</span><span class="p">();</span>
+<span class="n">cycles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">;</span>
+
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;%-40s | %12lu | %12lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Division (1K times)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cycles</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">cycles</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000000UL</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">frequency</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="testing-with-qemu">
+<h2>Testing with QEMU<a class="headerlink" href="#testing-with-qemu" title="Permalink to this heading"></a></h2>
+<section id="pnsh-protected-configuration">
+<h3>PNSH (Protected) Configuration<a class="headerlink" href="#pnsh-protected-configuration" title="Permalink to this heading"></a></h3>
+<p>For protected build with userspace PMU access:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh qemu-armv7r:pnsh
+$ make -j$(nproc)
+</pre></div>
+</div>
+<ol class="arabic" start="2">
+<li><p>Run QEMU (load both kernel and userspace):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-arm -M virt -semihosting -nographic -cpu cortex-r5f -device loader,file=nuttx_user -device loader,file=nuttx
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
 </section>
 </section>
 
