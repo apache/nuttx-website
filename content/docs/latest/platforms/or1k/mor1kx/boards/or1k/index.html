@@ -209,7 +209,185 @@
              
   <section id="or1k">
 <h1>or1k<a class="headerlink" href="#or1k" title="Permalink to this heading"></a></h1>
-<p>Generic OpenRISC board.</p>
+<p>Generic OpenRISC board, suitable for use with Qemu, for example.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<blockquote>
+<div><p>2018-04-2</p>
+<p>I have been trying to retrace all of Matt Thompson’s steps to get or1k
+building running on Qemu. I am stuck at the moment because it looks like there
+is some problem with my Kubuntu package manager. The Qemu configuration gives:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ERROR:  glib-2.22 gthread-2.0 is required to compile QEMU.</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>But it looks like to do have a later version of gthread-2.0 installed.</p>
+</div>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<section id="pre-built-or1k-elf-toolchain-newlib">
+<h3>Pre-built or1k-elf Toolchain (newlib)<a class="headerlink" href="#pre-built-or1k-elf-toolchain-newlib" title="Permalink to this heading"></a></h3>
+<p>Ref: <a class="reference external" href="https://openrisc.io/newlib/">https://openrisc.io/newlib/</a></p>
+<p>You can install pre-compiled toolchains and install them on your Linux system.
+We have prebuilt-toolchains for releases of the different components that are
+preferably installed to /opt/toolchains/or1k-elf. You can find all releases
+here. Those are current releases:</p>
+<blockquote>
+<div><p>GCC 4.9.2, Binutils 2.26, Newlib 2.3.0 (+or1k backports), GDB 7.11
+<a class="reference external" href="https://github.com/openrisc/newlib/releases/download/v2.3.0-1/or1k-elf_gcc4.9.3_binutils2.26_newlib2.3.0-1_gdb7.11.tgz">https://github.com/openrisc/newlib/releases/download/v2.3.0-1/or1k-elf_gcc4.9.3_binutils2.26_newlib2.3.0-1_gdb7.11.tgz</a></p>
+<p>GCC 5.2.0, Binutils 2.26, Newlib 2.3.0 (+or1k backports), GDB 7.11
+<a class="reference external" href="https://github.com/openrisc/newlib/releases/download/v2.3.0-1/or1k-elf_gcc5.2.0_binutils2.26_newlib2.3.0-1_gdb7.11.tgz">https://github.com/openrisc/newlib/releases/download/v2.3.0-1/or1k-elf_gcc5.2.0_binutils2.26_newlib2.3.0-1_gdb7.11.tgz</a></p>
+</div></blockquote>
+<p>After downloading a release you can extract it anywhere in your filesystem, we
+recommend to /opt/toolchains/or1k-elf/. You need to add the toolchain to your
+path:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span>/opt/toolchains/or1k-elf/bin:<span class="si">${</span><span class="nv">PATH</span><span class="si">}</span>
+</pre></div>
+</div>
+</section>
+<section id="openrisc-gnu-tool-chain-from-source">
+<h3>OpenRISC GNU tool chain from source<a class="headerlink" href="#openrisc-gnu-tool-chain-from-source" title="Permalink to this heading"></a></h3>
+<p>Ref: <a class="reference external" href="https://github.com/juliusbaxter/mor1kx-dev-env/wiki/OpenRISC-tool-chain-installation-guide">https://github.com/juliusbaxter/mor1kx-dev-env/wiki/OpenRISC-tool-chain-installation-guide</a></p>
+<p>These instructions are as per the project’s GNU tool chain page on [OpenCores]
+(<a class="reference external" href="http://opencores.org/or1k">http://opencores.org/or1k</a>).</p>
+<p>What is required first is a copy of the tool chain source. There are two
+repositories - one for GCC (called or1k-gcc) and one for the rest of the GNU
+tools and libraries (binutils, GDB, newlib, called or1k-src). We must get the
+entirety of both.</p>
+<p>You will need to download the repositories as a zip file OR use git.
+Download zip files (save into <code class="docutils literal notranslate"><span class="pre">$HOME/or1k</span></code>):</p>
+<ul class="simple">
+<li><p>or1k-src: <a class="reference external" href="https://github.com/openrisc/or1k-src/archive/or1k.zip">https://github.com/openrisc/or1k-src/archive/or1k.zip</a></p></li>
+<li><p>or1k-gcc: <a class="reference external" href="https://github.com/openrisc/or1k-gcc/archive/or1k.zip">https://github.com/openrisc/or1k-gcc/archive/or1k.zip</a></p></li>
+</ul>
+<p>and unzip into the <code class="docutils literal notranslate"><span class="pre">$HOME/or1k</span></code> directory, making 2 directories:
+<code class="docutils literal notranslate"><span class="pre">or1k-src-or1k/</span></code> and <code class="docutils literal notranslate"><span class="pre">or1k-gcc-or1k/</span></code></p>
+<p>Rename those directories to be without the trailing <code class="docutils literal notranslate"><span class="pre">-or1k</span></code>, so:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mv<span class="w"> </span>or1k-src-or1k<span class="w"> </span>or1k-src
+<span class="gp">$ </span>mv<span class="w"> </span>or1k-gcc-or1k<span class="w"> </span>or1k-gcc
+</pre></div>
+</div>
+<p>or with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir<span class="w"> </span><span class="nv">$HOME</span>/or1k<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$HOME</span>/or1k
+<span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>git://github.com/openrisc/or1k-src.git
+<span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>git://github.com/openrisc/or1k-gcc.git
+</pre></div>
+</div>
+<p>Once the source trees are in place, we will build.</p>
+<p>We will install the tool chain into <code class="docutils literal notranslate"><span class="pre">/opt/or1k-toolchain</span></code>. Make sure that
+directory is writeable eg.:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>mkdir<span class="w"> </span>/opt/or1k-toolchain
+<span class="gp">$ </span>sudo<span class="w"> </span>chown<span class="w"> </span><span class="nv">$USER</span><span class="w"> </span>/opt/or1k-toolchain
+</pre></div>
+</div>
+<p>The following commands will build the tool chain (starting in the <code class="docutils literal notranslate"><span class="pre">$HOME/or1k</span></code>
+directory):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Build<span class="w"> </span>the<span class="w"> </span>first<span class="w"> </span><span class="nb">set</span><span class="w"> </span>of<span class="w"> </span>tools,<span class="w"> </span>binutils<span class="w"> </span>etc.
+<span class="gp"># </span>NOTE:<span class="w"> </span>on<span class="w"> </span><span class="m">32</span>-bit<span class="w"> </span>machines<span class="w"> </span>--disable-werror<span class="w"> </span>is<span class="w"> </span>needed<span class="w"> </span>due<span class="w"> </span>to<span class="w"> </span>an<span class="w"> </span>enum<span class="w"> </span>acting<span class="w"> </span>as<span class="w"> </span>bit<span class="w"> </span>mask<span class="w"> </span>is<span class="w"> </span>considered<span class="w"> </span>signed
+
+<span class="gp">$ </span>mkdir<span class="w"> </span>bld-or1k-src<span class="w"> </span>bld-or1k-gcc
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>bld-or1k-src
+<span class="gp">$ </span>../or1k-src/configure<span class="w"> </span>--target<span class="o">=</span>or1k-elf<span class="w"> </span>--prefix<span class="o">=</span>/opt/or1k-toolchain<span class="w"> </span>--enable-shared<span class="w"> </span>--disable-itcl<span class="w"> </span>--disable-tk<span class="w"> </span>--disable-tcl<span class="w"> </span>--disable-winsup<span class="w"> </span>--disable-libgui<span class="w"> </span>--disable-rda<span class="w"> </span>--disable-sid<span class="w"> </span>--disable-sim<span class="w"> </span>--disable-gdb<span class="w"> </span>--with-sysroot<span class="w"> </span>--disable-newlib<span class="w"> </span>--disable-libgloss<span class="w"> </span>--disable-werror
+<span class="gp">$ </span>make
+<span class="gp">$ </span>make<span class="w"> </span>install
+
+<span class="gp"># </span>Build<span class="w"> </span>gcc
+
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>../bld-or1k-gcc
+<span class="gp">$ </span>../or1k-gcc/configure<span class="w"> </span>--target<span class="o">=</span>or1k-elf<span class="w"> </span>--prefix<span class="o">=</span>/opt/or1k-toolchain<span class="w"> </span>--enable-languages<span class="o">=</span>c<span class="w"> </span>--disable-shared<span class="w"> </span>--disable-libssp
+<span class="gp">$ </span>make
+<span class="gp">$ </span>make<span class="w"> </span>install
+
+<span class="gp"># </span>build<span class="w"> </span>newlib<span class="w"> </span>and<span class="w"> </span>gdb<span class="w"> </span><span class="o">(</span>without<span class="w"> </span>or1ksim<span class="w"> </span><span class="k">in</span><span class="w"> </span>this<span class="w"> </span><span class="k">case</span><span class="o">)</span>
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>../bld-or1k-src
+<span class="gp">$ </span>../or1k-src/configure<span class="w"> </span>--target<span class="o">=</span>or1k-elf<span class="w"> </span>--prefix<span class="o">=</span>/opt/or1k-toolchain<span class="w"> </span>--enable-shared<span class="w"> </span>--disable-itcl<span class="w"> </span>--disable-tk<span class="w"> </span>--disable-tcl<span class="w"> </span>--disable-winsup<span class="w"> </span>--disable-libgui<span class="w"> </span>--disable-rda<span class="w"> </span>--disable-sid<span class="w"> </span>--enable-sim<span class="w"> </span>--disable-or1ksim<span class="w"> </span>--enable-gdb<span class="w"> </span>--with-sysroot<span class="w"> </span>--enable-newlib<span class="w"> </span>--enable-libgloss<span class="w"> </span>--disable-werror
+<span class="gp">$ </span>make
+<span class="gp">$ </span>make<span class="w"> </span>install
+
+<span class="gp"># </span>build<span class="w"> </span>gcc<span class="w"> </span>again,<span class="w"> </span>this<span class="w"> </span><span class="nb">time</span><span class="w"> </span>with<span class="w"> </span>newlib
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>../bld-or1k-gcc
+<span class="gp">$ </span>../or1k-gcc/configure<span class="w"> </span>--target<span class="o">=</span>or1k-elf<span class="w"> </span>--prefix<span class="o">=</span>/opt/or1k-toolchain<span class="w"> </span>--enable-languages<span class="o">=</span>c,c++<span class="w"> </span>--disable-shared<span class="w"> </span>--disable-libssp<span class="w"> </span>--with-newlib
+<span class="gp">$ </span>make
+<span class="gp">$ </span>make<span class="w"> </span>install
+</pre></div>
+</div>
+<p>Finally, we will want to run the following to put this path in our <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code>
+file:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;# OpenRISC tool chain path&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<span class="gp">$ </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;export PATH=</span><span class="nv">$PATH</span><span class="s2">:/opt/or1k-toolchain/bin&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="openocd">
+<h3>OpenOCD<a class="headerlink" href="#openocd" title="Permalink to this heading"></a></h3>
+<p>Ref: <a class="reference external" href="https://github.com/juliusbaxter/mor1kx-dev-env/wiki/OpenRISC-tool-chain-installation-guide">https://github.com/juliusbaxter/mor1kx-dev-env/wiki/OpenRISC-tool-chain-installation-guide</a></p>
+<p>OpenOCD is the debug proxy we’ll use to talk to the board over JTAG.</p>
+<p>Download the source to <code class="docutils literal notranslate"><span class="pre">$HOME/or1k</span></code> with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/openrisc/openOCD.git
+</pre></div>
+</div>
+<p>Go into the OpenOCD directory and, the very first time, you must bootstrap it:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./bootstrap
+</pre></div>
+</div>
+<p>Once that is finished, configure and compile it:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./configure<span class="w"> </span>--enable-usb_blaster_libftdi<span class="w"> </span>--enable-adv_debug_sys<span class="w"> </span><span class="se">\</span>
+--enable-altera_vjtag<span class="w"> </span>--enable-maintainer-mode
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>You can run make install if you like, too.</p>
+</section>
+<section id="qemu">
+<h3>QEMU<a class="headerlink" href="#qemu" title="Permalink to this heading"></a></h3>
+<p>The compiled ELF that works in or1ksim (<a class="reference external" href="https://github.com/openrisc/or1ksim">https://github.com/openrisc/or1ksim</a>).</p>
+<p>Ref: <a class="reference external" href="https://github.com/openrisc/or1ksim">https://github.com/openrisc/or1ksim</a></p>
+<p>Or1ksim is a generic OpenRISC 1000 architecture simulator capable of emulating
+OpenRISC based computer systems at the instruction level. It includes models of
+a range of peripherals, allowing complete systems to be modeled.  For full
+details see <a class="reference external" href="http://opencores.org/or1k/Or1ksim">http://opencores.org/or1k/Or1ksim</a></p>
+<p>This is a variant of the standard Or1ksim, which uses or1k as the architecture
+name, rather than or32. At some stage in the future this will be merged in, so
+that either architecture name is supported.</p>
+<section id="or1k-build">
+<h4>Or1k Build<a class="headerlink" href="#or1k-build" title="Permalink to this heading"></a></h4>
+<p>Or1ksim uses a standard GNU autoconf/automake installation and is designed to
+be built in a separate build directory. So from the main directory, a minimal
+install can be done with</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>or1ksim
+<span class="gp">$ </span>mkdir<span class="w"> </span>bd
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>bd
+<span class="gp">$ </span>../configure
+<span class="gp">$ </span>make
+<span class="gp">$ </span>sudo<span class="w"> </span>make<span class="w"> </span>install
+</pre></div>
+</div>
+<p>This will install the executables ‘sim’, ‘profile’, and ‘mprofile’ at
+<code class="docutils literal notranslate"><span class="pre">/user/local/bin</span></code> and libraries at <code class="docutils literal notranslate"><span class="pre">/usr/local/lib</span></code>.</p>
+<p>The UART must be enabled in sim.cfg BEFORE the build in order for the NSH
+configuration to work:</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="w"> </span>section uart
+<span class="gd">-  enabled  = 0</span>
+<span class="gi">+  enabled  = 1</span>
+</pre></div>
+</div>
+</section>
+<section id="qemu-build">
+<h4>Qemu Build<a class="headerlink" href="#qemu-build" title="Permalink to this heading"></a></h4>
+<p>Download: <a class="reference external" href="https://www.qemu.org/download/#source">https://www.qemu.org/download/#source</a></p>
+<p>To configure and build: (ref: <a class="reference external" href="https://wiki.qemu.org/Documentation/Platforms/OpenRISC">https://wiki.qemu.org/Documentation/Platforms/OpenRISC</a>)</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./configure<span class="w"> </span>--target-list<span class="o">=</span>or1k-softmmu
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>Then this command will get it running:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>qemu-system-or1k<span class="w"> </span>-kernel<span class="w"> </span>nuttx-or1k-sim.elf<span class="w"> </span>-serial<span class="w"> </span>stdio<span class="w"> </span>-nographic<span class="w"> </span><span class="se">\</span>
+-monitor<span class="w"> </span>none
+</pre></div>
+</div>
+</section>
+</section>
+</section>
 </section>
 
 
