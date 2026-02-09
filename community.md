@@ -36,7 +36,7 @@ You can:
 * Report bugs and submit patches.
 * Contribute code or documentation.
 
-Visit the [Contributing] page for more information.
+Visit the [Contributing](https://nuttx.apache.org/docs/latest/contributing/index.html) page for more information.
 
 
 ### Mailing list
