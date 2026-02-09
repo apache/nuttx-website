@@ -84,7 +84,7 @@ for `x86_64-linux`, `Darwin`, `FreeBSD`, and other build hosts with
 `bundle lock --add-platform <your_platform>` command.
 
 
-## Updating the Documentaion
+## Updating the Documentation
 
 NuttX Technical Documentation is part of the
 [NuttX source code repository](https://github.com/apache/nuttx/tree/master/Documentation).
