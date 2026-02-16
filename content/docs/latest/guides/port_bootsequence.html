@@ -240,13 +240,54 @@
   <section id="the-diagram-of-boot-sequence">
 <h1>The diagram of boot sequence<a class="headerlink" href="#the-diagram-of-boot-sequence" title="Permalink to this heading"></a></h1>
 <p>The premise of this sequence diagram is NuttX12.4.0, cxd56xx, non-SMP and Flat build.</p>
-<p>The beginning of boot sequence is __start().
-__start() will call nx_start(). nx_start() will initialize the kernel and call nsh_main().
-nsh_main() will execute NuttShell(NSH).
-nx_start() is NuttX standard function, but the behavior depends on some kernel configurations.
-For example, the calling nsh_main() is also configurable.
-About related kernel configurations, see <a class="reference internal" href="port_relatedkernelconfigrations.html"><span class="doc">The list of related kernel configurations</span></a>.</p>
-<img alt="../_images/port_bootsequence-12.4.0.png" src="../_images/port_bootsequence-12.4.0.png" />
+<p>The beginning of boot sequence is <code class="docutils literal notranslate"><span class="pre">__start()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">__start()</span></code> will call <code class="docutils literal notranslate"><span class="pre">nx_start()</span></code>. <code class="docutils literal notranslate"><span class="pre">nx_start()</span></code> will initialize the
+kernel and call <code class="docutils literal notranslate"><span class="pre">nsh_main()</span></code>. <code class="docutils literal notranslate"><span class="pre">nsh_main()</span></code> will execute NuttShell(NSH).
+<code class="docutils literal notranslate"><span class="pre">nx_start()</span></code> is NuttX standard function, but the behavior depends on some
+kernel configurations. For example, the calling <code class="docutils literal notranslate"><span class="pre">nsh_main()</span></code> is also
+configurable. About related kernel configurations, see
+<a class="reference internal" href="port_relatedkernelconfigrations.html"><span class="doc">The list of related kernel configurations</span></a>.</p>
+<p class="plantuml">
+<img src="../_images/plantuml-6fc4b6847ab85f76e22a6f8abe5188797729d229.png" alt="bootloader --&gt; cxd56_start.c : Jump to __start by function call or de-assert the reset signal of CM4F
+
+note over cxd56_start.c : Initialize SP
+note over cxd56_start.c : Disable IRQ &#64;processor level
+note over cxd56_start.c : Initialize .data/.bss
+note over cxd56_start.c : cxd56_board_initialize() as &lt;arch&gt;_board_initialize()
+
+cxd56_start.c --&gt; nx_start.c : nx_start()
+
+note over nx_start.c : Initialize IDLE task TCB
+note over nx_start.c : nxsem_initialize()
+note over nx_start.c : Initialize HEAP
+note over nx_start.c : Create and initialize IDLE group instance
+note over nx_start.c : sched_lock()
+note over nx_start.c : fs_initialize()
+note over nx_start.c : irq_initialize()
+note over nx_start.c : clock_initialize()
+note over nx_start.c : timer_initialize()
+note over nx_start.c : nxsig_initialize()
+note over nx_start.c : nxmq_initialize()
+note over nx_start.c : net_initialize()
+note over nx_start.c : binfmt_initialize()
+note over nx_start.c : up_initialize()
+note over nx_start.c : drivers_initialize()
+note over nx_start.c : board_early_initialize()
+note over nx_start.c : Initialize SDIO for IDLE task
+
+nx_start.c --&gt; nx_bringup.c : nx_bringup()
+
+note over nx_bringup.c : Initialize environment variables (PWD, PATH, LD_LIBRARY_PATH)
+note over nx_bringup.c : Start work queues
+
+nx_bringup.c --&gt; nx_start_application : nx_start_task()
+
+note over nx_start_application : board_late_initialize()
+note over nx_start_application : coredump_initialize()
+note over nx_start_application : Start nsh_main() as the application initialization task
+
+note over nx_start.c : up_idle()"/>
+</p>
 </section>
 
 

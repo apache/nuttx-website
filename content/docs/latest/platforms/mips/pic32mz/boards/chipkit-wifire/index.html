@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>chipkit-wifire &mdash; NuttX latest documentation</title>
+  <title>chipKIT Wi-FIRE &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -46,7 +46,7 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="flipnclick-pic32mz" href="../flipnclick-pic32mz/index.html" />
+    <link rel="next" title="Flip &amp; Click PIC32MZ" href="../flipnclick-pic32mz/index.html" />
     <link rel="prev" title="Microchip pic32mz" href="../../index.html" /> 
 </head>
 
@@ -199,7 +199,7 @@
           <li class="breadcrumb-item"><a href="../../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">MIPS</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Microchip pic32mz</a></li>
-      <li class="breadcrumb-item active">chipkit-wifire</li>
+      <li class="breadcrumb-item active">chipKIT Wi-FIRE</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/mips/pic32mz/boards/chipkit-wifire/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -209,114 +209,118 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="chipkit-wifire">
-<h1>chipkit-wifire<a class="headerlink" href="#chipkit-wifire" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-======
-
-  chipKIT Wi-FIRE board
-  (https://chipkit.net/wiki/index.php?title=ChipKIT_Wi-Fire) features
-  the Microchip PIC32MZ2048EFG100 MCU, Microchip MRF24WG0MA Wi-Fi module,
-  USB 2.0 Full-Speed / Hi-Speed OTG controller, Micro SD card connector etc.
-  The PIC32MZ2048EFG100 is a 200 MHz 32-bit MIPS M5150 operation with 2MB Flash
-  memory and 512KB RAM.
-
-Contents
-========
-
-  - Toolchain
-  - Building NuttX for the chipKIT Wi-FIRE board
-  - Programming Flash
-  - Serial console
-
-Toolchain
-=========
-
-  The following Toolchain options have been tested and confirmed to work:
-
-    CONFIG_MIPS32_TOOLCHAIN_PINGUINOL               - Pinquino Toolchain
-                                                      for Linux
-    CONFIG_MIPS32_TOOLCHAIN_SOURCERY_CODEBENCH_LITE - Sourcery CodeBench Lite
-                                                      Toolchain for Linux
-
-  Pinquino Toolchain can be downloaded here:
-
-    https://github.com/PinguinoIDE/pinguino-compilers
-
-  Sourcery CodeBench Lite Toolchain for Linux can be downloaded and
-  installed as follows:
-
-    $ wget https://sourcery.mentor.com/GNUToolchain/package12725/public/mips-sde-elf/mips-2014.05-24-mips-sde-elf-i686-pc-linux-gnu.tar.bz2
-    $ sudo tar xvjf mips-2014.05-24-mips-sde-elf-i686-pc-linux-gnu.tar.bz2 \
-      -C /usr/local
-
-Building NuttX for the chipKIT Wi-FIRE board
-============================================
-
-  $ cd nuttx
-  $ make apps_distclean
-  $ make distclean
-  $ ./tools/configure.sh -l chipkit-wifire:nsh
-  $ make
-
-Programming Flash
-=================
-
-  CAUTION:
-
-  Currently the pre-installed bootloader of the chipKIT Wi-FIRE board
-  is not supported in this NuttX configuration. Doing the following
-  steps will erase the factory installed bootloader in the Flash
-  memory! If you are going to recover the bootloader later on your
-  chipKIT Wi-FIRE board, the original chipKIT bootloader can be found here:
-  https://reference.digilentinc.com/_media/chipkit_wifire/chipkit-wifire-v01000303.zip
-
-  Flash memory can be programmed with a PICkit 2 programmer via the
-  6-pin ICSP connector JP1 of chipKIT Wi-FIRE board.
-
-  A program is needed to interface to the PICkit 2. One such program
-  is the pic32prog utility:
-  https://github.com/sergev/pic32prog.git
-
-  It is recommended to configure udev rules so that root privileges
-  are not needed to use pic32prog; root privileges will only be needed
-  for this one-time setup:
-
-  1.  On most Linux distributions, add the user to the plugdev group:
-
-      $ sudo useradd -G plugdev $(whoami)
-
-  2.  Create the file /etc/udev/rules.d/60-pickit.rules with this
-      content (from http://kair.us/projects/pickitminus/):
-
-      # PICkit 2
-      ATTRS{idVendor}==&quot;04d8&quot;, ATTRS{idProduct}==&quot;0033&quot;, MODE=&quot;0660&quot;, GROUP=&quot;plugdev&quot;
-
-      # PICkit 3
-      ATTRS{idVendor}==&quot;04d8&quot;, ATTRS{idProduct}==&quot;900a&quot;, MODE=&quot;0660&quot;, GROUP=&quot;plugdev&quot;
-
-  3.  Restart udev (or restart the computer):
-
-      Debian: $ sudo udevadm trigger
-      Arch:   $ sudo udevadm control --reload &amp;&amp; sudo udevadm trigger
-
-  4.  If PICkit was already plugged into USB, unplug and replug it.
-
-  Now NuttX can be flashed to the board as follows:
-
-    $ pic32prog nuttx.hex
-
-Serial console
-==============
-
-  Connect USB cable from your PC to connector J1 (labeled &quot;UART&quot;) of
-  the chipKIT Wi-FIRE board.
-  Then use some serial console client (minicom, picocom, teraterm, etc)
-  configured to 115200 8n1 without software or hardware flow control.
-
-  Reset the board and you should see NuttX starting in the serial.
+  <section id="chipkit-wi-fire">
+<h1>chipKIT Wi-FIRE<a class="headerlink" href="#chipkit-wi-fire" title="Permalink to this heading"></a></h1>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-mips.html"><span class="doc">arch:mips</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-pic32mz.html"><span class="doc">chip:pic32mz</span></a></p>
+<figure class="align-center" id="id1" style="width: 40%">
+<img alt="The chipKIT Wi-FIRE development board" src="../../../../../_images/chipkit-wifire.jpg" />
+<figcaption>
+<p><span class="caption-text">The chipKIT Wi-FIRE development board</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<p>This the documentation page for NuttX support of the <a class="reference external" href="https://chipkit.net/wiki/index.php?title=ChipKIT_Wi-Fire">chipKIT Wi-FIRE board</a>.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Microchip PIC32MZ2048EFG100 MCU &#64;200MHz</p></li>
+<li><p>Microchip MRF24WG0MA Wi-Fi module</p></li>
+<li><p>USB 2.0</p></li>
+<li><p>Full-Speed / Hi-Speed OTG controller,</p></li>
+<li><p>Micro SD card connector</p></li>
+<li><p>32-bit MIPS M5150 operation</p></li>
+<li><p>2MB flash memory</p></li>
+<li><p>512KB RAM</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>The following toolchain options have been tested and confirmed to work:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MIPS32_TOOLCHAIN_PINGUINOL</span></code>: Pinquino Toolchain for Linux</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MIPS32_TOOLCHAIN_SOURCERY_CODEBENCH_LITE</span></code>: Sourcery CodeBench Lite
+Toolchain for Linux</p></li>
+</ul>
+<p>Pinquino Toolchain can be downloaded here:
+<a class="reference external" href="https://github.com/PinguinoIDE/pinguino-compilers">https://github.com/PinguinoIDE/pinguino-compilers</a></p>
+<p>Sourcery CodeBench Lite Toolchain for Linux can be downloaded and
+installed as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>wget<span class="w"> </span>https://sourcery.mentor.com/GNUToolchain/package12725/public/mips-sde-elf/mips-2014.05-24-mips-sde-elf-i686-pc-linux-gnu.tar.bz2
+<span class="gp">$ </span>sudo<span class="w"> </span>tar<span class="w"> </span>xvjf<span class="w"> </span>mips-2014.05-24-mips-sde-elf-i686-pc-linux-gnu.tar.bz2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-C<span class="w"> </span>/usr/local
 </pre></div>
 </div>
+</section>
+<section id="flashing">
+<h2>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Currently the pre-installed bootloader of the chipKIT Wi-FIRE board is not
+supported in this NuttX configuration. Doing the following steps will erase
+the factory installed bootloader in the Flash memory! If you are going to
+recover the bootloader later on your chipKIT Wi-FIRE board, the original
+chipKIT bootloader can be found here:
+<a class="reference external" href="https://reference.digilentinc.com/_media/chipkit_wifire/chipkit-wifire-v01000303.zip">https://reference.digilentinc.com/_media/chipkit_wifire/chipkit-wifire-v01000303.zip</a></p>
+</div>
+<p>Flash memory can be programmed with a PICkit 2 programmer via the 6-pin ICSP
+connector JP1 of chipKIT Wi-FIRE board.</p>
+<p>A program is needed to interface to the PICkit 2. One such program is the
+pic32prog utility: <a class="reference external" href="https://github.com/sergev/pic32prog.git">https://github.com/sergev/pic32prog.git</a></p>
+<p>It is recommended to configure udev rules so that root privileges are not needed
+to use pic32prog; root privileges will only be needed for this one-time setup:</p>
+<ol class="arabic">
+<li><p>On most Linux distributions, add the user to the plugdev group:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>useradd<span class="w"> </span>-G<span class="w"> </span>plugdev<span class="w"> </span><span class="k">$(</span>whoami<span class="k">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Create the file /etc/udev/rules.d/60-pickit.rules with this content (from
+<a class="reference external" href="http://kair.us/projects/pickitminus/">http://kair.us/projects/pickitminus/</a>):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># PICkit 2
+ATTRS{idVendor}==&quot;04d8&quot;, ATTRS{idProduct}==&quot;0033&quot;, MODE=&quot;0660&quot;, GROUP=&quot;plugdev&quot;
+
+# PICkit 3
+ATTRS{idVendor}==&quot;04d8&quot;, ATTRS{idProduct}==&quot;900a&quot;, MODE=&quot;0660&quot;, GROUP=&quot;plugdev&quot;
+</pre></div>
+</div>
+</li>
+<li><p>Restart udev (or restart the computer):</p>
+<p>On Debian:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>udevadm<span class="w"> </span>trigger
+</pre></div>
+</div>
+<p>On Arch:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>udevadm<span class="w"> </span>control<span class="w"> </span>--reload<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>udevadm<span class="w"> </span>trigger
+</pre></div>
+</div>
+</li>
+<li><p>If PICkit was already plugged into USB, unplug and replug it. Now NuttX can
+be flashed to the board as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pic32prog<span class="w"> </span>nuttx.hex
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>You can use the following command to configure the NuttX build, where
+<code class="docutils literal notranslate"><span class="pre">&lt;config&gt;</span></code> is one of the configurations listed below:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>-l<span class="w"> </span>chipkit-wifire:nsh
+</pre></div>
+</div>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>Basic serial console access to the NSH shell.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Connect USB cable from your PC to connector J1 (labeled “UART”) of
+the chipKIT Wi-FIRE board.
+Then use some serial console client (minicom, picocom, teraterm, etc)
+configured to 115200 8n1 without software or hardware flow control.</p>
+<p>Reset the board and you should see NuttX starting in the serial.</p>
+</div>
+</section>
+</section>
 </section>
 
 
@@ -324,7 +328,7 @@ Serial console
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../../index.html" class="btn btn-neutral float-left" title="Microchip pic32mz" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../flipnclick-pic32mz/index.html" class="btn btn-neutral float-right" title="flipnclick-pic32mz" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../flipnclick-pic32mz/index.html" class="btn btn-neutral float-right" title="Flip &amp; Click PIC32MZ" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
