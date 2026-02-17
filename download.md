@@ -36,21 +36,21 @@ and another for the integrated Apps.
 <table class="table">
     <tr>
         <th class="col-md-1">Version</th>
-        <th>Summary</th>
-        <th class="col-md-1 text-right">Archive</th>
-        <th class="col-md-1 text-right">SHA-512</th>
-        <th class="col-md-1 text-right">Signature</th>
-        <th class="col-md-2 text-right">Release&nbsp;Date</th>
+        <th class="col-md-4">Summary</th>
+        <th class="col-md-2 text-right">Archive</th>
+        <th class="col-md-2 text-right">SHA-512</th>
+        <th class="col-md-2 text-right">Signature</th>
+        <th class="col-md-1 text-right">Release&nbsp;Date</th>
     </tr>
     {% for release in releases reversed %}
         {% if release.title %}
             <tr>
                 <td style="vertical-align: middle; line-height: 2.5em;" class="col-md-1"><a href="{{ release.url | prepend: site.baseurl }}">{{ release.title }}</a></td>
-                <td style="vertical-align: middle;" >{{ release.summary }}</td>
-                <td style="vertical-align: middle;" class="col-md-1 text-right"><a href="{{release.artifact-root}}/{{release.source-os-dist}}">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}">Apps</a></td>
-                <td style="vertical-align: middle;"><a href="{{release.artifact-root}}/{{release.source-os-dist}}.sha512">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}.sha512">Apps</a></td>
-                <td style="vertical-align: middle;"><a href="{{release.artifact-root}}/{{release.source-os-dist}}.asc">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}.asc">Apps</a></td>
-                <td style="vertical-align: middle;" class="col-md-2 text-right">{{ release.date | date: "%Y-%m-%d" }}</td>
+                <td style="vertical-align: middle;" class="col-md-4">{{ release.summary }}</td>
+                <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.artifact-root}}/{{release.source-os-dist}}">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}">Apps</a></td>
+                <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.artifact-root}}/{{release.source-os-dist}}.sha512">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}.sha512">Apps</a></td>
+                <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.artifact-root}}/{{release.source-os-dist}}.asc">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}.asc">Apps</a></td>
+                <td style="vertical-align: middle;" class="col-md-1 text-right">{{ release.date | date: "%Y-%m-%d" }}</td>
             </tr>
         {% endif %}
     {% endfor %}
@@ -85,17 +85,17 @@ No official Apache releases have been made yet!
 <table class="table">
     <tr>
         <th class="col-md-1">Version</th>
-        <th>Summary</th>
-        <th class="col-md-1 text-right">Archive</th>
-        <th class="col-md-2 text-right">Release&nbsp;Date</th>
+        <th class="col-md-5">Summary</th>
+        <th class="col-md-3 text-right">Archive</th>
+        <th class="col-md-3 text-right">Release&nbsp;Date</th>
     </tr>
     {% for release in releases reversed %}
         {% if release.title %}
             <tr>
                 <td style="vertical-align: middle; line-height: 2.5em;" class="col-md-1"><a href="{{ release.url | prepend: site.baseurl }}">{{ release.title }}</a></td>
-                <td style="vertical-align: middle;" >{{ release.summary }}</td>
-                <td style="vertical-align: middle;" class="col-md-1 text-right"><a href="{{release.artifact-root}}{{release.source-os-dist}}">OS</a>/<a href="{{release.artifact-root}}{{release.source-app-dist}}">Apps</a></td>
-                <td style="vertical-align: middle;" class="col-md-2 text-right">{{ release.date | date: "%Y-%m-%d" }}</td>
+                <td style="vertical-align: middle;" class="col-md-5">{{ release.summary }}</td>
+                <td style="vertical-align: middle;" class="col-md-3 text-right"><a href="{{release.artifact-root}}{{release.source-os-dist}}">OS</a>/<a href="{{release.artifact-root}}{{release.source-app-dist}}">Apps</a></td>
+                <td style="vertical-align: middle;" class="col-md-3 text-right">{{ release.date | date: "%Y-%m-%d" }}</td>
             </tr>
         {% endif %}
     {% endfor %}

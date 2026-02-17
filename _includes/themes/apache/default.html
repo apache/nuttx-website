@@ -16,9 +16,15 @@
 
     <!-- Le styles -->
     <link href="{{ site.baseurl }}/assets/themes/apache/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <link href="{{ site.baseurl }}/assets/themes/apache/css/style.css?body=1" rel="stylesheet" type="text/css">
+    <link href="{{ site.baseurl }}/assets/themes/apache/css/modern.css" rel="stylesheet" type="text/css">
     <link href="{{ site.baseurl }}/assets/themes/apache/css/syntax.css" rel="stylesheet"  type="text/css" media="screen" />
-    <link href="{{ site.baseurl }}/assets/themes/apache/css/demo.css" rel="stylesheet" type="text/css"/>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Patua+One&family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    {% if page.title == "Home" %}
+    <link href="{{ site.baseurl }}/assets/themes/apache/css/demo.css" rel="stylesheet" type="text/css">
+    {% endif %}
     <!-- Le fav and touch icons -->
     <!-- Update these with your own images
     <link rel="shortcut icon" href="images/favicon.ico">
@@ -33,20 +39,109 @@
 
     {% include themes/apache/_navigation.html %}
 
-    <div class="container">
-      {{ content }}
-      <hr>
-      <footer>
-        <!-- <p>&copy; {{ site.time | date: '%Y' }} {{ site.author.name }}</p>-->
-        {% include themes/apache/footer.html %}
-      </footer>
+    <div class="main-content">
+      <div class="content-wrapper">
+        {{ content }}
+      </div>
     </div>
+    
+    <footer class="site-footer">
+      <div class="footer-content">
+        {% include themes/apache/footer.html %}
+      </div>
+    </footer>
 
     {% include JB/analytics %}
     <script src="{{ ASSET_PATH }}/jquery/jquery-2.1.1.min.js"></script>
-
     <script src="{{ ASSET_PATH }}/bootstrap/js/bootstrap.min.js"></script>
-
+    
+    <script>
+    // GitHub Stats Fetcher
+    (function() {
+      fetch('https://api.github.com/repos/apache/nuttx')
+        .then(response => response.json())
+        .then(data => {
+          const heroStars = document.getElementById('heroStars');
+          const heroForks = document.getElementById('heroForks');
+          if (heroStars) heroStars.textContent = (data.stargazers_count || 0).toLocaleString();
+          if (heroForks) heroForks.textContent = (data.forks_count || 0).toLocaleString();
+        })
+        .catch(err => {
+          console.log('GitHub stats loading error:', err);
+        });
+    })();
+    
+    // Theme Toggle
+    (function() {
+      const themeToggle = document.getElementById('themeToggle');
+      const html = document.documentElement;
+      const currentTheme = localStorage.getItem('theme') || 'light';
+      html.setAttribute('data-theme', currentTheme);
+      
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+          const theme = html.getAttribute('data-theme');
+          const newTheme = theme === 'dark' ? 'light' : 'dark';
+          html.setAttribute('data-theme', newTheme);
+          localStorage.setItem('theme', newTheme);
+        });
+      }
+    })();
+    
+    // Doc Mode Toggle
+    (function() {
+      const docModeToggle = document.getElementById('docModeToggle');
+      const html = document.documentElement;
+      const currentDocMode = localStorage.getItem('docMode') || 'false';
+      html.setAttribute('data-doc-mode', currentDocMode);
+      
+      if (docModeToggle) {
+        docModeToggle.addEventListener('click', function() {
+          const docMode = html.getAttribute('data-doc-mode');
+          const newDocMode = docMode === 'true' ? 'false' : 'true';
+          html.setAttribute('data-doc-mode', newDocMode);
+          localStorage.setItem('docMode', newDocMode);
+        });
+      }
+    })();
+    
+    // Dropdown Toggle
+    (function() {
+      const dropdowns = document.querySelectorAll('.pill-item.dropdown');
+      
+      dropdowns.forEach(function(dropdown) {
+        const button = dropdown.querySelector('.pill-link');
+        
+        button.addEventListener('click', function(e) {
+          e.stopPropagation();
+          
+          // Close all other dropdowns
+          dropdowns.forEach(function(other) {
+            if (other !== dropdown) {
+              other.classList.remove('active');
+              const otherButton = other.querySelector('.pill-link');
+              if (otherButton) otherButton.setAttribute('aria-expanded', 'false');
+            }
+          });
+          
+          // Toggle current dropdown
+          const isActive = dropdown.classList.toggle('active');
+          button.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+        });
+      });
+      
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.pill-item.dropdown')) {
+          dropdowns.forEach(function(dropdown) {
+            dropdown.classList.remove('active');
+            const button = dropdown.querySelector('.pill-link');
+            if (button) button.setAttribute('aria-expanded', 'false');
+          });
+        }
+      });
+    })();
+    </script>
 
   </body>
 </html>
