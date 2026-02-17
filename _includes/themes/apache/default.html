@@ -107,36 +107,43 @@
     
     // Dropdown Toggle
     (function() {
-      const dropdowns = document.querySelectorAll('.menu-item.dropdown');
+      const navItems = document.querySelectorAll('.nav-item.has-dropdown');
       
-      dropdowns.forEach(function(dropdown) {
-        const button = dropdown.querySelector('.menu-link');
+      navItems.forEach(function(item) {
+        const button = item.querySelector('.nav-link');
         
-        button.addEventListener('click', function(e) {
-          e.stopPropagation();
-          
-          // Close all other dropdowns
-          dropdowns.forEach(function(other) {
-            if (other !== dropdown) {
-              other.classList.remove('active');
-              const otherButton = other.querySelector('.menu-link');
-              if (otherButton) otherButton.setAttribute('aria-expanded', 'false');
-            }
+        if (button) {
+          button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close all other dropdowns
+            navItems.forEach(function(otherItem) {
+              if (otherItem !== item) {
+                otherItem.classList.remove('active');
+              }
+            });
+            
+            // Toggle current dropdown
+            item.classList.toggle('active');
           });
-          
-          // Toggle current dropdown
-          const isActive = dropdown.classList.toggle('active');
-          button.setAttribute('aria-expanded', isActive ? 'true' : 'false');
-        });
+        }
       });
       
       // Close dropdowns when clicking outside
       document.addEventListener('click', function(e) {
-        if (!e.target.closest('.menu-item.dropdown')) {
-          dropdowns.forEach(function(dropdown) {
-            dropdown.classList.remove('active');
-            const button = dropdown.querySelector('.menu-link');
-            if (button) button.setAttribute('aria-expanded', 'false');
+        if (!e.target.closest('.nav-item.has-dropdown')) {
+          navItems.forEach(function(item) {
+            item.classList.remove('active');
+          });
+        }
+      });
+      
+      // Close on escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          navItems.forEach(function(item) {
+            item.classList.remove('active');
           });
         }
       });

@@ -240,7 +240,7 @@ limitations under the License.
             <div class="terminal-title">NuttShell (NSH)</div>
           </div>
           <div class="terminal-body">
-            <pre class="terminal-code">NuttShell (NSH) NuttX-12.7.0
+            <pre class="terminal-code">NuttShell (NSH) NuttX-12.4.0
 nsh> <span class="cursor">█</span></pre>
           </div>
           <div class="demo-overlay">
@@ -321,85 +321,85 @@ nsh> <span class="cursor">█</span></pre>
     <div class="carousel-wrapper">
       <div class="carousel-track">
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.sony.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/sony.svg" alt="Sony" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.samsung.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/samsung.svg" alt="Samsung" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.mi.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/xiaomi.svg" alt="Xiaomi" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/google.svg" alt="Google" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.motorola.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/motorola.svg" alt="Motorola" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.fitbit.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/fitbit.svg" alt="Fitbit" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.seeedstudio.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/seeed.png" alt="Seeed Studio" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.inspace.aero" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/inspace.png" alt="InSpace" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <!-- Duplicate slides for seamless loop -->
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.sony.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/sony.svg" alt="Sony" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.samsung.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/samsung.svg" alt="Samsung" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.mi.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/xiaomi.svg" alt="Xiaomi" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/google.svg" alt="Google" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.motorola.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/motorola.svg" alt="Motorola" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.fitbit.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/fitbit.svg" alt="Fitbit" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.seeedstudio.com" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/seeed.png" alt="Seeed Studio" class="company-logo-img">
-          </div>
+          </a>
         </div>
         <div class="carousel-slide">
-          <div class="company-logo-container">
+          <a href="https://www.inspace.aero" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/inspace.png" alt="InSpace" class="company-logo-img">
-          </div>
+          </a>
         </div>
       </div>
     </div>
