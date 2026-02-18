@@ -112,11 +112,8 @@ function get_absolute_url(fname)
     
     if (fname.indexOf(":") >= 0)
         return fname;
-    path = window.location.pathname;
-    p = path.lastIndexOf("/");
-    if (p < 0)
-        return fname;
-    return window.location.origin + path.slice(0, p + 1) + fname;
+    /* Always resolve relative to /demo/ directory */
+    return window.location.origin + "/demo/" + fname;
 }
 
 function GraphicDisplay(parent_el, width, height)
@@ -624,7 +621,7 @@ function start_vm(user, pwd)
     }
     Module.preRun = start;
 
-    loadScript(vm_url, null);
+    loadScript("/demo/" + vm_url, null);
 }
 
 function on_login()
