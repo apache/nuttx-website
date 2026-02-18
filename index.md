@@ -271,19 +271,27 @@ nsh> <span class="cursor">█</span></pre>
           <div class="channel-list">
             <a href="{{ site.data.project.dev_list_archive_mailarchive }}" class="channel-item">
               <img src="{{ site.baseurl }}/static/icons/mailing-list.svg" width="24" height="24" alt="Mailing List">
-              <span>Mailing List (Primary)</span>
+              <span>Mailing List (Main)</span>
             </a>
             <a href="{{ site.data.project.socialmedia_discord }}" class="channel-item">
               <img src="{{ site.baseurl }}/static/icons/discord.svg" width="24" height="24" alt="Discord">
               <span>Discord</span>
             </a>
-            <a href="{{ site.data.project.socialmedia_youtube }}" class="channel-item">
-              <img src="{{ site.baseurl }}/static/icons/youtube.svg" width="24" height="24" alt="YouTube">
-              <span>YouTube</span>
+            <a href="{{ site.data.project.socialmedia_hackster }}" class="channel-item">
+              <img src="{{ site.baseurl }}/static/icons/hackster.svg" width="24" height="24" alt="Hackster">
+              <span>Hackster</span>
+            </a>
+            <a href="{{ site.data.project.socialmedia_linkedin_company }}" class="channel-item">
+              <img src="{{ site.baseurl }}/static/icons/linkedin.svg" width="24" height="24" alt="LinkedIn">
+              <span>LinkedIn</span>
             </a>
             <a href="{{ site.data.project.socialmedia_reddit }}" class="channel-item">
               <img src="{{ site.baseurl }}/static/icons/reddit.svg" width="24" height="24" alt="Reddit">
               <span>Reddit</span>
+            </a>
+            <a href="{{ site.data.project.socialmedia_youtube }}" class="channel-item">
+              <img src="{{ site.baseurl }}/static/icons/youtube.svg" width="24" height="24" alt="YouTube">
+              <span>YouTube</span>
             </a>
           </div>
         </div>
@@ -291,10 +299,10 @@ nsh> <span class="cursor">█</span></pre>
       
       <div class="community-events">
         <div class="events-card">
-          <h3 class="events-title">International Workshop 2025</h3>
+          <h3 class="events-title">International Workshop 2026</h3>
           <div class="event-date">
             <img src="{{ site.baseurl }}/static/icons/calendar.svg" width="20" height="20" alt="Calendar">
-            <span>October 16-17, 2025</span>
+            <span>October 16-17, 2026</span>
           </div>
           <div class="event-location">
             <img src="{{ site.baseurl }}/static/icons/location-pin.svg" width="20" height="20" alt="Location">
@@ -302,7 +310,7 @@ nsh> <span class="cursor">█</span></pre>
           </div>
           <p class="event-description">
             Join us for the annual Apache NuttX International Workshop. 
-            Attend online or in person for free!
+            Attend online or in person for free! We hope to meet with Gregory Nutt on site.
           </p>
           <div class="event-links">
             <a href="{{ site.data.project.community_events }}" class="event-link">Event Website</a>
@@ -356,7 +364,7 @@ nsh> <span class="cursor">█</span></pre>
           </a>
         </div>
         <div class="carousel-slide">
-          <a href="https://www.inspace.aero" target="_blank" rel="noopener noreferrer" class="company-logo-container">
+          <a href="https://www.cuinspace.ca/" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/inspace.png" alt="InSpace" class="company-logo-img">
           </a>
         </div>
@@ -397,7 +405,7 @@ nsh> <span class="cursor">█</span></pre>
           </a>
         </div>
         <div class="carousel-slide">
-          <a href="https://www.inspace.aero" target="_blank" rel="noopener noreferrer" class="company-logo-container">
+          <a href="https://www.cuinspace.ca/" target="_blank" rel="noopener noreferrer" class="company-logo-container">
             <img src="{{ site.baseurl }}/static/companies/inspace.png" alt="InSpace" class="company-logo-img">
           </a>
         </div>
