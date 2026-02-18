@@ -60,6 +60,8 @@ Michal Matiáš
 /
 [CVUT](https://dspace.cvut.cz/handle/10467/123231)
 
+---
+
 
 ### iplite: a lightweight packet filter for NuttX
 
@@ -88,6 +90,8 @@ Lourenc¸o Alves Pereira Jr.
 /
 [DOI](https://doi.org/10.5753/sbseg_estendido.2022.227059)
 
+---
+
 
 ### mnemofs: A NAND flash file-system for Apache NuttX
 
@@ -109,6 +113,8 @@ Saurav Pal
 Alan C. Assis
 
 [PDF]({{ site.baseurl }}/static/articles/NuttX-2021-PalAssis-MenmofsANANDFlashFilesystemForApacheNuttX.pdf)
+
+---
 
 
 ### Low power embedded software optimization for the NuttX RTOS
