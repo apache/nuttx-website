@@ -56,30 +56,26 @@
     <script src="{{ ASSET_PATH }}/bootstrap/js/bootstrap.min.js"></script>
     
     <script>
-    // GitHub Stats Fetcher
+    // Theme Toggle with System Preference
     (function() {
-      fetch('https://api.github.com/repos/apache/nuttx')
-        .then(response => response.json())
-        .then(data => {
-          const heroStars = document.getElementById('heroStars');
-          const heroForks = document.getElementById('heroForks');
-          if (heroStars) heroStars.textContent = (data.stargazers_count || 0).toLocaleString();
-          if (heroForks) heroForks.textContent = (data.forks_count || 0).toLocaleString();
-        })
-        .catch(err => {
-          console.log('GitHub stats loading error:', err);
-        });
-    })();
-    
-    // Theme Toggle
-    (function() {
-      const themeToggle = document.getElementById('themeToggle');
+      const themeBtn = document.getElementById('themeBtn');
       const html = document.documentElement;
-      const currentTheme = localStorage.getItem('theme') || 'light';
+      
+      // Check for saved theme preference or default to system preference
+      const savedTheme = localStorage.getItem('theme');
+      let currentTheme;
+      
+      if (savedTheme) {
+        currentTheme = savedTheme;
+      } else {
+        // Use system preference
+        currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
       html.setAttribute('data-theme', currentTheme);
       
-      if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
+      if (themeBtn) {
+        themeBtn.addEventListener('click', function() {
           const theme = html.getAttribute('data-theme');
           const newTheme = theme === 'dark' ? 'light' : 'dark';
           html.setAttribute('data-theme', newTheme);
@@ -88,62 +84,53 @@
       }
     })();
     
-    // Doc Mode Toggle
+    // Mobile Menu Toggle
     (function() {
-      const docModeToggle = document.getElementById('docModeToggle');
-      const html = document.documentElement;
-      const currentDocMode = localStorage.getItem('docMode') || 'false';
-      html.setAttribute('data-doc-mode', currentDocMode);
+      const mobileToggle = document.getElementById('mobileToggle');
+      const navbarNav = document.getElementById('navbarNav');
       
-      if (docModeToggle) {
-        docModeToggle.addEventListener('click', function() {
-          const docMode = html.getAttribute('data-doc-mode');
-          const newDocMode = docMode === 'true' ? 'false' : 'true';
-          html.setAttribute('data-doc-mode', newDocMode);
-          localStorage.setItem('docMode', newDocMode);
+      if (mobileToggle && navbarNav) {
+        mobileToggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+          mobileToggle.classList.toggle('active');
+          navbarNav.classList.toggle('active');
+        });
+        
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.navbar')) {
+            mobileToggle.classList.remove('active');
+            navbarNav.classList.remove('active');
+            // Close all dropdowns
+            document.querySelectorAll('.nav-item').forEach(item => {
+              item.classList.remove('open');
+            });
+          }
         });
       }
     })();
     
     // Dropdown Toggle
     (function() {
-      const navItems = document.querySelectorAll('.nav-item.has-dropdown');
+      const navItems = document.querySelectorAll('.nav-item');
       
       navItems.forEach(function(item) {
-        const button = item.querySelector('.nav-link');
+        const btn = item.querySelector('.nav-btn');
         
-        if (button) {
-          button.addEventListener('click', function(e) {
+        if (btn) {
+          btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Close all other dropdowns
+            // Close other dropdowns
             navItems.forEach(function(otherItem) {
               if (otherItem !== item) {
-                otherItem.classList.remove('active');
+                otherItem.classList.remove('open');
               }
             });
             
-            // Toggle current dropdown
-            item.classList.toggle('active');
-          });
-        }
-      });
-      
-      // Close dropdowns when clicking outside
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('.nav-item.has-dropdown')) {
-          navItems.forEach(function(item) {
-            item.classList.remove('active');
-          });
-        }
-      });
-      
-      // Close on escape key
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          navItems.forEach(function(item) {
-            item.classList.remove('active');
+            // Toggle current
+            item.classList.toggle('open');
           });
         }
       });

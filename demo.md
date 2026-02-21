@@ -1,7 +1,7 @@
 ---
 layout: demo
-title: Demo
-tagline: Apache Project !
+title: NuttX Online Demo
+tagline: Enter help to see the available commands.
 ---
 
 <!--
@@ -22,9 +22,3 @@ See the License for the specific language governing permissions and
 limitations under the License.
 {% endcomment %}
 -->
-
-{% include JB/setup %}
-
-## NuttX Online Demo
-
-Enter `help` to see the available commands.
