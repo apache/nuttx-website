@@ -56,8 +56,9 @@
     <script>
     // Theme Toggle with System Preference
     (function() {
-      const themeBtns = document.querySelectorAll('[id*="themeBtn"]'); // Both desktop and mobile buttons
       const html = document.documentElement;
+      const mobileThemeBtn = document.getElementById('themeBtn');
+      const desktopThemeBtn = document.getElementById('desktopThemeBtn');
       
       // Check for saved theme preference or default to system preference
       const savedTheme = localStorage.getItem('theme');
@@ -70,17 +71,37 @@
         currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       
+      // Set initial theme
       html.setAttribute('data-theme', currentTheme);
+      document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
       
-      if (themeBtns.length > 0) {
-        themeBtns.forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            const theme = html.getAttribute('data-theme');
-            const newTheme = theme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-          });
-        });
+      // Function to toggle theme
+      function toggleTheme(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        const theme = html.getAttribute('data-theme');
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        console.log('Theme toggled to:', newTheme);
+      }
+      
+      // Add click listeners to both buttons
+      if (mobileThemeBtn) {
+        mobileThemeBtn.addEventListener('click', toggleTheme);
+        console.log('Mobile theme button listener attached');
+      }
+      
+      if (desktopThemeBtn) {
+        desktopThemeBtn.addEventListener('click', toggleTheme);
+        console.log('Desktop theme button listener attached');
+      }
+      
+      if (!mobileThemeBtn && !desktopThemeBtn) {
+        console.warn('Theme buttons not found');
       }
     })();
     
