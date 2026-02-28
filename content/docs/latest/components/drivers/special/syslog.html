@@ -162,10 +162,15 @@
 <li class="toctree-l4"><a class="reference internal" href="segger.html">Segger RTT drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="spi.html">SPI Device Drivers</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">SYSLOG</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#syslog-interfaces">SYSLOG Interfaces</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#syslog-channels">SYSLOG Channels</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#syslog-channel-options">SYSLOG Channel Options</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#ram-logging-device">RAM Logging Device</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#syslog-configuration-options">Syslog Configuration Options</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#driver-implementation">Driver Implementation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#api-reference">API Reference</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#usage-notes">Usage Notes</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#syslog-protocol-rfc-5424">SYSLOG Protocol (RFC 5424)</a></li>
 </ul>
 </li>
@@ -257,6 +262,10 @@
              
   <section id="syslog">
 <h1>SYSLOG<a class="headerlink" href="#syslog" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<img alt="../../../_images/syslog-overview.png" src="../../../_images/syslog-overview.png" />
+</section>
 <section id="syslog-interfaces">
 <h2>SYSLOG Interfaces<a class="headerlink" href="#syslog-interfaces" title="Permalink to this heading"></a></h2>
 <section id="standard-syslog-interfaces">
@@ -767,6 +776,130 @@ You can set or get the rate limit using the following IOCTLs:</p>
 </div>
 <p>This command allows you to set the maximum number of log entries (burst) allowed in a given interval (seconds) for the RAMLOG device at runtime.</p>
 </section>
+</section>
+<section id="syslog-configuration-options">
+<h2>Syslog Configuration Options<a class="headerlink" href="#syslog-configuration-options" title="Permalink to this heading"></a></h2>
+<p>Syslog functionality is fully controlled by Kconfig options, which are grouped
+below by their functional role (matching the syslog system architecture). All
+options are prefixed with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_</span></code> and follow NuttX’s RTOS configuration
+conventions.</p>
+<section id="basic-debug-log-level-configuration">
+<h3>Basic Debug Log Level Configuration<a class="headerlink" href="#basic-debug-log-level-configuration" title="Permalink to this heading"></a></h3>
+<p>These options control the base debug assertion and log level filtering,
+defining which severity levels of messages are captured by the syslog system.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_ASSERT</span></code>: Enable assertion checks in the syslog subsystem.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_ERROR</span></code>: Enable logging of error-level (<code class="docutils literal notranslate"><span class="pre">LOG_ERR</span></code>) messages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_WARN</span></code>: Enable logging of warning-level (<code class="docutils literal notranslate"><span class="pre">LOG_WARNING</span></code>) messages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_INFO</span></code>: Enable logging of info-level (<code class="docutils literal notranslate"><span class="pre">LOG_INFO</span></code>) messages.</p></li>
+</ul>
+<p>Additionally, runtime log level filtering is supported via:
+- <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_SETLOGMASK</span></code>: Enable the <code class="docutils literal notranslate"><span class="pre">setlogmask(int</span> <span class="pre">mask)</span></code> API, allowing dynamic adjustment of log levels at runtime.</p>
+</section>
+<section id="message-formatting-configuration">
+<h3>Message Formatting Configuration<a class="headerlink" href="#message-formatting-configuration" title="Permalink to this heading"></a></h3>
+<p>These options define the metadata and visual formatting of syslog messages,
+including timestamps, identifiers, and color coding.</p>
+</section>
+<section id="timestamp-configuration">
+<h3>Timestamp Configuration<a class="headerlink" href="#timestamp-configuration" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>: Enable timestamp addition to all syslog messages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_MS</span></code>:  Use millisecond (ms) precision in timestamps, replacing the default microsecond (µs) precision. (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_REALTIME</span></code>: Use real-time clock (RTC) time for timestamps (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_FORMATTED</span></code>: Enable custom formatted timestamps (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_FORMAT</span></code>: Define custom timestamp format string (default: <code class="docutils literal notranslate"><span class="pre">&quot;%d/%m/%y</span> <span class="pre">%H:%M:%S&quot;</span></code>, requires <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_FORMATTED</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_LOCALTIME</span></code>: Use local time (instead of UTC) for timestamps (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_REALTIME</span></code>).</p></li>
+</ul>
+</section>
+<section id="message-metadata-prefix">
+<h3>Message Metadata &amp; Prefix<a class="headerlink" href="#message-metadata-prefix" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_PRIORITY</span></code>: Include message priority level in the syslog prefix.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_PROCESS_NAME</span></code>: Include the process name in the syslog prefix.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_PROCESSID</span></code>: Include the process ID (PID) in the syslog prefix.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CPUID</span></code>: Include the CPU ID (for SMP systems) in the syslog prefix.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_PREFIX</span></code>: Enable custom prefix support for syslog messages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_PREFIX_STRING</span></code>: Define a static custom string to prepend to all syslog messages (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_PREFIX</span></code>).</p></li>
+</ul>
+</section>
+<section id="visual-formatting">
+<h3>Visual Formatting<a class="headerlink" href="#visual-formatting" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_COLOR_OUTPUT</span></code>: Enable ANSI color coding for syslog messages (differentiates log levels visually).</p></li>
+</ul>
+</section>
+<section id="core-system-buffer-configuration">
+<h3>Core System &amp; Buffer Configuration<a class="headerlink" href="#core-system-buffer-configuration" title="Permalink to this heading"></a></h3>
+<p>These options control the core syslog system infrastructure, including buffering
+and low-level formatting dependencies.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_BUFFER</span></code>: Enable a dedicated buffer for syslog messages to prevent loss.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_INTBUFFER</span></code>: Enable an interrupt-safe buffer for syslog messages (critical for interrupt context logging).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CRLF</span></code>: Automatically convert line feeds (<code class="docutils literal notranslate"><span class="pre">\n</span></code>) to carriage return + line feed (<code class="docutils literal notranslate"><span class="pre">\r\n</span></code>) in output.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lib_vsprintf</span></code>: (Implicit dependency) The syslog system relies on NuttX’s <code class="docutils literal notranslate"><span class="pre">lib_vsprintf</span></code> for message formatting.</p></li>
+</ul>
+</section>
+<section id="output-channel-configuration">
+<h3>Output Channel Configuration<a class="headerlink" href="#output-channel-configuration" title="Permalink to this heading"></a></h3>
+<p>Syslog supports multiple output channels, with configuration options to enable
+channels and their respective destinations. The maximum number of channels is
+fixed at compile time.</p>
+</section>
+<section id="core-channel-settings">
+<h3>Core Channel Settings<a class="headerlink" href="#core-channel-settings" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_MAX_CHANNELS</span></code>: Set the maximum number of syslog channels (default: 1 in the architecture, configurable per platform).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_DEFAULT</span></code>: Enable the <strong>default channel</strong> (maps to UART output).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CRLF</span></code>: (Shared) Applies line ending conversion to all channel output.</p></li>
+</ul>
+</section>
+<section id="individual-channel-destination-options">
+<h3>Individual Channel &amp; Destination Options<a class="headerlink" href="#individual-channel-destination-options" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_RAMLOG</span></code>: Enable the <strong>ramlog channel</strong> (outputs syslog messages to RAM for later retrieval).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_RPMSG</span></code>: Enable the <strong>rpmsg channel</strong> (routes syslog messages over IPC via rpmsg).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_FILE</span></code>: Enable the <strong>dev channel</strong> (supports output to character devices or regular files via a character driver).</p></li>
+</ul>
+</section>
+<section id="stdout-stream-integration">
+<h3>Stdout Stream Integration<a class="headerlink" href="#stdout-stream-integration" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stdout</span> <span class="pre">stream</span></code>: (Implicit) Syslog messages are forwarded to the standard <code class="docutils literal notranslate"><span class="pre">stdout</span></code> stream, which maps to <code class="docutils literal notranslate"><span class="pre">/dev/console</span></code> by default.</p></li>
+</ul>
+</section>
+</section>
+<section id="driver-implementation">
+<h2>Driver Implementation<a class="headerlink" href="#driver-implementation" title="Permalink to this heading"></a></h2>
+<p>The syslog driver is implemented as a special character driver. It uses the
+NuttX logging infrastructure to collect messages and route them to the
+configured output channels. The driver supports:</p>
+<ul class="simple">
+<li><p><strong>Multiple Outputs</strong>: Simultaneous logging to UART, RAM, IPC, files, and <code class="docutils literal notranslate"><span class="pre">/dev/console</span></code>.</p></li>
+<li><p><strong>Interrupt Safety</strong>: Via <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_INTBUFFER</span></code>, safe for logging from interrupt handlers.</p></li>
+<li><p><strong>Format Flexibility</strong>: Configurable timestamps, prefixes, and color coding for readability.</p></li>
+<li><p><strong>POSIX Compatibility</strong>: Aligns with POSIX syslog semantics while optimizing for embedded RTOS constraints.</p></li>
+</ul>
+</section>
+<section id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading"></a></h2>
+<p>The syslog driver provides an API compatible with the POSIX <code class="docutils literal notranslate"><span class="pre">syslog()</span></code>
+function, as well as NuttX-specific extensions for runtime configuration:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">syslog(int</span> <span class="pre">priority,</span> <span class="pre">const</span> <span class="pre">char</span> <span class="pre">*format,</span> <span class="pre">...)</span></code>: Log a message with a specified priority.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">setlogmask(int</span> <span class="pre">mask)</span></code>: Set the log level mask (enabled if <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_SETLOGMASK</span></code> is defined).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">vsyslog(int</span> <span class="pre">priority,</span> <span class="pre">const</span> <span class="pre">char</span> <span class="pre">*format,</span> <span class="pre">va_list</span> <span class="pre">ap)</span></code>: Variadic version of <code class="docutils literal notranslate"><span class="pre">syslog()</span></code> for use in custom wrappers.</p></li>
+</ul>
+</section>
+<section id="usage-notes">
+<h2>Usage Notes<a class="headerlink" href="#usage-notes" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Interrupt Context Logging</strong>: Always enable <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_INTBUFFER</span></code> if logging from interrupt handlers to avoid race conditions.</p></li>
+<li><p><strong>RAM Log Usage</strong>: The RAM log (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_RAMLOG</span></code>) is useful for systems without persistent storage; retrieve logs via the ramlog driver.</p></li>
+<li><p><strong>rpmsg Logging</strong>: When using <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_RPMSG</span></code>, ensure the rpmsg subsystem is properly configured for inter-processor communication.</p></li>
+<li><p><strong>Timestamps</strong>: For accurate real-time timestamps, enable an RTC driver and <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_TIMESTAMP_REALTIME</span></code>.</p></li>
+<li><p><strong>Color Output</strong>: Disable <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_COLOR_OUTPUT</span></code> if logging to non-ANSI terminals (e.g., raw UART terminals without color support).</p></li>
+</ol>
 </section>
 <section id="syslog-protocol-rfc-5424">
 <h2>SYSLOG Protocol (RFC 5424)<a class="headerlink" href="#syslog-protocol-rfc-5424" title="Permalink to this heading"></a></h2>
