@@ -313,7 +313,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../sotest/index.html"><code class="docutils literal notranslate"><span class="pre">sotest</span></code> Shared Library Module Test</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../spislv_test/index.html"><code class="docutils literal notranslate"><span class="pre">spislv</span></code> SPI slave example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stat/index.html"><code class="docutils literal notranslate"><span class="pre">stat</span></code> Test of stat(), fstat(), and statfs()</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">sx127x_demo</span></code> SX127X Radio</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">sx127x_demo</span></code> SX127X Radio</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#default-configuration">Default configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#short-range-fsk-testing">Short-range FSK testing</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../system/index.html"><code class="docutils literal notranslate"><span class="pre">system</span></code> System() example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../tcp_ipc_client/index.html"><code class="docutils literal notranslate"><span class="pre">tcp_ipc_client</span></code> Client for TCP IPC NuttX</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../tcp_ipc_server/index.html"><code class="docutils literal notranslate"><span class="pre">tcp_ipc_server</span></code> Server for TCP IPC NuttX</a></li>
@@ -397,6 +403,67 @@
   <section id="sx127x-demo-sx127x-radio">
 <h1><code class="docutils literal notranslate"><span class="pre">sx127x_demo</span></code> SX127X Radio<a class="headerlink" href="#sx127x-demo-sx127x-radio" title="Permalink to this heading"></a></h1>
 <p>This example demonstrates the use of the <code class="docutils literal notranslate"><span class="pre">SX127X</span></code> radio.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">sx127x_demo</span></code> application exercises the <cite>SX127X</cite> low-power wide-area
+network (LPWAN) radio driver in both transmit and receive modes.  It is
+typically enabled via a board defconfig together with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X</span></code> and the appropriate SPI and GPIO wiring for the
+target module.</p>
+</section>
+<section id="default-configuration">
+<h2>Default configuration<a class="headerlink" href="#default-configuration" title="Permalink to this heading"></a></h2>
+<p>Unless explicitly overridden in the board or application configuration,
+the SX127X driver uses the following relevant defaults:</p>
+<ul class="simple">
+<li><p>RF frequency: <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X_RFFREQ_DEFAULT</span></code> (board-specific,
+for example 433 MHz, 868 MHz or 915 MHz).</p></li>
+<li><p>TX power: <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X_TXPOWER_DEFAULT</span></code>.
+The global default is <strong>17 dBm</strong>, which provides a stronger and more
+reliable link than the previous 14 dBm default.</p></li>
+<li><p>CRC: <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X_CRCON</span></code>.
+The global default is <strong>1</strong> (CRC enabled), so payloads are protected
+by a checksum and corrupted frames are rejected.</p></li>
+</ul>
+<p>Individual boards may override these values in their <code class="docutils literal notranslate"><span class="pre">defconfig</span></code> files.
+For example, some boards tested with integrated SX1276 modules may set
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X_TXPOWER_DEFAULT=20</span></code> and adjust
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X_RFFREQ_DEFAULT</span></code> to match the module’s band.</p>
+</section>
+<section id="short-range-fsk-testing">
+<h2>Short-range FSK testing<a class="headerlink" href="#short-range-fsk-testing" title="Permalink to this heading"></a></h2>
+<p>When running short-range FSK tests (for example, two modules placed
+around one meter apart on a lab bench), the following settings are
+recommended:</p>
+<ul class="simple">
+<li><p>Keep <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X_TXPOWER_DEFAULT</span></code> at <strong>17 dBm</strong> or higher
+(some modules work well at 20 dBm) to avoid marginal RSSI values that
+can lead to intermittent reception.</p></li>
+<li><p>Ensure <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX127X_CRCON=1</span></code> on both transmitter and
+receiver so corrupted frames are discarded instead of being printed
+with incorrect data.</p></li>
+</ul>
+<p>These defaults are based on empirical testing reported by users and are
+intended to provide robust communication without requiring additional
+per-board tuning.</p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading"></a></h2>
+<p>If the receiver occasionally shows no data, truncated data, or payloads
+that do not match what was transmitted, check the following:</p>
+<ul class="simple">
+<li><p>Verify that the RF frequency and modulation settings are identical on
+both sides.</p></li>
+<li><p>Inspect the reported RSSI and SNR values; very low RSSI at short
+distance can indicate insufficient TX power or antenna issues.</p></li>
+<li><p>Confirm that CRC is enabled and that both peers are configured
+consistently (either both with CRC enabled or both with it disabled,
+though enabling CRC is recommended).</p></li>
+</ul>
+<p>Adjusting TX power or antenna placement and ensuring consistent CRC
+settings on the link typically resolves data integrity problems seen in
+simple FSK tests.</p>
+</section>
 </section>
 
 
