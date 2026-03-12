@@ -162,6 +162,7 @@
 <li class="toctree-l4"><a class="reference internal" href="rf.html">RF Devices</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">Serial Device Drivers</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#serial-error-reporting">Serial Error Reporting</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#serial-debug-structure-tiocsergstruct">Serial Debug Structure (TIOCSERGSTRUCT)</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="timers/index.html">Timers Drivers</a></li>
@@ -278,6 +279,110 @@ character drivers.</p></li>
 <h2>Serial Error Reporting<a class="headerlink" href="#serial-error-reporting" title="Permalink to this heading"></a></h2>
 <p>It is possible to check if there are some frame, parity, overrun, break, or
 other error using the ioctl TIOCGICOUNT just like on Linux.</p>
+</section>
+<section id="serial-debug-structure-tiocsergstruct">
+<h2>Serial Debug Structure (TIOCSERGSTRUCT)<a class="headerlink" href="#serial-debug-structure-tiocsergstruct" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is a <strong>debug-only</strong> ioctl. The internal structures it exposes are
+driver-specific, may change without notice, and must not be relied upon
+as a stable ABI.</p>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">TIOCSERGSTRUCT</span></code> ioctl allows a developer to retrieve a copy of the
+serial driver’s internal state structure for diagnostic and debugging purposes.
+It is defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/serial/tioctl.h</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#define TIOCSERGSTRUCT  _TIOC(0x0032)  /* Get device TTY structure */
+</pre></div>
+</div>
+<section id="enabling-tiocsergstruct">
+<h3>Enabling <code class="docutils literal notranslate"><span class="pre">TIOCSERGSTRUCT</span></code><a class="headerlink" href="#enabling-tiocsergstruct" title="Permalink to this heading"></a></h3>
+<p>Support is controlled by the Kconfig option <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_TIOCSERGSTRUCT</span></code>.
+To enable it:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_FEATURES</span></code> must be enabled (the option depends on it).</p></li>
+<li><p>Either <code class="docutils literal notranslate"><span class="pre">CONFIG_MCU_SERIAL</span></code> or <code class="docutils literal notranslate"><span class="pre">CONFIG_16550_UART</span></code> must be active (i.e.,
+the board must use an MCU serial driver or the generic 16550 UART driver).</p></li>
+<li><p>The specific low-level serial driver for your hardware must implement the
+<code class="docutils literal notranslate"><span class="pre">TIOCSERGSTRUCT</span></code> case in its <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> method. Most serial drivers in
+the tree already do (63+ drivers across ARM, ARM64, RISC-V, Xtensa, and
+MIPS architectures).</p></li>
+</ol>
+<p>Via <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code>, navigate to:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Device Drivers  ---&gt;
+  Serial Driver Support  ---&gt;
+    [*] Support TIOCSERGSTRUCT
+</pre></div>
+</div>
+<p>If the option is not visible, ensure that <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_FEATURES</span></code> is enabled
+first.</p>
+</section>
+<section id="how-it-works">
+<h3>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this heading"></a></h3>
+<p>Because the exact layout depends on the serial driver selected for your board,
+there is no single portable structure definition. The caller must consult the
+driver source for the struct definition and size the buffer accordingly.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">arg</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the ioctl returns <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code>.</p>
+</section>
+<section id="example-usage">
+<h3>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this heading"></a></h3>
+<p>The following example shows how an application might use <code class="docutils literal notranslate"><span class="pre">TIOCSERGSTRUCT</span></code>
+with the 16550 UART driver to inspect internal state. Adapt the structure type
+and header to match the serial driver used on your board.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/ioctl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/serial/tioctl.h&gt;</span>
+
+<span class="cm">/* Include the driver-specific header for the struct definition.</span>
+<span class="cm"> * This example uses the 16550 UART; replace with the header that</span>
+<span class="cm"> * defines your board&#39;s serial driver state structure.</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/serial/uart_16550.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">u16550_s</span><span class="w"> </span><span class="n">devstate</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ttyS0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDONLY</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;open&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">TIOCSERGSTRUCT</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="o">&amp;</span><span class="n">devstate</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">perror</span><span class="p">(</span><span class="s">&quot;ioctl TIOCSERGSTRUCT&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cm">/* Inspect driver-internal fields for debugging.  Field names</span>
+<span class="cm">   * are specific to the driver; consult the driver source for</span>
+<span class="cm">   * the struct definition.</span>
+<span class="cm">   */</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;UART base address: 0x%08lx</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">devstate</span><span class="p">.</span><span class="n">uartbase</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The structure layout and field names are internal to each driver
+implementation and <strong>may change between NuttX releases</strong>. Use this ioctl
+for interactive debugging and diagnostics only — never in production
+application logic.</p>
+</div>
+</section>
 </section>
 </section>
 
