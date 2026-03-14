@@ -4,17 +4,30 @@ ST STM32F4-Discovery
 
 .. tags:: chip:stm32, chip:stm32f4, chip:stm32f407
 
-This page discusses issues unique to NuttX configurations for the
-STMicro STM32F4Discovery development board featuring the STM32F407VGT6
-MCU. The STM32F407VGT6 is a 168MHz Cortex-M4 operation with 1Mbit Flash
-memory and 128kbytes. The board features:
+The STM32F4Discover board (also known as STM32F407G-DISC1) is a low cost
+development board released by STMicroelectronics.
 
+.. figure:: stm32f4discovery.png
+   :align: center
+
+Features
+========
+
+- Processor
+    - STM32F407VGT6 (Cortex-M4 running at 168MHz)
+- Memory
+    - 192 KiB SRAM memory
+    - 1024 MiB Flash
+- Connectivity
+    - USB host/device (OTG) over Micro-AB connector 
+    - Note: the board also supports Ethernet, CAN, RS485 (but requires baseboard)
+- Multimedia
+    - Audio Input and Output (over P2 connector)
 - On-board ST-LINK/V2 for programming and debugging,
 - LIS302DL, ST MEMS motion sensor, 3-axis digital output accelerometer,
 - MP45DT02, ST MEMS audio sensor, omni-directional digital microphone,
 - CS43L22, audio DAC with integrated class D speaker driver,
 - Four user LEDs and two push-buttons,
-- USB OTG FS with micro-AB connector, and
 - Easy access to most MCU pins.
 
 Refer to http://www.st.com/internet/evalboard/product/252419.jsp for
@@ -776,8 +789,8 @@ BASIC interpreter that you can find at apps/interpreters/bas.::
 There is also a test suite for the interpreter that can be found at
 apps/examples/bastest.
 
-Configuration
--------------
+BAS
+---
 
 Below are the recommended configuration changes to use BAS with the
 stm32f4discovery/nsh configuration:
@@ -1998,6 +2011,78 @@ This is an NSH configuration that includes apps/testing/ostest as a builtin.
 The sporadic scheduler is enabled and the purpose of this configuration is
 to investigate an error in that scheduler.  See Issue 2035.  The serial
 console is on USART6.
+
+st7567
+------
+
+Configures the board to support a ST7567 monochromatic LCD like the
+OPEN-SMART 1.8INCH LCD.
+
+Connect the STM32F4Discovery board to ST7567 LCD this way:
+
+================ ===========
+STM32F4Discovery ST7567 LCD
+================ ===========
+GND              GND
+3V [1]           3V3
+SPI1 MOSI (PA7)  SDI
+SPI1 SCK (PA5)   SCK
+PB8              DC
+SPI1 CS (PB7)    CS
+PB6              RST
+GND              LED
+================ ===========
+
+1: You need to remove the diode D3 and short-circuit the PADs in the
+board to get 3.3V. Be aware: although my board works fine, it could
+damage something that expects 3V in our board (double check).
+
+After compiling and flashing the firmware in our board, run fb command.
+
+.. code:: console
+
+   NuttShell (NSH) NuttX-12.12.0
+   nsh> ?
+   help usage:  help [-v] [<cmd>]
+
+       .           cp          expr        mount       kill        uname
+       [           cmp         false       mv          pkill       umount
+       ?           dirname     fdinfo      pidof       sleep       unset
+       alias       df          free        printf      usleep      uptime
+       unalias     dmesg       help        ps          source      watch
+       basename    echo        hexdump     pwd         test        xd
+       break       env         ls          rm          time        wait
+       cat         exec        mkdir       rmdir       true
+       cd          exit        mkrd        set         truncate
+
+     Builtin Apps:
+     dd       fb       hello    nsh      sh
+   nsh> fb
+   VideoInfo:
+         fmt: 0
+         xres: 128
+        yres: 64
+     nplanes: 1
+   PlaneInfo (plane 0):
+       fbmem: 0x10000a98
+       fblen: 1024
+      stride: 16 
+     display: 0
+         bpp: 1
+   Mapped FB: 0x10000a98
+    0: (  0,  0) (128, 64)
+    1: ( 11,  5) (106, 54)
+    2: ( 22, 10) ( 84, 44)
+    3: ( 33, 15) ( 62, 34)
+    4: ( 44, 20) ( 40, 24)
+    5: ( 55, 25) ( 18, 14)
+   Test finished
+   nsh> 
+
+You should see this image:
+
+.. figure:: st7567.png
+   :align: center
 
 testlibcxx
 ----------

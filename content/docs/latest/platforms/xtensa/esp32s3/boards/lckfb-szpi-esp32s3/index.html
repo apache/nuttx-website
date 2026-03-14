@@ -728,6 +728,54 @@ sensor_accel(now:113510000):timestamp:113510000,x:-0.810913,y:0.027343,z:0.57116
 </pre></div>
 </div>
 </section>
+<section id="sdmmc">
+<h3>sdmmc<a class="headerlink" href="#sdmmc" title="Permalink to this heading"></a></h3>
+<p>Basic NuttShell configuration console and SD card enabled via SDMMC peripheral
+in 1-bit mode. The SD card pin mapping is as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CLK</p></td>
+<td><p>GPIO47</p></td>
+</tr>
+<tr class="row-odd"><td><p>CMD</p></td>
+<td><p>GPIO48</p></td>
+</tr>
+<tr class="row-even"><td><p>D0</p></td>
+<td><p>GPIO21</p></td>
+</tr>
+</tbody>
+</table>
+<p>You can run the configuration and compilation procedure:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh lckfb-szpi-esp32s3:sdmmc
+$ make flash -j$(nproc) ESPTOOL_PORT=/dev/ttyUSB0
+</pre></div>
+</div>
+<p>Then format and mount the SD card:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Format the SD card with FAT32
+nsh&gt; mkfatfs -F 32 /dev/mmcsd1
+
+# Create mount point and mount
+nsh&gt; mkdir -p /mnt/sd
+nsh&gt; mount -t vfat /dev/mmcsd1 /mnt/sd
+
+# Verify
+nsh&gt; df
+  Block  Number
+  Size   Blocks     Used Available Mounted on
+     0        0        0         0 /proc
+   512 124702720        0 124702720 /mnt/sd
+
+nsh&gt; echo &quot;hello&quot; &gt; /mnt/sd/test.txt
+nsh&gt; cat /mnt/sd/test.txt
+hello
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 
