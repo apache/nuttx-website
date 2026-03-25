@@ -285,8 +285,20 @@ loaded</p></li>
 <section id="option-1-load-via-u-boot-from-sd-card">
 <h2>Option 1: load via u-boot from SD-card:<a class="headerlink" href="#option-1-load-via-u-boot-from-sd-card" title="Permalink to this heading"></a></h2>
 <ol class="arabic">
-<li><p>Build nuttx, and move <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> to MMC</p></li>
-<li><p>Load from MMC and start nuttx payload</p>
+<li><p>Build nuttx</p></li>
+<li><p>In the u-boot console, expose the eMMC as a USB mass storage device:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">u-boot=&gt; ums 0 mmc 0</span>
+</pre></div>
+</div>
+<p>The board will appear as a USB drive on the host PC.</p>
+</li>
+<li><p>On the Linux host, copy <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> to the boot partition:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cp<span class="w"> </span>nuttx.bin<span class="w"> </span>/media/<span class="sb">`</span>id<span class="w"> </span>-un<span class="sb">`</span>/boot
+</pre></div>
+</div>
+</li>
+<li><p>Go back to the u-boot console and press <code class="docutils literal notranslate"><span class="pre">Ctrl+C</span></code> to stop UMS mode.</p></li>
+<li><p>Load from MMC and start nuttx payload:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">u-boot=&gt; dcache off; fatload mmc 0 0xa0100000 nuttx.bin; go 0xa0100000</span>
 </pre></div>
 </div>

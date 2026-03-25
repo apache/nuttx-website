@@ -273,7 +273,12 @@
 <li class="toctree-l4"><a class="reference internal" href="../nxhello/index.html"><code class="docutils literal notranslate"><span class="pre">nxhello</span></code> NX graphics “Hello, World!” example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../nximage/index.html"><code class="docutils literal notranslate"><span class="pre">nximage</span></code> Display NuttX Logo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../nxlines/index.html"><code class="docutils literal notranslate"><span class="pre">nxlines</span></code> NX Line Drawing</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nxscope</span></code> NxScope library example</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nxscope</span></code> NxScope library example</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#command-line-arguments">Command-Line Arguments</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#supported-channels">Supported Channels</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../nxterm/index.html"><code class="docutils literal notranslate"><span class="pre">nxterm</span></code> Display NuttShell (NSH) as NX Console</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../nxtext/index.html"><code class="docutils literal notranslate"><span class="pre">nxtext</span></code> Display NX Text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../obd2/index.html"><code class="docutils literal notranslate"><span class="pre">obd2</span></code> OBD-II application example</a></li>
@@ -396,7 +401,85 @@
              
   <section id="nxscope-nxscope-library-example">
 <h1><code class="docutils literal notranslate"><span class="pre">nxscope</span></code> NxScope library example<a class="headerlink" href="#nxscope-nxscope-library-example" title="Permalink to this heading"></a></h1>
-<p>TODO</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">nxscope</span></code> example demonstrates the basic usage of the NxScope
+library for real-time data streaming.</p>
+<p>See <a class="reference internal" href="../../logging/nxscope/index.html"><span class="doc">NxScope Library</span></a> for more details about
+the NxScope library and host-side tools.</p>
+<p>This application initializes a set of example channels and starts a thread
+that generates various waveforms (sine waves, counters, etc.) to be streamed
+to a host client.</p>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>To use this example, enable <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE=y</span></code>. The available
+configuration options depend on the interface selected in the <code class="docutils literal notranslate"><span class="pre">nxscope</span></code>
+configuration.</p>
+<section id="common-options">
+<h3>Common Options<a class="headerlink" href="#common-options" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_STREAMBUF_LEN</span></code>: NxScope stream buffer size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_RXBUF_LEN</span></code>: NxScope RX buffer size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_MAIN_INTERVAL</span></code>: Main loop interval in microseconds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_FORCE_ENABLE</span></code>: Automatically enable all channels
+and start streaming on startup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_CHARLOG</span></code>: Demonstrate sending text messages over
+a dedicated channel (channel 19).</p></li>
+</ul>
+</section>
+<section id="serial-interface-options">
+<h3>Serial Interface Options<a class="headerlink" href="#serial-interface-options" title="Permalink to this heading"></a></h3>
+<p>These options are available when <code class="docutils literal notranslate"><span class="pre">CONFIG_LOGGING_NXSCOPE_INTF_SERIAL=y</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_SERIAL_PATH</span></code>: Device path (e.g. <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_SERIAL_BAUD</span></code>: Baud rate for the serial interface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_CDCACM</span></code>: Enable USB CDC/ACM serial transport
+support.</p></li>
+</ul>
+</section>
+<section id="udp-interface-options">
+<h3>UDP Interface Options<a class="headerlink" href="#udp-interface-options" title="Permalink to this heading"></a></h3>
+<p>These options are available when <code class="docutils literal notranslate"><span class="pre">CONFIG_LOGGING_NXSCOPE_INTF_UDP=y</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_UDP_PORT</span></code>: Local UDP port for the NxScope
+interface.</p></li>
+</ul>
+</section>
+<section id="timer-options">
+<h3>Timer Options<a class="headerlink" href="#timer-options" title="Permalink to this heading"></a></h3>
+<p>These options are available when <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_TIMER=y</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_TIMER_PATH</span></code>: Device path for the hardware timer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_TIMER_INTERVAL</span></code>: Timer interval in microseconds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_TIMER_SIGNO</span></code>: Signal number for timer
+notifications.</p></li>
+</ul>
+</section>
+</section>
+<section id="command-line-arguments">
+<h2>Command-Line Arguments<a class="headerlink" href="#command-line-arguments" title="Permalink to this heading"></a></h2>
+<p>The example accepts the following command-line arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">&lt;stream_interval_us&gt;</span></code>: Data sampling thread interval in microseconds.
+Overrides the default value (<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_TIMER_INTERVAL</span></code>
+if timer is used, otherwise 100us).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">&lt;main_interval_us&gt;</span></code>: Main loop interval in microseconds.
+Overrides the default value (<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_NXSCOPE_MAIN_INTERVAL</span></code>).</p></li>
+</ul>
+</section>
+<section id="supported-channels">
+<h2>Supported Channels<a class="headerlink" href="#supported-channels" title="Permalink to this heading"></a></h2>
+<p>The example initializes 32 channels to demonstrate different data types and
+capabilities:</p>
+<ul class="simple">
+<li><p><strong>Channels 0-7</strong>: Standard integer types (uint8 to int64).</p></li>
+<li><p><strong>Channels 8-9</strong>: Floating point types (float and double).</p></li>
+<li><p><strong>Channels 10-15</strong>: Fixed-point types (b8, b16, b32).</p></li>
+<li><p><strong>Channel 16</strong>: Vector of floats (3-phase sine waveform).</p></li>
+<li><p><strong>Channel 17</strong>: Vector of floats with metadata.</p></li>
+<li><p><strong>Channel 18</strong>: No-data channel with metadata.</p></li>
+<li><p><strong>Channel 19</strong>: Character channel for text logs (if enabled).</p></li>
+<li><p><strong>Channel 20</strong>: Critical channel (if enabled).</p></li>
+</ul>
+</section>
 </section>
 
 
