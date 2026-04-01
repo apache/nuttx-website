@@ -173,6 +173,15 @@
 <li class="toctree-l5"><a class="reference internal" href="#security">Security</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#ulp-lp-core-coprocessor">ULP LP Core Coprocessor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#features-of-the-ulp-lp-core">Features of the ULP LP-Core</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#loading-binary-into-ulp-lp-core">Loading Binary into ULP LP-Core</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#makefile-variables-for-ulp-core-build">Makefile Variables for ULP Core Build:</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#creating-an-ulp-lp-core-application">Creating an ULP LP-Core Application</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#accessing-the-ulp-lp-core-program-variables">Accessing the ULP LP-Core Program Variables</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#debugging-ulp-lp-core">Debugging ULP LP-Core</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/esp32p4-function-ev-board/index.html">ESP32-P4-Function-EV-Board</a></li>
 </ul>
@@ -344,7 +353,7 @@ partitioning.</p>
 </section>
 </section>
 <section id="debugging">
-<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h2>
+<span id="esp32p4-debug"></span><h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h2>
 <section id="debugging-with-openocd-and-gdb">
 <h3>Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code><a class="headerlink" href="#debugging-with-openocd-and-gdb" title="Permalink to this heading"></a></h3>
 <p>Espressif uses a specific version of OpenOCD to support ESP chips: <code class="docutils literal notranslate"><span class="pre">openocd-esp32</span></code>.
@@ -731,6 +740,341 @@ and configuration. Consult the board documentation and the
 <code class="file docutils literal notranslate"><span class="pre">arch/risc-v/src/common/espressif/Kconfig</span></code> for feature flags and
 pin selections.</p>
 </div>
+</section>
+</section>
+<section id="ulp-lp-core-coprocessor">
+<span id="esp32p4-ulp"></span><h2>ULP LP Core Coprocessor<a class="headerlink" href="#ulp-lp-core-coprocessor" title="Permalink to this heading"></a></h2>
+<p>The ULP LP core (Low-power core) is a 32-bit RISC-V coprocessor integrated into the ESP32-P4 SoC.
+It is designed to run independently of the main high-performance (HP) core and is capable of executing lightweight tasks
+such as GPIO polling, simple peripheral control and I/O interactions.</p>
+<p>This coprocessor benefits to offload simple tasks from HP core (e.g., GPIO polling , I2C operations, basic control logic) and
+frees the main CPU for higher-level processing</p>
+<p>For more information about ULP LP Core Coprocessor <a class="reference external" href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32p4/api-reference/system/ulp-lp-core.html">check here</a>.</p>
+<section id="features-of-the-ulp-lp-core">
+<h3>Features of the ULP LP-Core<a class="headerlink" href="#features-of-the-ulp-lp-core" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Processor Architecture</dt><dd><ul>
+<li><p>RV32I RISC-V core with IMAC extensions—Integer (I), Multiplication/Division (M), Atomic (A), and Compressed (C) instructions</p></li>
+<li><p>Runs at 40 MHz</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Memory</dt><dd><ul>
+<li><p>Access to 16 KB of low-power ROM (LP-ROM) any time</p></li>
+<li><p>Access to 32 KB of low-power memory (LP-RAM) and LP-domain peripherals any time</p></li>
+<li><p>Access to 768 KB of L2 SRAM any time with latency</p></li>
+<li><p>Full access to all of the chip’s memory and peripherals when the HP core is active</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Debugging</dt><dd><ul>
+<li><p>Built-in JTAG debug module for external debugging</p></li>
+<li><p>Supports LP UART for logging from the ULP itself</p></li>
+<li><p>Includes a panic handler capable of dumping register state via LP UART on exceptions</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Peripheral support</dt><dd><ul>
+<li><p>LP domain peripherals (LP GPIO, LP I2C, LP UART, LP SPI, LP Mailbox, LP Timer and more)</p></li>
+<li><p>Full access HP domain peripherals when when the HP core is active</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="loading-binary-into-ulp-lp-core">
+<h3>Loading Binary into ULP LP-Core<a class="headerlink" href="#loading-binary-into-ulp-lp-core" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>There are two ways to load a binary into LP-Core:</dt><dd><ul class="simple">
+<li><p>Using a prebuilt binary</p></li>
+<li><p>Using NuttX internal build system to build your own (bare-metal) application</p></li>
+</ul>
+</dd>
+</dl>
+<p>When using a prebuilt binary, the already compiled output for the ULP system whether built from NuttX
+or the ESP-IDF environment can be leveraged. However, whenever the ULP code needs to be modified, it must be rebuilt separately,
+and the resulting .bin file has to be integrated into NuttX. This workflow, while compatible, can become tedious.</p>
+<p>With NuttX internal build system, the ULP binary code can be built and flashed from a single location. It is more convenient but
+using build system has some dependencies on example side.</p>
+<p>Both methods requires <code class="docutils literal notranslate"><span class="pre">CONFIG_ESPRESSIF_USE_LP_CORE</span></code> variable to enable ULP core
+and it can be set using <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> or <code class="docutils literal notranslate"><span class="pre">kconfig-tweak</span></code> commands.</p>
+<p>Additionally, a Makefile needs to be provided to specify the ULP application name,
+source path of the ULP application, and either the binary (for prebuilt) or the source files (for internal build).
+This Makefile must include the ULP makefile after the variable set process on <code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/espressif/esp_ulp.mk</span></code> integration script.
+For more information please refer to <a class="reference internal" href="../../xtensa/esp32s3/index.html#ulp-makefile"><span class="std std-ref">ulp example Makefile.</span></a></p>
+</section>
+<section id="makefile-variables-for-ulp-core-build">
+<h3>Makefile Variables for ULP Core Build:<a class="headerlink" href="#makefile-variables-for-ulp-core-build" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code>: Sets name for the ULP application. This variable also be used as prefix (e.g. ULP application bin variable name)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_FOLDER</span></code>: Specifies the directory containing the ULP application’s source codes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_BIN</span></code>: Defines the path of the prebuilt ULP binary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_C_SRCS</span></code>: Lists all C source files (.c) that need to be compiled for the ULP application.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_ASM_SRCS</span></code>: Lists all assembly source files (.S or .s) to be assembled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_INCLUDES</span></code>: Specifies additional include directories for the compiler and assembler.</p></li>
+</ul>
+<p>Here is an Makefile example when using prebuilt binary for ULP core:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ULP_APP_NAME = esp_ulp</span>
+<span class="go">ULP_APP_FOLDER = $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)$(CHIP_SERIES)</span>
+<span class="go">ULP_APP_BIN = $(TOPDIR)$(DELIM)Documentation$(DELIM)platforms$(DELIM)$(CONFIG_ARCH)$(DELIM)$(CONFIG_ARCH_CHIP)$(DELIM)boards$(DELIM)$(CONFIG_ARCH_BOARD)$(DELIM)ulp_riscv_blink.bin</span>
+
+<span class="go">include $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)common$(DELIM)espressif$(DELIM)esp_ulp.mk</span>
+</pre></div>
+</div>
+<p>Here is an example for enabling ULP and using the prebuilt test binary for ULP core:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make distclean
+./tools/configure.sh esp32p4-function-ev-board:nsh
+kconfig-tweak -e CONFIG_ESPRESSIF_USE_LP_CORE
+kconfig-tweak -e CONFIG_ESPRESSIF_ULP_USE_TEST_BIN
+make olddefconfig
+make -j
+</pre></div>
+</div>
+</section>
+<section id="creating-an-ulp-lp-core-application">
+<h3>Creating an ULP LP-Core Application<a class="headerlink" href="#creating-an-ulp-lp-core-application" title="Permalink to this heading"></a></h3>
+<p>To use NuttX’s internal build system to compile the bare-metal LP binary, check the following instructions.</p>
+<p>First, create a folder for the ULP source and header files into your NuttX example.
+This folder is just for ULP project and it is an independent project. Therefore, the NuttX example guide should not be followed
+for ULP example (folder location is irrelevant. It can be the same of the <cite>nuttx-apps</cite> repository, for instance).
+To include the ULP folder in the build system, don’t forget to include the ULP Makefile in the NuttX example Makefile. Lastly, configuration variables
+needed to enable ULP core instructions can be found above.</p>
+<p>NuttX’s internal functions or POSIX calls are not supported.</p>
+<p>Here is an example:</p>
+<ul class="simple">
+<li><p>ULP UART Snippet:</p></li>
+</ul>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdint.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_lp_core_print.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_lp_core_utils.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_lp_core_uart.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_lp_core_gpio.h&quot;</span>
+
+<span class="cp">#define nop() __asm__ __volatile__ (&quot;nop&quot;)</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+
+<span class="w">    </span><span class="n">lp_core_printf</span><span class="p">(</span><span class="s">&quot;Hello from the LP core!!</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10000</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="n">nop</span><span class="p">();</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For more information about ULP Core Coprocessor examples <a class="reference external" href="https://github.com/espressif/esp-idf/tree/master/examples/system/ulp/lp_core">check here</a>.
+After these settings follow the same steps as for any other configuration to build NuttX. Build system checks ULP project path,
+adds every source and header file into project and builds it.</p>
+<p>To sum up, here is an example. <code class="docutils literal notranslate"><span class="pre">ulp_example/ulp</span> <span class="pre">(../ulp_example/ulp)</span></code> folder selected as example
+to create a subfolder for ULP but folder that includes ULP source code can be anywhere. For more information about
+custom apps, please follow NuttX <a class="reference external" href="https://nuttx.apache.org/docs/latest/guides/customapps.html#custom-apps-how-to">Custom Apps How-to</a> guide,
+this example will demonstrate how to add ULP code into a custom application:</p>
+<ul class="simple">
+<li><p>Tree view:</p></li>
+</ul>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nuttxspace/
+├── nuttx/
+└── apps/
+└── ulp_example/
+    └── Makefile
+    └── Kconfig
+    └── ulp_example.c
+    └── ulp/
+        └── Makefile
+        └── ulp_main.c
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in Makefile:</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">include $(APPDIR)/Make.defs</span>
+
+<span class="go">PROGNAME  = $(CONFIG_EXAMPLES_ULP_EXAMPLE_PROGNAME)</span>
+<span class="go">PRIORITY  = $(CONFIG_EXAMPLES_ULP_EXAMPLE_PRIORITY)</span>
+<span class="go">STACKSIZE = $(CONFIG_EXAMPLES_ULP_EXAMPLE_STACKSIZE)</span>
+<span class="go">MODULE    = $(CONFIG_EXAMPLES_ULP_EXAMPLE)</span>
+
+<span class="go">MAINSRC = ulp_example.c</span>
+
+<span class="go">include $(APPDIR)/Application.mk</span>
+
+<span class="go">include ulp/Makefile</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in Kconfig:</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">config EXAMPLES_ULP_EXAMPLE</span>
+<span class="go">  bool &quot;ULP Example&quot;</span>
+<span class="go">  default n</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in ulp_example.c:</p></li>
+</ul>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/ioctl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;inttypes.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdint.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp/ulp/ulp_main.h&quot;</span>
+<span class="cm">/* Files that holds ULP binary header */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp/ulp/ulp_code.h&quot;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">   </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ulp&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_WRONLY</span><span class="p">);</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">       </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Failed to open ULP: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">errno</span><span class="p">);</span>
+<span class="w">       </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">     </span><span class="p">}</span>
+<span class="w">   </span><span class="cm">/* ulp_example is the prefix which can be changed with ULP_APP_NAME makefile</span>
+<span class="cm">    * variable to access ULP binary code variable */</span>
+<span class="w">   </span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">ulp_example_bin</span><span class="p">,</span><span class="w"> </span><span class="n">ulp_example_bin_len</span><span class="p">);</span>
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple" id="ulp-makefile">
+<li><p>Contents in ulp/Makefile:</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ULP_APP_NAME = ulp_example</span>
+<span class="go">ULP_APP_FOLDER = $(APPDIR)$(DELIM)ulp_example$(DELIM)ulp</span>
+<span class="go">ULP_APP_C_SRCS = ulp_main.c</span>
+
+<span class="go">include $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)common$(DELIM)espressif$(DELIM)esp_ulp.mk</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in ulp_main.c:</p></li>
+</ul>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdint.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ulp_lp_core_gpio.h&quot;</span>
+
+<span class="cp">#define GPIO_PIN 0</span>
+
+<span class="cp">#define nop() __asm__ __volatile__ (&quot;nop&quot;)</span>
+
+<span class="kt">bool</span><span class="w"> </span><span class="n">gpio_level_previous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ulp_lp_core_gpio_set_level</span><span class="p">(</span><span class="n">GPIO_PIN</span><span class="p">,</span><span class="w"> </span><span class="n">gpio_level_previous</span><span class="p">);</span>
+<span class="w">        </span><span class="n">gpio_level_previous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">gpio_level_previous</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10000</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="n">nop</span><span class="p">();</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<ul>
+<li><p>Command to build:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make distclean
+./tools/configure.sh esp32p4-function-ev-board:nsh
+kconfig-tweak -e CONFIG_ESPRESSIF_GPIO_IRQ
+kconfig-tweak -e CONFIG_DEV_GPIO
+kconfig-tweak -e CONFIG_ESPRESSIF_USE_LP_CORE
+kconfig-tweak -e CONFIG_EXAMPLES_ULP_EXAMPLE
+make olddefconfig
+make -j
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Here is an example of a single ULP application. However, support is not limited to just
+one application. Multiple ULP applications are also supported.
+By following the same guideline, multiple ULP applications can be created and loaded using <code class="docutils literal notranslate"><span class="pre">write</span></code> POSIX call.
+Each NuttX application can build one ULP application. Therefore, to build multiple ULP applications, multiple NuttX
+applications are needed to create each ULP binary. This limitation only applies when using the NuttX build system to
+build multiple ULP applications; it does not affect the ability to load multiple ULP applications built by other means.</p>
+<p>ULP binary can be included in NuttX application by adding
+<code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&quot;ulp/ulp/ulp_code.h&quot;</span></code> line. Then, the ULP binary is accessible by using the ULP application
+prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP application Makefile) with the <code class="docutils literal notranslate"><span class="pre">bin</span></code> keyword to
+access the binary data (e.g., if <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is <code class="docutils literal notranslate"><span class="pre">ulp_test</span></code>, the binary variable will be <code class="docutils literal notranslate"><span class="pre">ulp_test_bin</span></code>)
+and <code class="docutils literal notranslate"><span class="pre">bin_len</span></code> keyword to access its length (e.g., <code class="docutils literal notranslate"><span class="pre">ulp_test_bin_len</span></code> for <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is <code class="docutils literal notranslate"><span class="pre">ulp_test</span></code>).</p>
+</section>
+<section id="accessing-the-ulp-lp-core-program-variables">
+<h3>Accessing the ULP LP-Core Program Variables<a class="headerlink" href="#accessing-the-ulp-lp-core-program-variables" title="Permalink to this heading"></a></h3>
+<p>Global symbols defined in the ULP application are available to the HP core through a shared memory region. To read or write ULP variables,
+direct reading/writing to such memory positions are not allowed. POSIX calls are needed instead. To access the ULP variable through the HP core,
+consider that its name is defined by the ULP application prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP application Makefile) + the ULP application variable.
+For example if HP core tries to access a ULP application variable named <code class="docutils literal notranslate"><span class="pre">result</span></code> and <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> in the ULP application Makefile set as <code class="docutils literal notranslate"><span class="pre">ulp_app</span></code>, required name for
+that variable will be <code class="docutils literal notranslate"><span class="pre">ulp_app_result</span></code>.
+<code class="docutils literal notranslate"><span class="pre">FIONREAD</span></code> or <code class="docutils literal notranslate"><span class="pre">FIONWRITE</span></code> ioctl calls are, then, performed with the address of a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">symtab_s</span></code> previously defined with the name of the variable to be read or written.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Ensure that the related ULP application is running. Otherwise, another ULP application may interfere by using the same memory space for a different variables.</p>
+</div>
+<p>Here is a snippet for reading and writing to a ULP variable named <code class="docutils literal notranslate"><span class="pre">var_test</span></code> (assuming the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is set to <code class="docutils literal notranslate"><span class="pre">ulp</span></code>) through the HP core:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/ioctl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;nuttx/symtab.h&quot;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ulp_var</span><span class="p">;</span>
+<span class="w">   </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">   </span><span class="k">struct</span><span class="w"> </span><span class="nc">symtab_s</span><span class="w"> </span><span class="n">sym</span><span class="w"> </span><span class="o">=</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">     </span><span class="p">.</span><span class="n">sym_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ulp_var_test&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="p">.</span><span class="n">sym_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ulp_var</span><span class="p">,</span>
+<span class="w">   </span><span class="p">};</span>
+<span class="w">   </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ulp&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDWR</span><span class="p">);</span>
+<span class="w">   </span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">FIONREAD</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sym</span><span class="p">);</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ulp_var</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">       </span><span class="n">ulp_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">       </span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">FIONWRITE</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sym</span><span class="p">);</span>
+<span class="w">     </span><span class="p">}</span>
+
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="debugging-ulp-lp-core">
+<h3>Debugging ULP LP-Core<a class="headerlink" href="#debugging-ulp-lp-core" title="Permalink to this heading"></a></h3>
+<p>To debug ULP LP-Core please first refer to <a class="reference internal" href="#esp32p4-debug"><span class="std std-ref">Debugging section.</span></a>
+Debugging ULP core consist same steps with some small differences. First of all, configuration file
+needs to be changed from <code class="docutils literal notranslate"><span class="pre">board/esp32p4-builtin.cfg</span></code> or <code class="docutils literal notranslate"><span class="pre">board/esp32p4-ftdi.cfg</span></code> to
+<code class="docutils literal notranslate"><span class="pre">board/esp32p4-lpcore-builtin.cfg</span></code> or <code class="docutils literal notranslate"><span class="pre">board/esp32p4-lpcore-ftdi.cfg</span></code> depending on preferred debug adapter.</p>
+<p>LP core supports limited set of HW exceptions, so, for example, writing at address
+0x0 will not cause a panic as it would be for the code running on HP core.
+This can be overcome to some extent by enabling undefined behavior sanitizer for LP core application,
+so ubsan can help to catch some errors. But note that it will increase code size significantly and
+it can happen that application won’t fit into RTC RAM.
+To enable ubsan for ULP please add <code class="docutils literal notranslate"><span class="pre">CONFIG_ESPRESSIF_ULP_ENABLE_UBSAN</span></code> in menuconfig.</p>
 </section>
 </section>
 <section id="supported-boards">
