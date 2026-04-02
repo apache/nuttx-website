@@ -159,6 +159,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#bootloader-and-partitions">Bootloader and partitions</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#building-and-flashing">Building and Flashing</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#flashing-nsh-example">Flashing NSH Example</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#building-with-cmake">Building with CMake</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#debugging">Debugging</a><ul>
@@ -434,9 +435,82 @@ NuttX 12.8.0 759d37b97c-dirty Mar  5 2025 19:42:41 risc-v esp32c6-devkitc
 </pre></div>
 </div>
 </section>
+<section id="building-with-cmake">
+<h3>Building with CMake<a class="headerlink" href="#building-with-cmake" title="Permalink to this heading"></a></h3>
+<p>General CMake usage (out-of-tree build, <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code> target, and so on) is described in
+<a class="reference internal" href="../../../quickstart/compiling_cmake.html"><span class="doc">Compiling with CMake</span></a>. The ESP32-C6 common arch enables post-build steps that
+produce <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> (and related images) under the <strong>CMake binary directory</strong>; the build
+log also prints suggested <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> command lines for your layout.</p>
+<p>Example (NuttX shell defconfig, Ninja generator):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd nuttx
+$ cmake -B build -DBOARD_CONFIG=esp32c6-devkitc:nsh -GNinja
+$ cmake --build build
+</pre></div>
+</div>
+<p>To reconfigure the tree after changing options (same as other NuttX CMake boards):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake --build build -t menuconfig
+$ cmake --build build
+</pre></div>
+</div>
+<section id="persistent-hal-cache-nxtmpdir">
+<h4>Persistent HAL cache (<code class="docutils literal notranslate"><span class="pre">NXTMPDIR</span></code>)<a class="headerlink" href="#persistent-hal-cache-nxtmpdir" title="Permalink to this heading"></a></h4>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">-DNXTMPDIR=ON</span></code> at <strong>configure</strong> time to reuse a persistent clone of the
+<code class="docutils literal notranslate"><span class="pre">esp-hal-3rdparty</span></code> repository under <code class="docutils literal notranslate"><span class="pre">nuttx/../nxtmpdir/esp-hal-3rdparty</span></code>. CMake checks
+the expected revision; if it does not match, the cache directory is refreshed. This cuts
+repeat configure/build time when the HAL checkout would otherwise be re-fetched into the
+binary directory.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B build -DBOARD_CONFIG=esp32c6-devkitc:nsh -DNXTMPDIR=ON -GNinja
+$ cmake --build build
+</pre></div>
+</div>
+</section>
+<section id="mcuboot-building-the-2nd-stage-bootloader-t-bootloader">
+<h4>MCUBoot: building the 2nd-stage bootloader (<code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">bootloader</span></code>)<a class="headerlink" href="#mcuboot-building-the-2nd-stage-bootloader-t-bootloader" title="Permalink to this heading"></a></h4>
+<p>For configurations that use MCUboot, build the bootloader the same way as
+with Make, but via the CMake target:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake --build build -t bootloader
+</pre></div>
+</div>
+<p>The image is installed as <code class="docutils literal notranslate"><span class="pre">mcuboot-esp32c6.bin</span></code> in the NuttX <strong>source</strong> directory (not
+inside <code class="docutils literal notranslate"><span class="pre">build/</span></code>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Flashing paths differ from the pure-Make flow: the application image is under your CMake
+build directory (for example <code class="docutils literal notranslate"><span class="pre">build/nuttx.bin</span></code>), while MCUboot binaries live next to
+<code class="docutils literal notranslate"><span class="pre">nuttx</span></code> sources. Use the <code class="docutils literal notranslate"><span class="pre">esptool.py</span></code> hints printed at the end of the build, or the
+same offsets as documented for <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code> with <code class="docutils literal notranslate"><span class="pre">ESPTOOL_BINDIR</span></code>.</p>
+</div>
+</section>
+<section id="target-flashing-t-flash">
+<h4>Target flashing (<code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">flash</span></code>)<a class="headerlink" href="#target-flashing-t-flash" title="Permalink to this heading"></a></h4>
+<p>After a successful CMake build, you can flash the chip with the <code class="docutils literal notranslate"><span class="pre">flash</span></code> custom target.
+This is the CMake-side equivalent of the Make <code class="docutils literal notranslate"><span class="pre">FLASH</span></code> logic in
+<code class="docutils literal notranslate"><span class="pre">tools/espressif/Config.mk</span></code>.</p>
+<p><strong>Serial port:</strong> you must set <code class="docutils literal notranslate"><span class="pre">ESPTOOL_PORT</span></code> to a non-empty value (for example
+<code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code>). If it is unset or empty, the flash step fails.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ export ESPTOOL_PORT=/dev/ttyUSB0
+$ cmake --build build -t flash
+</pre></div>
+</div>
+<p>Or for a single invocation:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ESPTOOL_PORT=/dev/ttyUSB0 cmake --build build -t flash
+</pre></div>
+</div>
+</section>
+<section id="cmake-limitations">
+<span id="esp32c6-debug"></span><h4>CMake limitations<a class="headerlink" href="#cmake-limitations" title="Permalink to this heading"></a></h4>
+<p>The following is <strong>not</strong> supported when building with CMake yet; use the Make-based build instead:</p>
+<ul class="simple">
+<li><p><strong>ULP / LP core</strong> — Low-power coprocessor support (<code class="docutils literal notranslate"><span class="pre">CONFIG_ESPRESSIF_USE_LP_CORE</span></code>) is
+not wired up for CMake (ULP/LP integration is TODO).</p></li>
+</ul>
+</section>
+</section>
 </section>
 <section id="debugging">
-<span id="esp32c6-debug"></span><h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h2>
+<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h2>
 <p>This section describes debugging techniques for the ESP32-C6.</p>
 <section id="debugging-with-openocd-and-gdb">
 <h3>Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code><a class="headerlink" href="#debugging-with-openocd-and-gdb" title="Permalink to this heading"></a></h3>
