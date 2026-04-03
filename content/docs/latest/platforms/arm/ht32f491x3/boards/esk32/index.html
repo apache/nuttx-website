@@ -112,6 +112,8 @@
     
     <option value="../../../../../../12.12.0" >12.12.0</option>
     
+    <option value="../../../../../../12.13.0" >12.13.0</option>
+    
     </select>
   </div>
 
@@ -284,7 +286,7 @@
 <p>The ESK32 is a development board based on the Holtek HT32F49163 MCU.
 The current NuttX port targets the HT32F49163 device used on the
 HT32F49163 development kit and focuses on a working serial-console NSH
-configuration with basic board bring-up.</p>
+configuration with basic board bring-up plus timer-based PWM validation.</p>
 <p>For additional hardware details, refer to Holtek’s
 <a class="reference external" href="https://www.holtek.com/webapi/106680/HT32F491x3_StarterKitUserManualv100.pdf">HT32F491x3 Starter Kit User Guide</a>.</p>
 <figure class="align-center" id="id1">
@@ -302,6 +304,7 @@ configuration with basic board bring-up.</p>
 <li><p>Boot and clock initialization for the ESK32 8 MHz external crystal</p></li>
 <li><p>System clock configured to 150 MHz</p></li>
 <li><p>USART1 serial console at 115200 8N1</p></li>
+<li><p>TMR3 PWM outputs exposed through <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> .. <code class="docutils literal notranslate"><span class="pre">/dev/pwm3</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">/bin</span></code> mounted through <code class="docutils literal notranslate"><span class="pre">binfs</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">/proc</span></code> mounted through <code class="docutils literal notranslate"><span class="pre">procfs</span></code></p></li>
 <li><p>User LED registration through <code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code></p></li>
@@ -315,6 +318,9 @@ applications:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">leds</span></code></p></li>
 </ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">esk32:pwm</span></code> configuration keeps the same board bring-up and adds the
+<code class="docutils literal notranslate"><span class="pre">pwm</span></code> example application together with a board-level PWM device at
+<code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> .. <code class="docutils literal notranslate"><span class="pre">/dev/pwm3</span></code>.</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
@@ -364,6 +370,14 @@ LED interface.</p>
 </tr>
 </thead>
 <tbody>
+<tr class="row-even"><td><p>PA6</p></td>
+<td><p>TMR3_CH1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> output in <code class="docutils literal notranslate"><span class="pre">esk32:pwm</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>PA7</p></td>
+<td><p>TMR3_CH2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm1</span></code> output in <code class="docutils literal notranslate"><span class="pre">esk32:pwm</span></code></p></td>
+</tr>
 <tr class="row-even"><td><p>PA9</p></td>
 <td><p>USART1_TX</p></td>
 <td><p>Default serial console TX</p></td>
@@ -371,6 +385,14 @@ LED interface.</p>
 <tr class="row-odd"><td><p>PA10</p></td>
 <td><p>USART1_RX</p></td>
 <td><p>Default serial console RX</p></td>
+</tr>
+<tr class="row-even"><td><p>PB0</p></td>
+<td><p>TMR3_CH3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm2</span></code> output in <code class="docutils literal notranslate"><span class="pre">esk32:pwm</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>PB1</p></td>
+<td><p>TMR3_CH4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm3</span></code> output in <code class="docutils literal notranslate"><span class="pre">esk32:pwm</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>PD13</p></td>
 <td><p>LED2</p></td>
@@ -421,17 +443,117 @@ from Holtek’s website: <a class="reference external" href="https://www.holtek.
 </div>
 <p>When <code class="docutils literal notranslate"><span class="pre">leds</span></code> is executed, the example opens <code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code> and cycles
 through the LED bitmasks supported by the board.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">esk32:pwm</span></code> configuration also exposes <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> through TMR3. The
+default defconfig selects <code class="docutils literal notranslate"><span class="pre">CONFIG_HT32F491X3_TMR3_CHANNEL=1</span></code>, so the PWM
+signal is routed to <code class="docutils literal notranslate"><span class="pre">PA6</span></code>. Probe <code class="docutils literal notranslate"><span class="pre">PA6</span></code> against board <code class="docutils literal notranslate"><span class="pre">GND</span></code> and run:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; pwm -f 1000 -d 50 -t 5</span>
+</pre></div>
+</div>
+<p>This command starts a 1 kHz PWM waveform with a 50% duty cycle for 5 seconds.
+On the default channel that corresponds to a 1 ms period with a 500 us high
+pulse on <code class="docutils literal notranslate"><span class="pre">PA6</span></code>. A typical console log is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; pwm -f 1000 -d 50 -t 5</span>
+<span class="go">pwm_main: starting output with frequency: 1000 duty: 00007fff</span>
+<span class="go">pwm_main: stopping output</span>
+</pre></div>
+</div>
 </section>
-<section id="current-limitations">
-<h2>Current Limitations<a class="headerlink" href="#current-limitations" title="Permalink to this heading"></a></h2>
-<p>The current port is still intentionally small. In particular:</p>
-<ul class="simple">
-<li><p>only the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> board configuration is maintained</p></li>
-<li><p>only USART1 routing is described by the board port</p></li>
-<li><p>LEDs are supported, but board buttons are not yet implemented</p></li>
-<li><p>internal GPIO helpers exist, but there is not yet a board-level <code class="docutils literal notranslate"><span class="pre">/dev/gpio</span></code>
-test interface in this port</p></li>
-</ul>
+<section id="peripheral-support">
+<h2>Peripheral Support<a class="headerlink" href="#peripheral-support" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Peripheral</p></th>
+<th class="head"><p>Support</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Boot / Clock / IRQ</p></td>
+<td><p>Yes</p></td>
+<td><p>Board start-up, clock tree and tick</p></td>
+</tr>
+<tr class="row-odd"><td><p>UART</p></td>
+<td><p>Yes</p></td>
+<td><p>USART1 console</p></td>
+</tr>
+<tr class="row-even"><td><p>GPIO</p></td>
+<td><p>Partial</p></td>
+<td><p>Internal helpers only</p></td>
+</tr>
+<tr class="row-odd"><td><p>LEDs</p></td>
+<td><p>Yes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">USERLED</span></code> and <code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Buttons</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>PWM</p></td>
+<td><p>Yes</p></td>
+<td><p>TMR3 exposed as <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Pulse Counter</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Timers</p></td>
+<td><p>Partial</p></td>
+<td><p>OS tick and TMR3 PWM</p></td>
+</tr>
+<tr class="row-even"><td><p>SPI</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>I2C</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>ADC</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>DAC</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>CAN</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>DMA</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>RTC / ERTC</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>I2S</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Watchdog</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>USB Device</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>USB Host</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>External Interrupts</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Power Control</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
@@ -465,6 +587,41 @@ board bring-up.</p>
 <span class="go">sh</span>
 </pre></div>
 </div>
+</section>
+<section id="pwm">
+<h3>pwm<a class="headerlink" href="#pwm" title="Permalink to this heading"></a></h3>
+<p>This configuration enables the generic PWM framework, registers the TMR3
+lower-half driver as <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> .. <code class="docutils literal notranslate"><span class="pre">/dev/pwm3</span></code>, and includes the <code class="docutils literal notranslate"><span class="pre">pwm</span></code> example
+application for board-level validation.</p>
+<p>Configure and build it from the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>-l<span class="w"> </span>esk32:pwm
+<span class="gp">$ </span>make<span class="w"> </span>olddefconfig
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+<p>After flashing the image, the following command can be used from NSH to
+validate PWM generation on <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; pwm -f 1000 -d 50 -t 5</span>
+</pre></div>
+</div>
+<p>The expected result is a 1 kHz, 50% duty-cycle waveform on <code class="docutils literal notranslate"><span class="pre">PA6</span></code> for 5
+seconds, followed by the application stopping the output. A typical console
+log is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; pwm -f 1000 -d 50 -t 5</span>
+<span class="go">pwm_main: starting output with frequency: 1000 duty: 00007fff</span>
+<span class="go">pwm_main: stopping output</span>
+</pre></div>
+</div>
+<p>The additional TMR3 outputs are also registered:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code>: <code class="docutils literal notranslate"><span class="pre">PA6</span></code> / TMR3_CH1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm1</span></code>: <code class="docutils literal notranslate"><span class="pre">PA7</span></code> / TMR3_CH2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm2</span></code>: <code class="docutils literal notranslate"><span class="pre">PB0</span></code> / TMR3_CH3</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/dev/pwm3</span></code>: <code class="docutils literal notranslate"><span class="pre">PB1</span></code> / TMR3_CH4</p></li>
+</ul>
+<p>All four device nodes share the same underlying TMR3 instance, so they must
+run at the same PWM frequency. Starting one channel at a different frequency
+while another channel is active returns <code class="docutils literal notranslate"><span class="pre">-EBUSY</span></code>.</p>
 </section>
 </section>
 </section>
