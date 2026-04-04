@@ -337,6 +337,53 @@ NuttX 0.0.0  Mar 21 2025 14:25:36 xtensa lckfb-szpi-esp32s3
 </pre></div>
 </div>
 </section>
+<section id="es7210">
+<h3>es7210<a class="headerlink" href="#es7210" title="Permalink to this heading"></a></h3>
+<p>Basic NuttShell configuration with ES7210 4-channel ADC audio codec support
+over USB ADB. The ES7210 is connected via I2C0 (address 0x41) and I2S0 RX,
+enabling audio recording through the on-board microphones.</p>
+<p>The I2S0 RX pin mapping is as follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>GPIO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BCLK</p></td>
+<td><p>GPIO14</p></td>
+</tr>
+<tr class="row-odd"><td><p>DIN</p></td>
+<td><p>GPIO12</p></td>
+</tr>
+<tr class="row-even"><td><p>MCLK</p></td>
+<td><p>GPIO38</p></td>
+</tr>
+<tr class="row-odd"><td><p>WS</p></td>
+<td><p>GPIO13</p></td>
+</tr>
+</tbody>
+</table>
+<p>You can run the configuration and compilation procedure:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh lckfb-szpi-esp32s3:es7210
+$ make flash ESPTOOL_PORT=/dev/ttyUSB0 -j
+</pre></div>
+</div>
+<p>Then record audio using nxrecorder:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ adb -s 1234 shell
+nsh&gt; nxrecorder
+nxrecorder&gt; device /dev/audio/pcm_in0
+nxrecorder&gt; recordraw /tmp/test.pcm 2 16 48000
+nxrecorder&gt; stop
+nxrecorder&gt; q
+</pre></div>
+</div>
+<p>Pull the recorded file to the host and convert to WAV:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ adb -s 1234 pull /tmp/test.pcm .
+$ ffmpeg -f s16le -ar 48000 -ac 2 -i test.pcm test.wav
+</pre></div>
+</div>
+</section>
 <section id="txtable">
 <h3>txtable<a class="headerlink" href="#txtable" title="Permalink to this heading"></a></h3>
 <p>Basic TXTABLE(Text based Partition Table) configuration console enabled over USB ADB.</p>
