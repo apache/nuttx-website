@@ -160,7 +160,14 @@
 <li class="toctree-l4"><a class="reference internal" href="note.html">Note Driver Interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nullzero.html"><code class="docutils literal notranslate"><span class="pre">dev_null.c</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_zero.c</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="quadrature.html">Quadrature Encoder Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Remote Control Devices</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Remote Control Devices</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#application-programming-interface">Application Programming Interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#raw-pulse-space-format">Raw Pulse/Space Format</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#ioctl-commands">IOCTL Commands</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#lower-half-registration">Lower-Half Registration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#espressif-rmt-lirc-adapter">Espressif RMT LIRC Adapter</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="rf.html">RF Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="serial.html">Serial Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="timers/index.html">Timers Drivers</a></li>
@@ -239,6 +246,128 @@
              
   <section id="remote-control-devices">
 <h1>Remote Control Devices<a class="headerlink" href="#remote-control-devices" title="Permalink to this heading"></a></h1>
+<p>NuttX provides a Remote Control (RC) framework for infrared style input and
+output devices. The userspace interface follows the LIRC model and exposes
+each device as a character node such as <code class="docutils literal notranslate"><span class="pre">/dev/lirc0</span></code>.</p>
+<p>Like many NuttX drivers, the RC subsystem is split into two parts:</p>
+<ol class="arabic simple">
+<li><p>a generic upper half in <code class="docutils literal notranslate"><span class="pre">drivers/rc/lirc_dev.c</span></code>, and</p></li>
+<li><p>a lower half supplied by platform or device specific code.</p></li>
+</ol>
+<p>The upper half handles the character driver registration, per-open buffering,
+<code class="docutils literal notranslate"><span class="pre">poll()</span></code> support, and the common <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> interface. The lower half is
+responsible for the hardware specific work such as receiving pulse timings,
+transmitting IR data, or reporting decoded scancodes.</p>
+<p>Files related to the RC framework are located in:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/lirc.h</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/rc/lirc_dev.h</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/rc/lirc_dev.c</span></code></p></li>
+</ul>
+<section id="application-programming-interface">
+<h2>Application Programming Interface<a class="headerlink" href="#application-programming-interface" title="Permalink to this heading"></a></h2>
+<p>Applications should include the following header files:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/lirc.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/ioctl.h&gt;</span>
+</pre></div>
+</div>
+<p>Each RC device is registered as a POSIX character device in <code class="docutils literal notranslate"><span class="pre">/dev</span></code>.
+Applications open the device with the standard <code class="docutils literal notranslate"><span class="pre">open()</span></code> call and then use
+<code class="docutils literal notranslate"><span class="pre">read()</span></code>, <code class="docutils literal notranslate"><span class="pre">write()</span></code>, <code class="docutils literal notranslate"><span class="pre">poll()</span></code>, and <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> just like other character
+drivers.</p>
+<p>The RC framework supports three kinds of lower-half devices:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_DRIVER_SCANCODE</span></code> for devices that report decoded scancodes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_DRIVER_IR_RAW</span></code> for devices that report raw pulse/space timings</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_DRIVER_IR_RAW_TX</span></code> for transmit-only raw devices</p></li>
+</ul>
+</section>
+<section id="raw-pulse-space-format">
+<h2>Raw Pulse/Space Format<a class="headerlink" href="#raw-pulse-space-format" title="Permalink to this heading"></a></h2>
+<p>Raw IR timing is transferred in the LIRC <code class="docutils literal notranslate"><span class="pre">mode2</span></code> format. Each sample is a
+32-bit <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code> value. The upper 8 bits describe the sample type and
+the lower 24 bits carry the payload, usually a duration in microseconds.</p>
+<p>The helpers in <code class="docutils literal notranslate"><span class="pre">include/nuttx/lirc.h</span></code> are intended to build and inspect
+these values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_PULSE(usec)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_SPACE(usec)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_FREQUENCY(value)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_TIMEOUT(usec)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_IS_PULSE(sample)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_IS_SPACE(sample)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_VALUE(sample)</span></code></p></li>
+</ul>
+<p>Typical raw transmit data looks like this:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">txbuf</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">LIRC_PULSE</span><span class="p">(</span><span class="mi">9000</span><span class="p">),</span>
+<span class="w">  </span><span class="n">LIRC_SPACE</span><span class="p">(</span><span class="mi">4500</span><span class="p">),</span>
+<span class="w">  </span><span class="n">LIRC_PULSE</span><span class="p">(</span><span class="mi">560</span><span class="p">),</span>
+<span class="w">  </span><span class="n">LIRC_SPACE</span><span class="p">(</span><span class="mi">560</span><span class="p">),</span>
+<span class="w">  </span><span class="n">LIRC_PULSE</span><span class="p">(</span><span class="mi">560</span><span class="p">),</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>For raw transmit, <code class="docutils literal notranslate"><span class="pre">write()</span></code> expects an odd number of <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>
+samples. The upper half forwards the pulse/space sequence to the lower-half
+<code class="docutils literal notranslate"><span class="pre">tx_ir()</span></code> callback.</p>
+</section>
+<section id="ioctl-commands">
+<h2>IOCTL Commands<a class="headerlink" href="#ioctl-commands" title="Permalink to this heading"></a></h2>
+<p>The RC upper half supports the standard LIRC <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> commands defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/lirc.h</span></code>. Commonly used commands include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_GET_FEATURES</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_GET_SEND_MODE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_GET_REC_MODE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_SET_SEND_MODE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_SET_REC_MODE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_GET_REC_RESOLUTION</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_SET_SEND_CARRIER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_SET_SEND_DUTY_CYCLE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LIRC_SET_REC_TIMEOUT</span></code></p></li>
+</ul>
+<p>Support for a specific command depends on the lower-half capabilities. In
+practice, applications usually start by querying <code class="docutils literal notranslate"><span class="pre">LIRC_GET_FEATURES</span></code> and
+then only use the operations that the device advertises.</p>
+</section>
+<section id="lower-half-registration">
+<h2>Lower-Half Registration<a class="headerlink" href="#lower-half-registration" title="Permalink to this heading"></a></h2>
+<p>Platform code registers an RC lower half by filling <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lirc_lowerhalf_s</span></code>
+and calling <code class="docutils literal notranslate"><span class="pre">lirc_register()</span></code>.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lirc_register</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="n">devno</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The lower half provides a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lirc_ops_s</span></code> callback table. Depending on
+the hardware, it may implement open/close callbacks, raw transmit via
+<code class="docutils literal notranslate"><span class="pre">tx_ir()</span></code>, scancode transmit via <code class="docutils literal notranslate"><span class="pre">tx_scancode()</span></code>, carrier and duty-cycle
+configuration, or receive timeout handling.</p>
+<section id="testing">
+<h3>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">irtest</span></code> application in <code class="docutils literal notranslate"><span class="pre">nuttx-apps/system/irtest</span></code> can be used to
+exercise RC devices from NSH. A typical validation sequence is:</p>
+<ol class="arabic simple">
+<li><p>open <code class="docutils literal notranslate"><span class="pre">/dev/lircN</span></code></p></li>
+<li><p>query <code class="docutils literal notranslate"><span class="pre">LIRC_GET_FEATURES</span></code></p></li>
+<li><p>query or set send / receive mode</p></li>
+<li><p>write raw mode2 samples on transmit-capable devices</p></li>
+<li><p>read back mode2 samples from receive-capable devices</p></li>
+</ol>
+</section>
+</section>
+<section id="espressif-rmt-lirc-adapter">
+<h2>Espressif RMT LIRC Adapter<a class="headerlink" href="#espressif-rmt-lirc-adapter" title="Permalink to this heading"></a></h2>
+<p>Espressif targets may provide an arch-local LIRC adapter built on top of the
+RMT peripheral:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">arch/xtensa/src/common/espressif/esp_lirc.c</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/espressif/esp_lirc.c</span></code></p></li>
+</ul>
+<p>These adapters expose the RMT peripheral through the RC framework as
+<code class="docutils literal notranslate"><span class="pre">/dev/lircN</span></code> devices while keeping the hardware specific RMT implementation
+in the Espressif lower-half driver.</p>
+</section>
 </section>
 
 
