@@ -8,7 +8,22 @@ group: nav-right
 {% include JB/setup %}
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+/* Local font declarations for DM Mono (used as fallback monospace font) */
+@font-face {
+  font-family: 'DM Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/themes/apache/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/themes/apache/fonts/JetBrainsMono-Medium.ttf') format('truetype');
+}
 
 /* ════════════════════════════════════════
    DESIGN TOKENS — light & dark
@@ -328,7 +343,7 @@ html[data-theme="dark"] .nx-chip-logo-wrap img.need-invert {
   flex-direction: column !important;
   gap: 20px !important;
   justify-content: space-between !important;
-  align-items: flex-start !important;
+  align-items: center !important;
 }
 @media (max-width: 760px) {
   .nx-side {
@@ -346,7 +361,7 @@ html[data-theme="dark"] .nx-chip-logo-wrap img.need-invert {
   min-height: 72px !important;
   display: flex !important;
   align-items: center !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
 }
 
 /* SVG / PNG logos directly in sidebar */
@@ -395,7 +410,7 @@ html[data-theme="light"] .nx-chip-logo-wrap img.invert-in-light {
 }
 
 /* Segment meta */
-.nx-meta { display: flex !important; flex-direction: column !important; gap: 3px !important; }
+.nx-meta { display: flex !important; flex-direction: column !important; gap: 3px !important; align-items: center !important; text-align: center !important; }
 .nx-meta-lbl {
   font-family: var(--f-mono) !important;
   font-size: 10px !important;
@@ -785,7 +800,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
-          <img src="{{ site.baseurl }}/static/companies/elektroline.png" alt="Elektroline" class="logo-knockout-white">
+          <img src="{{ site.baseurl }}/static/companies/elektroline.png" alt="Elektroline" class="logo-knockout-white" style="border-radius: 12px !important;">
         </div>
         <div class="nx-meta">
           <span class="nx-meta-lbl">Segment</span>
@@ -867,7 +882,32 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
     </div>
   </div>
 
-  <!-- Motorola / Google Modular -->
+  <!-- Google Modular Phone -->
+  <div class="nx-entry">
+    <div class="nx-entry-grid">
+      <div class="nx-side">
+        <div class="nx-logo-area">
+          <img src="{{ site.baseurl }}/static/companies/google.svg" alt="Google">
+        </div>
+        <div class="nx-meta">
+          <span class="nx-meta-lbl">Segment</span>
+          <span class="nx-meta-val">Mobile</span>
+        </div>
+      </div>
+      <div class="nx-main">
+        <span class="nx-use-lbl">Historic Innovation</span>
+        <h4>Google Modular Phone</h4>
+        <p>Google used NuttX in its ambitious modular phone project, an early effort to bring a hardware-modular smartphone to market.</p>
+        <div class="nx-tags">
+          <span class="nx-tag">Mobile</span>
+          <span class="nx-tag">Modular</span>
+          <span class="nx-tag">Google</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Motorola Moto Mods -->
   <div class="nx-entry">
     <div class="nx-entry-grid">
       <div class="nx-side">
@@ -876,17 +916,54 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
         <div class="nx-meta">
           <span class="nx-meta-lbl">Segment</span>
-          <span class="nx-meta-val">Mobile &amp; Frameworks</span>
+          <span class="nx-meta-val">Smart Accessories</span>
         </div>
       </div>
       <div class="nx-main">
         <span class="nx-use-lbl">Historic Innovation</span>
-        <h4>Google Modular Phone, Moto Mods &amp; micro-ROS</h4>
-        <p>Google used NuttX in its ambitious modular phone project, and Motorola deployed it in Moto Z smart accessories (Moto Mods). The widely adopted micro-ROS robotics framework was also initially developed directly on NuttX before expanding to support other RTOS platforms.</p>
+        <h4>Motorola Moto Mods</h4>
+        <p>Motorola deployed NuttX in Moto Z smart accessories (Moto Mods), enabling modular hardware extensions such as cameras, projectors, and speakers to communicate intelligently with the host device.</p>
         <div class="nx-tags">
           <span class="nx-tag">Mobile</span>
+          <span class="nx-tag">Accessories</span>
+          <span class="nx-tag">Motorola</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 5 — Robotics Frameworks
+══════════════════════════════════════ -->
+<div class="nx-section-label">Robotics Frameworks</div>
+<div class="nx-domain">
+  <div class="nx-domain-hdr">
+    <h3>Robotics Frameworks</h3>
+    <p>Foundational contributions to the open-source robotics ecosystem.</p>
+  </div>
+
+  <!-- micro-ROS -->
+  <div class="nx-entry">
+    <div class="nx-entry-grid">
+      <div class="nx-side">
+        <div class="nx-logo-area">
+          <img src="{{ site.baseurl }}/static/companies/micro-ros.JPG" alt="micro-ROS" class="logo-knockout-white" style="border-radius: 12px !important;">
+        </div>
+        <div class="nx-meta">
+          <span class="nx-meta-lbl">Segment</span>
+          <span class="nx-meta-val">Robotics Framework</span>
+        </div>
+      </div>
+      <div class="nx-main">
+        <span class="nx-use-lbl">ROS 2 on Microcontrollers</span>
+        <h4>micro-ROS</h4>
+        <p>The widely adopted micro-ROS robotics framework was initially developed directly on NuttX before expanding to support other RTOS platforms, cementing NuttX's role as the foundational platform for bringing ROS 2 to microcontrollers.</p>
+        <div class="nx-tags">
           <span class="nx-tag">Robotics</span>
+          <span class="nx-tag">ROS 2</span>
           <span class="nx-tag">micro-ROS</span>
+          <span class="nx-tag">Framework</span>
         </div>
       </div>
     </div>
