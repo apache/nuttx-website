@@ -168,7 +168,16 @@
 <li class="toctree-l3"><a class="reference internal" href="../iper/index.html"><code class="docutils literal notranslate"><span class="pre">iperf</span></code> iperf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../iptables/index.html"><code class="docutils literal notranslate"><span class="pre">iptables</span></code> iptables library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../libcurl4nx/index.html"><code class="docutils literal notranslate"><span class="pre">libcurl4nx</span></code> cURL4nx HTTP client library</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">mqttc</span></code> MQTT-C library</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">mqttc</span></code> MQTT-C library</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-mqttc-pub-with-mbed-tls">Using <code class="docutils literal notranslate"><span class="pre">mqttc_pub</span></code> with Mbed TLS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-mqttc-mbedtls-pub">Using <code class="docutils literal notranslate"><span class="pre">mqttc_mbedtls_pub</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#build-systems-make-and-cmake">Build systems (Make and CMake)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#see-also">See also</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../netcat/index.html"><code class="docutils literal notranslate"><span class="pre">netcat</span></code> NetCat tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../netinit/index.html"><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network initialization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../netlib/index.html"><code class="docutils literal notranslate"><span class="pre">netlib</span></code> Network support library</a></li>
@@ -244,6 +253,117 @@
              
   <section id="mqttc-mqtt-c-library">
 <h1><code class="docutils literal notranslate"><span class="pre">mqttc</span></code> MQTT-C library<a class="headerlink" href="#mqttc-mqtt-c-library" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference external" href="https://github.com/LiamBindle/MQTT-C">MQTT-C</a> client library is integrated
+into NuttX through <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> (<code class="docutils literal notranslate"><span class="pre">apps/netutils/mqttc</span></code>). It provides an MQTT
+v3.1.1 client with a small platform abstraction layer.</p>
+<p>You can use MQTT-C over plain TCP or, when enabled, over TLS using Mbed TLS. The
+TLS path defines <code class="docutils literal notranslate"><span class="pre">MQTT_USE_MBEDTLS</span></code> for code that includes the library and the
+<code class="docutils literal notranslate"><span class="pre">examples/mqttc</span></code> publisher application.</p>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>A NuttX tree and a matching <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> checkout (see the top-level
+<code class="docutils literal notranslate"><span class="pre">README</span></code> in each repository).</p></li>
+<li><p>A working network stack and route to your MQTT broker (Ethernet, Wi-Fi, or
+other), unless you only run loopback tests on the host.</p></li>
+<li><p>For TLS with certificate verification, ensure the device has a valid clock
+(RTC or NTP) before connecting; otherwise verification of <code class="docutils literal notranslate"><span class="pre">notBefore</span></code> /
+<code class="docutils literal notranslate"><span class="pre">notAfter</span></code> may fail.</p></li>
+</ul>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the MQTT-C package and optional pieces from <code class="docutils literal notranslate"><span class="pre">menuconfig</span></code>:</p>
+<p><strong>Library and TLS</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC</span></code>: Build the MQTT-C static library.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_CRYPTO_MBEDTLS</span></code>: Build Mbed TLS (required for the TLS integration).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_WITH_MBEDTLS</span></code>: Compile MQTT-C and dependent apps with
+<code class="docutils literal notranslate"><span class="pre">MQTT_USE_MBEDTLS</span></code>. This option depends on <code class="docutils literal notranslate"><span class="pre">CRYPTO_MBEDTLS</span></code> and selects
+<code class="docutils literal notranslate"><span class="pre">DEV_URANDOM</span></code> for entropy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_VERSION</span></code>: Upstream MQTT-C version string (default is
+<code class="docutils literal notranslate"><span class="pre">1.1.5</span></code>).</p></li>
+</ul>
+<p><strong>Example: ``mqttc_pub`` (``apps/examples/mqttc``)</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_MQTTC</span></code>: Build the NSH publisher example. Program name is
+<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_MQTTC_PROGNAME</span></code> (default <code class="docutils literal notranslate"><span class="pre">mqttc_pub</span></code>). Requires
+<code class="docutils literal notranslate"><span class="pre">NETUTILS_MQTTC</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_MQTTC_ALLOW_UNVERIFIED_TLS</span></code>: If TLS verification fails,
+continue anyway. Intended for development with self-signed brokers; do not
+rely on this for production.</p></li>
+</ul>
+<p><strong>Bundled upstream examples (``apps/netutils/mqttc``)</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_EXAMPLE</span></code>: Build extra sample programs from the
+MQTT-C tree. With Mbed TLS enabled this produces <code class="docutils literal notranslate"><span class="pre">mqttc_mbedtls_pub</span></code>;
+otherwise <code class="docutils literal notranslate"><span class="pre">mqttc_posix_pub</span></code> and <code class="docutils literal notranslate"><span class="pre">mqttc_posix_sub</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_TEST</span></code>: CMocka-based tests. This option is not
+available when <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_WITH_MBEDTLS</span></code> is enabled.</p></li>
+</ul>
+<p>A minimal <code class="docutils literal notranslate"><span class="pre">kconfig</span></code> fragment for TLS-enabled <code class="docutils literal notranslate"><span class="pre">mqttc_pub</span></code> might look like:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_CRYPTO_MBEDTLS=y
+CONFIG_NETUTILS_MQTTC=y
+CONFIG_NETUTILS_MQTTC_WITH_MBEDTLS=y
+CONFIG_EXAMPLES_MQTTC=y
+</pre></div>
+</div>
+</section>
+<section id="using-mqttc-pub-with-mbed-tls">
+<h2>Using <code class="docutils literal notranslate"><span class="pre">mqttc_pub</span></code> with Mbed TLS<a class="headerlink" href="#using-mqttc-pub-with-mbed-tls" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_WITH_MBEDTLS</span></code> is set, <code class="docutils literal notranslate"><span class="pre">mqttc_pub</span></code> uses Mbed TLS
+for the broker connection. The default broker port is <strong>8883</strong> (TLS). Typical
+arguments:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mqttc_pub -h BROKER [-p PORT] [-c CAFILE] [-t TOPIC] [-m MESSAGE] [-n COUNT] [-q QOS]
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-h</span></code>: Broker hostname or address (required for non-default use).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-p</span></code>: Port (default <code class="docutils literal notranslate"><span class="pre">8883</span></code> in TLS mode).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code>: Path to a PEM file containing the broker CA certificate (or chain).
+If omitted, the example uses an embedded test CA (PolarSSL/Mbed TLS test
+material), which is only appropriate for matching test servers—not for
+arbitrary production brokers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-t</span></code>, <code class="docutils literal notranslate"><span class="pre">-m</span></code>, <code class="docutils literal notranslate"><span class="pre">-n</span></code>, <code class="docutils literal notranslate"><span class="pre">-q</span></code>: Topic, payload, publish repeat count, and QoS.</p></li>
+</ul>
+<p>Example (NSH, after the network is up):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nsh&gt; mqttc_pub -h mqtt.example.com -p 8883 -c /etc/ssl/certs/broker-ca.pem
+</pre></div>
+</div>
+<p>If verification fails and you must use a self-signed broker during bring-up,
+enable <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_MQTTC_ALLOW_UNVERIFIED_TLS</span></code> or fix the CA/time on the
+device.</p>
+</section>
+<section id="using-mqttc-mbedtls-pub">
+<h2>Using <code class="docutils literal notranslate"><span class="pre">mqttc_mbedtls_pub</span></code><a class="headerlink" href="#using-mqttc-mbedtls-pub" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_EXAMPLE</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_MQTTC_WITH_MBEDTLS</span></code> are set, the <code class="docutils literal notranslate"><span class="pre">mqttc_mbedtls_pub</span></code>
+program is built from the upstream <code class="docutils literal notranslate"><span class="pre">examples/mbedtls_publisher.c</span></code>. It expects
+positional arguments:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mqttc_mbedtls_pub CAFILE [ADDRESS [PORT [TOPIC]]]
+</pre></div>
+</div>
+<p>Defaults are similar to the upstream sample (e.g. public test broker and port
+<code class="docutils literal notranslate"><span class="pre">8883</span></code> if not overridden). Use a CA file that matches your broker.</p>
+</section>
+<section id="build-systems-make-and-cmake">
+<h2>Build systems (Make and CMake)<a class="headerlink" href="#build-systems-make-and-cmake" title="Permalink to this heading"></a></h2>
+<p>Make-based and CMake-based NuttX builds both support these options. For CMake,
+ensure Mbed TLS and MQTT-C targets resolve includes and dependencies; recent
+<code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> changes wire <code class="docutils literal notranslate"><span class="pre">mqttc</span></code> to <code class="docutils literal notranslate"><span class="pre">mbedtls</span></code> when both TLS options are
+enabled.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../examples/mqttc/index.html"><span class="doc">mqttc MQTT-C Example</span></a> — Quick test steps for <code class="docutils literal notranslate"><span class="pre">mqttc_pub</span></code>.</p></li>
+<li><p><a class="reference internal" href="../../crypto/mbedtls/index.html"><span class="doc">mbedtls Mbed TLS Cryptography Library</span></a> — Mbed TLS package overview.</p></li>
+<li><p><a class="reference internal" href="../paho_mqtt/index.html"><span class="doc">paho_mqtt Eclipse Paho MQTT C Library</span></a> — Eclipse Paho MQTT C client (alternative stack).</p></li>
+</ul>
+</section>
 </section>
 
 

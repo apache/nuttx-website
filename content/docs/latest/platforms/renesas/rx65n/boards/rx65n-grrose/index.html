@@ -733,19 +733,19 @@ mounted at /etc and will look like this at run-time:</p>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">/etc/init.d/rc.sysinit</span></code> is system init script; <code class="docutils literal notranslate"><span class="pre">/etc/init.d/rcS</span></code> is the
-start-up script; <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> is a the password file. It supports a single
-user:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>USERNAME:  admin
-PASSWORD:  Administrator
-
-nsh&gt; cat /etc/passwd
-admin:8Tv+Hbmr3pLVb5HHZgd26D:0:0:/
-</pre></div>
-</div>
-<p>The encrypted passwords in the provided passwd file are only valid if the TEA
-key is set to: 012345678 9abcdef0 012345678 9abcdef0. Changes to either the key
-or the password word will require regeneration of the <code class="docutils literal notranslate"><span class="pre">nsh_romfimg.h</span></code> header
-file.</p>
+start-up script; <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> is the password file.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> file is auto-generated at build time when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE</span></code> is set.  Enable the option and set
+credentials via <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_USER</span></code> (default: <code class="docutils literal notranslate"><span class="pre">root</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code> (required, build fails if empty)</p></li>
+</ul>
+<p>The password is hashed with TEA at build time by the host tool
+<code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code>; the plaintext is <strong>not</strong> stored in the firmware.</p>
+<p>For the full description of the mechanism, TEA key configuration, file format,
+and verification steps, see <a class="reference internal" href="../../../../../components/tools/index.html#mkpasswd-autogen"><span class="std std-ref">mkpasswd — Build-time /etc/passwd Generation</span></a>.</p>
 <p>The format of the password file is:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>user:x:uid:gid:home
 

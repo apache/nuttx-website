@@ -197,6 +197,15 @@
 <li class="toctree-l3"><a class="reference internal" href="uncrustify.html"><code class="docutils literal notranslate"><span class="pre">uncrustify.cfg</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="zds.html">zds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="zipme.html"><code class="docutils literal notranslate"><span class="pre">zipme.sh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mkpasswd-build-time-etc-passwd-generation">mkpasswd — Build-time <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> Generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#why-build-time-generation">Why build-time generation?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#how-it-works">How it works</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kconfig-options">Kconfig options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#etc-passwd-file-format"><code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> file format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#verifying-the-generated-entry">Verifying the generated entry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes-on-savedefconfig">Notes on <code class="docutils literal notranslate"><span class="pre">savedefconfig</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../arch/index.html">Architecture-Specific Code</a></li>
@@ -304,6 +313,105 @@ and host C programs that are important parts of the NuttX build system:</p>
 <li class="toctree-l1"><a class="reference internal" href="zipme.html"><code class="docutils literal notranslate"><span class="pre">zipme.sh</span></code></a></li>
 </ul>
 </div>
+<section id="mkpasswd-build-time-etc-passwd-generation">
+<span id="mkpasswd-autogen"></span><h2>mkpasswd — Build-time <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> Generation<a class="headerlink" href="#mkpasswd-build-time-etc-passwd-generation" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code> is a C host tool (compiled from <code class="docutils literal notranslate"><span class="pre">tools/mkpasswd.c</span></code>) that
+generates a single <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> entry at build time.  It is invoked
+automatically by the ROMFS build step when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y</span></code> is set.</p>
+<section id="why-build-time-generation">
+<h3>Why build-time generation?<a class="headerlink" href="#why-build-time-generation" title="Permalink to this heading"></a></h3>
+<p>Shipping a hard-coded default password in firmware is a well-known security
+weakness (CWE-798).  By generating the <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> entry from a
+user-supplied plaintext password at build time, each firmware image carries
+unique credentials.  The build will fail if the password is left empty,
+preventing accidental deployments with no credentials.</p>
+<p>For improved baseline security, the configured password must be at least
+8 characters long.</p>
+</section>
+<section id="how-it-works">
+<h3>How it works<a class="headerlink" href="#how-it-works" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>The host tool reads the plaintext password from
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code>.</p></li>
+<li><p>The password is hashed using the Tiny Encryption Algorithm (TEA) — the
+same implementation used at runtime in
+<code class="docutils literal notranslate"><span class="pre">libs/libc/misc/lib_tea_encrypt.c</span></code> — with custom base64 encoding
+matching <code class="docutils literal notranslate"><span class="pre">apps/fsutils/passwd/passwd_encrypt.c</span></code>.</p></li>
+<li><p>The resulting hashed entry is written to
+<code class="docutils literal notranslate"><span class="pre">etctmp/&lt;mountpoint&gt;/passwd</span></code> and then embedded into the ROMFS image.</p></li>
+<li><p>The <strong>plaintext password is never stored in the firmware image</strong>.</p></li>
+</ol>
+</section>
+<section id="kconfig-options">
+<h3>Kconfig options<a class="headerlink" href="#kconfig-options" title="Permalink to this heading"></a></h3>
+<p>Enable the feature and configure credentials via <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y
+CONFIG_NSH_CONSOLE_LOGIN=y<span class="w">                     </span><span class="c1"># required to enforce login prompt</span>
+CONFIG_BOARD_ETC_ROMFS_PASSWD_USER=&quot;root&quot;<span class="w">          </span><span class="c1"># default: root</span>
+CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD=&quot;&lt;secret&gt;&quot;<span class="w">  </span><span class="c1"># required, min length 8</span>
+CONFIG_BOARD_ETC_ROMFS_PASSWD_UID=0
+CONFIG_BOARD_ETC_ROMFS_PASSWD_GID=0
+CONFIG_BOARD_ETC_ROMFS_PASSWD_HOME=&quot;/&quot;
+</pre></div>
+</div>
+<p>The TEA encryption keys can be changed from their defaults via
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY1..4</span></code>.</p>
+</section>
+<section id="etc-passwd-file-format">
+<h3><code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> file format<a class="headerlink" href="#etc-passwd-file-format" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>user:x:uid:gid:home
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">user</span></code> — user name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> — TEA-hashed, base64-encoded password</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uid</span></code> — numeric user ID</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gid</span></code> — numeric group ID</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">home</span></code> — login directory</p></li>
+</ul>
+</section>
+<section id="verifying-the-generated-entry">
+<h3>Verifying the generated entry<a class="headerlink" href="#verifying-the-generated-entry" title="Permalink to this heading"></a></h3>
+<p>After enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE</span></code> and setting a
+password, rebuild and verify:</p>
+<ol class="arabic">
+<li><p><strong>Configure and build</strong>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>menuconfig<span class="w">   </span><span class="c1"># enable BOARD_ETC_ROMFS_PASSWD_ENABLE and set password</span>
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+</li>
+<li><p><strong>Inspect the generated passwd line</strong> (written to the board build tree):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cat<span class="w"> </span>boards/&lt;arch&gt;/&lt;chip&gt;/&lt;board&gt;/src/etctmp/etc/passwd
+<span class="go">root:8Tv+Hbmr3pLVb5HHZgd26D:0:0:/</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Verify the plaintext is absent from firmware</strong>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>grep<span class="w"> </span>&lt;your-password&gt;<span class="w"> </span>boards/&lt;arch&gt;/&lt;chip&gt;/&lt;board&gt;/src/etctmp.c
+<span class="gp"># </span>must<span class="w"> </span>print<span class="w"> </span>nothing
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="notes-on-savedefconfig">
+<h3>Notes on <code class="docutils literal notranslate"><span class="pre">savedefconfig</span></code><a class="headerlink" href="#notes-on-savedefconfig" title="Permalink to this heading"></a></h3>
+<p>To avoid leaking credentials into board defconfigs, <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">savedefconfig</span></code>
+does not save the following options in the generated defconfig:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY3</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY4</span></code></p></li>
+</ul>
+<p>If you need these values for local development, add them manually to your
+local defconfig after running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">savedefconfig</span></code>.</p>
+</section>
+</section>
 </section>
 
 
