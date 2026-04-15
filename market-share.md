@@ -97,9 +97,9 @@ html[data-theme="dark"] .nx-page {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Kill any site-level img constraints inside our page */
+/* Kill any site-level img constraints inside our page — desktop only */
 .nx-page img {
-  max-width: none !important;
+  max-width: 100% !important;
   max-height: none !important;
   width: auto !important;
   height: auto !important;
@@ -158,9 +158,6 @@ html[data-theme="dark"] .nx-page {
   gap: 12px !important;
   margin-bottom: 48px !important;
 }
-@media (max-width: 700px) {
-  .nx-stats { grid-template-columns: repeat(2, 1fr) !important; }
-}
 
 .nx-stat {
   background: var(--bg-card) !important;
@@ -211,80 +208,6 @@ html[data-theme="dark"] .nx-page {
 }
 
 /* ════════════════════════════════════════
-   PARTNER STRIP
-════════════════════════════════════════ */
-.nx-partner-strip {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 12px !important;
-  margin-bottom: 52px !important;
-}
-@media (max-width: 700px) {
-  .nx-partner-strip { grid-template-columns: repeat(2, 1fr) !important; }
-}
-
-.nx-chip {
-  background: var(--bg-chip) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--r-md) !important;
-  padding: 20px 22px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 14px !important;
-  min-height: 80px !important;
-  box-shadow: var(--sh-sm) !important;
-  transition: border-color .18s, box-shadow .18s, transform .18s !important;
-  text-decoration: none !important;
-}
-.nx-chip:hover {
-  border-color: var(--border-h) !important;
-  box-shadow: var(--sh-md) !important;
-  transform: translateY(-2px) !important;
-}
-
-/* Chip logo: fixed container so logos always have room */
-.nx-chip-logo-wrap {
-  flex-shrink: 0 !important;
-  width: 130px !important;
-  height: 58px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-}
-.nx-chip-logo-wrap img {
-  max-width: 130px !important;
-  max-height: 58px !important;
-  width: auto !important;
-  height: auto !important;
-  object-fit: contain !important;
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .nx-chip-logo-wrap img.need-invert {
-    filter: invert(1) !important;
-  }
-}
-html[data-theme="dark"] .nx-chip-logo-wrap img.need-invert {
-  filter: invert(1) !important;
-}
-
-.nx-chip-meta { text-align: right !important; flex-shrink: 0 !important; }
-.nx-chip-name {
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  color: var(--text) !important;
-  display: block !important;
-  line-height: 1.2 !important;
-}
-.nx-chip-tag {
-  font-family: var(--f-mono) !important;
-  font-size: 10px !important;
-  letter-spacing: .06em !important;
-  text-transform: uppercase !important;
-  color: var(--text-dim) !important;
-}
-
-/* ════════════════════════════════════════
    DOMAIN HEADER
 ════════════════════════════════════════ */
 .nx-domain { margin-bottom: 8px !important; }
@@ -322,6 +245,12 @@ html[data-theme="dark"] .nx-chip-logo-wrap img.need-invert {
   box-shadow: var(--sh-md) !important;
   border-color: var(--border-h) !important;
 }
+a.nx-entry {
+  display: block !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  scroll-margin-top: calc(64px + 1.5rem) !important;
+}
 
 /* TWO COLUMN GRID — forced with !important */
 .nx-entry-grid {
@@ -330,8 +259,74 @@ html[data-theme="dark"] .nx-chip-logo-wrap img.need-invert {
   grid-template-rows: auto !important;
   min-height: 0 !important;
 }
+
+/* ════════════════════════════════════════
+   MOBILE OVERRIDES (single block)
+════════════════════════════════════════ */
 @media (max-width: 760px) {
+  /* Page container */
+  .nx-page { overflow-x: hidden !important; }
+
+  /* Hero */
+  .nx-hero { padding: 28px 0 24px !important; margin-bottom: 28px !important; }
+  .nx-hero h2 { font-size: 1.55rem !important; }
+  .nx-hero p { font-size: 14px !important; }
+
+  /* Stats */
+  .nx-stats { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Section label */
+  .nx-section-label { margin-top: 36px !important; font-size: 9.5px !important; }
+
+  /* Domain header */
+  .nx-domain-hdr h3 { font-size: 17px !important; }
+
+  /* Entry grid — single column */
   .nx-entry-grid { grid-template-columns: 1fr !important; }
+  a.nx-entry { display: block !important; }
+
+  /* Sidebar — horizontal strip: logo left, segment right, compact */
+  .nx-side {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 16px !important;
+    padding: 16px 18px !important;
+    min-height: 0 !important;
+  }
+  /* Logo area — fixed width so meta always has room, no overflow clip */
+  .nx-page .nx-side .nx-logo-area {
+    min-height: 56px !important;
+    width: 112px !important;
+    max-width: 112px !important;
+    flex-shrink: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: visible !important;
+  }
+  /* All logos inside sidebar scale proportionally within the 112px column */
+  .nx-page .nx-side .nx-logo-area img,
+  .nx-page .nx-side .nx-logo-area > img {
+    max-width: 108px !important;
+    max-height: 56px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+  /* Meta: left-aligned next to logo */
+  .nx-page .nx-side .nx-meta {
+    align-items: flex-start !important;
+    text-align: left !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  /* Main content */
+  .nx-main { padding: 18px 16px !important; }
+  .nx-main h4 { font-size: 15px !important; }
+  .nx-main p { font-size: 13.5px !important; }
 }
 
 /* ── SIDEBAR ── */
@@ -345,16 +340,6 @@ html[data-theme="dark"] .nx-chip-logo-wrap img.need-invert {
   justify-content: space-between !important;
   align-items: center !important;
 }
-@media (max-width: 760px) {
-  .nx-side {
-    border-right: none !important;
-    border-bottom: 1px solid var(--border) !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    padding: 20px 24px !important;
-  }
-}
-
 /* Logo area — fixed height so logos always show properly */
 .nx-logo-area {
   width: 100% !important;
@@ -480,6 +465,32 @@ html[data-theme="light"] .nx-chip-logo-wrap img.invert-in-light {
 .logo-knockout-white {
   mix-blend-mode: multiply !important;
 }
+
+/* Color-accurate logos: multiply removes white bg in light mode;
+   invert+hue-rotate(180deg) in dark mode — inverts lightness (white bg → transparent/black)
+   while preserving all brand hues exactly (hue 0°→180°→0°, net zero change) */
+.nx-logo-area.logo-preserve img {
+  mix-blend-mode: multiply !important;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .nx-logo-area.logo-preserve {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  html:not([data-theme="light"]) .nx-logo-area.logo-preserve img {
+    mix-blend-mode: normal !important;
+    filter: invert(1) hue-rotate(180deg) !important;
+  }
+}
+html[data-theme="dark"] .nx-logo-area.logo-preserve {
+  background: transparent !important;
+  padding: 0 !important;
+}
+html[data-theme="dark"] .nx-logo-area.logo-preserve img {
+  mix-blend-mode: normal !important;
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .logo-knockout-white {
     mix-blend-mode: normal !important;
@@ -545,47 +556,6 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
   </div>
 </div>
 
-<!-- ── Partner Strip ── -->
-<div class="nx-section-label">Industry Partners</div>
-<div class="nx-partner-strip">
-  <div class="nx-chip">
-    <div class="nx-chip-logo-wrap">
-      <img class="invert-in-light" src="{{ site.baseurl }}/static/companies/sony.svg" alt="Sony">
-    </div>
-    <div class="nx-chip-meta">
-      <span class="nx-chip-name">Spresense</span>
-      <span class="nx-chip-tag">Platform</span>
-    </div>
-  </div>
-  <div class="nx-chip">
-    <div class="nx-chip-logo-wrap">
-      <img class="need-invert" src="{{ site.baseurl }}/static/companies/fitbit.svg" alt="Fitbit">
-    </div>
-    <div class="nx-chip-meta">
-      <span class="nx-chip-name">Fitbit</span>
-      <span class="nx-chip-tag">Wearable</span>
-    </div>
-  </div>
-  <div class="nx-chip">
-    <div class="nx-chip-logo-wrap">
-      <img src="{{ site.baseurl }}/static/companies/xiaomi.svg" alt="Xiaomi">
-    </div>
-    <div class="nx-chip-meta">
-      <span class="nx-chip-name">OpenVela</span>
-      <span class="nx-chip-tag">Consumer</span>
-    </div>
-  </div>
-  <div class="nx-chip">
-    <div class="nx-chip-logo-wrap">
-      <img src="{{ site.baseurl }}/static/companies/samsung.svg" alt="Samsung">
-    </div>
-    <div class="nx-chip-meta">
-      <span class="nx-chip-name">TizenRT</span>
-      <span class="nx-chip-tag">IoT</span>
-    </div>
-  </div>
-</div>
-
 <!-- ══════════════════════════════════════
      SECTION 1 — Consumer Electronics
 ══════════════════════════════════════ -->
@@ -597,7 +567,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
   </div>
 
   <!-- Sony -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-sony" href="https://developer.sony.com/spresense/" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -619,10 +589,10 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 
   <!-- Fitbit -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-fitbit" href="https://www.fitbit.com/" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -644,10 +614,10 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 
   <!-- Xiaomi -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-xiaomi" href="https://github.com/open-vela" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -669,7 +639,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -683,7 +653,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
   </div>
 
   <!-- PX4 -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-px4" href="https://px4.io/" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -706,10 +676,62 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
+
+  <!-- ArduSimple -->
+  <a class="nx-entry" id="entry-ardusimple" href="https://www.ardusimple.com/" target="_blank" rel="noopener noreferrer">
+    <div class="nx-entry-grid">
+      <div class="nx-side">
+        <div class="nx-logo-area logo-preserve" style="justify-content:center !important; align-items:center !important;">
+          <img src="{{ site.baseurl }}/static/companies/ardusimple.png" alt="ArduSimple" style="max-width: 220px !important; max-height: 90px !important; object-fit: contain !important; display:block !important;">
+        </div>
+        <div class="nx-meta">
+          <span class="nx-meta-lbl">Segment</span>
+          <span class="nx-meta-val">RTK GNSS</span>
+        </div>
+      </div>
+      <div class="nx-main">
+        <span class="nx-use-lbl">Precision Positioning</span>
+        <h4>ArduSimple RTK GNSS</h4>
+        <p>ArduSimple provides high-precision RTK GNSS solutions based on u-blox and Septentrio receivers, widely integrated with NuttX-based systems such as PX4. NuttX handles communication, control, and data processing while the GNSS module performs RTK positioning enabling centimeter-level accuracy for drones, autonomous vehicles, and surveying applications.</p>
+        <div class="nx-tags">
+          <span class="nx-tag">GNSS</span>
+          <span class="nx-tag">RTK</span>
+          <span class="nx-tag">Robotics</span>
+          <span class="nx-tag">Autonomous Systems</span>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Japan Aviation Electronics (JAE) -->
+  <a class="nx-entry" id="entry-jae" href="https://www.jae.com/en/" target="_blank" rel="noopener noreferrer">
+    <div class="nx-entry-grid">
+      <div class="nx-side">
+        <div class="nx-logo-area logo-preserve">
+          <img src="{{ site.baseurl }}/static/companies/JAE.png" alt="JAE" style="max-width: 180px !important; max-height: 75px !important; object-fit: contain !important;">
+        </div>
+        <div class="nx-meta">
+          <span class="nx-meta-lbl">Segment</span>
+          <span class="nx-meta-val">Avionics &amp; Flight Control</span>
+        </div>
+      </div>
+      <div class="nx-main">
+        <span class="nx-use-lbl">Flight Control Hardware</span>
+        <h4>Japan Aviation Electronics Industry (JAE)</h4>
+        <p>Japan Aviation Electronics Industry (JAE) develops flight controllers based on STM32H7 series microcontrollers running Apache NuttX via PX4 Autopilot. Their hardware is designed for high-reliability UAV and aerospace applications, with NuttX providing the real-time foundation for mission-critical avionics control.</p>
+        <div class="nx-tags">
+          <span class="nx-tag">Avionics</span>
+          <span class="nx-tag">Flight Control</span>
+          <span class="nx-tag">STM32H7</span>
+          <span class="nx-tag">PX4</span>
+        </div>
+      </div>
+    </div>
+  </a>
 
   <!-- Li Auto -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-li-auto" href="https://www.lixiang.com/en" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -731,7 +753,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -745,7 +767,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
   </div>
 
   <!-- Samsung -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-samsung" href="https://github.com/Samsung/TizenRT" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -767,10 +789,10 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 
   <!-- Espressif -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-espressif" href="https://www.espressif.com/" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -793,10 +815,10 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 
   <!-- Elektroline -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-elektroline" href="https://www.elektroline.cz/en/" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -819,10 +841,10 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 
   <!-- Meadow -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-meadow" href="https://www.wildernesslabs.com/" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -844,7 +866,59 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
+
+  <!-- NXP Semiconductors -->
+  <a class="nx-entry" id="entry-nxp" href="https://www.nxp.com/" target="_blank" rel="noopener noreferrer">
+    <div class="nx-entry-grid">
+      <div class="nx-side">
+        <div class="nx-logo-area logo-preserve">
+          <img src="{{ site.baseurl }}/static/companies/NXP.jpg" alt="NXP" style="max-width: 160px !important; max-height: 70px !important; border-radius: 6px !important;">
+        </div>
+        <div class="nx-meta">
+          <span class="nx-meta-lbl">Segment</span>
+          <span class="nx-meta-val">MCU Portfolio</span>
+        </div>
+      </div>
+      <div class="nx-main">
+        <span class="nx-use-lbl">Hardware Support</span>
+        <h4>NXP Semiconductors</h4>
+        <p>NXP provides broad hardware support for Apache NuttX across its MCU portfolio, including i.MX RT, LPC, and Kinetis series. NuttX runs on these platforms for real-time and industrial applications, with active community-driven board support and BSP contributions.</p>
+        <div class="nx-tags">
+          <span class="nx-tag">Hardware</span>
+          <span class="nx-tag">MCU</span>
+          <span class="nx-tag">Real-Time</span>
+          <span class="nx-tag">Industrial</span>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Seeed Studio Ecosystem -->
+  <a class="nx-entry" id="entry-seeed" href="https://www.seeedstudio.com/" target="_blank" rel="noopener noreferrer">
+    <div class="nx-entry-grid">
+      <div class="nx-side">
+        <div class="nx-logo-area">
+          <img src="{{ site.baseurl }}/static/companies/seeed.png" alt="Seeed Studio">
+        </div>
+        <div class="nx-meta">
+          <span class="nx-meta-lbl">Segment</span>
+          <span class="nx-meta-val">Open Hardware</span>
+        </div>
+      </div>
+      <div class="nx-main">
+        <span class="nx-use-lbl">Platform Support</span>
+        <h4>Seeed Studio Ecosystem</h4>
+        <p>Seeed Studio actively supports Apache NuttX on its open hardware platforms such as XIAO and Wio series. With strong community collaboration, Seeed enables rapid prototyping and IoT development using NuttX in edge and embedded systems.</p>
+        <div class="nx-tags">
+          <span class="nx-tag">Open Hardware</span>
+          <span class="nx-tag">IoT</span>
+          <span class="nx-tag">Prototyping</span>
+          <span class="nx-tag">Edge</span>
+        </div>
+      </div>
+    </div>
+  </a>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -858,7 +932,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
   </div>
 
   <!-- Japan Lunar -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-japan" href="https://developer.sony.com/posts/apache-nuttx-powers-worlds-smallest-lunar-robot-in-japans-historic-autonomous-lunar-exploration-mission" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -880,10 +954,10 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 
   <!-- Google Modular Phone -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-google" href="https://en.wikipedia.org/wiki/Project_Ara" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -905,10 +979,10 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 
   <!-- Motorola Moto Mods -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-motorola" href="https://en.wikipedia.org/wiki/Moto_Mods" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -930,7 +1004,33 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
+
+  <!-- CU InSpace -->
+  <a class="nx-entry" id="entry-inspace" href="https://www.cuinspace.ca/" target="_blank" rel="noopener noreferrer">
+    <div class="nx-entry-grid">
+      <div class="nx-side">
+        <div class="nx-logo-area logo-preserve">
+          <img src="{{ site.baseurl }}/static/companies/Inspace.jpg" alt="CU InSpace" style="max-width: 200px !important; max-height: 80px !important; border-radius: 8px !important;">
+        </div>
+        <div class="nx-meta">
+          <span class="nx-meta-lbl">Segment</span>
+          <span class="nx-meta-val">Aerospace</span>
+        </div>
+      </div>
+      <div class="nx-main">
+        <span class="nx-use-lbl">Rocket Systems</span>
+        <h4>CU InSpace</h4>
+        <p>CU InSpace uses NuttX to run their rocket telemetry tracker, flown multiple times up to 30,000ft. NuttX is also used for all of the control logic for the InSpace hybrid rocket fill and ignition ground control systems, which is safety critical rocketry software.</p>
+        <div class="nx-tags">
+          <span class="nx-tag">Aerospace</span>
+          <span class="nx-tag">Rocketry</span>
+          <span class="nx-tag">Safety-Critical</span>
+          <span class="nx-tag">Telemetry</span>
+        </div>
+      </div>
+    </div>
+  </a>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -944,7 +1044,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
   </div>
 
   <!-- micro-ROS -->
-  <div class="nx-entry">
+  <a class="nx-entry" id="entry-micro-ros" href="https://micro.ros.org/" target="_blank" rel="noopener noreferrer">
     <div class="nx-entry-grid">
       <div class="nx-side">
         <div class="nx-logo-area">
@@ -967,7 +1067,7 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         </div>
       </div>
     </div>
-  </div>
+  </a>
 </div>
 
 </div><!-- end .nx-page -->
