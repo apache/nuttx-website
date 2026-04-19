@@ -194,6 +194,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#expected-output">Expected Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dhcp-provided-ntp-servers">DHCP-provided NTP servers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
 </ul>
 </li>
@@ -291,6 +292,7 @@ to provide accurate time synchronization.</p>
 <ul class="simple">
 <li><p>Uses the NTP client library to synchronize system time</p></li>
 <li><p>Connects to NTP servers (default: pool.ntp.org)</p></li>
+<li><p>Supports NTP server configuration learned from DHCP option 42</p></li>
 <li><p>Starts the NTP client in the background for continuous synchronization</p></li>
 <li><p>Provides commands to check status and stop the NTP client</p></li>
 <li><p>Allows management of the NTP client through command line options</p></li>
@@ -308,14 +310,20 @@ high-precision time synchronization and is the standard for network time service
 <li><p>CONFIG_NETUTILS_NTPCLIENT: Enable NTP client support</p></li>
 <li><p>CONFIG_SYSTEM_NTPC: Enable this example</p></li>
 </ul>
-<p>Additional configuration options:
-- CONFIG_NETUTILS_NTPCLIENT_SERVER: NTP server hostname (default: “pool.ntp.org”)</p>
+<p>Additional configuration options:</p>
+<ul class="simple">
+<li><p>CONFIG_NETUTILS_NTPCLIENT_SERVER: NTP server hostname (default: “pool.ntp.org”)</p></li>
+<li><p>CONFIG_NETUTILS_DHCPC: Enable DHCP client support when NTP servers should be
+learned dynamically from DHCP option 42</p></li>
+</ul>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p>Configure your NuttX build with networking support</p></li>
-<li><p>Ensure network connectivity is established (e.g., via NSH network commands)</p></li>
+<li><p>Ensure network connectivity is established (e.g., via NSH network commands)
+If DHCP provides NTP servers through option 42, <code class="docutils literal notranslate"><span class="pre">ntpc</span></code> can use that
+server list automatically.</p></li>
 <li><p>Build and flash the image to your target board</p></li>
 <li><p>Run the commands:
 - <code class="docutils literal notranslate"><span class="pre">ntpcstart</span></code>, <code class="docutils literal notranslate"><span class="pre">ntpcstop</span></code>, <code class="docutils literal notranslate"><span class="pre">ntpcstatus</span></code></p></li>
@@ -358,6 +366,23 @@ NTP client started successfully (task ID: 10)
 NTP client is now running in the background
 nsh&gt; date
 Fri, Sep 05 18:49:37 2025
+</pre></div>
+</div>
+</section>
+<section id="dhcp-provided-ntp-servers">
+<h2>DHCP-provided NTP servers<a class="headerlink" href="#dhcp-provided-ntp-servers" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC</span></code> is enabled, the DHCP client can pass NTP
+server IPv4 addresses learned from DHCP option 42 to <code class="docutils literal notranslate"><span class="pre">ntpc</span></code>.</p>
+<p>This allows <code class="docutils literal notranslate"><span class="pre">ntpc</span></code> to run without a fixed server hostname in the
+configuration and to follow NTP server updates delivered by DHCP.</p>
+<p>One way to test DHCP-delivered NTP servers is with <code class="docutils literal notranslate"><span class="pre">dnsmasq</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dnsmasq --no-daemon --log-dhcp --log-queries \
+  --interface=tap0 --bind-interfaces \
+  --dhcp-authoritative \
+  --dhcp-range=192.168.50.20,192.168.50.50,255.255.255.0 \
+  --dhcp-option=option:router,192.168.50.1 \
+  --dhcp-option=option:dns-server,1.1.1.1 \
+  --dhcp-option=option:ntp-server,162.159.200.123
 </pre></div>
 </div>
 </section>
