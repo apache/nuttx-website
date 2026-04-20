@@ -818,6 +818,34 @@ firmware in the second board. Now you can start the both boards, run the
 “can” command in the Write-only board and then run the “can” command in the
 Read-only board. You should see the data coming.</p>
 </section>
+<section id="can-support">
+<h2>CAN support<a class="headerlink" href="#can-support" title="Permalink to this heading"></a></h2>
+<p>The STM32F103C8 has a on-chip bxCAN controller, then we can use it for
+CAN bus communication.
+It has limitations:</p>
+<ul class="simple">
+<li><p>USB is not available together with on-chip CAN, because they share the SRAM
+buffer (see the MCP2515 External Module section);</p></li>
+<li><p>you need to use transceivers (SN65HVD230, …) to connect the CAN bus;</p></li>
+<li><p>you need a second device on the CAN bus to test the communication.</p></li>
+</ul>
+<p>If you want only to check the CAN bus, you can use mode ‘loopback’ in the CAN device.</p>
+<section id="can-pins">
+<h3>CAN PINS<a class="headerlink" href="#can-pins" title="Permalink to this heading"></a></h3>
+<blockquote>
+<div><p>On STM32F103Cx in LQFP48, CAN1_REMAP2 is not available.</p>
+</div></blockquote>
+</section>
+<section id="transceivers">
+<h3>Transceivers<a class="headerlink" href="#transceivers" title="Permalink to this heading"></a></h3>
+<p>The MCU CAN peripheral only provides single-ended TTL-level <code class="docutils literal notranslate"><span class="pre">CAN_RX</span></code> / <code class="docutils literal notranslate"><span class="pre">CAN_TX</span></code>
+lines. A CAN transceiver interfaces those to the differential <strong>CANH</strong> / <strong>CANL</strong>
+bus (dominant/recessive signaling), drives the correct line impedance, and
+typically adds short-circuit and ESD protection so the chip can safely connect
+to a real vehicle or bench network. Common parts include SN65HVD230, MCP2551,
+and TJA1050.</p>
+</section>
+</section>
 <section id="stm32f103-minimum-specific-configuration-options">
 <h2>STM32F103 Minimum - specific Configuration Options<a class="headerlink" href="#stm32f103-minimum-specific-configuration-options" title="Permalink to this heading"></a></h2>
 <blockquote>
@@ -935,6 +963,15 @@ CONFIG_PL2303_CONSOLE=y       : The PL2303 serial device is the console
 <p>This is a config example to use the Vishay VEML6070 UV-A sensor. To use this
 sensor you need to connect PB6 (I2C1 CLK) to SCL; PB7 (I2C1 SDA) to SDA of
 sensor module. I used a GY-VEML6070 module to test this driver.</p>
+</section>
+<section id="can">
+<h3>can<a class="headerlink" href="#can" title="Permalink to this heading"></a></h3>
+<p>This is a config example to use on-chip CAN1 and the CAN example application.
+Wire PA11 (CAN_RX) and PA12 (CAN_TX) to a CAN transceiver;
+connect the transceiver’s CANH and CANL to the bus.
+See the ‘CAN support’ section above for pins, transceivers, and limitations.</p>
+<p>A UART adapter on USART1 (PA9/PA10) is required for the NSH console on a
+host PC.</p>
 </section>
 </section>
 </section>
