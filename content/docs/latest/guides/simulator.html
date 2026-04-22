@@ -151,6 +151,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#compiling">Compiling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#accessing-the-network">Accessing the Network</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#testing-capturing-tcp-network-traffic">Testing / capturing TCP network traffic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testing-nxmodbus-rtu-on-simulator">Testing NxModbus RTU on simulator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stopping">Stopping</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#debugging">Debugging</a></li>
 </ul>
@@ -461,6 +462,72 @@ Internet:</p>
 </div></blockquote>
 </li>
 <li><p>Observe TCP network traffic in Wireshark / tcpdump on Linux.</p></li>
+</ol>
+</section>
+<section id="testing-nxmodbus-rtu-on-simulator">
+<h2>Testing NxModbus RTU on simulator<a class="headerlink" href="#testing-nxmodbus-rtu-on-simulator" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Create a virtual UART pair on Linux:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>socat<span class="w"> </span>PTY,link<span class="o">=</span>/tmp/ttyNXB0<span class="w"> </span>PTY,link<span class="o">=</span>/tmp/ttyNXB1<span class="w"> </span><span class="p">&amp;</span>
+<span class="gp">$ </span>stty<span class="w"> </span>-F<span class="w"> </span>/tmp/ttyNXB0<span class="w"> </span>raw
+<span class="gp">$ </span>stty<span class="w"> </span>-F<span class="w"> </span>/tmp/ttyNXB1<span class="w"> </span>raw
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Build NuttX with the NxModbus RTU simulator configuration:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>sim:nxmbrtu
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Start the server instance (slave):</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx
+<span class="go">nsh&gt; nxmbserver -t rtu -d /tmp/ttyNXB0 -b 9600 -p none -u 1</span>
+<span class="go">Starting Modbus RTU server on /tmp/ttyNXB0 (baud=9600, unit=1)</span>
+<span class="go">Server running. Press Ctrl+C to stop.</span>
+<span class="go">Register map:</span>
+<span class="go">Coils:          1-100 (read/write)</span>
+<span class="go">Discrete:       1-100 (read-only)</span>
+<span class="go">Input regs:     1-100 (read-only, value=addr*10)</span>
+<span class="go">Holding regs:   1-100 (read/write, initial=addr*100)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>In another terminal, start a second simulator instance and run the client
+command (master) against the server:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx
+<span class="go">nsh&gt; nxmbclient -t rtu -d /tmp/ttyNXB1 -b 9600 -p none -u 1 read-holding 0 10</span>
+<span class="go">0        0</span>
+<span class="go">1        100</span>
+<span class="go">2        200</span>
+<span class="go">3        300</span>
+<span class="go">4        400</span>
+<span class="go">5        500</span>
+<span class="go">6        600</span>
+<span class="go">7        700</span>
+<span class="go">8        800</span>
+<span class="go">9        900</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Optional write/read-back check:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; nxmbclient -t rtu -d /tmp/ttyNXB1 -b 9600 -p none -u 1 write-holding 0 123</span>
+<span class="go">OK</span>
+<span class="go">nsh&gt; nxmbclient -t rtu -d /tmp/ttyNXB1 -b 9600 -p none -u 1 read-holding 0 1</span>
+<span class="go">0        123</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
 </ol>
 </section>
 <section id="stopping">
