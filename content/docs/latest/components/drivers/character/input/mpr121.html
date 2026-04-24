@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Matrix Keypad (KMATRIX) &mdash; NuttX latest documentation</title>
+  <title>MPR121 Capacitive Keypad &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="MPR121 Capacitive Keypad" href="mpr121.html" />
-    <link rel="prev" title="Keyboard/Keypad Drivers" href="keypad-keyboard.html" /> 
+    <link rel="next" title="Single Button Multi Actions Driver" href="sbutton.html" />
+    <link rel="prev" title="Matrix Keypad (KMATRIX)" href="keypad.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -152,8 +152,8 @@
 <li class="toctree-l4"><a class="reference internal" href="../i2s.html">I2S Drivers</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="index.html">Input Devices</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="keypad-keyboard.html">Keyboard/Keypad Drivers</a></li>
-<li class="toctree-l5 current"><a class="current reference internal" href="#">Matrix Keypad (KMATRIX)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="mpr121.html">MPR121 Capacitive Keypad</a></li>
+<li class="toctree-l5"><a class="reference internal" href="keypad.html">Matrix Keypad (KMATRIX)</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">MPR121 Capacitive Keypad</a></li>
 <li class="toctree-l5"><a class="reference internal" href="sbutton.html">Single Button Multi Actions Driver</a></li>
 </ul>
 </li>
@@ -234,9 +234,9 @@
           <li class="breadcrumb-item"><a href="../../index.html">Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Character Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="index.html">Input Devices</a></li>
-      <li class="breadcrumb-item active">Matrix Keypad (KMATRIX)</li>
+      <li class="breadcrumb-item active">MPR121 Capacitive Keypad</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/character/input/keypad.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/character/input/mpr121.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -244,81 +244,69 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="matrix-keypad-kmatrix">
-<h1>Matrix Keypad (KMATRIX)<a class="headerlink" href="#matrix-keypad-kmatrix" title="Permalink to this heading"></a></h1>
-<p><strong>What is a Keypad?</strong>
-A keypad is a small keyboard with a limited set of keys, typically
-arranged in a matrix. It is commonly used for numeric input, access
-control, or simple user interfaces.</p>
-<p>For example, a typical 12-key numeric keypad looks like this:</p>
-<a class="reference internal image-reference" href="../../../../_images/keypad-example.png"><img alt="Example of a 12-key matrix keypad" class="align-center" src="../../../../_images/keypad-example.png" style="width: 200px;" /></a>
-<p><strong>Purpose</strong>. The KMATRIX driver provides a generic keypad
-implementation for boards that expose a switch matrix through GPIOs.
-It periodically scans rows and columns, detects state changes with a
-simple debounce, and emits keyboard events through the common keyboard
-upper-half. This makes the device available as a character driver
-(e.g., <code class="docutils literal notranslate"><span class="pre">/dev/keypad0</span></code>) using the standard keyboard
+  <section id="mpr121-capacitive-keypad">
+<h1>MPR121 Capacitive Keypad<a class="headerlink" href="#mpr121-capacitive-keypad" title="Permalink to this heading"></a></h1>
+<p><strong>What is the MPR121 Keypad</strong>
+The  MPR Capacitive Keypad is a small keyboard with 12 keys, similar
+to a telephone keypad, however the keys are numered from 0 to 11.</p>
+<p>This is the picture of the MPR121 Capacitive Keypad:</p>
+<a class="reference internal image-reference" href="../../../../_images/mpr121.png"><img alt="MPR121 Capacitive Keypad" class="align-center" src="../../../../_images/mpr121.png" style="width: 200px;" /></a>
+<p><strong>Purpose</strong>. The MPR121 driver provides a generic keypad
+implementation for this capacitive keypad. The MPR121 uses the I2C
+bus to setup and read the touched/released key and uses an IRQ pin
+(open drain) to indicate when a key is pressed/released or when some
+unnexpected issue happens (currently not used).</p>
+<p>The driver also enables debounce, and emits keyboard events through
+the common keyboard upper-half. This makes the device available as a
+character driver (e.g., <code class="docutils literal notranslate"><span class="pre">/dev/keypad0</span></code>) using the standard keyboard
 interfaces.</p>
-<p><strong>Why Polling</strong>. This first version uses polling to be broadly usable
-on any board with available GPIOs, without requiring per-board IRQ
-wiring, pin interrupt capabilities, or expander-specific interrupt
-support. Polling also simplifies early bring-up and makes the driver
-predictable while the keymap and GPIO configuration are validated.
-Future iterations are expected to add interrupt-driven scanning and
-I2C expander variants; the GPIO polling path remains a good baseline
-and fallback.</p>
-<p><strong>Driver Overview</strong>. The KMATRIX lower-half scans the matrix and calls
+<p><strong>Driver Overview</strong>. The MPR121 lower-half scans the matrix and calls
 <code class="docutils literal notranslate"><span class="pre">keyboard_event()</span></code> when it detects a press or release. The keyboard
 upper-half registers the character device at the requested <code class="docutils literal notranslate"><span class="pre">devpath</span></code>
 and stores events in a circular buffer. Applications read
 <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">keyboard_event_s</span></code> from the device or use the optional
 kbd-codec layer.</p>
-<p><strong>Board Support</strong>. To support KMATRIX, a board must provide:</p>
+<p><strong>Board Support</strong>. To support the MPR121, a board must provide:</p>
 <ol class="arabic simple">
-<li><p><strong>GPIO Definitions</strong></p>
+<li><p><strong>IRQ Definition</strong></p>
 <ul class="simple">
-<li><p>Define the row and column GPIOs (arrays of pins).</p></li>
-<li><p>Provide a keymap array indexed by <code class="docutils literal notranslate"><span class="pre">row</span> <span class="pre">*</span> <span class="pre">ncols</span> <span class="pre">+</span> <span class="pre">col</span></code>.</p></li>
-</ul>
-</li>
-<li><p><strong>Configuration Callbacks</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">config_row(pin)</span></code>: Configure a row GPIO as output.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">config_col(pin)</span></code>: Configure a column GPIO as input with pull-up
-or pull-down consistent with the wiring.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">row_set(pin,</span> <span class="pre">active)</span></code>: Drive a row active/inactive. For the
-STM32F4Discovery example, rows are driven low to activate.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_get(pin)</span></code>: Read a column and return <code class="docutils literal notranslate"><span class="pre">true</span></code> when pressed.</p></li>
+<li><p>Define the GPIO Input pin with pull-up enabled (since the
+IRQ pin is open-drain) to be used to detect the interrupts.</p></li>
 </ul>
 </li>
 <li><p><strong>Registration Hook</strong></p>
 <ul class="simple">
-<li><p>Implement <code class="docutils literal notranslate"><span class="pre">board_kmatrix_initialize(const</span> <span class="pre">char</span> <span class="pre">*devpath)</span></code> to
-call <code class="docutils literal notranslate"><span class="pre">kmatrix_register(&amp;config,</span> <span class="pre">devpath)</span></code>.</p></li>
+<li><p>Define a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">xxx_mpr121config_s</span></code> that will wrap the
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mpr121_config_s</span> <span class="pre">config</span></code> as first member and the irq
+argument and ISR handler (xcpt_t isr). The <code class="docutils literal notranslate"><span class="pre">config</span></code> needs to
+have its <code class="docutils literal notranslate"><span class="pre">.irq_attach</span></code> and <code class="docutils literal notranslate"><span class="pre">keymap</span></code> initialized with the
+board IRQ ISR function and the key mapping array.</p></li>
+<li><p>Implement <code class="docutils literal notranslate"><span class="pre">board_mpr121_initialize(int</span> <span class="pre">devno,</span> <span class="pre">int</span> <span class="pre">busno)</span></code> to
+call <code class="docutils literal notranslate"><span class="pre">mpr121_register(&amp;config,</span> <span class="pre">devpath)</span></code>. It needs to initialize
+the I2C Master port/channel that will be used to communicate with
+the MPR121 and an instance of that <code class="docutils literal notranslate"><span class="pre">xxx_mpr121config_s</span></code> structure.</p></li>
 <li><p>Invoke the board hook during bring-up (for example,
-<code class="docutils literal notranslate"><span class="pre">board_kmatrix_initialize(&quot;/dev/keypad0&quot;)</span></code>).</p></li>
+<code class="docutils literal notranslate"><span class="pre">board_mpr121_initialize(0,</span> <span class="pre">1)</span></code> for <code class="docutils literal notranslate"><span class="pre">/dev/keymap0</span></code> and <code class="docutils literal notranslate"><span class="pre">i2c1</span></code>).</p></li>
 </ul>
 </li>
 </ol>
 <p><strong>Reference Implementation (STM32F4Discovery)</strong>. The current reference
-is in <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/common/src/stm32_kmatrix_gpio.c</span></code>:</p>
+is in <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/common/src/stm32_mpr121.c</span></code>:</p>
 <ul class="simple">
-<li><p>Rows: <code class="docutils literal notranslate"><span class="pre">BOARD_KMATRIX_ROW0..3</span></code> (outputs)</p></li>
-<li><p>Columns: <code class="docutils literal notranslate"><span class="pre">BOARD_KMATRIX_COL0..2</span></code> (inputs with pull-up)</p></li>
-<li><p>Keymap: 4x3 phone keypad layout</p></li>
-<li><p>Callbacks: <code class="docutils literal notranslate"><span class="pre">km_stm32_config_row</span></code>, <code class="docutils literal notranslate"><span class="pre">km_stm32_config_col</span></code>,
-<code class="docutils literal notranslate"><span class="pre">km_stm32_row_set</span></code>, <code class="docutils literal notranslate"><span class="pre">km_stm32_col_get</span></code></p></li>
-<li><p>Registration: <code class="docutils literal notranslate"><span class="pre">board_kmatrix_initialize()</span></code> calls
-<code class="docutils literal notranslate"><span class="pre">kmatrix_register()</span></code></p></li>
+<li><p>Keymap: 4x3 keypad layout</p></li>
+<li><p>Registration: <code class="docutils literal notranslate"><span class="pre">board_mpr121_initialize()</span></code> calls
+<code class="docutils literal notranslate"><span class="pre">mpr121_register()</span></code></p></li>
 </ul>
 <p><strong>Data Path Summary</strong>.</p>
 <ul class="simple">
-<li><p>Board calls <code class="docutils literal notranslate"><span class="pre">board_kmatrix_initialize(&quot;/dev/keypad0&quot;)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">kmatrix_register()</span></code> configures GPIOs and calls
-<code class="docutils literal notranslate"><span class="pre">keyboard_register(&amp;lower,</span> <span class="pre">devpath,</span> <span class="pre">buflen)</span></code></p></li>
+<li><p>Board calls <code class="docutils literal notranslate"><span class="pre">board_mpr121_initialize(0,</span> <span class="pre">1)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mpr121_register()</span></code> initializes and configure the MPR121 chip
+and calls <code class="docutils literal notranslate"><span class="pre">keyboard_register(&amp;lower,</span> <span class="pre">devpath,</span> <span class="pre">buflen)</span></code></p></li>
 <li><p>The upper-half registers the device node at <code class="docutils literal notranslate"><span class="pre">devpath</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">kmatrix_scan_worker()</span></code> calls <code class="docutils literal notranslate"><span class="pre">keyboard_event()</span></code> on press/release</p></li>
-<li><p>Applications read events from the device node</p></li>
+<li><p>Every time an interruption is generated on IRQ pin it will call the
+<code class="docutils literal notranslate"><span class="pre">mpr121_worker()</span></code> and it is calls <code class="docutils literal notranslate"><span class="pre">keyboard_event()</span></code> on
+press/release of keys.</p></li>
+<li><p>Applications read events from the device node (<code class="docutils literal notranslate"><span class="pre">/dev/keypad0</span></code>).</p></li>
 </ul>
 </section>
 
@@ -326,8 +314,8 @@ is in <code class="docutils literal notranslate"><span class="pre">boards/arm/st
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="keypad-keyboard.html" class="btn btn-neutral float-left" title="Keyboard/Keypad Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="mpr121.html" class="btn btn-neutral float-right" title="MPR121 Capacitive Keypad" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="keypad.html" class="btn btn-neutral float-left" title="Matrix Keypad (KMATRIX)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sbutton.html" class="btn btn-neutral float-right" title="Single Button Multi Actions Driver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

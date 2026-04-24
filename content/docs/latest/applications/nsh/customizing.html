@@ -273,9 +273,12 @@ This function will (1) register a ROMFS file system, then (2) mount
 the ROMFS file system. <code class="docutils literal notranslate"><span class="pre">/etc</span></code> is the default location where a
 read-only, ROMFS file system is mounted by <code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code>.</p>
 <p>The ROMFS image is, itself, just built into the firmware. By default,
-this <code class="docutils literal notranslate"><span class="pre">rc.sysinit</span></code> system init script contains the following logic:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Create a RAMDISK and mount it at XXXRDMOUNTPOINTXXX
+this <code class="docutils literal notranslate"><span class="pre">rc.sysinit</span></code> system init script contains logic to prefer
+TMPFS for <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> and to fall back to FAT RAMDISK:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Mount /tmp on TMPFS
+mount -t tmpfs XXXRDMOUNTPOINTXXX
 
+# Otherwise create a RAMDISK and mount it at XXXRDMOUNTPOINTXXX
 mkrd -m XXXMKRDMINORXXX -s XXMKRDSECTORSIZEXXX XXMKRDBLOCKSXXX
 mkfatfs /dev/ramXXXMKRDMINORXXX
 mount -t vfat /dev/ramXXXMKRDMINORXXX XXXRDMOUNTPOINTXXX
@@ -292,16 +295,20 @@ device.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">XXXRDMOUNTPOINTXXX</span></code> will become the configured mount point.
 Default: <code class="docutils literal notranslate"><span class="pre">/etc</span></code></p></li>
 </ul>
-<p>By default, the substituted values would yield an <code class="docutils literal notranslate"><span class="pre">rc.sysinit</span></code> file like:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Create a RAMDISK and mount it at /tmp
+<p>By default, with FAT fallback values substituted, <code class="docutils literal notranslate"><span class="pre">rc.sysinit</span></code>
+can look like:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Mount /tmp on TMPFS
+mount -t tmpfs /tmp
 
+# Otherwise create a RAMDISK and mount it at /tmp
 mkrd -m 1 -s 512 1024
 mkfatfs /dev/ram1
 mount -t vfat /dev/ram1 /tmp
 </pre></div>
 </div>
-<p>This script will, then:</p>
+<p>This script will:</p>
 <ul class="simple">
+<li><p>Mount <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> as TMPFS when available, or else:</p></li>
 <li><p>Create a RAMDISK of size 512*1024 bytes at <code class="docutils literal notranslate"><span class="pre">/dev/ram1</span></code>,</p></li>
 <li><p>Format a FAT file system on the RAM disk at <code class="docutils literal notranslate"><span class="pre">/dev/ram1</span></code>, and
 then</p></li>
