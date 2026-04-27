@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NFS &mdash; NuttX latest documentation</title>
+  <title>VFS Performance Profiler &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="NXFFS" href="nxffs.html" />
-    <link rel="prev" title="MNEMOFS" href="mnemofs.html" /> 
+    <link rel="next" title="ROMFS" href="romfs.html" />
+    <link rel="prev" title="PROCFS" href="procfs.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -154,11 +154,15 @@
 <li class="toctree-l4"><a class="reference internal" href="littlefs.html">LITTLEFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mnemofs.html">MNEMOFS</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">NFS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nfs.html">NFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nxffs.html">NXFFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="partition.html">Partition Table</a></li>
 <li class="toctree-l4"><a class="reference internal" href="procfs.html">PROCFS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="profiler.html">VFS Performance Profiler</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">VFS Performance Profiler</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="romfs.html">ROMFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rpmsgfs.html">RPMSG File System</a></li>
 <li class="toctree-l4"><a class="reference internal" href="smartfs.html">SMARTFS</a></li>
@@ -225,9 +229,9 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">OS Components</a></li>
           <li class="breadcrumb-item"><a href="index.html">NuttX File System</a></li>
-      <li class="breadcrumb-item active">NFS</li>
+      <li class="breadcrumb-item active">VFS Performance Profiler</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/filesystem/nfs.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/filesystem/profiler.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -235,17 +239,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="nfs">
-<h1>NFS<a class="headerlink" href="#nfs" title="Permalink to this heading"></a></h1>
-<p>Network file system (NFS) client file system.</p>
+  <section id="vfs-performance-profiler">
+<h1>VFS Performance Profiler<a class="headerlink" href="#vfs-performance-profiler" title="Permalink to this heading"></a></h1>
+<p>The Virtual File System (VFS) Performance Profiler provides a simple, in-kernel
+mechanism to track execution times and invocation counts for core VFS operations
+(read, write, open, close) seamlessly. This is highly suitable for
+CI/CD automated regression testing and performance bottleneck identification.</p>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>To enable the profiler, select <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROFILER</span></code> in your Kconfig.
+To expose the metrics dynamically via procfs, ensure <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS</span></code> is enabled, and
+the profiler node is included via <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS_PROFILER</span></code>.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>When enabled, the profiler automatically intercepts calls to the underlying
+inode operations and records the execution elapsed times using <code class="docutils literal notranslate"><span class="pre">perf_gettime()</span></code>.
+Since no blocking mutexes are used during updates (fast <code class="docutils literal notranslate"><span class="pre">atomic.h</span></code> operations
+are utilized instead), the overhead is extremely minimal and safely scales on SMP.</p>
+<p>To view the current statistics collectively from the NuttShell (NSH), simply
+read the node:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>cat<span class="w"> </span>/proc/fs/profile
+VFS<span class="w"> </span>Performance<span class="w"> </span>Profile:
+<span class="w">  </span>Reads:<span class="w">          </span><span class="m">12</span><span class="w"> </span><span class="o">(</span>Total<span class="w"> </span>time:<span class="w"> </span><span class="m">4500120</span><span class="w"> </span>ns<span class="o">)</span>
+<span class="w">  </span>Writes:<span class="w">          </span><span class="m">3</span><span class="w"> </span><span class="o">(</span>Total<span class="w"> </span>time:<span class="w">   </span><span class="m">95050</span><span class="w"> </span>ns<span class="o">)</span>
+<span class="w">  </span>Opens:<span class="w">          </span><span class="m">15</span><span class="w"> </span><span class="o">(</span>Total<span class="w"> </span>time:<span class="w"> </span><span class="m">1005000</span><span class="w"> </span>ns<span class="o">)</span>
+<span class="w">  </span>Closes:<span class="w">         </span><span class="m">15</span><span class="w"> </span><span class="o">(</span>Total<span class="w"> </span>time:<span class="w">   </span><span class="m">45000</span><span class="w"> </span>ns<span class="o">)</span>
+</pre></div>
+</div>
+<p>The reported times are in the raw ticks/units provided by <code class="docutils literal notranslate"><span class="pre">perf_gettime()</span></code> on
+your specific architecture.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="mnemofs.html" class="btn btn-neutral float-left" title="MNEMOFS" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="nxffs.html" class="btn btn-neutral float-right" title="NXFFS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="procfs.html" class="btn btn-neutral float-left" title="PROCFS" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="romfs.html" class="btn btn-neutral float-right" title="ROMFS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
