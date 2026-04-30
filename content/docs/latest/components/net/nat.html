@@ -154,7 +154,18 @@
 <li class="toctree-l4"><a class="reference internal" href="#workflow">Workflow</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#validation">Validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#validation">Validation</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#step-1-configure-nuttx-simulator">Step 1: Configure NuttX simulator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-2-start-nuttx-simulator">Step 2: Start NuttX simulator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-3-configure-linux-namespaces">Step 3: Configure Linux namespaces</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-4-configure-nuttx-network-interfaces">Step 4: Configure NuttX network interfaces</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-5-validate-basic-connectivity">Step 5: Validate basic connectivity</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-6-test-tcp-nat">Step 6: Test TCP NAT</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-7-test-icmp-nat">Step 7: Test ICMP NAT</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-8-test-http-nat">Step 8: Test HTTP NAT</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#step-9-capture-packets">Step 9: Capture packets</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="netdev.html">Network Devices</a></li>
@@ -223,17 +234,39 @@
              
   <section id="network-address-translation-nat">
 <h1>Network Address Translation (NAT)<a class="headerlink" href="#network-address-translation-nat" title="Permalink to this heading"></a></h1>
-<p>NuttX supports full cone or symmetric NAT logic, which currently supports</p>
-<ul class="simple">
+<p>Network Address Translation (NAT) modifies addresses, ports, or ICMP
+identifiers in forwarded packets so that traffic from one network can use
+the address of another interface.</p>
+<p>NuttX supports build-time selectable NAT modes for NAT44 and NAT66:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">full-cone</span> <span class="pre">NAT</span></code></dt><dd><p>Maps a local address and port, or ICMP identifier, to an external
+address and port or identifier. The peer endpoint is not part of the NAT
+entry key.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">symmetric</span> <span class="pre">NAT</span></code></dt><dd><p>Maps a local endpoint to an external endpoint for a specific peer
+endpoint. The peer endpoint is part of the NAT entry key, so traffic from
+the same local endpoint to different peers may use different mappings.</p>
+</dd>
+</dl>
+<p>The Nuttx NAT implementation supports:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>TCP</p></li>
 <li><p>UDP</p></li>
 <li><p>ICMP</p>
 <ul>
-<li><p>ECHO (REQUEST &amp; REPLY)</p></li>
-<li><p>Error Messages (DEST_UNREACHABLE &amp; TIME_EXCEEDED &amp; PARAMETER_PROBLEM)</p></li>
+<li><p>ECHO (REQUEST / REPLY)</p></li>
+<li><p>Error Messages (DEST_UNREACHABLE / TIME_EXCEEDED / PARAMETER_PROBLEM)</p></li>
+</ul>
+</li>
+<li><p>ICMPv6</p>
+<ul>
+<li><p>ECHO (REQUEST / REPLY)</p></li>
+<li><p>Error Messages (DEST_UNREACHABLE / PACKET_TOO_BIG / TIME_EXCEEDED / PARAMETER_PROBLEM)</p></li>
 </ul>
 </li>
 </ul>
+</div></blockquote>
 <section id="workflow">
 <h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this heading"></a></h2>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Local Network (LAN)                          External Network (WAN)
@@ -264,34 +297,33 @@ with <code class="docutils literal notranslate"><span class="pre">local</span> <
 <section id="configuration-options">
 <h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code></dt><dd><p>Enable or disable Network Address Translation (NAT) function.
-Depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_IPFORWARD</span></code>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code></dt><dd><p>Enable Network Address Translation. This option depends on
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NET_IPFORWARD</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66</span></code></dt><dd><p>Enable or disable NAT on IPv4 / IPv6.
-Depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44</span></code> / <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66</span></code></dt><dd><p>Enable IPv4-to-IPv4 / IPv6-to-IPv6 NAT. This option depends on
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44_FULL_CONE</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66_FULL_CONE</span></code></dt><dd><p>Enable Full Cone NAT logic. Full Cone NAT is easier to traverse than
-Symmetric NAT, and uses less resources than Symmetric NAT.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44_FULL_CONE</span></code> / <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66_FULL_CONE</span></code></dt><dd><p>Select full-cone NAT mode for NAT44 / NAT66.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44_SYMMETRIC</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66_SYMMETRIC</span></code></dt><dd><p>Enable Symmetric NAT logic. Symmetric NAT will be safer than Full Cone NAT,
-be more difficult to traverse, and has more entries which may lead to heavier load.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT44_SYMMETRIC</span></code> / <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT66_SYMMETRIC</span></code></dt><dd><p>Select symmetric NAT mode for NAT44 / NAT66.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_HASH_BITS</span></code></dt><dd><p>The bits of the hashtable of NAT entries, hashtable has (1 &lt;&lt; bits) buckets.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_HASH_BITS</span></code></dt><dd><p>Set the number of bits used for the NAT entry hash table. The hash
+table has <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;&lt;</span> <span class="pre">CONFIG_NET_NAT_HASH_BITS</span></code> buckets.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_TCP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle TCP entry in NAT.
-The default value 86400 is suggested by RFC2663, Section 2.6,
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_TCP_EXPIRE_SEC</span></code></dt><dd><p>Set the expiration time, in seconds, for idle TCP NAT entries. The
+default value is 86400 seconds, as suggested by RFC 2663, Section 2.6,
 Page 5. But we may set it to shorter time like 240s for better
 performance.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_UDP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle UDP entry in NAT.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_UDP_EXPIRE_SEC</span></code></dt><dd><p>Set the expiration time, in seconds, for idle UDP NAT entries.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ICMP_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle ICMP entry in NAT.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ICMP_EXPIRE_SEC</span></code></dt><dd><p>Set the expiration time, in seconds, for idle ICMP NAT entries.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ICMPv6_EXPIRE_SEC</span></code></dt><dd><p>The expiration time for idle ICMPv6 entry in NAT.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ICMPv6_EXPIRE_SEC</span></code></dt><dd><p>Set the expiration time, in seconds, for idle ICMPv6 NAT entries.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ENTRY_RECLAIM_SEC</span></code></dt><dd><p>The time to auto reclaim all expired NAT entries. A value of zero will
-disable auto reclaiming.
-Expired entries will be automatically reclaimed when matching
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_NAT_ENTRY_RECLAIM_SEC</span></code></dt><dd><p>Set the time to auto reclaim all expired NAT entries. A value of zero
+will disable auto reclaiming.
+Because expired entries will be automatically reclaimed when matching
 inbound/outbound entries, so this config does not have significant
 impact when NAT is normally used, but very useful when the hashtable
 is big and there are only a few connections using NAT (which will
@@ -301,170 +333,225 @@ only trigger reclaiming on a few chains in hashtable).</p>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference internal" href="#c.nat_enable" title="nat_enable"><code class="xref c c-func docutils literal notranslate"><span class="pre">nat_enable()</span></code></a></p></li>
-<li><p><a class="reference internal" href="#c.nat_disable" title="nat_disable"><code class="xref c c-func docutils literal notranslate"><span class="pre">nat_disable()</span></code></a></p></li>
-</ul>
-</div></blockquote>
+<ul>
+<li><p>NAT can be enabled directly from C code:</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.nat_enable">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nat_enable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.nat_enable" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Enable NAT function on a network device, on which the outbound packets
-will be masqueraded.</p>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nat_enable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nat_enable" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Enable NAT on a network device. Outbound packets forwarded through this
+device may be translated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Zero is returned if NAT function is successfully enabled on
-the device; A negated errno value is returned if failed.</p>
+<dd class="field-odd"><p>Zero is returned if NAT is successfully enabled on the device.
+A negated errno value is returned on failure.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.nat_disable">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nat_disable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.nat_disable" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Disable NAT function on a network device.</p>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nat_disable</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="netdev.html#c.net_driver_s" title="net_driver_s"><span class="n"><span class="pre">net_driver_s</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dev</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.nat_disable" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Disable NAT on a network device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Zero is returned if NAT function is successfully disabled on
-the device; A negated errno value is returned if failed.</p>
+<dd class="field-odd"><p>Zero is returned if NAT is successfully disabled on the device.
+A negated errno value is returned on failure.</p>
 </dd>
 </dl>
 </dd></dl>
 
+</li>
+<li><p>NAT can also be enabled from the NSH with the <code class="docutils literal notranslate"><span class="pre">iptables</span></code> command.
+The rule is added to the NAT table, and the output interface
+passed to <code class="docutils literal notranslate"><span class="pre">-o</span></code> is the NuttX external interface:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE</span>
+</pre></div>
+</div>
+<p>To remove the rule, use the same rule specification with <code class="docutils literal notranslate"><span class="pre">-D</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; iptables -t nat -D POSTROUTING -o eth1 -j MASQUERADE</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The commands above are NuttX <code class="docutils literal notranslate"><span class="pre">iptables</span></code> commands. They configure NAT
+inside NuttX. They are separate from Linux host <code class="docutils literal notranslate"><span class="pre">iptables</span></code> commands.</p>
+</div>
+</li>
+</ul>
 </section>
 <section id="validation">
 <h2>Validation<a class="headerlink" href="#validation" title="Permalink to this heading"></a></h2>
-<p>Validated on Ubuntu 22.04 x86_64 with NuttX SIM by following steps:</p>
-<ol class="arabic simple">
-<li><p>Configure NuttX with &gt;=2 TAP devices (host route mode) and NAT enabled:</p></li>
-</ol>
+<p>The following setup validates NAT with the NuttX simulator on an Ubuntu
+22.04 x86_64 Linux host. IPv4 is used as the main example.</p>
+<p>The test uses two Linux network namespaces:</p>
 <blockquote>
-<div><div class="highlight-Kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_NET_IPFORWARD=y
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">private</span></code> represents a host behind NuttX NAT.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">public</span></code> represents a host on the external side of NuttX NAT.</p></li>
+</ul>
+</div></blockquote>
+<p>This keeps the test local to the host and does not require Internet access.</p>
+<p>The topology is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Private Namespace               NuttX simulator                 Public Namespace
+                       |----------------------------------|
+    tap0               | eth0: 192.168.0.2/24             |
+ 192.168.0.1/24  ------|                                  |
+                       |                                  |
+                       |                eth1: 10.0.1.2/24 |------ 10.0.1.1/24
+                       |                    (NAT enabled) |        tap1
+                       |----------------------------------|
+</pre></div>
+</div>
+<p>In this topology:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">eth0</span></code> is the NuttX private-side interface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eth1</span></code> is the NuttX external interface. NAT is enabled on <code class="docutils literal notranslate"><span class="pre">eth1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tap0</span></code> is moved into the Linux <code class="docutils literal notranslate"><span class="pre">private</span></code> namespace and is the peer of
+<code class="docutils literal notranslate"><span class="pre">eth0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tap1</span></code> is moved into the Linux <code class="docutils literal notranslate"><span class="pre">public</span></code> namespace and is the peer of
+<code class="docutils literal notranslate"><span class="pre">eth1</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<section id="step-1-configure-nuttx-simulator">
+<h3>Step 1: Configure NuttX simulator<a class="headerlink" href="#step-1-configure-nuttx-simulator" title="Permalink to this heading"></a></h3>
+<p>Configure NuttX simulator with at least two TAP devices, IP forwarding and NAT:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_NET_IPFORWARD=y
 CONFIG_NET_NAT=y
-<span class="c1"># CONFIG_SIM_NET_BRIDGE is not set</span>
-CONFIG_SIM_NETDEV_NUMBER=2
+CONFIG_NET_NAT44=y
+CONFIG_simulator_NETDEV_NUMBER=2
 </pre></div>
 </div>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Call <code class="docutils literal notranslate"><span class="pre">nat_enable</span></code> on one dev on startup, or manually enable NAT
-with <code class="docutils literal notranslate"><span class="pre">iptables</span></code> command (either may work).</p></li>
-</ol>
-<blockquote>
-<div><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* arch/sim/src/sim/up_netdriver.c */</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">netdriver_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="p">...</span>
-<span class="w">  </span><span class="n">nat_enable</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_sim_dev</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-<span class="w">  </span><span class="p">...</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="3">
-<li><p>Set IP Address for NuttX on startup</p></li>
-</ol>
-<blockquote>
-<div><div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ifconfig<span class="w"> </span>eth0<span class="w"> </span><span class="m">10</span>.0.1.2
-ifup<span class="w"> </span>eth0
-ifconfig<span class="w"> </span>eth1<span class="w"> </span><span class="m">10</span>.0.10.2
-ifup<span class="w"> </span>eth1
+</section>
+<section id="step-2-start-nuttx-simulator">
+<h3>Step 2: Start NuttX simulator<a class="headerlink" href="#step-2-start-nuttx-simulator" title="Permalink to this heading"></a></h3>
+<p>Start the NuttX simulator and make sure it creates two TAP interfaces on the
+Linux host. Creating or configuring TAP interfaces may require root privileges
+or capabilities such as <code class="docutils literal notranslate"><span class="pre">CAP_NET_ADMIN</span></code>. The interface names are assumed to
+be <code class="docutils literal notranslate"><span class="pre">tap0</span></code> and <code class="docutils literal notranslate"><span class="pre">tap1</span></code> in the commands below.</p>
+</section>
+<section id="step-3-configure-linux-namespaces">
+<h3>Step 3: Configure Linux namespaces<a class="headerlink" href="#step-3-configure-linux-namespaces" title="Permalink to this heading"></a></h3>
+<p>Run the following commands on the Linux host:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">NS_PRIVATE</span><span class="o">=</span><span class="s2">&quot;private&quot;</span>
+<span class="nv">NS_PUBLIC</span><span class="o">=</span><span class="s2">&quot;public&quot;</span>
 
-<span class="c1"># IPv6 if you need</span>
-ifconfig<span class="w"> </span>eth0<span class="w"> </span>inet6<span class="w"> </span>add<span class="w"> </span>fc00:1::2/64<span class="w"> </span>gw<span class="w"> </span>fc00:1::1
-ifconfig<span class="w"> </span>eth1<span class="w"> </span>inet6<span class="w"> </span>add<span class="w"> </span>fc00:10::2/64
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic simple" start="4">
-<li><p>Configure IP &amp; namespace &amp; route on host side (maybe need to be root, then try <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-i</span></code>)</p></li>
-</ol>
-<blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">IF_HOST</span><span class="o">=</span><span class="s2">&quot;enp1s0&quot;</span>
-<span class="nv">IF_0</span><span class="o">=</span><span class="s2">&quot;tap0&quot;</span>
-<span class="nv">IP_HOST_0</span><span class="o">=</span><span class="s2">&quot;10.0.1.1&quot;</span>
-<span class="nv">IF_1</span><span class="o">=</span><span class="s2">&quot;tap1&quot;</span>
-<span class="nv">IP_HOST_1</span><span class="o">=</span><span class="s2">&quot;10.0.10.1&quot;</span>
-<span class="nv">IP_NUTTX_1</span><span class="o">=</span><span class="s2">&quot;10.0.10.2&quot;</span>
+<span class="nv">IF_PRIVATE</span><span class="o">=</span><span class="s2">&quot;tap0&quot;</span>
+<span class="nv">IP_PRIVATE</span><span class="o">=</span><span class="s2">&quot;192.168.0.1&quot;</span>
+<span class="nv">IP_NUTTX_PRIVATE</span><span class="o">=</span><span class="s2">&quot;192.168.0.2&quot;</span>
 
-<span class="c1"># add net namespace LAN for $IF_1</span>
-ip<span class="w"> </span>netns<span class="w"> </span>add<span class="w"> </span>LAN
-ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv4.ip_forward<span class="o">=</span><span class="m">1</span>
-ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">$IF_1</span><span class="w"> </span>netns<span class="w"> </span>LAN
-ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">$IF_1</span><span class="w"> </span>up
-ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>lo<span class="w"> </span>up
+<span class="nv">IF_PUBLIC</span><span class="o">=</span><span class="s2">&quot;tap1&quot;</span>
+<span class="nv">IP_PUBLIC</span><span class="o">=</span><span class="s2">&quot;10.0.1.1&quot;</span>
+<span class="nv">IP_NUTTX_PUBLIC</span><span class="o">=</span><span class="s2">&quot;10.0.1.2&quot;</span>
 
-<span class="c1"># add address and set default route</span>
-ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="nv">$IP_HOST_0</span>/24<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_0</span>
-ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="nv">$IP_HOST_1</span>/24<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_1</span>
-ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>route<span class="w"> </span>add<span class="w"> </span>default<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_1</span><span class="w"> </span>via<span class="w"> </span><span class="nv">$IP_NUTTX_1</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PRIVATE</span><span class="s2">&quot;</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PUBLIC</span><span class="s2">&quot;</span>
 
-<span class="c1"># nat to allow NuttX to access the internet</span>
-iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-j<span class="w"> </span>MASQUERADE
-iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
-iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
-sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv4.ip_forward<span class="o">=</span><span class="m">1</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IF_PRIVATE</span><span class="s2">&quot;</span><span class="w"> </span>netns<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PRIVATE</span><span class="s2">&quot;</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IF_PUBLIC</span><span class="s2">&quot;</span><span class="w"> </span>netns<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PUBLIC</span><span class="s2">&quot;</span>
 
-<span class="c1"># IPv6 if you need</span>
-<span class="nv">IP6_HOST_0</span><span class="o">=</span><span class="s2">&quot;fc00:1::1&quot;</span>
-<span class="nv">IP6_HOST_1</span><span class="o">=</span><span class="s2">&quot;fc00:10::1&quot;</span>
-<span class="nv">IP6_NUTTX_1</span><span class="o">=</span><span class="s2">&quot;fc00:10::2&quot;</span>
+<span class="c1"># Private namespace</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PRIVATE</span><span class="s2">&quot;</span><span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>lo<span class="w"> </span>up
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PRIVATE</span><span class="s2">&quot;</span><span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IF_PRIVATE</span><span class="s2">&quot;</span><span class="w"> </span>up
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PRIVATE</span><span class="s2">&quot;</span><span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IP_PRIVATE</span><span class="s2">/24&quot;</span><span class="w"> </span>dev<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IF_PRIVATE</span><span class="s2">&quot;</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PRIVATE</span><span class="s2">&quot;</span><span class="w"> </span>ip<span class="w"> </span>route<span class="w"> </span>add<span class="w"> </span>default<span class="w"> </span>via<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IP_NUTTX_PRIVATE</span><span class="s2">&quot;</span><span class="w"> </span>dev<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IF_PRIVATE</span><span class="s2">&quot;</span>
 
-<span class="c1"># add address and set default route</span>
-ip<span class="w"> </span>-6<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="nv">$IP6_HOST_0</span>/64<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_0</span>
-ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>-6<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="nv">$IP6_HOST_1</span>/64<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_1</span>
-ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ip<span class="w"> </span>-6<span class="w"> </span>route<span class="w"> </span>add<span class="w"> </span>default<span class="w"> </span>dev<span class="w"> </span><span class="nv">$IF_1</span><span class="w"> </span>via<span class="w"> </span><span class="nv">$IP6_NUTTX_1</span>
-
-<span class="c1"># nat to allow NuttX to access the internet</span>
-ip6tables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-j<span class="w"> </span>MASQUERADE
-ip6tables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
-ip6tables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-i<span class="w"> </span><span class="nv">$IF_0</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$IF_HOST</span><span class="w"> </span>-j<span class="w"> </span>ACCEPT
-sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.forwarding<span class="o">=</span><span class="m">1</span>
+<span class="c1"># Public namespace</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PUBLIC</span><span class="s2">&quot;</span><span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>lo<span class="w"> </span>up
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PUBLIC</span><span class="s2">&quot;</span><span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IF_PUBLIC</span><span class="s2">&quot;</span><span class="w"> </span>up
+sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NS_PUBLIC</span><span class="s2">&quot;</span><span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IP_PUBLIC</span><span class="s2">/24&quot;</span><span class="w"> </span>dev<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IF_PUBLIC</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
-</div></blockquote>
-<ol class="arabic simple" start="5">
-<li><p>Do anything in the LAN namespace will go through NAT</p></li>
-</ol>
-<blockquote>
-<div><div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Host side</span>
-iperf<span class="w"> </span>-B<span class="w"> </span><span class="m">10</span>.0.1.1<span class="w"> </span>-s<span class="w"> </span>-i<span class="w"> </span><span class="m">1</span>
-<span class="c1"># LAN side</span>
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>iperf<span class="w"> </span>-B<span class="w"> </span><span class="m">10</span>.0.10.1<span class="w"> </span>-c<span class="w"> </span><span class="m">10</span>.0.1.1<span class="w"> </span>-i<span class="w"> </span><span class="m">1</span>
+<p>The <code class="docutils literal notranslate"><span class="pre">public</span></code> namespace does not need a route back to <code class="docutils literal notranslate"><span class="pre">192.168.0.0/24</span></code> for
+normal NAT validation, because return traffic is addressed to the translated
+external address <code class="docutils literal notranslate"><span class="pre">10.0.1.2</span></code>.</p>
+</section>
+<section id="step-4-configure-nuttx-network-interfaces">
+<h3>Step 4: Configure NuttX network interfaces<a class="headerlink" href="#step-4-configure-nuttx-network-interfaces" title="Permalink to this heading"></a></h3>
+<p>Configure the NuttX interface addresses from NSH:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ifconfig eth0 192.168.0.2</span>
+<span class="go">nsh&gt; ifup eth0</span>
+<span class="go">nsh&gt; ifconfig eth1 10.0.1.2</span>
+<span class="go">nsh&gt; ifup eth1</span>
+<span class="go">nsh&gt; addroute default 10.0.1.1 eth1</span>
 </pre></div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Host side</span>
-python3<span class="w"> </span>-m<span class="w"> </span>http.server<span class="w"> </span>-b<span class="w"> </span>::
-<span class="c1"># LAN side</span>
-<span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">1</span>..20000<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>curl<span class="w"> </span><span class="s1">&#39;http://10.0.1.1:8000/&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="m">2</span>&gt;1<span class="p">;</span><span class="w"> </span><span class="k">done</span>
-<span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">1</span>..20000<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>curl<span class="w"> </span><span class="s1">&#39;http://[fc00:1::1]:8000/&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="m">2</span>&gt;1<span class="p">;</span><span class="w"> </span><span class="k">done</span>
+<p>Enable NAT on NuttX <code class="docutils literal notranslate"><span class="pre">eth1</span></code>. Either call <code class="docutils literal notranslate"><span class="pre">nat_enable()</span></code> during network
+initialization or run this command from NSH:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE</span>
 </pre></div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># LAN side</span>
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ping<span class="w"> </span><span class="m">8</span>.8.8.8
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>ping<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
+</section>
+<section id="step-5-validate-basic-connectivity">
+<h3>Step 5: Validate basic connectivity<a class="headerlink" href="#step-5-validate-basic-connectivity" title="Permalink to this heading"></a></h3>
+<p>Before testing NAT, verify that each direct link works.</p>
+<p>From NuttX, ping the private-side peer:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping 192.168.0.1</span>
 </pre></div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># LAN side</span>
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w">     </span><span class="c1"># ICMP error msg of UDP</span>
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-T<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w">  </span><span class="c1"># ICMP error msg of TCP</span>
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-I<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w">  </span><span class="c1"># ICMP error msg of ICMP</span>
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-T<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>traceroute<span class="w"> </span>-n<span class="w"> </span>-I<span class="w"> </span><span class="m">2001</span>:4860:4860::8888
+<p>From NuttX, ping the public-side peer:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping 10.0.1.1</span>
 </pre></div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Host side</span>
-tcpdump<span class="w"> </span>-nn<span class="w"> </span>-i<span class="w"> </span>tap0
-<span class="c1"># LAN side</span>
-sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>LAN<span class="w"> </span>tcpdump<span class="w"> </span>-nn<span class="w"> </span>-i<span class="w"> </span>tap1
+<p>From the private namespace, ping the NuttX private-side interface:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>private<span class="w"> </span>ping<span class="w"> </span><span class="m">192</span>.168.0.2
 </pre></div>
 </div>
-</div></blockquote>
+<p>From the public namespace, ping the NuttX external interface:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>public<span class="w"> </span>ping<span class="w"> </span><span class="m">10</span>.0.1.2
+</pre></div>
+</div>
+</section>
+<section id="step-6-test-tcp-nat">
+<h3>Step 6: Test TCP NAT<a class="headerlink" href="#step-6-test-tcp-nat" title="Permalink to this heading"></a></h3>
+<p>Start an iperf server in the <code class="docutils literal notranslate"><span class="pre">public</span></code> namespace:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>public<span class="w"> </span>iperf<span class="w"> </span>-B<span class="w"> </span><span class="m">10</span>.0.1.1<span class="w"> </span>-s<span class="w"> </span>-i<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p>Run the iperf client from the <code class="docutils literal notranslate"><span class="pre">private</span></code> namespace:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>private<span class="w"> </span>iperf<span class="w"> </span>-B<span class="w"> </span><span class="m">192</span>.168.0.1<span class="w"> </span>-c<span class="w"> </span><span class="m">10</span>.0.1.1<span class="w"> </span>-i<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p>The server should see the connection as coming from the NuttX external
+address <code class="docutils literal notranslate"><span class="pre">10.0.1.2</span></code>, not from the private address <code class="docutils literal notranslate"><span class="pre">192.168.0.1</span></code>.</p>
+</section>
+<section id="step-7-test-icmp-nat">
+<h3>Step 7: Test ICMP NAT<a class="headerlink" href="#step-7-test-icmp-nat" title="Permalink to this heading"></a></h3>
+<p>Run ping from the <code class="docutils literal notranslate"><span class="pre">private</span></code> namespace to the <code class="docutils literal notranslate"><span class="pre">public</span></code> namespace:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>private<span class="w"> </span>ping<span class="w"> </span><span class="m">10</span>.0.1.1
+</pre></div>
+</div>
+<p>On the public side, the ICMP Echo Request should be translated to use the
+NuttX external address <code class="docutils literal notranslate"><span class="pre">10.0.1.2</span></code> as the source address.</p>
+</section>
+<section id="step-8-test-http-nat">
+<h3>Step 8: Test HTTP NAT<a class="headerlink" href="#step-8-test-http-nat" title="Permalink to this heading"></a></h3>
+<p>Start a simple HTTP server in the <code class="docutils literal notranslate"><span class="pre">public</span></code> namespace:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>public<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>http.server<span class="w"> </span><span class="m">8000</span><span class="w"> </span>-b<span class="w"> </span><span class="m">10</span>.0.1.1
+</pre></div>
+</div>
+<p>Run HTTP requests from the <code class="docutils literal notranslate"><span class="pre">private</span></code> namespace:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>seq<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">20000</span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>private<span class="w"> </span>curl<span class="w"> </span>-sS<span class="w"> </span>-o<span class="w"> </span>/dev/null<span class="w"> </span><span class="s1">&#39;http://10.0.1.1:8000/&#39;</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+</section>
+<section id="step-9-capture-packets">
+<h3>Step 9: Capture packets<a class="headerlink" href="#step-9-capture-packets" title="Permalink to this heading"></a></h3>
+<p>Capture on the private side:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>private<span class="w"> </span>tcpdump<span class="w"> </span>-nn<span class="w"> </span>-i<span class="w"> </span>tap0
+</pre></div>
+</div>
+<p>Capture on the public side:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>public<span class="w"> </span>tcpdump<span class="w"> </span>-nn<span class="w"> </span>-i<span class="w"> </span>tap1
+</pre></div>
+</div>
+<p>For outbound IPv4 traffic, <code class="docutils literal notranslate"><span class="pre">tap0</span></code> should show packets sourced from
+<code class="docutils literal notranslate"><span class="pre">192.168.0.1</span></code> and <code class="docutils literal notranslate"><span class="pre">tap1</span></code> should show the same flow after translation,
+sourced from <code class="docutils literal notranslate"><span class="pre">10.0.1.2</span></code>. The inbound return path should show the reverse
+translation.</p>
+</section>
 </section>
 </section>
 
