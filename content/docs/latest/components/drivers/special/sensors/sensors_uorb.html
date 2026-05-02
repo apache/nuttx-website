@@ -313,10 +313,52 @@ performed by the general lower half include a set of sensor operations such as
 sensor events are sent to the ring buffer in the upper layer.</p>
 <a class="reference internal image-reference" href="../../../../_images/sensor_driver_model.png"><img alt="../../../../_images/sensor_driver_model.png" class="align-center" src="../../../../_images/sensor_driver_model.png" style="width: 800px;" /></a>
 </section>
-<section id="problems-to-solve">
-<h2>Problems to solve<a class="headerlink" href="#problems-to-solve" title="Permalink to this heading"></a></h2>
-<p>The current implementation uses the <code class="docutils literal notranslate"><span class="pre">float</span></code> type which may make it difficult
-to use on platforms without FPU support.</p>
+<section id="sensor-data-type">
+<h2>Sensor data type<a class="headerlink" href="#sensor-data-type" title="Permalink to this heading"></a></h2>
+<p>The framework supports two types of sensor data:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">float</span></code> if <code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_USE_FLOAT=y</span></code>, not recommended for
+targets without FPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b16_t</span></code> if <code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_USE_B16=y</span></code>, recommended for targets without
+FPU.</p></li>
+</ol>
+<p>Currently all sensors support <code class="docutils literal notranslate"><span class="pre">float</span></code>, support for <code class="docutils literal notranslate"><span class="pre">b16_t</span></code> is work-in-progress.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Using fixed-point math instead of floating point may cause sensors measurements
+to saturate where they wouldn’t before. Verify that fixed-point data types are
+sufficient for your application. Just because a driver has fixed-point support
+<strong>does not mean</strong> it can support the sensor’s full range.</p>
+</div>
+<p>To create generic drivers that support both data types, you should use the dedicated
+sensor data type:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Data type for sensors */</span>
+
+<span class="cp">#ifdef CONFIG_SENSORS_USE_B16</span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">b16_t</span><span class="w"> </span><span class="n">sensor_data_t</span><span class="p">;</span>
+<span class="cp">#else</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">sensor_data_t</span><span class="p">;</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>Mathematical operations on this type should only be performed using dedicated
+macros:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_ftof(f1)</span></code> - convert float to sensor data number.
+Should be used only for compile-time constants.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_itof(i)</span></code> - convert int to sensor data number.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_inv(i)</span></code> - invert int and convert to sensor data number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_add(f1,</span> <span class="pre">f2)</span></code> - add two sensor data numbers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_sub(f1,</span> <span class="pre">f2)</span></code> - subtract two sensor data numbers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_subi(f1,</span> <span class="pre">i)</span></code> - subtract int from sensor data number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_mul(f1,</span> <span class="pre">f2)</span></code> - multiply two sensor data numbers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_muli(f1,</span> <span class="pre">i)</span></code> - multiply sensor data with int</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_div(f1,</span> <span class="pre">f2)</span></code> - divide two sensor data numbers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_divi(f1,</span> <span class="pre">i)</span></code> - divide sensor data with int</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_abs(f1)</span></code> - get absolute value for sensor data number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_sqrt(f1)</span></code> - get sqrt for sensro data number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data_usat(f1)</span></code> - unsigned saturation for sensor data.</p></li>
+</ul>
 </section>
 <section id="code">
 <h2><strong>Code</strong><a class="headerlink" href="#code" title="Permalink to this heading"></a></h2>
@@ -531,9 +573,9 @@ being <code class="docutils literal notranslate"><span class="pre">sensor_device
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">sensor_device_info_s</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="kt">uint32_t</span><span class="w">      </span><span class="n">version</span><span class="p">;</span>
-<span class="w">  </span><span class="kt">float</span><span class="w">         </span><span class="n">power</span><span class="p">;</span>
-<span class="w">  </span><span class="kt">float</span><span class="w">         </span><span class="n">max_range</span><span class="p">;</span>
-<span class="w">  </span><span class="kt">float</span><span class="w">         </span><span class="n">resolution</span><span class="p">;</span>
+<span class="w">  </span><span class="n">sensor_data_t</span><span class="w"> </span><span class="n">power</span><span class="p">;</span>
+<span class="w">  </span><span class="n">sensor_data_t</span><span class="w"> </span><span class="n">max_range</span><span class="p">;</span>
+<span class="w">  </span><span class="n">sensor_data_t</span><span class="w"> </span><span class="n">resolution</span><span class="p">;</span>
 <span class="w">  </span><span class="kt">int32_t</span><span class="w">       </span><span class="n">min_delay</span><span class="p">;</span>
 <span class="w">  </span><span class="kt">int32_t</span><span class="w">       </span><span class="n">max_delay</span><span class="p">;</span>
 <span class="w">  </span><span class="kt">uint32_t</span><span class="w">      </span><span class="n">fifo_reserved_event_count</span><span class="p">;</span>
