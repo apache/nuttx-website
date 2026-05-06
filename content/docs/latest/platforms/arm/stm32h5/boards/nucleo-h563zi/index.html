@@ -464,6 +464,73 @@ application.</p>
 at /dev/uorb/sensor_temp0 and provides the test application
 sensortest. E.g. sensortest -n 10 temp0</p>
 </section>
+<section id="usbmsc">
+<h3>usbmsc:<a class="headerlink" href="#usbmsc" title="Permalink to this heading"></a></h3>
+<p>This configuration enables USB Host support with the Mass Storage Class
+(MSC) driver.  It is intended to test USB Host operation by connecting a
+USB mass-storage device (e.g. a USB flash drive) to the board’s USB-C
+connector.  Key options enabled:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_USBFS_HOST</span></code> — STM32H5 USB full-speed host controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_MSC</span></code> — USB Mass Storage Class host driver</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_HUB</span></code> — USB hub support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_FAT</span></code> — FAT filesystem for mounting the storage device</p></li>
+</ul>
+<p>The serial console remains on USART3 (ST-Link VCOM).  NSH
+<code class="docutils literal notranslate"><span class="pre">ifup</span></code>/<code class="docutils literal notranslate"><span class="pre">ifdown</span></code> commands are disabled because no network interface is
+configured in this build.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>USB Host requires a stable 48 MHz clock.  HSI48 is not accurate enough
+for reliable USB operation, so this configuration uses the external
+high-speed oscillator (HSE) as the USB clock source
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_USE_HSE=y</span></code>).  On the Nucleo-H563ZI development board
+HSE is not connected by default; to enable it you must:</p>
+<ul class="simple">
+<li><p><strong>Connect</strong> solder bridges <strong>SB3</strong> and <strong>SB4</strong></p></li>
+<li><p><strong>Disconnect</strong> solder bridge <strong>SB49</strong></p></li>
+</ul>
+<p>The board also does not support software control of VBUS power.  To
+supply power to the USB host port, fit a second jumper on the <strong>PWR SEL</strong>
+header that bridges the <strong>STLK</strong> and <strong>USB USER</strong> pins together.</p>
+</div>
+</section>
+<section id="nshusbnet">
+<h3>nshusbnet:<a class="headerlink" href="#nshusbnet" title="Permalink to this heading"></a></h3>
+<p>This configuration is based on the standard <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration but adds
+full networking support and the CDC-ECM USB Ethernet host driver.  It is
+intended to test USB Host operation with a USB-to-Ethernet adapter that
+uses the CDC-ECM (Ethernet Control Model) protocol.  Key options enabled:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_USBFS_HOST</span></code> — STM32H5 USB full-speed host controller</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_CDCECM</span></code> — USB CDC-ECM Ethernet host driver</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_COMPOSITE</span></code> — composite USB device support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_HUB</span></code> — USB hub support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_UDP</span></code> — IPv4 networking stack</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DHCPC</span></code> / <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC</span></code> — DHCP client for automatic IP configuration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_TELNETD</span></code> — Telnet daemon for remote NSH access</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_PING</span></code> — ping utility for connectivity testing</p></li>
+</ul>
+<p>Plug a CDC-ECM USB Ethernet adapter into the board’s USB-C host port.
+NuttX will enumerate the device, assign it a network interface, and obtain
+an IP address via DHCP.  The <code class="docutils literal notranslate"><span class="pre">ping</span></code> application can then be used to
+verify network connectivity.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>USB Host requires a stable 48 MHz clock.  HSI48 is not accurate enough
+for reliable USB operation, so this configuration uses the external
+high-speed oscillator (HSE) as the USB clock source
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_USE_HSE=y</span></code>).  On the Nucleo-H563ZI development board
+HSE is not connected by default; to enable it you must:</p>
+<ul class="simple">
+<li><p><strong>Connect</strong> solder bridges <strong>SB3</strong> and <strong>SB4</strong></p></li>
+<li><p><strong>Disconnect</strong> solder bridge <strong>SB49</strong></p></li>
+</ul>
+<p>The board also does not support software control of VBUS power.  To
+supply power to the USB host port, fit a second jumper on the <strong>PWR SEL</strong>
+header that bridges the <strong>STLK</strong> and <strong>USB USER</strong> pins together.</p>
+</div>
+</section>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>

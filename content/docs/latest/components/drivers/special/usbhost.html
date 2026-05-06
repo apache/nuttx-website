@@ -167,7 +167,10 @@
 <li class="toctree-l4"><a class="reference internal" href="sdio.html">SDIO Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbdev.html">USB Device-Side Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="uvc.html">USB Video Class (UVC) Gadget Driver</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">USB Host-Side Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">USB Host-Side Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#cdc-ecm-host-class-driver">CDC-ECM Host Class Driver</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="usbmisc.html">USB Miscellaneous Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbmonitor.html">USB Monitor support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usrsock.html">Usrsock Driver</a></li>
@@ -352,6 +355,36 @@ the function <code class="docutils literal notranslate"><span class="pre">usbhos
 </ol>
 </li>
 </ul>
+<section id="cdc-ecm-host-class-driver">
+<h2>CDC-ECM Host Class Driver<a class="headerlink" href="#cdc-ecm-host-class-driver" title="Permalink to this heading"></a></h2>
+<p>The CDC-ECM (Ethernet Control Model) host class driver
+(<code class="docutils literal notranslate"><span class="pre">drivers/usbhost/usbhost_cdcecm.c</span></code>) supports USB devices that expose
+a network interface using the USB Communications Device Class Ethernet
+Control Model. Common device types include:</p>
+<ul class="simple">
+<li><p><strong>USB-to-Ethernet adapters</strong> that implement CDC-ECM, providing wired
+Ethernet connectivity over a USB port.</p></li>
+<li><p><strong>Cellular modems and similar devices</strong> that expose a CDC-ECM
+interface for IP connectivity, such as LTE modems operating in USB
+tethering mode.</p></li>
+</ul>
+<p>When a compatible device is connected and enumerated, the driver
+registers a standard NuttX Ethernet network interface — for example
+<code class="docutils literal notranslate"><span class="pre">eth0</span></code> — and integrates with the NuttX networking stack in exactly the
+same way as any on-board Ethernet driver. Normal network configuration
+can then be applied to the interface using standard NSH commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ifup eth0
+ifconfig eth0 192.168.1.10 netmask 255.255.255.0
+</pre></div>
+</div>
+<p>Or with DHCP via the <code class="docutils literal notranslate"><span class="pre">netinit</span></code> daemon when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DHCPC=y</span></code> is selected.</p>
+<p>The driver is registered by calling <code class="docutils literal notranslate"><span class="pre">usbhost_cdcecm_initialize()</span></code>
+during board initialization, before the USB host waiter thread begins
+enumerating devices.</p>
+<p><strong>Examples</strong>: <code class="docutils literal notranslate"><span class="pre">drivers/usbhost/usbhost_cdcecm.c</span></code>,
+<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32h5/nucleo-h563zi/configs/nshusbnet/defconfig</span></code>.</p>
+</section>
 </section>
 
 
