@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>nxcamera NxCamera video test application &mdash; NuttX latest documentation</title>
+  <title>nxcamera Camera/Video Stream Test Command &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -190,7 +190,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../netdb/index.html"><code class="docutils literal notranslate"><span class="pre">netdb</span></code> netdb interface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nsh/index.html"><code class="docutils literal notranslate"><span class="pre">nsh</span></code> NuttShell (NSH) example</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ntpc/index.html"><code class="docutils literal notranslate"><span class="pre">ntpc</span></code> NTP Daemon Commands</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> NxCamera video test application</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> Camera/Video Stream Test Command</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tip-execute-nsh-commands-hidden">Tip: Execute NSH Commands (Hidden)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pixel-format">Pixel Format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#features-and-updates">Features and Updates</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../nxcodec/index.html"><code class="docutils literal notranslate"><span class="pre">nxcodec</span></code> NxCodec video codec test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxdiag/index.html"><code class="docutils literal notranslate"><span class="pre">nxdiag</span></code> NuttX Diagnostic Tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxlooper/index.html"><code class="docutils literal notranslate"><span class="pre">nxlooper</span></code> NxLooper audio test application</a></li>
@@ -265,7 +273,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">System Libraries and NSH Add-Ons</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> NxCamera video test application</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> Camera/Video Stream Test Command</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/system/nxcamera/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -275,8 +283,110 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="nxcamera-nxcamera-video-test-application">
-<h1><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> NxCamera video test application<a class="headerlink" href="#nxcamera-nxcamera-video-test-application" title="Permalink to this heading"></a></h1>
+  <section id="nxcamera-camera-video-stream-test-command">
+<h1><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> Camera/Video Stream Test Command<a class="headerlink" href="#nxcamera-camera-video-stream-test-command" title="Permalink to this heading"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> is a command-line utility for testing camera devices and video
+stream capture in NuttX. It is built on top of the NuttX video subsystem
+(using a V4L2-style interface) and is typically used to:</p>
+<ul class="simple">
+<li><p>Enumerate and open video device nodes such as <code class="docutils literal notranslate"><span class="pre">/dev/video0</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/dev/video1</span></code></p></li>
+<li><p>Configure capture parameters including resolution and pixel format</p></li>
+<li><p>Capture video frames for validation, debugging, or simple data dumping,
+depending on platform support and build configuration</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> is an interactive command-line program. Start it from NSH, then
+enter commands at the <code class="docutils literal notranslate"><span class="pre">nxcamera&gt;</span></code> prompt:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; nxcamera</span>
+<span class="go">nxcamera&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="tip-execute-nsh-commands-hidden">
+<h2>Tip: Execute NSH Commands (Hidden)<a class="headerlink" href="#tip-execute-nsh-commands-hidden" title="Permalink to this heading"></a></h2>
+<p>At the <code class="docutils literal notranslate"><span class="pre">nxcamera&gt;</span></code> prompt you can run an NSH command by prefixing it with
+<code class="docutils literal notranslate"><span class="pre">!</span></code>. This is useful for quickly checking system state or invoking other
+utilities without exiting <code class="docutils literal notranslate"><span class="pre">nxcamera</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nxcamera&gt; !ls /dev</span>
+<span class="go">/dev:</span>
+<span class="go"> console</span>
+<span class="go"> fb0</span>
+<span class="go"> gpio0</span>
+<span class="go"> gpio1</span>
+<span class="go"> gpio2</span>
+<span class="go"> gpio3</span>
+<span class="go"> loop</span>
+<span class="go"> null</span>
+<span class="go"> oneshot</span>
+<span class="go"> ram0</span>
+<span class="go"> ram1</span>
+<span class="go"> ram2</span>
+<span class="go"> video0</span>
+<span class="go"> video1</span>
+<span class="go"> zero</span>
+<span class="go">nxcamera&gt; !poweroff</span>
+<span class="go">bash&gt;</span>
+</pre></div>
+</div>
+<p>A typical workflow at the prompt is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span> <span class="pre">/dev/video0</span></code> to set the input video node.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span> <span class="pre">/dev/fb0</span></code> to set the output node, for example a framebuffer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stream</span> <span class="pre">640</span> <span class="pre">480</span> <span class="pre">30</span> <span class="pre">NV12</span></code> to start streaming with <code class="docutils literal notranslate"><span class="pre">width</span> <span class="pre">height</span> <span class="pre">fps</span>
+<span class="pre">format</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop</span></code> to stop streaming.</p></li>
+</ul>
+<p>You may just copy-paste the commands below to get started:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nxcamera</span>
+<span class="go">input /dev/video0</span>
+<span class="go">output /dev/fb0</span>
+<span class="go">stream 640 480 30 YUYV # or NV12 on macOS</span>
+</pre></div>
+</div>
+</section>
+<section id="pixel-format">
+<h2>Pixel Format<a class="headerlink" href="#pixel-format" title="Permalink to this heading"></a></h2>
+<p>For the <code class="docutils literal notranslate"><span class="pre">stream</span></code> command, the pixel format depends on the platform. On the
+macOS <code class="docutils literal notranslate"><span class="pre">sim</span></code> platform you may use <code class="docutils literal notranslate"><span class="pre">NV12</span></code>, while on Linux systems <code class="docutils literal notranslate"><span class="pre">YUYV</span></code>
+is more commonly used.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Start <code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> and configure a typical interactive capture session:</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; nxcamera</span>
+<span class="go">nxcamera&gt; input /dev/video0</span>
+<span class="go">nxcamera&gt; output /dev/fb0</span>
+<span class="go">nxcamera&gt; stream 640 480 30 NV12</span>
+<span class="go">nxcamera&gt; stop</span>
+</pre></div>
+</div>
+<figure class="align-center" id="id1">
+<img alt="nxcamera running on the macOS SIM platform" src="../../../_images/nxcamera_macos_sim.png" />
+<figcaption>
+<p><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> using the macOS AVFoundation backend on the SIM platform.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="features-and-updates">
+<h2>Features and Updates<a class="headerlink" href="#features-and-updates" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Multiple camera instances are supported, allowing several cameras to be
+exposed as different device nodes such as <code class="docutils literal notranslate"><span class="pre">/dev/video0</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/dev/video1</span></code>. This makes it easier to select and validate different
+video input sources on the same system.</p></li>
+<li><p>On the <code class="docutils literal notranslate"><span class="pre">sim</span></code> platform, support has been added for the macOS
+AVFoundation backend. This enables camera capture and functional
+verification on macOS hosts, subject to build configuration and host
+permission settings.</p></li>
+</ul>
+</section>
 </section>
 
 
