@@ -186,8 +186,10 @@
 <li class="toctree-l5"><a class="reference internal" href="#debugging-ulp-lp-core">Debugging ULP LP-Core</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#esp32-p4-chip-revisions">ESP32-P4 Chip Revisions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/esp32p4-function-ev-board/index.html">ESP32-P4-Function-EV-Board</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#other-boards">Other Boards</a></li>
 </ul>
 </li>
 </ul>
@@ -288,11 +290,19 @@ descriptions.</p>
 <li><p>Datasheet: <a class="reference external" href="https://documentation.espressif.com/esp32-p4-chip-revision-v1.3_datasheet_en.pdf">ESP32-P4 Datasheet (v1.3)</a></p></li>
 <li><p>Technical Reference Manual: <a class="reference external" href="https://documentation.espressif.com/esp32-p4-chip-revision-v1.3_technical_reference_manual_en.pdf">ESP32-P4 TRM (v1.3)</a></p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>NuttX by default supports ESP32-P4 chip revisions v3.0 and above.
+If your build and flash works fine but firmware does not run as
+expected (i.e. stuck in a boot loop) then additional tuning is
+required, see <a class="reference internal" href="#esp32-p4-chip-revisions">ESP32-P4 Chip Revisions</a> section for details.</p>
+</div>
 <section id="esp32-p4-toolchain">
 <h2>ESP32-P4 Toolchain<a class="headerlink" href="#esp32-p4-toolchain" title="Permalink to this heading"></a></h2>
-<p>A generic RISC-V toolchain can be used to build ESP32-P4 projects. It’s recommended
-to use the same toolchain version used by NuttX CI for RISC-V.
-Please refer to the Docker
+<p>A generic RISC-V toolchain can be used to build ESP32-P4 projects.
+You can use standard <code class="docutils literal notranslate"><span class="pre">riscv32-esp-elf-gcc</span></code> provided by ESP IDF Tools.
+However, it is recommended to use the same toolchain version as used by
+the NuttX CI for RISC-V. Please refer to our CI Docker configuration
 <a class="reference external" href="https://github.com/apache/nuttx/tree/master/tools/ci/docker/linux/Dockerfile">container</a>
 and check for the current compiler version being used. For instance:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>###############################################################################
@@ -1170,6 +1180,42 @@ it can happen that application won’t fit into RTC RAM.
 To enable ubsan for ULP please add <code class="docutils literal notranslate"><span class="pre">CONFIG_ESPRESSIF_ULP_ENABLE_UBSAN</span></code> in menuconfig.</p>
 </section>
 </section>
+<section id="esp32-p4-chip-revisions">
+<h2>ESP32-P4 Chip Revisions<a class="headerlink" href="#esp32-p4-chip-revisions" title="Permalink to this heading"></a></h2>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>NuttX by default supports ESP32-P4 chip revisions starting
+from v3.0.</p>
+</div>
+<p>Different ESP32-P4 chip revisions contain internal hardware breaking
+changes. Revisions 3.0 and higher are not compatible with 0.x and 1.x.
+Older chip revisions may work but require dedicated firmware builds.
+Compatibility is verified by the 2nd stage bootloader against following
+firmware build parameters: <code class="docutils literal notranslate"><span class="pre">CONFIG_ESP32P4_SELECTS_REV_LESS_V3</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ESP32P4_REV_*</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_ESP_REV_*</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">CONFIG_ESP_EFUSE_BLOCK_REV_*</span></code>.
+These parameters are set with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> in the <code class="docutils literal notranslate"><span class="pre">System</span> <span class="pre">Type</span></code> menu:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Select</span> <span class="pre">ESP32-P4</span> <span class="pre">revisions</span> <span class="pre">&lt;3.0</span></code> - enable if your chip is older than v3.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Minimum</span> <span class="pre">Supported</span> <span class="pre">ESP32-P4</span> <span class="pre">Revision</span></code> - select minimum chip revision
+on which the firmware can boot, refuse to boot otherwise (boot loop).
+Note that older chip revisions may contain bugs or have missing features.
+Selecting wide range of supported revisions will increase firmware size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Minimum</span> <span class="pre">Supported</span> <span class="pre">ESP32-P4</span> <span class="pre">eFuse</span> <span class="pre">Block</span> <span class="pre">Revision</span></code> - select minimum eFuse
+block revision on which the firmware can boot, refuse to boot otherwise
+(boot loop).</p></li>
+</ul>
+<p>You can check your chip revision with <code class="docutils literal notranslate"><span class="pre">esptool</span></code> utility that is used
+by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code> command, for instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>esptool v5.2.0
+Connected to ESP32-P4 on /dev/cuaU0:
+Chip type:          ESP32-P4 (revision v1.3)
+Features:           Dual Core + LP Core, 400MHz
+Crystal frequency:  40MHz
+MAC:                XXX
+</pre></div>
+</div>
+</section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
@@ -1177,6 +1223,17 @@ To enable ubsan for ULP please add <code class="docutils literal notranslate"><s
 <li class="toctree-l1"><a class="reference internal" href="boards/esp32p4-function-ev-board/index.html">ESP32-P4-Function-EV-Board</a></li>
 </ul>
 </div>
+<section id="other-boards">
+<h3>Other Boards<a class="headerlink" href="#other-boards" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.waveshare.com/wiki/ESP32-P4-NANO">WaveShare ESP32-P4-Nano</a>
+is similar in design to
+<a class="reference internal" href="boards/esp32p4-function-ev-board/index.html#esp32p4-function-ev-board"><span class="std std-ref">ESP32-P4-Function-EV-Board</span></a>.
+Aside from a few onboard component differences you can play around using
+existing configurations for start. Note that it may contain ESP32-P4 v1.3 so
+additional configuration tuning is required (see <a class="reference internal" href="#esp32-p4-chip-revisions">ESP32-P4 Chip Revisions</a>).</p></li>
+</ul>
+</section>
 </section>
 </section>
 
