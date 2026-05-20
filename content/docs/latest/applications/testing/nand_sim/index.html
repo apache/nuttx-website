@@ -184,7 +184,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#ram-to-device-lower-half">RAM to Device (Lower Half)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#upper-half">Upper Half</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#wrapper-over-upper-half">Wrapper Over Upper Half</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#registering-device-daemon">Registering Device &amp; Daemon</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#registering-device-background-task">Registering Device &amp; Background Task</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#known-issues">Known Issues</a></li>
 </ul>
 </li>
@@ -388,13 +388,16 @@ is still the wrapper, not the actual upper half, as the upper half methods
 may call the other methods as well internally and we might want to log
 them as well</em>.</p>
 </section>
-<section id="registering-device-daemon">
-<h2>Registering Device &amp; Daemon<a class="headerlink" href="#registering-device-daemon" title="Permalink to this heading"></a></h2>
+<section id="registering-device-background-task">
+<h2>Registering Device &amp; Background Task<a class="headerlink" href="#registering-device-background-task" title="Permalink to this heading"></a></h2>
 <p>This wrapper is then registered using <code class="docutils literal notranslate"><span class="pre">register_mtddriver</span></code>, and this
-whole thing is converted to be a daemon, so that the device can keep running
-in the background.</p>
-<p>Making it a daemon is achieved by using <code class="docutils literal notranslate"><span class="pre">fork()</span></code>, killing the parent, and
-using <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> in child.</p>
+whole thing is launched as a background task, so that the device can keep
+running after the <code class="docutils literal notranslate"><span class="pre">nand</span></code> command returns to the shell.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">nand</span></code> command starts a dedicated NuttX task with <code class="docutils literal notranslate"><span class="pre">task_create()</span></code>,
+waits until the device registration finishes, and then returns control to
+the shell. This keeps the simulator alive in the background without relying
+on <code class="docutils literal notranslate"><span class="pre">fork()</span></code>, whose post-fork execution model is not appropriate for this
+kind of long-running initialization in the flat build used by the simulator.</p>
 </section>
 <section id="known-issues">
 <h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this heading"></a></h2>
