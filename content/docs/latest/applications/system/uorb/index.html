@@ -355,9 +355,11 @@ and subscribers is achieved through ioctl operations.</p>
 <section id="code-location">
 <h2><strong>Code Location</strong><a class="headerlink" href="#code-location" title="Permalink to this heading"></a></h2>
 <p>The directory apps/system/uorb contains the uORB wrapper, unit tests, physical
-sensor topic definitions, and the uorb_listener tool.</p>
+sensor topic definitions, and the <code class="docutils literal notranslate"><span class="pre">uorb_listener</span></code> and <code class="docutils literal notranslate"><span class="pre">uorb_generator</span></code>
+tools.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>├── Kconfig
-├── listener.c   // Implementation of uorb_listener.c
+├── generator.c  // Implementation of the uorb_generator command
+├── listener.c   // Implementation of the uorb_listener command
 ├── Make.defs
 ├── Makefile
 ├── sensor       // Definitions for physical sensor topics
@@ -752,6 +754,12 @@ and management in an embedded system environment.</p>
 </section>
 <section id="tools">
 <h2><strong>Tools</strong><a class="headerlink" href="#tools" title="Permalink to this heading"></a></h2>
+<p>To use these tools, enable <code class="docutils literal notranslate"><span class="pre">CONFIG_UORB</span></code> and the corresponding command
+options in <code class="docutils literal notranslate"><span class="pre">apps/system/uorb/Kconfig</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UORB_LISTENER</span></code> for <code class="docutils literal notranslate"><span class="pre">uorb_listener</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_UORB_GENERATOR</span></code> for <code class="docutils literal notranslate"><span class="pre">uorb_generator</span></code></p></li>
+</ul>
 <section id="uorb-listener">
 <span id="id1"></span><h3><strong>uorb_listener</strong><a class="headerlink" href="#uorb-listener" title="Permalink to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span></code> is a testing tool located above the uORB layer. It calls the uORB API to subscribe
@@ -759,23 +767,27 @@ to and obtain topic information, further verifying whether the underlying system
 correctly. uorb_listener only monitors topics that have been advertised. The entire listening process
 can be paused using Ctrl+C. Usage instructions can be viewed by running uorb_listener -h.
 Below are some commonly used cases:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>listener &lt;command&gt; [arguments...]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>uorb_listener &lt;command&gt; [arguments...]
  Commands:
         &lt;topics_name&gt; Topic name. Multi name are separated by &#39;,&#39;
         [-h       ]  Listener commands help
-        [-f       ]  Record uorb data to file
+        [-s       ]  Record uorb data to file
         [-n &lt;val&gt; ]  Number of messages, default: 0
         [-r &lt;val&gt; ]  Subscription rate (unlimited if 0), default: 0
         [-b &lt;val&gt; ]  Subscription maximum report latency in us(unlimited if 0), default: 0
         [-t &lt;val&gt; ]  Time of listener, in seconds, default: 5
+        [-f       ]  Flush sensor driver data
         [-T       ]  Top, continuously print updating objects
         [-l       ]  Top only execute once.
+        [-i       ]  Print topic state information
+        [-u       ]  Use non-wakeup mode when available
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span></code> continuously prints information for all topics at the frequency of topic publications.</p>
-<p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">-f</span></code> continuously saves information for all topics to /data/uorb/<strong>*/*</strong>.csv at the frequency of
+<p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">-s</span></code> continuously saves information for all topics to /data/uorb/<strong>*/*</strong>.csv at the frequency of
 topic publications. If the -f flag is used and the file cannot be created, the data will be output to the terminal instead.</p>
-<p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">-f</span> <span class="pre">sensor_accel0</span></code> continuously saves information for the specified topic to a file at the frequency of topic publications.</p>
+<p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">-s</span> <span class="pre">sensor_accel0</span></code> continuously saves information for the specified topic to a file at the frequency of topic publications.</p>
+<p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">-f</span></code> requests a flush for physical sensor topics that support FIFO flush operations.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">n</span> <span class="pre">1</span></code> prints a snapshot of the current information for all topics.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">n</span></code> num prints information for all topics until num messages have been received, at the frequency of topic publications.</p>
 <p><code class="docutils literal notranslate"><span class="pre">uorb_listener</span> <span class="pre">r</span> <span class="pre">1</span></code> prints information for all topics at a frequency of 1Hz.</p>
@@ -802,9 +814,9 @@ imported into the simulator for debugging (mount -t hostfs -o fs=/home/xxx/ /dat
 <code class="docutils literal notranslate"><span class="pre">-s</span></code> enables playback of simulated (fake) data, generating struct data from input entered via the terminal. It will modify the timestamp of the current data to real-time. Simulated data should be placed at the end of the entire command.</p>
 <p>By following these instructions, users can effectively utilize the Generator debugging tool in conjunction with uorb_listener for system debugging and verification.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>The tool publishes topic data via uorb.
-Notice:LINE_MAX must be set to 128 or more.
+Notice:NSH_LINELEN must be set to 128 or more.
 
-generator &lt;command&gt; [arguments...]
+uorb_generator &lt;command&gt; [arguments...]
   Commands:
     &lt;topics_name&gt; The playback topic name.
     [-h       ]  Listener commands help.

@@ -141,7 +141,13 @@
 <li class="toctree-l2"><a class="reference internal" href="../../boot/index.html">Bootloader Utilities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../benchmarks/index.html">Benchmark Applications</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">CAN Utilities</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">candump</span></code> SocketCAN candump tool</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">candump</span></code> SocketCAN candump tool</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#filter-syntax">Filter syntax</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../canlib/index.html"><code class="docutils literal notranslate"><span class="pre">canlib</span></code> CAN utility library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../cansend/index.html"><code class="docutils literal notranslate"><span class="pre">cansend</span></code> SocketCAN cansend tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../lely-canopen/index.html"><code class="docutils literal notranslate"><span class="pre">lely-canopen</span></code> Lely CANopen support</a></li>
@@ -214,6 +220,82 @@
              
   <section id="candump-socketcan-candump-tool">
 <h1><code class="docutils literal notranslate"><span class="pre">candump</span></code> SocketCAN candump tool<a class="headerlink" href="#candump-socketcan-candump-tool" title="Permalink to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">candump</span></code> is a SocketCAN traffic monitor ported from the Linux CAN utilities.
+It listens on one or more CAN interfaces and prints received CAN or CAN FD
+frames to the console. It can also timestamp frames, apply receive filters,
+monitor dropped frames, decode error frames in a human-readable format, and
+write captured traffic to a log file.</p>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the application with <code class="docutils literal notranslate"><span class="pre">CONFIG_CANUTILS_CANDUMP</span></code>. The option depends on
+the SocketCAN network stack and canutils support:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_CAN</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_CANUTILS_LIBCANUTILS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ENABLE_ALL_SIGNALS</span></code></p></li>
+</ul>
+<p>You can also adjust the task stack size with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_CANUTILS_CANDUMP_STACKSIZE</span></code>.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>The command is available as <code class="docutils literal notranslate"><span class="pre">candump</span></code> in NSH when built as a builtin
+application.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; candump [options] &lt;CAN interface&gt;+</span>
+</pre></div>
+</div>
+<p>Each interface argument may optionally include a comma-separated filter list in
+the form <code class="docutils literal notranslate"><span class="pre">&lt;ifname&gt;[,filter]*</span></code>.</p>
+<p>Common options include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">&lt;type&gt;</span></code>: print timestamps using absolute, delta, zero-based, or
+absolute-with-date modes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-l</span></code>: log received CAN frames to a file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-L</span></code>: print log-file format to standard output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">&lt;count&gt;</span></code>: stop after receiving <code class="docutils literal notranslate"><span class="pre">count</span></code> frames</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-r</span> <span class="pre">&lt;size&gt;</span></code>: set the socket receive buffer size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-d</span></code>: monitor dropped CAN frames</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-e</span></code>: decode CAN error frames in a human-readable format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-x</span></code>: print extra message information such as RX/TX, BRS, and ESI</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-T</span> <span class="pre">&lt;msecs&gt;</span></code>: terminate after a timeout with no received frames</p></li>
+</ul>
+</section>
+<section id="filter-syntax">
+<h2>Filter syntax<a class="headerlink" href="#filter-syntax" title="Permalink to this heading"></a></h2>
+<p>Each CAN interface can be followed by zero or more filters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;can_id&gt;:&lt;can_mask&gt;</span></code> matches frames where
+<code class="docutils literal notranslate"><span class="pre">received_can_id</span> <span class="pre">&amp;</span> <span class="pre">mask</span> <span class="pre">==</span> <span class="pre">can_id</span> <span class="pre">&amp;</span> <span class="pre">mask</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;can_id&gt;~&lt;can_mask&gt;</span></code> matches frames where
+<code class="docutils literal notranslate"><span class="pre">received_can_id</span> <span class="pre">&amp;</span> <span class="pre">mask</span> <span class="pre">!=</span> <span class="pre">can_id</span> <span class="pre">&amp;</span> <span class="pre">mask</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#&lt;error_mask&gt;</span></code> sets the error frame filter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code> or <code class="docutils literal notranslate"><span class="pre">J</span></code> joins the specified filters with logical AND semantics</p></li>
+</ul>
+<p>CAN IDs, masks, and data values are specified in hexadecimal. Without any
+explicit filter, <code class="docutils literal notranslate"><span class="pre">candump</span></code> uses the default filter <code class="docutils literal notranslate"><span class="pre">0:0</span></code> and receives all
+data frames. Use interface name <code class="docutils literal notranslate"><span class="pre">any</span></code> to receive from all CAN interfaces.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Listen on a single CAN interface:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; candump can0</span>
+</pre></div>
+</div>
+<p>Listen on multiple interfaces with filters and absolute timestamps:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; candump -t a can0,123:7FF,400:700,#000000FF can2,400~7F0 can3</span>
+</pre></div>
+</div>
+<p>Log all CAN traffic and error frames from every available CAN interface:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; candump -l any,0:0,#FFFFFFFF</span>
+</pre></div>
+</div>
+<p>Capture only error frames:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; candump -l any,0~0,#FFFFFFFF</span>
+</pre></div>
+</div>
+<p>This command is useful when debugging SocketCAN drivers, verifying traffic on a
+bus, or collecting logs for later analysis.</p>
+</section>
 </section>
 
 
