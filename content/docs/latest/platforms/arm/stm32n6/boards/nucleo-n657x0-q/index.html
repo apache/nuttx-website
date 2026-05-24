@@ -321,19 +321,17 @@ for the full product page.</p>
 <p class="admonition-title">Warning</p>
 <p>This is the initial NuttX port for the STM32N6 family. The supported
 peripheral set is intentionally minimal: USART1 (the ST-LINK VCOM
-console), GPIO, RCC, PWR, and the SysTick-based timer. Other on-chip
-peripherals and on-board features (XSPI flash boot, networking,
-user LEDs/buttons, USB, MIPI, NPU, etc) are not yet wired up. The CPU is
-currently clocked at 200 MHz from PLL1. Raising it to the standard
-600 / 800 MHz operating points is deferred to a follow-up change.</p>
+console), GPIO, RCC, PWR, the SysTick-based timer, and the three
+on-board user LEDs. Other on-chip peripherals and on-board features
+(XSPI flash boot, networking, user button, USB, MIPI, NPU, etc) are
+not yet wired up. The CPU is currently clocked at 200 MHz from PLL1.
+Raising it to the standard 600 / 800 MHz operating points is deferred
+to a follow-up change.</p>
 </div>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
-<p>The board exposes three user LEDs and a user pushbutton, but the
-initial NuttX port does not yet ship <code class="docutils literal notranslate"><span class="pre">userleds</span></code> or <code class="docutils literal notranslate"><span class="pre">buttons</span></code>
-drivers. The hardware wiring is summarised here so a follow-up
-driver can be written against an authoritative pin map:</p>
+<p>The board exposes three user LEDs and a user pushbutton:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>ID</p></th>
@@ -365,6 +363,21 @@ driver can be written against an authoritative pin map:</p>
 </tr>
 </tbody>
 </table>
+<p>The LEDs are supported via two mutually-exclusive paths:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS=y</span></code> (default when the board is selected) lets
+NuttX drive the LEDs to indicate OS state (boot stages, idle,
+interrupt activity, assertion, panic).  See
+<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32n6/nucleo-n657x0-q/include/board.h</span></code> for the
+state-to-LED mapping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS=n</span></code> plus <code class="docutils literal notranslate"><span class="pre">CONFIG_USERLED=y</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_USERLED_LOWER=y</span></code> hands the LEDs to userspace via the
+<code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code> character device.  The <code class="docutils literal notranslate"><span class="pre">nucleo-n657x0-q:leds</span></code>
+configuration bundles this with <code class="docutils literal notranslate"><span class="pre">apps/examples/leds</span></code> so the
+<code class="docutils literal notranslate"><span class="pre">leds</span></code> NSH command can cycle the LEDs as a quick smoke test.</p></li>
+</ul>
+<p>The user pushbutton is not yet wired up; a polled or EXTI-based
+driver is deferred to a follow-up change.</p>
 </section>
 <section id="pin-mapping">
 <h2>Pin Mapping<a class="headerlink" href="#pin-mapping" title="Permalink to this heading"></a></h2>
@@ -459,6 +472,14 @@ selectable via <code class="docutils literal notranslate"><span class="pre">make
 NSH prompt to exercise the core RTOS primitives (tasks, mutexes,
 semaphores, signals, message queues, POSIX timers, condition
 variables, scheduling). Used as the smoke test.</p>
+</section>
+<section id="leds">
+<h3>leds<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h3>
+<p>Builds the NSH configuration with <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> disabled and
+the userled lower-half driver and <code class="docutils literal notranslate"><span class="pre">apps/examples/leds</span></code> enabled, so
+the three on-board LEDs are exposed at <code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code> and can be
+exercised from userspace.  Run <code class="docutils literal notranslate"><span class="pre">leds</span></code> from the NSH prompt to spawn
+the daemon that cycles through the LEDs.</p>
 </section>
 </section>
 <section id="license-exceptions">
