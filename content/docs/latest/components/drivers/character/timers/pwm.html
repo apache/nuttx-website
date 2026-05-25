@@ -316,41 +316,16 @@ set through <code class="docutils literal notranslate"><span class="pre">pwm_inf
 
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_info_s</span>
 <span class="p">{</span>
-<span class="w">   </span><span class="cm">/* Frequency of the pulse train */</span>
-<span class="w">   </span><span class="kt">uint32_t</span><span class="w">           </span><span class="n">frequency</span><span class="p">;</span>
-<span class="cp">#ifdef CONFIG_PWM_MULTICHAN</span>
-<span class="w">   </span><span class="cm">/* Per-channel output state */</span>
-<span class="w">   </span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_chan_s</span><span class="w">  </span><span class="n">channels</span><span class="p">[</span><span class="n">CONFIG_PWM_NCHANNELS</span><span class="p">];</span>
-<span class="cp">#else</span>
-<span class="w">   </span><span class="cm">/* Duty of the pulse train, &quot;1&quot;-to-&quot;0&quot; duration.</span>
-<span class="cm">    * Maximum: 65535/65536 (0x0000ffff)</span>
-<span class="cm">    * Minimum:     1/65536 (0x00000001)</span>
-<span class="cm">    */</span>
-<span class="w">   </span><span class="n">ub16_t</span><span class="w">             </span><span class="n">duty</span><span class="p">;</span>
-<span class="cp">#ifdef CONFIG_PWM_DEADTIME</span>
-<span class="w">   </span><span class="cm">/* Dead time value for main output */</span>
-<span class="w">   </span><span class="n">ub16_t</span><span class="w">             </span><span class="n">dead_time_a</span><span class="p">;</span>
-<span class="w">   </span><span class="cm">/* Dead time value for complementary output */</span>
-<span class="w">   </span><span class="n">ub16_t</span><span class="w">             </span><span class="n">dead_time_b</span><span class="p">;</span>
-<span class="cp">#endif</span>
-<span class="cp">#ifdef CONFIG_PWM_PULSECOUNT</span>
-<span class="w">   </span><span class="cm">/* The number of pulse to generate.  0 means to</span>
-<span class="cm">    * generate an indefinite number of pulses</span>
-<span class="cm">    */</span>
-<span class="w">   </span><span class="kt">uint32_t</span><span class="w">           </span><span class="n">count</span><span class="p">;</span>
-<span class="cp">#endif</span>
-<span class="w">   </span><span class="cm">/* Channel polarity */</span>
-<span class="w">   </span><span class="kt">uint8_t</span><span class="w">            </span><span class="n">cpol</span><span class="p">;</span>
-<span class="w">   </span><span class="cm">/* Disabled channel polarity */</span>
-<span class="w">   </span><span class="kt">uint8_t</span><span class="w">            </span><span class="n">dcpol</span><span class="p">;</span>
-<span class="cp">#endif </span><span class="cm">/* CONFIG_PWM_MULTICHAN */</span>
-<span class="w">   </span><span class="cm">/* User provided argument to be used in the lower half */</span>
-<span class="w">   </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w">           </span><span class="o">*</span><span class="n">arg</span><span class="p">;</span>
+<span class="w">  </span><span class="cm">/* Frequency of the pulse train */</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">frequency</span><span class="p">;</span>
+<span class="w">  </span><span class="cm">/* Per-channel output state */</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_chan_s</span><span class="w"> </span><span class="n">channels</span><span class="p">[</span><span class="n">CONFIG_PWM_NCHANNELS</span><span class="p">];</span>
+<span class="w">  </span><span class="cm">/* User provided argument to be used in the lower half */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div>
 </div>
-<p>Structure <code class="docutils literal notranslate"><span class="pre">pwm_chan_s</span></code> holds the representation of one PWM channel
-if multiple channels are used ( <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_MULTICHAN</span></code> is set).</p>
+<p>Structure <code class="docutils literal notranslate"><span class="pre">pwm_chan_s</span></code> holds the representation of one PWM channel.</p>
 <dl class="c struct">
 <dt class="sig sig-object c" id="c.pwm_chan_s">
 <span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pwm_chan_s</span></span></span><a class="headerlink" href="#c.pwm_chan_s" title="Permalink to this definition"></a><br /></dt>
@@ -379,8 +354,15 @@ if multiple channels are used ( <code class="docutils literal notranslate"><span
 <span class="w">   </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">cpol</span><span class="p">;</span>
 <span class="w">   </span><span class="cm">/* Disabled channel polarity */</span>
 <span class="w">   </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">dcpol</span><span class="p">;</span>
-<span class="w">   </span><span class="cm">/* Channel number */</span>
+<span class="w">   </span><span class="cm">/* Channel number. Valid channel numbers are starting from 1.</span>
+<span class="cm">    * 0  - channel is not used, skip it in initialization</span>
+<span class="cm">    * -1 - this and all following channels are not used, skip all</span>
+<span class="cm">    */</span>
 <span class="w">   </span><span class="kt">int8_t</span><span class="w"> </span><span class="n">channel</span><span class="p">;</span>
+<span class="w"> </span><span class="cp">#ifdef CONFIG_PWM_PULSECOUNT</span>
+<span class="w">   </span><span class="cm">/* The number of pulses to generate. 0 is an infinite number of pulses */</span>
+<span class="w">   </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
+<span class="w"> </span><span class="cp">#endif</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -467,10 +449,9 @@ path <code class="docutils literal notranslate"><span class="pre">examples/pwm</
 <p>This section describes common PWM configuration in <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code>. The reader
 should refer to target documentation for target specific configuration.</p>
 <p>PWM is enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM</span></code> configuration option. Option
-<code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_MULTICHAN</span></code> selects support for multiple channels for one PWM
-instance. If multiple channels are used, configuration option
 <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_NCHANNELS</span></code> defines the maximum number of channels per instance.
-Each timer/controller may support fewer output channels than this value.</p>
+Each timer/controller may support fewer output channels than this value
+by setting the channel number of unused channels to zero.</p>
 <p>Generation of pin overwrite is enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_OVERWRITE</span></code> option.
 This supports generation of a pin overwrite with 0 or 1 without the need to
 wait for an end of cycle.</p>
