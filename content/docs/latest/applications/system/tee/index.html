@@ -215,7 +215,16 @@
 <li class="toctree-l3"><a class="reference internal" href="../system/index.html"><code class="docutils literal notranslate"><span class="pre">system</span></code> System Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../taskset/index.html"><code class="docutils literal notranslate"><span class="pre">taskset</span></code> Taskset Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../tcpdump/index.html"><code class="docutils literal notranslate"><span class="pre">tcpdump</span></code> tcpdump command</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">tee</span></code> Tee Command</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">tee</span></code> Tee Command</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#arguments">Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../telnet/index.html"><code class="docutils literal notranslate"><span class="pre">telnet</span></code> Telnet chat daemon</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../telnetd/index.html"><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet daemon application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../termcurses/index.html"><code class="docutils literal notranslate"><span class="pre">termcurses</span></code> Terminal Curses control support</a></li>
@@ -278,6 +287,82 @@
              
   <section id="tee-tee-command">
 <h1><code class="docutils literal notranslate"><span class="pre">tee</span></code> Tee Command<a class="headerlink" href="#tee-tee-command" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">tee</span></code> command copies standard input to standard output and to each
+specified file.  It is useful in scripts or command pipelines when output
+needs to be displayed and saved at the same time.</p>
+<p>When no files are specified, <code class="docutils literal notranslate"><span class="pre">tee</span></code> copies standard input to standard
+output only.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the application with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_TEE</span></code>.</p>
+<p>The task priority and stack size are controlled by:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_TEE_PRIORITY</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_TEE_STACKSIZE</span></code></p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">tee [-a] [file ...]</span>
+<span class="go">tee -h</span>
+</pre></div>
+</div>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-a</span></code></p></td>
+<td><p>Append to each output file instead of truncating it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td><p>Show command usage and exit.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="arguments">
+<h2>Arguments<a class="headerlink" href="#arguments" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">file</span></code></dt><dd><p>Optional output file.  Any number of files may be specified.  Output is
+written to standard output in addition to each named file.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Copy input to standard output and save it in <code class="docutils literal notranslate"><span class="pre">output.txt</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; echo &quot;hello&quot; | tee output.txt</span>
+<span class="go">hello</span>
+</pre></div>
+</div>
+<p>Append input to an existing log file while also displaying it:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; echo &quot;next line&quot; | tee -a log.txt</span>
+<span class="go">next line</span>
+</pre></div>
+</div>
+<p>Copy input to more than one file:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; echo &quot;sample&quot; | tee first.txt second.txt</span>
+<span class="go">sample</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<p>The command opens each named file for writing.  Without <code class="docutils literal notranslate"><span class="pre">-a</span></code>, existing
+files are truncated; with <code class="docutils literal notranslate"><span class="pre">-a</span></code>, output is appended.  Files that do not
+already exist are created with mode <code class="docutils literal notranslate"><span class="pre">0644</span></code>.</p>
+<p>If opening an output file, reading from standard input, or writing to an
+output destination fails, the command exits with failure status.</p>
+</section>
 </section>
 
 

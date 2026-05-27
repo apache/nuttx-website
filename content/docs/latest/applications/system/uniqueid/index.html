@@ -221,7 +221,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../termcurses/index.html"><code class="docutils literal notranslate"><span class="pre">termcurses</span></code> Terminal Curses control support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../trace/index.html"><code class="docutils literal notranslate"><span class="pre">trace</span></code> Trace command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ubloxmodem/index.html"><code class="docutils literal notranslate"><span class="pre">ubloxmodem</span></code> u-blox modem configuration tool</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">uniqueid</span></code> “uniqueid” command</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">uniqueid</span></code> “uniqueid” command</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../uorb/index.html"><code class="docutils literal notranslate"><span class="pre">uorb</span></code> uorb(micro object request broker)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../usbmsc/index.html"><code class="docutils literal notranslate"><span class="pre">usbmsc</span></code> USB Mass Storage Device Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../vi/index.html"><code class="docutils literal notranslate"><span class="pre">vi</span></code> VI Work-Alike Text Editor</a></li>
@@ -278,6 +286,70 @@
              
   <section id="uniqueid-uniqueid-command">
 <h1><code class="docutils literal notranslate"><span class="pre">uniqueid</span></code> “uniqueid” command<a class="headerlink" href="#uniqueid-uniqueid-command" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">uniqueid</span></code> command prints the board unique ID returned by the
+<code class="docutils literal notranslate"><span class="pre">BOARDIOC_UNIQUEID</span></code> <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> command.  It is useful for checking the
+identifier that board-specific logic exposes through <code class="docutils literal notranslate"><span class="pre">board_uniqueid()</span></code> and
+for formatting selected bytes of that identifier from NSH scripts.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the command with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_UNIQUEID</span></code>.  This option depends on
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_UNIQUEID</span></code> because the board must provide the
+<code class="docutils literal notranslate"><span class="pre">BOARDIOC_UNIQUEID</span></code> implementation.  The number of bytes printed by default
+is controlled by <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_UNIQUEID_SIZE</span></code>.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">uniqueid [-b &lt;bytes&gt;] [-d &lt;delimiter&gt;] [-f &lt;format&gt;] [-p &lt;prefix&gt;]</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">-b</span></code> is omitted, <code class="docutils literal notranslate"><span class="pre">uniqueid</span></code> prints all
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_UNIQUEID_SIZE</span></code> bytes.</p>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">&lt;bytes&gt;</span></code></dt><dd><p>Select the bytes to print.  Byte positions are one-based and may be provided
+as a comma-separated list, ranges, or a mix of both.  Ranges may be ascending
+or descending, for example <code class="docutils literal notranslate"><span class="pre">1,2,4-8</span></code> or <code class="docutils literal notranslate"><span class="pre">8-1</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">&lt;delimiter&gt;</span></code></dt><dd><p>Print <code class="docutils literal notranslate"><span class="pre">&lt;delimiter&gt;</span></code> between selected bytes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">&lt;format&gt;</span></code></dt><dd><p>Format each byte with the supplied <code class="docutils literal notranslate"><span class="pre">printf</span></code> conversion suffix.  The default
+is <code class="docutils literal notranslate"><span class="pre">02x</span></code>.  The command accepts integer and character conversions ending in
+<code class="docutils literal notranslate"><span class="pre">d</span></code>, <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">o</span></code>, <code class="docutils literal notranslate"><span class="pre">u</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">X</span></code>, or <code class="docutils literal notranslate"><span class="pre">c</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">&lt;prefix&gt;</span></code></dt><dd><p>Print <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;</span></code> before the first byte.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Print the full unique ID as hexadecimal bytes without separators:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; uniqueid</span>
+<span class="go">00112233445566778899aabbccddeeff</span>
+</pre></div>
+</div>
+<p>Print the ID as colon-separated hexadecimal bytes:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; uniqueid -d :</span>
+<span class="go">00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff</span>
+</pre></div>
+</div>
+<p>Print only the first four bytes with a prefix:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; uniqueid -b 1-4 -d : -p uid:</span>
+<span class="go">uid:00:11:22:33</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<p>The actual unique ID value and its stability across resets or boards are
+provided by the board-specific <code class="docutils literal notranslate"><span class="pre">board_uniqueid()</span></code> implementation.  If the
+board does not implement <code class="docutils literal notranslate"><span class="pre">BOARDIOC_UNIQUEID</span></code>, the command reports an error
+from <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code>.</p>
+</section>
 </section>
 
 
