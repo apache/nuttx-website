@@ -47,7 +47,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="hexed Hex editor" href="../hexed/index.html" />
-    <link rel="prev" title="gprof GNU Profile tool" href="../gprof/index.html" /> 
+    <link rel="prev" title="gprof profiling command" href="../gprof/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -176,8 +176,17 @@
 <li class="toctree-l3"><a class="reference internal" href="../flash_eraseall/index.html"><code class="docutils literal notranslate"><span class="pre">flash_eraseall</span></code> FLASH Erase-all Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gcov/index.html"><code class="docutils literal notranslate"><span class="pre">gcov</span></code> gcov tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gdbstub/index.html"><code class="docutils literal notranslate"><span class="pre">gdbstub</span></code> GDBSTUB</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../gprof/index.html"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> GNU Profile tool</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> Intel HEX to binary conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gprof/index.html"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> profiling command</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> Intel HEX to binary conversion</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#arguments">Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../hexed/index.html"><code class="docutils literal notranslate"><span class="pre">hexed</span></code> Hex editor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hostname/index.html"><code class="docutils literal notranslate"><span class="pre">hostname</span></code> “hostname” command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../i2c/index.html"><code class="docutils literal notranslate"><span class="pre">i2c</span></code> I2C Tool</a></li>
@@ -194,6 +203,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../nxcamera/index.html"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> Camera/Video Stream Test Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxcodec/index.html"><code class="docutils literal notranslate"><span class="pre">nxcodec</span></code> NxCodec video codec test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxdiag/index.html"><code class="docutils literal notranslate"><span class="pre">nxdiag</span></code> NuttX Diagnostic Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../nxinit/index.html"><code class="docutils literal notranslate"><span class="pre">nxinit</span></code> NXInit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxlooper/index.html"><code class="docutils literal notranslate"><span class="pre">nxlooper</span></code> NxLooper audio test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxmbclient/index.html"><code class="docutils literal notranslate"><span class="pre">nxmbclient</span></code> NxModbus Client Tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxplayer/index.html"><code class="docutils literal notranslate"><span class="pre">nxplayer</span></code> NxPlayer Media Player</a></li>
@@ -278,13 +288,117 @@
              
   <section id="hex2bin-intel-hex-to-binary-conversion">
 <h1><code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> Intel HEX to binary conversion<a class="headerlink" href="#hex2bin-intel-hex-to-binary-conversion" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> command reads an Intel HEX file and writes the
+corresponding binary data to an output file.  Intel HEX is a common
+text format for representing compiled program data; <code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> converts
+that format into raw binary suitable for flashing or further processing.</p>
+<p>The command operates on two file arguments: the source HEX file and the
+destination binary file.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the command with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN</span></code>.  The NSH built-in
+variant additionally requires <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_BUILTIN</span></code>.</p>
+<p>The task priority and stack size are controlled by:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_PRIORITY</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_STACKSIZE</span></code></p></li>
+</ul>
+<p>The default values for the <code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">-e</span></code>, and <code class="docutils literal notranslate"><span class="pre">-w</span></code> options can be
+pre-set through:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_BASEADDR</span></code> — default start address</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_ENDPADDR</span></code> — default end address</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_SWAP</span></code> — default byte-swap mode</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">-h</span></code> usage message can be suppressed to save flash by disabling
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_USAGE</span></code>.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">hex2bin [-s &lt;addr&gt;] [-e &lt;addr&gt;] [-w &lt;swap&gt;] &lt;hexfile&gt; &lt;binfile&gt;</span>
+<span class="go">hex2bin -h</span>
+</pre></div>
+</div>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;start</span> <span class="pre">address&gt;</span></code></p></td>
+<td><p>Set the start address of the binary output in hexadecimal.
+This value is used to calculate offsets into the output stream
+and for error checking.  Default: <code class="docutils literal notranslate"><span class="pre">0x00000000</span></code> (or the value
+of <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_BASEADDR</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">&lt;end</span> <span class="pre">address&gt;</span></code></p></td>
+<td><p>Set the maximum address (plus one) of the binary output in
+hexadecimal.  Used for range-checking only.  A value of zero
+disables range checking.  Default: <code class="docutils literal notranslate"><span class="pre">0x00000000</span></code> (or the value
+of <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_ENDPADDR</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span> <span class="pre">&lt;swap</span> <span class="pre">code&gt;</span></code></p></td>
+<td><p>Control byte ordering of the output.  <code class="docutils literal notranslate"><span class="pre">0</span></code>: no swap, <code class="docutils literal notranslate"><span class="pre">1</span></code>:
+swap bytes in 16-bit values, <code class="docutils literal notranslate"><span class="pre">2</span></code>: swap bytes in 32-bit
+values.  Default: <code class="docutils literal notranslate"><span class="pre">0</span></code> (or the value of
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_SWAP</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td><p>Show command usage and exit.  Only available when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_HEX2BIN_USAGE</span></code> is enabled.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="arguments">
+<h2>Arguments<a class="headerlink" href="#arguments" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">hexfile</span></code></dt><dd><p>The input file containing Intel HEX records.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">binfile</span></code></dt><dd><p>The output file to be created with the converted binary data.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Convert a HEX file to binary with default settings:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; hex2bin firmware.hex firmware.bin</span>
+</pre></div>
+</div>
+<p>Convert with a custom start address and 16-bit byte swap:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; hex2bin -s 0x08000000 -w 1 firmware.hex firmware.bin</span>
+</pre></div>
+</div>
+<p>Show usage information:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; hex2bin -h</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>The command requires both <code class="docutils literal notranslate"><span class="pre">&lt;hexfile&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;binfile&gt;</span></code> arguments;
+omitting either produces an error.</p></li>
+<li><p>When the <code class="docutils literal notranslate"><span class="pre">-e</span></code> end address is non-zero and the HEX data exceeds that
+range, the conversion fails with an error.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> library function (<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_HEX2BIN</span></code>) can also
+be used directly from C code without the NSH command interface.</p></li>
+</ul>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../gprof/index.html" class="btn btn-neutral float-left" title="gprof GNU Profile tool" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../gprof/index.html" class="btn btn-neutral float-left" title="gprof profiling command" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../hexed/index.html" class="btn btn-neutral float-right" title="hexed Hex editor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

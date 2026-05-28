@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gprof GNU Profile tool &mdash; NuttX latest documentation</title>
+  <title>gprof profiling command &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -176,7 +176,21 @@
 <li class="toctree-l3"><a class="reference internal" href="../flash_eraseall/index.html"><code class="docutils literal notranslate"><span class="pre">flash_eraseall</span></code> FLASH Erase-all Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gcov/index.html"><code class="docutils literal notranslate"><span class="pre">gcov</span></code> gcov tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gdbstub/index.html"><code class="docutils literal notranslate"><span class="pre">gdbstub</span></code> GDBSTUB</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> GNU Profile tool</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> profiling command</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#subcommands">Subcommands</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#start">start</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#stop">stop</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#dump-output">dump [output]</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#help">help</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#automatic-dump-on-exit">Automatic dump on exit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../hex2bin/index.html"><code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> Intel HEX to binary conversion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hexed/index.html"><code class="docutils literal notranslate"><span class="pre">hexed</span></code> Hex editor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hostname/index.html"><code class="docutils literal notranslate"><span class="pre">hostname</span></code> “hostname” command</a></li>
@@ -194,6 +208,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../nxcamera/index.html"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> Camera/Video Stream Test Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxcodec/index.html"><code class="docutils literal notranslate"><span class="pre">nxcodec</span></code> NxCodec video codec test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxdiag/index.html"><code class="docutils literal notranslate"><span class="pre">nxdiag</span></code> NuttX Diagnostic Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../nxinit/index.html"><code class="docutils literal notranslate"><span class="pre">nxinit</span></code> NXInit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxlooper/index.html"><code class="docutils literal notranslate"><span class="pre">nxlooper</span></code> NxLooper audio test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxmbclient/index.html"><code class="docutils literal notranslate"><span class="pre">nxmbclient</span></code> NxModbus Client Tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxplayer/index.html"><code class="docutils literal notranslate"><span class="pre">nxplayer</span></code> NxPlayer Media Player</a></li>
@@ -266,7 +281,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">System Libraries and NSH Add-Ons</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> GNU Profile tool</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> profiling command</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/system/gprof/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -276,10 +291,115 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="gprof-gnu-profile-tool">
-<h1><code class="docutils literal notranslate"><span class="pre">gprof</span></code> GNU Profile tool<a class="headerlink" href="#gprof-gnu-profile-tool" title="Permalink to this heading"></a></h1>
-<p>Please refer to <a class="reference internal" href="../../../debugging/gprof.html"><span class="doc">GNU gprof Profiling Tool</span></a> for comprehensive gprof documentation,
-including configuration options, usage examples, and real board examples.</p>
+  <section id="gprof-profiling-command">
+<h1><code class="docutils literal notranslate"><span class="pre">gprof</span></code> profiling command<a class="headerlink" href="#gprof-profiling-command" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">gprof</span></code> command controls the NuttX function-call profiling subsystem.
+It can start and stop sampling at runtime and dump the collected profiling
+data to a file in <code class="docutils literal notranslate"><span class="pre">gmon.out</span></code> format.  The resulting file can be processed
+with the host <code class="docutils literal notranslate"><span class="pre">gprof</span></code> tool (or compatible analysers) to produce a flat
+profile and a call-graph.</p>
+<p>Profiling relies on compiler instrumentation (<code class="docutils literal notranslate"><span class="pre">-finstrument-functions</span></code>
+or equivalent).  Each instrumented function call records the caller and
+callee addresses; the dump subcommand writes these records together with a
+histogram of sampled program-counter values.</p>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the application with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_GPROF</span></code> (tristate; can be
+built-in or an NSH command).</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_GPROF</span></code> depends on profiling being enabled.  Set
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PROFILE_NONE</span></code> to <code class="docutils literal notranslate"><span class="pre">n</span></code> (or enable <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_GPROF</span></code> for the
+simulator).</p>
+<p>Related profiling options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PROFILE</span></code> – enable the NuttX profiling framework</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PROFILE_DUMP_ON_EXIT</span></code> – automatically dump profiling data when
+the process exits</p></li>
+</ul>
+<p>Task tuning:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_GPROF_PRIORITY</span></code> – task priority (default <code class="docutils literal notranslate"><span class="pre">100</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_GPROF_STACKSIZE</span></code> – stack size (default
+<code class="docutils literal notranslate"><span class="pre">DEFAULT_TASK_STACKSIZE</span></code>)</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">gprof start</span>
+<span class="go">gprof stop</span>
+<span class="go">gprof dump [output]</span>
+<span class="go">gprof help</span>
+</pre></div>
+</div>
+</section>
+<section id="subcommands">
+<h2>Subcommands<a class="headerlink" href="#subcommands" title="Permalink to this heading"></a></h2>
+<section id="start">
+<h3>start<a class="headerlink" href="#start" title="Permalink to this heading"></a></h3>
+<p>Begin profiling.  Calls <code class="docutils literal notranslate"><span class="pre">monstartup()</span></code> with the text-section boundaries
+(<code class="docutils literal notranslate"><span class="pre">_stext</span></code> to <code class="docutils literal notranslate"><span class="pre">_etext</span></code>) and then enables sampling via <code class="docutils literal notranslate"><span class="pre">moncontrol(1)</span></code>.</p>
+</section>
+<section id="stop">
+<h3>stop<a class="headerlink" href="#stop" title="Permalink to this heading"></a></h3>
+<p>Disable sampling by calling <code class="docutils literal notranslate"><span class="pre">moncontrol(0)</span></code>.  Profiling data remains in
+memory and can be dumped later.</p>
+</section>
+<section id="dump-output">
+<h3>dump [output]<a class="headerlink" href="#dump-output" title="Permalink to this heading"></a></h3>
+<p>Write collected profiling data to a file and release the associated
+resources.  Calls <code class="docutils literal notranslate"><span class="pre">_mcleanup()</span></code> internally.</p>
+<p>By default the output file is <code class="docutils literal notranslate"><span class="pre">gmon.out</span></code> in the current working
+directory.  When <em>output</em> is specified it is used as the file-name prefix
+via the <code class="docutils literal notranslate"><span class="pre">GMON_OUT_PREFIX</span></code> environment variable; the actual file will be
+named <code class="docutils literal notranslate"><span class="pre">&lt;output&gt;.0</span></code> (the suffix is appended by the gmon writer).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dump</span></code> subcommand requires <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_ENVIRON</span></code> to be
+<code class="docutils literal notranslate"><span class="pre">n</span></code> so that <code class="docutils literal notranslate"><span class="pre">setenv()</span></code> is available.  On configurations that
+disable the environment, <code class="docutils literal notranslate"><span class="pre">dump</span></code> prints an error message and does
+not write a file.</p>
+</div>
+</section>
+<section id="help">
+<h3>help<a class="headerlink" href="#help" title="Permalink to this heading"></a></h3>
+<p>Print a short usage summary and exit.</p>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Profile a section of code interactively:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; gprof start</span>
+<span class="go">nsh&gt; &lt;run the workload to be profiled&gt;</span>
+<span class="go">nsh&gt; gprof stop</span>
+<span class="go">nsh&gt; gprof dump</span>
+</pre></div>
+</div>
+<p>Dump to a custom file name:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; gprof dump /tmp/my_profile</span>
+</pre></div>
+</div>
+<p>The resulting <code class="docutils literal notranslate"><span class="pre">/tmp/my_profile.0</span></code> can be copied to the host and analysed:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>arm-none-eabi-objcopy<span class="w"> </span>--update-section<span class="w"> </span>.gmon/data<span class="o">=</span>my_profile.0<span class="w"> </span>nuttx
+<span class="gp">$ </span>arm-none-eabi-gprof<span class="w"> </span>nuttx
+</pre></div>
+</div>
+</section>
+<section id="automatic-dump-on-exit">
+<h2>Automatic dump on exit<a class="headerlink" href="#automatic-dump-on-exit" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_PROFILE_DUMP_ON_EXIT</span></code> is enabled, profiling data is written
+automatically when the profiled process exits.  In that case there is no
+need to call <code class="docutils literal notranslate"><span class="pre">gprof</span> <span class="pre">dump</span></code> explicitly.</p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Profiling data structures are allocated by <code class="docutils literal notranslate"><span class="pre">monstartup()</span></code>.  Starting
+profiling a second time without dumping first will silently discard the
+previous data.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">gprof</span></code> command itself must also be built with profiling
+instrumentation if you want to profile it; normally it is only used as a
+controller for profiling other code.</p></li>
+</ul>
+</section>
 </section>
 
 

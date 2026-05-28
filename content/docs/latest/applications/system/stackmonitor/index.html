@@ -176,7 +176,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../flash_eraseall/index.html"><code class="docutils literal notranslate"><span class="pre">flash_eraseall</span></code> FLASH Erase-all Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gcov/index.html"><code class="docutils literal notranslate"><span class="pre">gcov</span></code> gcov tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gdbstub/index.html"><code class="docutils literal notranslate"><span class="pre">gdbstub</span></code> GDBSTUB</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../gprof/index.html"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> GNU Profile tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gprof/index.html"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> profiling command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hex2bin/index.html"><code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> Intel HEX to binary conversion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hexed/index.html"><code class="docutils literal notranslate"><span class="pre">hexed</span></code> Hex editor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hostname/index.html"><code class="docutils literal notranslate"><span class="pre">hostname</span></code> “hostname” command</a></li>
@@ -194,6 +194,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../nxcamera/index.html"><code class="docutils literal notranslate"><span class="pre">nxcamera</span></code> Camera/Video Stream Test Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxcodec/index.html"><code class="docutils literal notranslate"><span class="pre">nxcodec</span></code> NxCodec video codec test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxdiag/index.html"><code class="docutils literal notranslate"><span class="pre">nxdiag</span></code> NuttX Diagnostic Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../nxinit/index.html"><code class="docutils literal notranslate"><span class="pre">nxinit</span></code> NXInit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxlooper/index.html"><code class="docutils literal notranslate"><span class="pre">nxlooper</span></code> NxLooper audio test application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxmbclient/index.html"><code class="docutils literal notranslate"><span class="pre">nxmbclient</span></code> NxModbus Client Tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxplayer/index.html"><code class="docutils literal notranslate"><span class="pre">nxplayer</span></code> NxPlayer Media Player</a></li>
@@ -210,7 +211,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../setlogmask/index.html"><code class="docutils literal notranslate"><span class="pre">setlogmask</span></code> “setlogmask” command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../smf/index.html"><code class="docutils literal notranslate"><span class="pre">smf</span></code> State Machine Framework</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../spi/index.html"><code class="docutils literal notranslate"><span class="pre">spi</span></code> SPI Tool</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">stackmonitor</span></code> Stack Monitor</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">stackmonitor</span></code> Stack Monitor</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../syslogd/index.html"><code class="docutils literal notranslate"><span class="pre">syslogd</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../system/index.html"><code class="docutils literal notranslate"><span class="pre">system</span></code> System Command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../taskset/index.html"><code class="docutils literal notranslate"><span class="pre">taskset</span></code> Taskset Command</a></li>
@@ -278,6 +287,96 @@
              
   <section id="stackmonitor-stack-monitor">
 <h1><code class="docutils literal notranslate"><span class="pre">stackmonitor</span></code> Stack Monitor<a class="headerlink" href="#stackmonitor-stack-monitor" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">stackmonitor</span></code> command starts a background daemon that periodically
+monitors stack usage for all tasks and threads in the system. It reads the
+procfs filesystem to collect stack size and usage information, helping
+developers identify potential stack overflow issues and optimize memory
+allocation.</p>
+<p>The daemon runs as a separate task and outputs a table showing the PID,
+stack size, stack used, and thread name (if available) for each task.
+The monitoring continues until explicitly stopped with the
+<code class="docutils literal notranslate"><span class="pre">stackmonitor_stop</span></code> command.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the command with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_STACKMONITOR</span></code>. This option depends
+on:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS</span></code> - procfs filesystem support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STACK_COLORATION</span></code> - stack coloration feature for usage tracking</p></li>
+</ul>
+<p>The following configuration options are available:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_STACKMONITOR_STACKSIZE</span></code></dt><dd><p>Stack size for the monitor daemon task. Default: 2048 bytes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_STACKMONITOR_PRIORITY</span></code></dt><dd><p>Priority for the monitor daemon task. Default: 50.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_STACKMONITOR_INTERVAL</span></code></dt><dd><p>Monitoring interval in seconds. Default: 2 seconds.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_STACKMONITOR_MOUNTPOINT</span></code></dt><dd><p>procfs mount point path. Default: <code class="docutils literal notranslate"><span class="pre">/proc</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">stackmonitor</span>
+</pre></div>
+</div>
+<p>Start the stack monitoring daemon. If the daemon is already running, display
+its current status.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">stackmonitor_stop</span>
+</pre></div>
+</div>
+<p>Stop the running stack monitoring daemon.</p>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">stackmonitor</span></code> and <code class="docutils literal notranslate"><span class="pre">stackmonitor_stop</span></code> commands accept no options.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Start the stack monitor and observe the output:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; stackmonitor</span>
+<span class="go">Stack Monitor: Started: 3</span>
+</pre></div>
+</div>
+<p>The daemon will periodically output stack usage information:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">PID   SIZE   USED   THREAD NAME</span>
+<span class="go">0     2048   1024   Idle_Task</span>
+<span class="go">1     2048   512    hpwork</span>
+<span class="go">2     2048   768    nsh_main</span>
+<span class="go">3     2048   256    Stack Monitor</span>
+</pre></div>
+</div>
+<p>Check the daemon status:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; stackmonitor</span>
+<span class="go">Stack Monitor: Running: 3</span>
+</pre></div>
+</div>
+<p>Stop the daemon:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; stackmonitor_stop</span>
+<span class="go">Stack Monitor: Stopping: 3</span>
+<span class="go">Stack Monitor: Stopped: 3</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>The daemon requires the procfs filesystem to be mounted at the configured
+mount point (default <code class="docutils literal notranslate"><span class="pre">/proc</span></code>).</p></li>
+<li><p>Stack usage tracking depends on the <code class="docutils literal notranslate"><span class="pre">CONFIG_STACK_COLORATION</span></code> feature,
+which fills unused stack space with a known pattern to detect usage.</p></li>
+<li><p>The daemon will automatically stop after 100 consecutive errors reading
+the procfs directory.</p></li>
+<li><p>The monitoring interval can be adjusted at compile time using
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_STACKMONITOR_INTERVAL</span></code>.</p></li>
+<li><p>The output format includes the thread name only when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_TASK_NAME_SIZE</span></code> is greater than 0.</p></li>
+</ul>
+</section>
 </section>
 
 
