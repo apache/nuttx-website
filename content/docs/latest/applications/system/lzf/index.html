@@ -185,7 +185,21 @@
 <li class="toctree-l3"><a class="reference internal" href="../iptables/index.html"><code class="docutils literal notranslate"><span class="pre">iptables</span></code> “iptables” command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../libuv/index.html"><code class="docutils literal notranslate"><span class="pre">libuv</span></code> libuv asynchronous I/O Library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../lm75/index.html"><code class="docutils literal notranslate"><span class="pre">lm75</span></code> LM75 Temperature</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">lzf</span></code> LZF compression tool</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">lzf</span></code> LZF compression tool</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#file-format">File format</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#environment">Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../mdio/index.html"><code class="docutils literal notranslate"><span class="pre">mdio</span></code> PHY MDIO tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../microros/index.html">micro-ROS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../netdb/index.html"><code class="docutils literal notranslate"><span class="pre">netdb</span></code> netdb interface</a></li>
@@ -201,7 +215,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../nxrecorder/index.html"><code class="docutils literal notranslate"><span class="pre">nxrecorder</span></code> NxRecorder pcm raw data Recorder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ofloader/index.html"><code class="docutils literal notranslate"><span class="pre">ofloader</span></code> Open flash loader</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ping/index.html"><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP “ping” command</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../ping6/index.html"><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 “ping6” command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ping6/index.html"><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 ECHO request tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../popen/index.html"><code class="docutils literal notranslate"><span class="pre">popen</span></code> popen()/pclose() Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../psmq/index.html"><code class="docutils literal notranslate"><span class="pre">psmq</span></code> Publish Subscribe Message Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ptpd/index.html"><code class="docutils literal notranslate"><span class="pre">ptpd</span></code> PTP daemon commands</a></li>
@@ -279,6 +293,158 @@
              
   <section id="lzf-lzf-compression-tool">
 <h1><code class="docutils literal notranslate"><span class="pre">lzf</span></code> LZF compression tool<a class="headerlink" href="#lzf-lzf-compression-tool" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">lzf</span></code> command compresses and decompresses files using the LZF
+algorithm by Marc Alexander Lehmann.  LZF is a very lightweight
+compression format optimized for speed; it trades a modest compression
+ratio for fast decompression that is nearly as fast as a memory copy.</p>
+<p>The tool reads input files (or <code class="docutils literal notranslate"><span class="pre">stdin</span></code> when no files are given),
+writes the result to a derived output file (or <code class="docutils literal notranslate"><span class="pre">stdout</span></code>), and
+optionally removes the original on success.</p>
+<section id="file-format">
+<h3>File format<a class="headerlink" href="#file-format" title="Permalink to this heading"></a></h3>
+<p>An LZF stream consists of zero or more blocks.  Each block starts
+with the two-byte magic <code class="docutils literal notranslate"><span class="pre">ZV</span></code> followed by a type byte:</p>
+<ul class="simple">
+<li><p><strong>Type 0</strong> (5-byte header): uncompressed literal — 2-byte length,
+then raw data.</p></li>
+<li><p><strong>Type 1</strong> (7-byte header): compressed — 2-byte compressed length,
+2-byte uncompressed length, then LZF-compressed data.</p></li>
+</ul>
+<p>A <code class="docutils literal notranslate"><span class="pre">\x00</span></code> byte signals end-of-stream.</p>
+</section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the command with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_LZF</span></code> (tristate).  This
+option depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_LZF</span></code>, which provides the core
+compression and decompression library.</p>
+<p>Additional configuration symbols:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_LZF_BLOG</span></code> — Log2 of the block size used for
+compression and decompression (default <code class="docutils literal notranslate"><span class="pre">10</span></code>, range 9–12).  The
+actual block size is <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">&lt;&lt;</span> <span class="pre">BLOG)</span> <span class="pre">-</span> <span class="pre">1</span></code> bytes.  Larger values may
+yield slightly better compression at the cost of more static memory
+(approximately <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">&lt;&lt;</span> <span class="pre">BLOG)</span></code> bytes of <code class="docutils literal notranslate"><span class="pre">.bss</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_LZF_PROGNAME</span></code> — Program name registered with NSH
+(default <code class="docutils literal notranslate"><span class="pre">&quot;lzf&quot;</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_LZF_PRIORITY</span></code> — Task priority (default <code class="docutils literal notranslate"><span class="pre">100</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_LZF_STACKSIZE</span></code> — Task stack size (default
+<code class="docutils literal notranslate"><span class="pre">DEFAULT_TASK_STACKSIZE</span></code>).</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">lzf [-cdfvh] [-b &lt;size&gt;] [file ...]</span>
+<span class="go">lzf -h</span>
+</pre></div>
+</div>
+<p>When no <code class="docutils literal notranslate"><span class="pre">file</span></code> arguments are given, <code class="docutils literal notranslate"><span class="pre">lzf</span></code> reads from <code class="docutils literal notranslate"><span class="pre">stdin</span></code>
+and writes to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>.  The <code class="docutils literal notranslate"><span class="pre">-f</span></code> flag is required in this mode
+if the data direction would otherwise be a terminal (to prevent
+accidental interactive use).</p>
+<p>When files are given, the output file name is derived automatically:</p>
+<ul class="simple">
+<li><p><strong>Compress</strong> (default or <code class="docutils literal notranslate"><span class="pre">-c</span></code>): the first <code class="docutils literal notranslate"><span class="pre">.</span></code> in the filename is
+replaced with <code class="docutils literal notranslate"><span class="pre">_</span></code>, and a <code class="docutils literal notranslate"><span class="pre">.lzf</span></code> suffix is appended.  For
+example, <code class="docutils literal notranslate"><span class="pre">data.bin</span></code> becomes <code class="docutils literal notranslate"><span class="pre">data_bin.lzf</span></code>.</p></li>
+<li><p><strong>Decompress</strong> (<code class="docutils literal notranslate"><span class="pre">-d</span></code>): the <code class="docutils literal notranslate"><span class="pre">.lzf</span></code> suffix is stripped and the
+first <code class="docutils literal notranslate"><span class="pre">_</span></code> is replaced back with <code class="docutils literal notranslate"><span class="pre">.</span></code>.  For example,
+<code class="docutils literal notranslate"><span class="pre">data_bin.lzf</span></code> becomes <code class="docutils literal notranslate"><span class="pre">data.bin</span></code>.</p></li>
+</ul>
+<p>On success the original file is removed (replaced).</p>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<td><p>Compress (default mode).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
+<td><p>Decompress.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span></code></p></td>
+<td><p>Force overwrite of the output file.  Also suppresses the
+terminal-safety check when reading from <code class="docutils literal notranslate"><span class="pre">stdin</span></code> or writing
+to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td><p>Show usage information and exit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-v</span></code></p></td>
+<td><p>Verbose mode.  Prints the compression ratio and the output
+filename for each processed file on <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">&lt;size&gt;</span></code></p></td>
+<td><p>Set the block size in bytes.  Must be between 1 and
+<code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">&lt;&lt;</span> <span class="pre">CONFIG_SYSTEM_LZF_BLOG)</span> <span class="pre">-</span> <span class="pre">1</span></code>.  Values outside this
+range are silently clamped to the compiled-in default.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="environment">
+<h3>Environment<a class="headerlink" href="#environment" title="Permalink to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_ENVIRON</span></code> is not set, the <code class="docutils literal notranslate"><span class="pre">LZF_BLOCKSIZE</span></code>
+environment variable can override the default block size.  The
+command-line <code class="docutils literal notranslate"><span class="pre">-b</span></code> option takes precedence over the environment
+variable.</p>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Compress a file (replaces <code class="docutils literal notranslate"><span class="pre">sensor.log</span></code> with
+<code class="docutils literal notranslate"><span class="pre">sensor_log.lzf</span></code>):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; lzf sensor.log</span>
+</pre></div>
+</div>
+<p>Decompress a file (replaces <code class="docutils literal notranslate"><span class="pre">sensor_log.lzf</span></code> with
+<code class="docutils literal notranslate"><span class="pre">sensor.log</span></code>):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; lzf -d sensor_log.lzf</span>
+</pre></div>
+</div>
+<p>Compress with verbose output showing the ratio:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; lzf -v largefile.dat</span>
+</pre></div>
+</div>
+<p>Compress from <code class="docutils literal notranslate"><span class="pre">stdin</span></code> to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> (pipeline):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; cat data.bin | lzf -f &gt; data.bin.lzf</span>
+</pre></div>
+</div>
+<p>Decompress from <code class="docutils literal notranslate"><span class="pre">stdin</span></code> to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; cat data.bin.lzf | lzf -df &gt; data.bin</span>
+</pre></div>
+</div>
+<p>Set a smaller block size for low-memory systems:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; lzf -b 512 sensor.log</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>The default mode is compress; <code class="docutils literal notranslate"><span class="pre">-c</span></code> is optional but may be used for
+clarity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code> and <code class="docutils literal notranslate"><span class="pre">-d</span></code> are mutually exclusive.  If both are specified the
+last one on the command line wins.</p></li>
+<li><p>When run in FLAT or PROTECTED build modes (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_LZF</span></code> set
+to <code class="docutils literal notranslate"><span class="pre">y</span></code>), the tool serializes concurrent invocations via a mutex
+because the compression hash table and I/O buffers are statically
+allocated.  In KERNEL build mode (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_LZF</span></code> set to <code class="docutils literal notranslate"><span class="pre">m</span></code>)
+each instance has its own address space and no serialization is
+needed.</p></li>
+<li><p>The LZF library is provided under a BSD-2-Clause license.</p></li>
+<li><p>The output file is created with mode <code class="docutils literal notranslate"><span class="pre">0600</span></code> (owner read/write only).</p></li>
+<li><p>If the output file already exists and <code class="docutils literal notranslate"><span class="pre">-f</span></code> is not given, the
+command fails with an error.</p></li>
+</ul>
+</section>
 </section>
 
 

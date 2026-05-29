@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ping6 ICMPv6 “ping6” command &mdash; NuttX latest documentation</title>
+  <title>ping6 ICMPv6 ECHO request tool &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -201,7 +201,16 @@
 <li class="toctree-l3"><a class="reference internal" href="../nxrecorder/index.html"><code class="docutils literal notranslate"><span class="pre">nxrecorder</span></code> NxRecorder pcm raw data Recorder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ofloader/index.html"><code class="docutils literal notranslate"><span class="pre">ofloader</span></code> Open flash loader</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ping/index.html"><code class="docutils literal notranslate"><span class="pre">ping</span></code> ICMP “ping” command</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 “ping6” command</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 ECHO request tool</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output-format">Output format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../popen/index.html"><code class="docutils literal notranslate"><span class="pre">popen</span></code> popen()/pclose() Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../psmq/index.html"><code class="docutils literal notranslate"><span class="pre">psmq</span></code> Publish Subscribe Message Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ptpd/index.html"><code class="docutils literal notranslate"><span class="pre">ptpd</span></code> PTP daemon commands</a></li>
@@ -267,7 +276,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">System Libraries and NSH Add-Ons</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 “ping6” command</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 ECHO request tool</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/system/ping6/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -277,8 +286,140 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="ping6-icmpv6-ping6-command">
-<h1><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 “ping6” command<a class="headerlink" href="#ping6-icmpv6-ping6-command" title="Permalink to this heading"></a></h1>
+  <section id="ping6-icmpv6-echo-request-tool">
+<h1><code class="docutils literal notranslate"><span class="pre">ping6</span></code> ICMPv6 ECHO request tool<a class="headerlink" href="#ping6-icmpv6-echo-request-tool" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ping6</span></code> command sends ICMPv6 ECHO_REQUEST packets to a remote
+IPv6 host and reports the replies.  It is the IPv6 counterpart of the
+IPv4 <code class="docutils literal notranslate"><span class="pre">ping</span></code> command and is used to verify IPv6 connectivity and
+measure round-trip times.</p>
+<p>The command takes a single required argument: either a numeric IPv6
+address or, when DNS resolution is enabled, a hostname.  It sends a
+configurable number of packets at a fixed interval and prints a
+per-reply summary followed by aggregate statistics (packet loss and
+round-trip time min/avg/max/mdev).</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the command with <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_PING6</span></code> (tristate).  This
+option selects <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_PING6</span></code>, which provides the
+underlying ICMPv6 ping library.</p>
+<p>Additional configuration symbols:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_PING6_PROGNAME</span></code> — Program name registered with
+NSH (default <code class="docutils literal notranslate"><span class="pre">&quot;ping6&quot;</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_PING6_PRIORITY</span></code> — Task priority (default
+<code class="docutils literal notranslate"><span class="pre">100</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_PING6_STACKSIZE</span></code> — Task stack size (default
+<code class="docutils literal notranslate"><span class="pre">DEFAULT_TASK_STACKSIZE</span></code>).</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">-I</span></code> option for binding to a specific network interface requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE</span></code>.</p>
+<p>When both <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT</span></code> are
+enabled, the <code class="docutils literal notranslate"><span class="pre">&lt;host&gt;</span></code> argument is resolved via DNS; otherwise only
+numeric IPv6 addresses are accepted.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ping6 [-c &lt;count&gt;] [-i &lt;interval&gt;] [-W &lt;timeout&gt;] [-s &lt;size&gt;]</span>
+<span class="go">      [-I &lt;interface&gt;] &lt;host&gt;</span>
+<span class="go">ping6 -h</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;host&gt;</span></code> argument is required.  It must be an IPv6 address
+(e.g. <code class="docutils literal notranslate"><span class="pre">fe80::1</span></code>) or, when DNS is available, a hostname.</p>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">&lt;count&gt;</span></code></p></td>
+<td><p>Number of ECHO requests to send.  Range: 1–65535.
+Default: <code class="docutils literal notranslate"><span class="pre">10</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">&lt;interval&gt;</span></code></p></td>
+<td><p>Delay between successive requests in milliseconds.  Range:
+1–65535.  Default: <code class="docutils literal notranslate"><span class="pre">1000</span></code> (1 second).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-W</span> <span class="pre">&lt;timeout&gt;</span></code></p></td>
+<td><p>Time to wait for a reply before reporting a timeout, in
+milliseconds.  Range: 1–65535.  Default: <code class="docutils literal notranslate"><span class="pre">1000</span></code> (1 second).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;size&gt;</span></code></p></td>
+<td><p>Number of data bytes in each ECHO request packet.  Range:
+1–65535.  Default: <code class="docutils literal notranslate"><span class="pre">56</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-I</span> <span class="pre">&lt;interface&gt;</span></code></p></td>
+<td><p>Bind the ping traffic to the specified network device (e.g.
+<code class="docutils literal notranslate"><span class="pre">eth0</span></code>).  Only available when <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE</span></code> is
+enabled.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td><p>Show usage information and exit.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Ping an IPv6 address with default settings (10 packets, 1-second
+interval):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping6 fe80::1</span>
+</pre></div>
+</div>
+<p>Send 5 pings with a 500 ms interval:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping6 -c 5 -i 500 fe80::1</span>
+</pre></div>
+</div>
+<p>Ping with a larger packet size and 2-second timeout:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping6 -s 1024 -W 2000 fe80::1</span>
+</pre></div>
+</div>
+<p>Bind ping traffic to a specific interface:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping6 -I eth0 fe80::1</span>
+</pre></div>
+</div>
+<p>Ping a hostname (requires DNS):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping6 myhost.example.com</span>
+</pre></div>
+</div>
+<p>Show usage:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping6 -h</span>
+</pre></div>
+</div>
+</section>
+<section id="output-format">
+<h2>Output format<a class="headerlink" href="#output-format" title="Permalink to this heading"></a></h2>
+<p>Each successful reply prints a line showing the reply size, source
+address, ICMP sequence number, and round-trip time:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>64 bytes from fe80::1 icmp_seq=0 time=1.234 ms
+</pre></div>
+</div>
+<p>After all packets are sent, the command prints aggregate statistics:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>10 packets transmitted, 10 received, 0% packet loss, time 9001 ms
+rtt min/avg/max/mdev = 1.100/1.234/1.500/0.123 ms
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>The interval and timeout values are specified in milliseconds, not
+seconds (unlike some other <code class="docutils literal notranslate"><span class="pre">ping</span></code> implementations).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">-I</span></code> option is silently ignored if <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE</span></code>
+is not enabled; an error message is printed in that case.</p></li>
+<li><p>The command uses the <code class="docutils literal notranslate"><span class="pre">icmp6_ping()</span></code> library function from
+<code class="docutils literal notranslate"><span class="pre">netutils/icmpv6_ping.h</span></code>.</p></li>
+<li><p>Round-trip times are measured in microseconds internally and
+displayed with millisecond precision.</p></li>
+</ul>
+</section>
 </section>
 
 
