@@ -165,6 +165,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#rfc-1122">RFC 1122</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#tcpblaster">TCPBlaster</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#what-about-receive-performance">What about Receive Performance?</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#performance-tips">Performance tips</a></li>
 </ul>
 </li>
 </ul>
@@ -393,6 +394,26 @@ system, that remote peer can easily overrun the
 embedded system due to the embedded system’s limited
 buffering space, its much lower processing capability,
 and its slower storage peripherals.</p>
+</section>
+<section id="performance-tips">
+<h3>Performance tips<a class="headerlink" href="#performance-tips" title="Permalink to this heading"></a></h3>
+<p>If you are chasing throughput on ARM boards (for example STM32H5),
+double-check which libc string implementation is active. In some
+configurations, <code class="docutils literal notranslate"><span class="pre">memcpy()</span></code>/<code class="docutils literal notranslate"><span class="pre">memset()</span></code> may fall back to the generic
+implementation, while the architecture-optimized implementation is gated by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV8M_STRING_FUNCTION</span></code> or similar.</p>
+<p>Practical tuning checklist:</p>
+<ul class="simple">
+<li><p>Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV8M_STRING_FUNCTION</span></code> or similar when using an ARM target
+and GNU toolchain.</p></li>
+<li><p>Rebuild and re-run throughput tests (for example with <code class="docutils literal notranslate"><span class="pre">iperf</span></code>) for both
+TCP and UDP after changing this option.</p></li>
+<li><p>Validate CPU headroom during the test (for example with <code class="docutils literal notranslate"><span class="pre">top</span></code> or idle
+metrics), not only link throughput.</p></li>
+</ul>
+<p>In one STM32H5 test setup, enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV8M_STRING_FUNCTION</span></code> improved
+performance from roughly ~50 Mbit/s to about 95 Mbit/s (UDP) and 84 Mbit/s
+(TCP), with significant idle time still available during <code class="docutils literal notranslate"><span class="pre">iperf</span></code>.</p>
 </section>
 </section>
 </section>
