@@ -352,24 +352,47 @@ chord_notes as members. The meaning of the value of each member depends on the r
 <p>On error, a nevative value is returned.
 On success, following values can be returned. And those values are defined in <code class="docutils literal notranslate"><span class="pre">mml_parser.h</span></code>.</p>
 <table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return values</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
 <tbody>
-<tr class="row-odd"><td><p>Return values</p></td>
-<td><p>Description</p></td>
+<tr class="row-even"><td><p>MML_TYPE_EOF</p></td>
+<td><p>This means that it have reached the end of the string. The content of the <code class="docutils literal notranslate"><span class="pre">result</span></code> has no meaning.</p></td>
+</tr>
+<tr class="row-odd"><td><p>MML_TYPE_NOTE</p></td>
+<td><p>This indicates that some note has been parsed. The scale of the note is stored in <code class="docutils literal notranslate"><span class="pre">note_idx[0]</span></code>. The length of the note is given by the <code class="docutils literal notranslate"><span class="pre">length</span></code> member as the number of samples. In the case of tuplet, this return value is returned at the time each note is parsed. In other words, a tuplet is parsed as a single note.</p></td>
+</tr>
+<tr class="row-even"><td><p>MML_TYPE_REST</p></td>
+<td><p>This indicates the <code class="docutils literal notranslate"><span class="pre">rest</span></code> has been parsed. The length of it is given by the <code class="docutils literal notranslate"><span class="pre">length</span></code> member as the number of samples.</p></td>
+</tr>
+<tr class="row-odd"><td><p>MML_TYPE_TEMPO</p></td>
+<td><p>This indicates <code class="docutils literal notranslate"><span class="pre">&quot;T&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the tempo. But tempo value is kept in mml instance for calculating sample number for each notes. So basically, no need to handle this return value in your code.</p></td>
+</tr>
+<tr class="row-even"><td><p>MML_TYPE_LENGTH</p></td>
+<td><p>This indicates <code class="docutils literal notranslate"><span class="pre">&quot;L&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the parsed length. But current length value is kept in mml instance. So basically, no need to handle this return value in your code. |</p></td>
+</tr>
+<tr class="row-odd"><td><p>MML_TYPE_OCTAVE</p></td>
+<td><p>This indicates <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;&gt;&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the octave. But the octave is encoded in <code class="docutils literal notranslate"><span class="pre">note_idx</span></code> in <code class="docutils literal notranslate"><span class="pre">MML_TYPE_NOTE</span></code> case. So basically, no need to handle this return value in your code.</p></td>
+</tr>
+<tr class="row-even"><td><p>MML_TYPE_TUPLETSTART</p></td>
+<td><p>This indicates tuplet is just started. And total length of the tuplet is stored in <code class="docutils literal notranslate"><span class="pre">length</span></code> of <code class="docutils literal notranslate"><span class="pre">result</span></code> members.</p></td>
+</tr>
+<tr class="row-odd"><td><p>MML_TYPE_TUPLETDONE</p></td>
+<td><p>This indicates the tuplet is just finished.</p></td>
+</tr>
+<tr class="row-even"><td><p>MML_TYPE_VOLUME</p></td>
+<td><p>This indicates <code class="docutils literal notranslate"><span class="pre">&quot;V&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the parsed volume.</p></td>
+</tr>
+<tr class="row-odd"><td><p>MML_TYPE_TONE</p></td>
+<td><p>T.B.D.</p></td>
+</tr>
+<tr class="row-even"><td><p>MML_TYPE_CHORD</p></td>
+<td><p>This indicates a chord is parsed. Chord has some notes, and how many notes is stored in <code class="docutils literal notranslate"><span class="pre">chord_notes</span></code> member of <code class="docutils literal notranslate"><span class="pre">result</span></code>. And each notes are stored in <code class="docutils literal notranslate"><span class="pre">note_idx[]</span></code>. Length of the chord is stored in <code class="docutils literal notranslate"><span class="pre">length</span></code> member of <code class="docutils literal notranslate"><span class="pre">result</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
-<p>MML_TYPE_EOF          This means that it have reached the end of the string. The content of the <code class="docutils literal notranslate"><span class="pre">result</span></code> has no meaning.
-MML_TYPE_NOTE         This indicates that some note has been parsed. The scale of the note is stored in <code class="docutils literal notranslate"><span class="pre">note_idx[0]</span></code>. The length of the note is given by the <code class="docutils literal notranslate"><span class="pre">length</span></code> member as the number of samples. In the case of tuplet, this return value is returned at the time each note is parsed. In other words, a tuplet is parsed as a single note.
-MML_TYPE_REST         This indicates the <code class="docutils literal notranslate"><span class="pre">rest</span></code> has been parsed. The length of it is given by the <code class="docutils literal notranslate"><span class="pre">length</span></code> member as the number of samples.
-MML_TYPE_TEMPO        This indicates <code class="docutils literal notranslate"><span class="pre">&quot;T&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the tempo. But tempo value is kept in mml instance for calculating sample number for each notes. So basically, no need to handle this return value in your code.
-MML_TYPE_LENGTH       This indicates <code class="docutils literal notranslate"><span class="pre">&quot;L&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the parsed length. But current length value is kept in mml instance. So basically, no need to handle this return value in your code. |
-MML_TYPE_OCTAVE       This indicates <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;&gt;&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the octave. But the octave is encoded in <code class="docutils literal notranslate"><span class="pre">note_idx</span></code> in <code class="docutils literal notranslate"><span class="pre">MML_TYPE_NOTE</span></code> case. So basically, no need to handle this return value in your code.
-MML_TYPE_TUPLETSTART  This indicates tuplet is just started. And total length of the tuplet is stored in <code class="docutils literal notranslate"><span class="pre">length</span></code> of <code class="docutils literal notranslate"><span class="pre">result</span></code> members.
-MML_TYPE_TUPLETDONE   This indicates the tuplet is just finished.
-MML_TYPE_VOLUME       This indicates <code class="docutils literal notranslate"><span class="pre">&quot;V&quot;</span></code> is parsed. <code class="docutils literal notranslate"><span class="pre">length</span></code> member in <code class="docutils literal notranslate"><span class="pre">result</span></code> has the value of the parsed volume.
-MML_TYPE_TONE         T.B.D.
-MML_TYPE_CHORD        This indicates a chord is parsed. Chord has some notes, and how many notes is stored in <code class="docutils literal notranslate"><span class="pre">chord_notes</span></code> member of <code class="docutils literal notranslate"><span class="pre">result</span></code>. And each notes are stored in <code class="docutils literal notranslate"><span class="pre">note_idx[]</span></code>. Length of the chord is stored in <code class="docutils literal notranslate"><span class="pre">length</span></code> member of <code class="docutils literal notranslate"><span class="pre">result</span></code>.
-===================== ===========================================</p>
 <p>The value of <code class="docutils literal notranslate"><span class="pre">note_idx[]</span></code> is encoding octave, like</p>
 <table class="docutils align-default">
 <thead>
@@ -497,7 +520,7 @@ Please write unit tests for any new functions you add - it’s fun!</p>
 </section>
 <section id="author">
 <h2>Author<a class="headerlink" href="#author" title="Permalink to this heading"></a></h2>
-<p>mml_parser was written by Takayoshi Koizumi &amp;lt;takayoshi.koizumi&#64;gmail.com&amp;gt;</p>
+<p>mml_parser was written by Takayoshi Koizumi &lt;<a class="reference external" href="mailto:takayoshi&#46;koizumi&#37;&#52;&#48;gmail&#46;com">takayoshi<span>&#46;</span>koizumi<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</p>
 </section>
 </section>
 
