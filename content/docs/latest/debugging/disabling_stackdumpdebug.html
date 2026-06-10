@@ -153,7 +153,14 @@
 <li class="toctree-l2"><a class="reference internal" href="stackcheck.html">Stack Overflow Check</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stackrecord.html">Run time stack statistics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stackusage.html">Static Stack Usage Analysis</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Disabling the Stack Dump During Debugging</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Disabling the Stack Dump During Debugging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reducing-the-crash-dump-verbosity">Reducing the Crash Dump Verbosity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#config-sched-dump-tasks">CONFIG_SCHED_DUMP_TASKS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#config-sched-dump-stack">CONFIG_SCHED_DUMP_STACK</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="debuggingflash_nuttxonarm.html">Debugging / flashing NuttX on ARM with hardware debugger (JTAG/SWD)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cortexmhardfaults.html">Analyzing Cortex-M Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mte.html">ATM64 MTE extension</a></li>
@@ -206,6 +213,34 @@ the board configuration:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_ARCH_STACKDUMP</span><span class="o">=</span><span class="n">n</span>
 </pre></div>
 </div>
+<section id="reducing-the-crash-dump-verbosity">
+<h2>Reducing the Crash Dump Verbosity<a class="headerlink" href="#reducing-the-crash-dump-verbosity" title="Permalink to this heading"></a></h2>
+<p>In addition to <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_STACKDUMP</span></code>, which controls whether the
+architecture-specific stack dump is produced at all, two finer-grained
+options are available to tune how verbose the assertion / crash output
+from <code class="docutils literal notranslate"><span class="pre">sched/misc/assert.c</span></code> is. Disabling them is useful to reduce
+flash usage on small targets and to keep the crash log short.</p>
+<p>Both options default to <code class="docutils literal notranslate"><span class="pre">y</span></code> unless <code class="docutils literal notranslate"><span class="pre">CONFIG_DEFAULT_SMALL</span></code> is
+selected, in which case they default to <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+<section id="config-sched-dump-tasks">
+<h3>CONFIG_SCHED_DUMP_TASKS<a class="headerlink" href="#config-sched-dump-tasks" title="Permalink to this heading"></a></h3>
+<p>Controls whether the per-task information table (task list with PID,
+priority, scheduling policy, stack usage, state, etc.) is printed as
+part of the crash dump.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_SCHED_DUMP_TASKS</span><span class="o">=</span><span class="n">n</span><span class="w">   </span><span class="cm">/* Omit the task table from the crash dump */</span>
+</pre></div>
+</div>
+</section>
+<section id="config-sched-dump-stack">
+<h3>CONFIG_SCHED_DUMP_STACK<a class="headerlink" href="#config-sched-dump-stack" title="Permalink to this heading"></a></h3>
+<p>Controls whether the contents of each stack (IRQ / kernel / user) are
+dumped as hex words. When disabled, only the base address and size of
+each stack are printed; the stack memory itself is not dumped.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CONFIG_SCHED_DUMP_STACK</span><span class="o">=</span><span class="n">n</span><span class="w">   </span><span class="cm">/* Omit the hex stack contents from the dump */</span>
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
