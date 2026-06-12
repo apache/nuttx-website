@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OS Drivers Design &mdash; NuttX latest documentation</title>
+  <title>User and Group Identity &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="File Descriptors" href="file_descriptors.html" />
-    <link rel="prev" title="Device Nodes" href="device_nodes.html" /> 
+    <link rel="next" title="USB (Universal Serial Bus)" href="usb.html" />
+    <link rel="prev" title="TLS: Thread Local Storage" href="tls.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -145,16 +145,7 @@
 <li class="toctree-l2"><a class="reference internal" href="critical_sections.html">Critical Sections</a></li>
 <li class="toctree-l2"><a class="reference internal" href="device_drivers.html">Device Drivers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="device_nodes.html">Device Nodes</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">OS Drivers Design</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#character-and-block-drivers">Character and Block Drivers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#mtd-drivers">MTD Drivers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#monolithic-drivers">Monolithic Drivers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#upper-half-and-lower-half-drivers">Upper Half and Lower Half Drivers</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#one-to-many-encapsulation-and-polymorphism">One to Many: Encapsulation and Polymorphism</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="drivers_design.html">OS Drivers Design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="file_descriptors.html">File Descriptors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hardfaults.html">Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
@@ -179,7 +170,17 @@
 <li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html">Tasks vs. Threads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tickless_os.html">Tickless OS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tls.html">TLS: Thread Local Storage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user_identity.html">User and Group Identity</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">User and Group Identity</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inheritance">Inheritance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#privilege-transitions">Privilege Transitions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#setuid-and-setgid"><code class="docutils literal notranslate"><span class="pre">setuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setgid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#seteuid-and-setegid"><code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setegid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="usb.html">USB (Universal Serial Bus)</a></li>
 </ul>
 </li>
@@ -210,9 +211,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Implementation Details</a></li>
-      <li class="breadcrumb-item active">OS Drivers Design</li>
+      <li class="breadcrumb-item active">User and Group Identity</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/implementation/drivers_design.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/implementation/user_identity.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -220,121 +221,67 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="os-drivers-design">
-<h1>OS Drivers Design<a class="headerlink" href="#os-drivers-design" title="Permalink to this heading"></a></h1>
-<p>There are three kinds of drivers that are recognized by the OS and are visible to
-applications. Two are POSIX standard device driver types, one is non-standard.
-There are also internal OS components that may also be considered to be drivers
-or, more correctly, lower-half drivers. Details about these are given below.</p>
-<section id="character-and-block-drivers">
-<h2>Character and Block Drivers<a class="headerlink" href="#character-and-block-drivers" title="Permalink to this heading"></a></h2>
-<p>The standard driver types include:</p>
+  <section id="user-and-group-identity">
+<span id="user-identity"></span><h1>User and Group Identity<a class="headerlink" href="#user-and-group-identity" title="Permalink to this heading"></a></h1>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> is enabled, each task group maintains POSIX
+process credentials. All threads within a task group share the same credentials
+(see <a class="reference internal" href="tasks_vs_threads.html#tasks-vs-threads"><span class="std std-ref">Tasks vs. Threads</span></a>).</p>
+<section id="credentials">
+<h2>Credentials<a class="headerlink" href="#credentials" title="Permalink to this heading"></a></h2>
+<p>The full POSIX three-field credential model is stored in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">task_group_s</span></code>
+(<code class="docutils literal notranslate"><span class="pre">include/nuttx/sched.h</span></code>):</p>
 <ul class="simple">
-<li><p><strong>Character Drivers</strong>. First there are the character drivers These are drivers
-that support user accessibility via <code class="docutils literal notranslate"><span class="pre">read()</span></code>, <code class="docutils literal notranslate"><span class="pre">write()</span></code> etc. The others do
-not naturally. Character drivers implement a stream of incoming or outgoing bytes.</p></li>
-<li><p><strong>Block Drivers</strong>. These are used to support files systems that supported
-block-oriented I/O, not a character stream. The user cannot <em>directly</em> access
-block drivers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tg_uid</span></code> / <code class="docutils literal notranslate"><span class="pre">tg_gid</span></code> — real user and group IDs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tg_euid</span></code> / <code class="docutils literal notranslate"><span class="pre">tg_egid</span></code> — effective IDs used for permission checks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tg_suid</span></code> / <code class="docutils literal notranslate"><span class="pre">tg_sgid</span></code> — saved set-IDs that allow a non-root process to
+restore a previously held effective ID.</p></li>
 </ul>
-<p>The user can, however, access block drivers indirectly through a character driver proxy.
-Both character and block drivers are represented by device nodes, usually in <code class="docutils literal notranslate"><span class="pre">/dev</span></code>.
-But if you try to open the block driver, something very strange happens: A temporary,
-nameless proxy character driver is automatically instantiated that maps a character
-driver’s byte stream into blocks and mediates the driver access to the block driver.
-This is the logic in <code class="docutils literal notranslate"><span class="pre">drivers/bch</span></code>. BCH stands for block to character. So from the
-application point of view, the both seem to be character drivers and applications
-can interact with both in the same way.</p>
-<p>This capability is exploited, for example, by the NuttX file system formatting
-applications like mkfatfs to format a FAT system on a block driver.</p>
-<p>There is also the complement, the loop device that converts a character driver into
-a block driver. Loop devices are commonly used to format a file system image in RAM.</p>
+<p>All six fields are zero-initialized at task creation, so the initial task runs
+as root (UID/GID 0) unless explicitly changed.</p>
 </section>
-<section id="mtd-drivers">
-<h2>MTD Drivers<a class="headerlink" href="#mtd-drivers" title="Permalink to this heading"></a></h2>
-<p>And the non-standard driver is:</p>
+<section id="inheritance">
+<h2>Inheritance<a class="headerlink" href="#inheritance" title="Permalink to this heading"></a></h2>
+<p>When a new task is created, <code class="docutils literal notranslate"><span class="pre">group_inherit_identity()</span></code> in
+<code class="docutils literal notranslate"><span class="pre">sched/group/group_create.c</span></code> copies all six credential fields from the parent
+task group to the child task group.</p>
+</section>
+<section id="privilege-transitions">
+<h2>Privilege Transitions<a class="headerlink" href="#privilege-transitions" title="Permalink to this heading"></a></h2>
+<section id="setuid-and-setgid">
+<h3><code class="docutils literal notranslate"><span class="pre">setuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setgid()</span></code><a class="headerlink" href="#setuid-and-setgid" title="Permalink to this heading"></a></h3>
+<p>When the effective ID is zero (root):</p>
 <ul class="simple">
-<li><p>The <strong>Memory Technology Driver (MTD)</strong>. This naming was borrowed from <code class="docutils literal notranslate"><span class="pre">infradead.org</span></code>,
-but does not derive from any of their MTD logic. The MTD driver manages memory-based
-devices like FLASH or EEPROM. And MTD FLASH memory driver is very similar to a block
-driver but FLASH has some different properties, most notably that you have to erase
-FLASH before you write to it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">setuid(uid)</span></code> sets <code class="docutils literal notranslate"><span class="pre">tg_uid</span></code>, <code class="docutils literal notranslate"><span class="pre">tg_euid</span></code>, and <code class="docutils literal notranslate"><span class="pre">tg_suid</span></code> to <code class="docutils literal notranslate"><span class="pre">uid</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">setgid(gid)</span></code> sets <code class="docutils literal notranslate"><span class="pre">tg_gid</span></code>, <code class="docutils literal notranslate"><span class="pre">tg_egid</span></code>, and <code class="docutils literal notranslate"><span class="pre">tg_sgid</span></code> to <code class="docutils literal notranslate"><span class="pre">gid</span></code>.</p></li>
 </ul>
-<p>MTD has the same conveniences as block drivers: Then can appear as device nodes
-under <code class="docutils literal notranslate"><span class="pre">/dev</span></code> and can be proxied to behave like character drivers if the opened
-as character drivers. Plus they have some additional twists: MTD drivers can be
-stacked one on top of another to extend the capabilities of the lower level MTD
-driver. For example, <code class="docutils literal notranslate"><span class="pre">drivers/mtd/sector512.c</span></code> is an MTD driver that when layered
-on top of another MTD driver, it changes the apparent page size of the FLASH to
-512 bytes.</p>
-<p><code class="docutils literal notranslate"><span class="pre">drivers/mtd/mtd_partitions.c</span></code> can be used to break up a large FLASH into
-separate, independent partitions, each of which looks like another MTD driver.</p>
-<p><code class="docutils literal notranslate"><span class="pre">drivers/mtd/ftl.c</span></code> is also interesting. FTL stands for FLASH Translation Layer.
-The FTL driver is an MTD driver that when layered on top of another MTD driver,
-converts the MTD driver to a block driver. The permutations are endless.</p>
-</section>
-<section id="monolithic-drivers">
-<h2>Monolithic Drivers<a class="headerlink" href="#monolithic-drivers" title="Permalink to this heading"></a></h2>
-<p>When one thinks about device drivers in an OS, one thinks of a single thing,
-a single block in a block diagram with these two primary interfaces:</p>
+<p>When the effective ID is non-zero:</p>
 <ul class="simple">
-<li><p>The device monolithic driver exposes a single, standard device driver interface.
-With the <strong>Virtual File System (VFS)</strong>, this provides the application user interface
-to the driver functionality. And</p></li>
-<li><p>A low-level interface to the hardware that is managed by the device driver.</p></li>
+<li><p>The caller may only set the effective ID to the current real or saved value.</p></li>
+<li><p>Any other value causes the function to return <code class="docutils literal notranslate"><span class="pre">-1</span></code> with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set to
+<code class="docutils literal notranslate"><span class="pre">EPERM</span></code>.</p></li>
 </ul>
 </section>
-<section id="upper-half-and-lower-half-drivers">
-<h2>Upper Half and Lower Half Drivers<a class="headerlink" href="#upper-half-and-lower-half-drivers" title="Permalink to this heading"></a></h2>
-<p>NuttX supports many, many different MCU platforms, each with many similar but
-distinct built-in peripherals.
-Certainly we could imagine a realization where each such peripheral is supported
-by monolithic driver as described in the preceding paragraph.
-That would involve a lot code duplication, however.
-The MCU peripherals may be unique at a low, register-level interface.
-However, the peripherals are really very similar at a higher level of abstraction.</p>
-<p>NuttX reduces the duplication, both in the code and in driver development,
-using the notion of <em>Upper Half</em> and <em>Lower Half</em> drivers.
-Such an implementation results in two things; two blocks in the system block
-diagram: The upper half driver in a group of common, shared drivers, and
-the MCU-specific lower half driver.</p>
-<p>As before, each of these two driver components has two functional interfaces.
-For the upper half driver:</p>
-<ul class="simple">
-<li><p>The upper half device driver exposes a single, standard driver interface.
-With the <strong>Virtual File System (VFS)</strong>, this, again, provides the application
-user interface to the driver functionality. And</p></li>
-<li><p>The upper-half side of the lower-half interface to the MCU-specific hardware
-that is managed by the lower-half device driver.</p></li>
-</ul>
-<p>And for the lower half driver:</p>
-<ul class="simple">
-<li><p>The lower-half side of the interface to the upper-half driver, and</p></li>
-<li><p>The low-level interface to the hardware that is managed by the lower half
-device driver.</p></li>
-</ul>
-<section id="one-to-many-encapsulation-and-polymorphism">
-<h3>One to Many: Encapsulation and Polymorphism<a class="headerlink" href="#one-to-many-encapsulation-and-polymorphism" title="Permalink to this heading"></a></h3>
-<p>These modular upper- and lower-half drivers have certain properties that you
-would associate with an object oriented design: Encapsulation, data abstraction,
-and polymorphism certainly.
-Because of this encapsulation, the upper-half driver is completely unaware of any
-implementation details within the lower-half driver.
-Everything needed for the upper- and lower-half drivers to integrate is provided
-by the defined interface between between those two things.
-In fact, a single upper-half driver may service many lower-half driver instances
-in a one-to-many relationship.</p>
-<p>As an example, some MCUs support UARTs, USARTs functioning as UARTs,
-Low-Power UARTs (LPUARTs), and other Flexible devices that may function as UARTs.
-Each of these is managed by a separate lower-half driver that can be found in the
-appropriate <code class="docutils literal notranslate"><span class="pre">src/</span></code> directory under <code class="docutils literal notranslate"><span class="pre">arch/</span></code>.
-In addition a board could have off-chip, external 16550 UART hardware (which has
-a common lower-half driver).
-Yet all of them would be supported by the single, common, serial upper half
-driver that can be found at <code class="docutils literal notranslate"><span class="pre">drivers/serial/serial.c</span></code>.
-This is only possible due to the object-like properties of the lower-half driver
-implementations.</p>
+<section id="seteuid-and-setegid">
+<h3><code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setegid()</span></code><a class="headerlink" href="#seteuid-and-setegid" title="Permalink to this heading"></a></h3>
+<p>When the effective ID is zero, any value may be assigned as the new effective
+ID.</p>
+<p>When the effective ID is non-zero, the requested value must equal the real or
+the saved ID. Otherwise the function returns <code class="docutils literal notranslate"><span class="pre">-1</span></code> with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set to
+<code class="docutils literal notranslate"><span class="pre">EPERM</span></code>.</p>
+<p>This implements the standard POSIX pattern of temporarily dropping privileges
+with <code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> or <code class="docutils literal notranslate"><span class="pre">setegid()</span></code> and later restoring them to the saved value.</p>
 </section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code></dt><dd><p>Enables per-task-group credential tracking. Without this option, stub
+root-only versions of all credential interfaces are provided.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PERMISSION</span></code></dt><dd><p>Enables filesystem ownership and permission enforcement. Requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>.</p>
+</dd>
+</dl>
 </section>
 </section>
 
@@ -342,8 +289,8 @@ implementations.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="device_nodes.html" class="btn btn-neutral float-left" title="Device Nodes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="file_descriptors.html" class="btn btn-neutral float-right" title="File Descriptors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tls.html" class="btn btn-neutral float-left" title="TLS: Thread Local Storage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usb.html" class="btn btn-neutral float-right" title="USB (Universal Serial Bus)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
