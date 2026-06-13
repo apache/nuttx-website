@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GPIO interrupt multiplexer &mdash; NuttX latest documentation</title>
+  <title>AVR DA/DB family up_udelay implementation &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="Two Wire Interface in AVR DA/DB" href="twi.html" />
-    <link rel="prev" title="AVR128DA28 on breadboard" href="../boards/breadxavr/index.html" /> 
+    <link rel="next" title="Keeping constants in program memory" href="../../common/constants-in-progmem.html" />
+    <link rel="prev" title="Two Wire Interface in AVR DA/DB" href="twi.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -148,9 +148,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../index.html#peripheral-support">Peripheral Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../index.html#supported-boards">Supported Boards</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../index.html#other-documents">Other documents</a><ul class="current">
-<li class="toctree-l5 current"><a class="current reference internal" href="#">GPIO interrupt multiplexer</a></li>
+<li class="toctree-l5"><a class="reference internal" href="gpio_intr_mux.html">GPIO interrupt multiplexer</a></li>
 <li class="toctree-l5"><a class="reference internal" href="twi.html">Two Wire Interface in AVR DA/DB</a></li>
-<li class="toctree-l5"><a class="reference internal" href="up_udelay.html">AVR DA/DB family <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code> implementation</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">AVR DA/DB family <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code> implementation</a></li>
 </ul>
 </li>
 </ul>
@@ -208,9 +208,9 @@
           <li class="breadcrumb-item"><a href="../../../index.html">Supported Platforms</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Microchip AVR</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Microchip DA/DB family</a></li>
-      <li class="breadcrumb-item active">GPIO interrupt multiplexer</li>
+      <li class="breadcrumb-item active">AVR DA/DB family <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code> implementation</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/avr/avrdx/docs/gpio_intr_mux.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/platforms/avr/avrdx/docs/up_udelay.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -218,39 +218,59 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="gpio-interrupt-multiplexer">
-<h1>GPIO interrupt multiplexer<a class="headerlink" href="#gpio-interrupt-multiplexer" title="Permalink to this heading"></a></h1>
-<p>AVR DA/DB family chips have single interrupt vector for all changes
-on an I/O port. This poses problem when multiple drivers want to claim
-the same interrupt (might happen for example with button and discrete
-joystick drivers using pins on the same port.)</p>
-<p>The I/O multiplexer solves it by providing interface similar
-to irq_attach. However, it allows registration of multiple handlers
-for the same interrupt vector with additional information recording
-which pins should be serviced by each handler.</p>
+  <section id="avr-da-db-family-up-udelay-implementation">
+<h1>AVR DA/DB family <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code> implementation<a class="headerlink" href="#avr-da-db-family-up-udelay-implementation" title="Permalink to this heading"></a></h1>
+<p>NuttX provides functions for busy sleep, these are documented
+<a class="reference internal" href="../../../../reference/os/sleep.html"><span class="doc">here</span></a>. These functions
+use <code class="docutils literal notranslate"><span class="pre">BOARD_LOOPSPERMSEC</span></code> configuration value to determine how many loops need
+to be done to cause requested delay. Creator of a the board code is supposed
+to calibrate this value to make the delay as precise as possible.</p>
+<p>This does not match well with AVR DA/DB microcontrollers because the CPU clock
+frequency is configurable and unless the user chooses one and sticks with it,
+any value in <code class="docutils literal notranslate"><span class="pre">BOARD_LOOPSPERMSEC</span></code> is going to be incorrect.</p>
+<p>Instead of using the default <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code> function, custom one is provided.
+When called, it determines current clock settings and infers required loop count
+from that.</p>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
-<p>The GPIO interrupt multiplexer is enabled in <span class="menuselection">System Type ‣ GPIO ISR Multiplexer</span>.
-All basic initialization is done automatically.</p>
+<p>This implementation is enabled automatically and can be turned off using
+<span class="menuselection">System Type ‣ Use AVR DA/DB implementation of up_udelay</span>
+configuration option. If enabled, there are two additional options:</p>
+<p><span class="menuselection">External clock is not supported in up_udelay</span> and
+<span class="menuselection">32.768kHz oscillator is not supported in up_udelay</span>.</p>
+<p>The latter simply excludes the code that checks if any 32.768kHz clock source
+is in use.</p>
+<p>The former does the same thing for external clock but also has an additional
+effect: when not selected, it does not set <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_DYNAMIC_UDELAY</span></code>
+configuration option. This in turn means that <code class="docutils literal notranslate"><span class="pre">BOARD_LOOPSPERMSEC</span></code> will
+need to be configured
+in <span class="menuselection">System Type ‣ Delay loops per millisecond</span></p>
+<p>The reason for this is that with the external clock, there is no way of knowing
+what the current CPU clock frequency is and it is therefore impossible
+to calculate the loop count. It needs to be provided by board code’s author
+to match the external clock the board is using. If the main clock prescaler is
+active, the loop value is recalculated to take that into consideration.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">BOARD_LOOPSPERMSEC</span></code> also needs to be specified if this <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code>
+implementation is disabled altogether.</p>
+<p>The other functions - <code class="docutils literal notranslate"><span class="pre">up_mdelay</span></code> and <code class="docutils literal notranslate"><span class="pre">up_ndelay</span></code> - are unchanged. These
+simply multiply or divide their time parameter by 1000 and pass the result
+to <code class="docutils literal notranslate"><span class="pre">up_udelay</span></code>.</p>
 </section>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
-<p>Taking button input driver as an example, this driver requires that the board
-provides <code class="docutils literal notranslate"><span class="pre">board_button_irq</span></code> method which enables and disables servicing
-interrupts for given button. Other than ID of the button to be configured,
-interrupt handler (function pointer) and opaque argument (void pointer)
-parameters are provided.</p>
-<p>Instead of calling <code class="docutils literal notranslate"><span class="pre">irq_attach</span></code> directly, this function may call
-<code class="docutils literal notranslate"><span class="pre">avrdx_irq_attach_gpio_mux</span></code>. Handler and argument are among parameters
-of this call but added to that are port index, pins and event that should
-trigger the interrupt.</p>
-<p>The multiplexer then attaches itself as the interrupt handler for the port.
-It only runs handlers for pin(s) which triggered the interrupt.</p>
-<p>It is possible to have 4 different handlers per port (currently hardcoded.)
-Handler is considered to be different even if it is the same function but
-with different opaque argument.</p>
-<p>Each handler can have multiple pins assigned to it (provided as a bitmask)
-but it is not possible to register one pin to multiple handlers.</p>
+<section id="precision">
+<h2>Precision<a class="headerlink" href="#precision" title="Permalink to this heading"></a></h2>
+<p>The loop count calculation takes time and that time depends on current settings
+and requested wait time. For example, calculation for wait time below
+180 microseconds when using high frequency oscillator can be done using 16bit
+arithmetic and without expensive division - unless the compiler is set
+to optimize for code size.</p>
+<p>On the other hand - whenever the main clock prescaler is in effect,
+division is unavoidable.</p>
+<p>The function attempts to account for this by guessing how much time all
+the processing took and reduce the loop count accordingly. Nevertheless,
+the wait may be considerably longer than requested for shorter delays
+and lower clock speeds.</p>
+<p>(For example - 32.768kHz clock with prescaler of 2 needs to do two
+divisions, taking 42 milliseconds total.)</p>
 </section>
 </section>
 
@@ -258,8 +278,8 @@ but it is not possible to register one pin to multiple handlers.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../boards/breadxavr/index.html" class="btn btn-neutral float-left" title="AVR128DA28 on breadboard" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="twi.html" class="btn btn-neutral float-right" title="Two Wire Interface in AVR DA/DB" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="twi.html" class="btn btn-neutral float-left" title="Two Wire Interface in AVR DA/DB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../common/constants-in-progmem.html" class="btn btn-neutral float-right" title="Keeping constants in program memory" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
