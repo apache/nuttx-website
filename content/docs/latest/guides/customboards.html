@@ -153,7 +153,11 @@
 <li class="toctree-l2"><a class="reference internal" href="pysimcoder.html">pysimCoder integration with NuttX</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Custom Boards How-To</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#add-a-custom-board">Add a Custom Board</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kconfig-settings">Kconfig Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kconfig-settings">Kconfig Settings</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kconfig-flags">Kconfig flags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kconfig-file">Kconfig file</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="customapps.html">Custom Apps How-to</a></li>
@@ -326,6 +330,42 @@ are two Kconfig settings that need to be set. These are:</p>
 <p>If you subsequently run a <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">distclean</span></code> operation, then these settings will be lost.
 They should be added back before building, and/or before running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>.</p>
 </div>
+<section id="kconfig-flags">
+<h3>Kconfig flags<a class="headerlink" href="#kconfig-flags" title="Permalink to this heading"></a></h3>
+<p>Some boards make using of Kconfig <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_*</span></code> flags in order to be able to
+select certain features. For example, <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_LEDS</span></code> is a necessary flag for
+enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS=y</span></code> because it tells the build system that the board
+has LEDs. Selecting <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_*</span></code> flags happens inside the NuttX build
+system, so it is not accessible to custom boards. If you need to enable these
+flags, then you should select them manually with the <code class="docutils literal notranslate"><span class="pre">BOARD_CUSTOM_*</span></code> options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">BOARD_CUSTOM_LEDS</span></code> selects <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_LEDS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BOARD_CUSTOM_BUTTONS</span></code> selects <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_BUTTONS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BOARD_CUSTOM_IRQBUTTONS</span></code> selects <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_IRQBUTTONS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BOARD_CUSTOM_INTERRUPT</span></code> selects <code class="docutils literal notranslate"><span class="pre">ARCH_PHY_INTERRUPT</span></code></p></li>
+</ul>
+<p>If there are any other <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_*</span></code> selectors you cannot access but need for
+your custom board, please open an issue!</p>
+</section>
+<section id="kconfig-file">
+<h3>Kconfig file<a class="headerlink" href="#kconfig-file" title="Permalink to this heading"></a></h3>
+<p>You may have noticed that in-tree boards typically surround their board-level
+Kconfig logic with something like:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span>ARCH_BOARD_BOARDNAME
+<span class="k">endif</span><span class="w"> </span><span class="c1"># ARCH_BOARD_BOARDAME</span>
+</pre></div>
+</div>
+<p>You should <strong>not</strong> do this for custom boards; just write your Kconfig logic
+without the guard. However, it is still good practice to prefix your custom
+Kconfig options with the board name:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span><span class="k">config</span><span class="w"> </span>BOARDNAME_MYOPTION
+<span class="w">    </span><span class="nb">bool</span><span class="w"> </span><span class="s2">&quot;My custom option&quot;</span>
+<span class="w">    </span><span class="k">default</span><span class="w"> </span>n
+<span class="w">    </span><span class="k">---help---</span>
+<span class="sd">        This is my custom option for my custom board.</span>
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 

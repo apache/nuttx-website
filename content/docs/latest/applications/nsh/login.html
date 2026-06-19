@@ -163,6 +163,7 @@
 <li class="toctree-l3"><a class="reference internal" href="installation.html">Customizing NSH Initialization</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Shell Login</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#enabling-shell-logins">Enabling Shell Logins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#session-identity-and-prompt">Session Identity and Prompt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#verification-of-credentials">Verification of Credentials</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#password-files">Password Files</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creating-a-password-file-for-a-romfs-file-system">Creating a Password File for a ROMFS File System</a></li>
@@ -240,6 +241,61 @@ User Logged-in!
 
 NuttShell (NSH)
 nsh&gt;
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_LOGIN_SETUID</span></code> is enabled (the default when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> is selected), NSH looks up the
+authenticated user name in the passwd database and sets the session
+identity after a successful login. See also <code class="docutils literal notranslate"><span class="pre">`id</span></code> &lt;#cmdid&gt;`__,
+<code class="docutils literal notranslate"><span class="pre">`su</span></code> &lt;#cmdsu&gt;`__, and <code class="docutils literal notranslate"><span class="pre">`whoami</span></code> &lt;#cmdwhoami&gt;`__.</p>
+</section>
+<section id="session-identity-and-prompt">
+<h2>Session Identity and Prompt<a class="headerlink" href="#session-identity-and-prompt" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> is enabled, NSH tracks the calling
+task’s real and effective UID/GID for the shell session. File
+permission checks use the <strong>effective</strong> identity.</p>
+<p><strong>Prompt markers.</strong> After login or a successful <code class="docutils literal notranslate"><span class="pre">su</span></code>, NSH updates the
+command prompt to show the effective privilege level of the session:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Prompt marker</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">#</span></code></p></td>
+<td><p>Effective UID is zero (root session)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">$</span></code></p></td>
+<td><p>Effective UID is non-zero (non-root session)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The marker replaces the character before the closing <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> in the
+default prompt (for example, <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">nsh#</span></code> or <code class="docutils literal notranslate"><span class="pre">nsh$</span></code>), or
+is appended when the configured prompt does not end with <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>. The
+prompt is refreshed by <code class="docutils literal notranslate"><span class="pre">nsh_update_prompt()</span></code> after <code class="docutils literal notranslate"><span class="pre">su</span></code> and after
+login when <code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_LOGIN_SETUID</span></code> is enabled.</p>
+<p><strong>Flat builds.</strong> NSH may retain a real UID of zero while only the
+effective UID/GID are changed. In that case <code class="docutils literal notranslate"><span class="pre">id</span></code> can report
+<code class="docutils literal notranslate"><span class="pre">uid=0</span> <span class="pre">euid=1000</span></code> after logging in as a normal user. Permission
+checks and the prompt marker follow the effective identity.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>login: testuser
+password:
+User Logged-in!
+
+NuttShell (NSH)
+nsh$ id
+uid=0 euid=1000 gid=0 egid=1000
+nsh$ whoami
+testuser
+nsh$ su root
+Password:
+nsh# id
+uid=0 euid=0 gid=0 egid=0
+nsh# whoami
+root
 </pre></div>
 </div>
 <p>After each failed login attempt, a delay can be set up. The purpose of
