@@ -151,7 +151,10 @@
 <li class="toctree-l4"><a class="reference internal" href="cromfs.html">CROMFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="fat.html">FAT</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hostfs.html">Host File System</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">LITTLEFS</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">LITTLEFS</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#user-identity-and-permissions">User identity and permissions</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="mmap.html">File mapping emulation (mmap)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mnemofs.html">MNEMOFS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nfs.html">NFS</a></li>
@@ -249,11 +252,11 @@ permanently stored (corruption prevention mechanism), it is required to
 periodically call <code class="docutils literal notranslate"><span class="pre">fsync</span></code> on the file to commit your writes. The exact
 semantics of when littlefs files are committed are discussed in <a class="reference external" href="https://github.com/apache/nuttx/issues/15840">this issue</a>.</p>
 </div>
-<p>..note:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>If your littlefs setup is experiencing crashes when you boot, try
-troubleshooting by tweaking the ``BLOCK_SIZE_FACTOR`` options in Kconfig. A
-factor of 4 works well for SD cards.
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your littlefs setup is experiencing crashes when you boot, try
+troubleshooting by tweaking the <code class="docutils literal notranslate"><span class="pre">BLOCK_SIZE_FACTOR</span></code> options in Kconfig. A
+factor of 4 works well for SD cards.</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -261,6 +264,29 @@ factor of 4 works well for SD cards.
 devices such as flash chips, SD cards and eMMC. Performance on SD cards and
 eMMC devices is worse than flash.</p>
 </div>
+<section id="user-identity-and-permissions">
+<h2>User identity and permissions<a class="headerlink" href="#user-identity-and-permissions" title="Permalink to this heading"></a></h2>
+<p>When both <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PERMISSION</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_LITTLEFS_ATTR_UPDATE</span></code> are
+enabled, littlefs stores owner, group, and mode in per-file custom attributes.
+This requires <a class="reference internal" href="../../implementation/user_identity.html#user-identity"><span class="std std-ref">User and Group Identity</span></a> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>).</p>
+<p><strong>Metadata.</strong> <code class="docutils literal notranslate"><span class="pre">chmod</span></code>/<code class="docutils literal notranslate"><span class="pre">chown</span></code> (via <code class="docutils literal notranslate"><span class="pre">chstat</span></code>) update the stored mode,
+UID, and GID. <code class="docutils literal notranslate"><span class="pre">stat</span></code> and <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">-l</span></code> read them back.</p>
+<p><strong>Creation.</strong> New files and directories are created with the effective UID and
+GID of the creating task.</p>
+<p><strong>Open checks.</strong> <code class="docutils literal notranslate"><span class="pre">open()</span></code> enforces POSIX permission bits using the caller’s
+effective identity:</p>
+<ul class="simple">
+<li><p>Existing files: each path component must grant search (<code class="docutils literal notranslate"><span class="pre">X_OK</span></code>) permission;
+the final component must grant the access requested by <code class="docutils literal notranslate"><span class="pre">oflags</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">O_CREAT</span></code> on a non-existent file: the parent directory must grant write and
+search permission.</p></li>
+</ul>
+<p><strong>Directory reads.</strong> <code class="docutils literal notranslate"><span class="pre">opendir()</span></code> requires read and search permission on the
+target directory.</p>
+<p>Files created before permission support was enabled, or without stored
+attributes, default to mode <code class="docutils literal notranslate"><span class="pre">0777</span></code> until <code class="docutils literal notranslate"><span class="pre">chmod</span></code>/<code class="docutils literal notranslate"><span class="pre">chown</span></code> sets explicit
+metadata.</p>
+</section>
 </section>
 
 
