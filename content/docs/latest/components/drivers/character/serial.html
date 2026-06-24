@@ -270,6 +270,33 @@ If``TTY_LAUNCH_FILE`` you can set file path by <code class="docutils literal not
 <p>Also, you can customize:
 <code class="docutils literal notranslate"><span class="pre">TTY_LAUNCH_ARGS</span></code> <code class="docutils literal notranslate"><span class="pre">TTY_LAUNCH_PRIORITY</span></code> <code class="docutils literal notranslate"><span class="pre">TTY_LAUNCH_STACKSIZE</span></code></p>
 </li>
+<li><p><strong>Job control / controlling terminal</strong>. When <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code>
+or <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGTSTP</span></code> is enabled, the TTY layer can generate
+<code class="docutils literal notranslate"><span class="pre">SIGINT</span></code> (Ctrl-C) and <code class="docutils literal notranslate"><span class="pre">SIGTSTP</span></code> (Ctrl-Z) for a foreground task.
+NuttX does not implement POSIX sessions or process groups, so the
+foreground process group is collapsed onto a single PID stored in
+the driver (<code class="docutils literal notranslate"><span class="pre">pgrp</span> <span class="pre">==</span> <span class="pre">pid</span></code>, one member per group); the signal is
+delivered with <code class="docutils literal notranslate"><span class="pre">nxsig_kill(pid,</span> <span class="pre">signo)</span></code>.</p>
+<p>The following terminal <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands manage this PID:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TIOCSCTTY</span></code> makes the terminal the controlling terminal.  The
+<code class="docutils literal notranslate"><span class="pre">arg</span></code> is treated as a flag: a value of <code class="docutils literal notranslate"><span class="pre">0</span></code> selects the
+calling task (the POSIX convention used by, e.g., dropbear and
+socat), while a positive value is honored as the target PID (the
+NuttX convention used by NSH to register a foreground command it
+has just spawned).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TIOCNOTTY</span></code> gives up the controlling terminal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TIOCGPGRP</span></code> / <code class="docutils literal notranslate"><span class="pre">TIOCGSID</span></code> return the foreground process group /
+session leader PID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TIOCSPGRP</span></code> sets the foreground process group PID (a value of
+<code class="docutils literal notranslate"><span class="pre">0</span></code> selects the calling task).</p></li>
+</ul>
+<p>The C library exposes these through <code class="docutils literal notranslate"><span class="pre">tcgetpgrp()</span></code>, <code class="docutils literal notranslate"><span class="pre">tcsetpgrp()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tcgetsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">setsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">getsid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setpgid()</span></code>.  Because
+sending a signal to a process group (<code class="docutils literal notranslate"><span class="pre">kill(-pgrp,</span> <span class="pre">signo)</span></code>) is not
+supported, TTY signals always target the single foreground PID rather
+than an entire group.</p>
+</li>
 <li><p><strong>User Access</strong>. Serial drivers are, ultimately, normal
 <a class="reference external" href="#chardrivers">character drivers</a> and are accessed as other
 character drivers.</p></li>
