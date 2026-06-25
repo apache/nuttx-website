@@ -266,7 +266,7 @@ represented in three phases:</p>
 board STM32F4Discovery as example but the explanation can be applied
 to any supported architecture.</p>
 <p>Here is the map of initialization function calls:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>__start()-arch/arm/src/stm32/stm32_start.c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>__start()-arch/arm/src/common/stm32/stm32_start_m3m4_v1.c
     |
     +--*Set stack limit
     +--stm32_clockconfig()
@@ -276,7 +276,7 @@ to any supported architecture.</p>
     +--showprogress(&#39;A&#39;)
     +--
     +--
-    +--stm32_boardinitialize()-boards/arm/stm32/stm32f4discovery/src/stm32_boot.c
+    +--stm32_boardinitialize()-boards/arm/stm32f4/stm32f4discovery/src/stm32_boot.c
     |    |
     |    +--stm32_spidev_initialize()-stm32_spi.c:ONLY CHIP SELECTS
     |    +--stm32_usbinitialize()-
@@ -417,7 +417,7 @@ There are few important things to note about this file.</p>
 <p><code class="docutils literal notranslate"><span class="pre">.section</span> <span class="pre">.vectors,</span> <span class="pre">ax</span></code>. This pseudo operation will place all of the
 vectors into a special section call <code class="docutils literal notranslate"><span class="pre">.vectors</span></code>.
 On of the STM32 F4 linker scripts is located at
-<code class="docutils literal notranslate"><span class="pre">nuttx/boards/arm/stm32/stm32f4discovery/scripts/ld.script</span></code>.
+<code class="docutils literal notranslate"><span class="pre">nuttx/boards/arm/stm32f4/stm32f4discovery/scripts/ld.script</span></code>.
 In that file, you can see that section <code class="docutils literal notranslate"><span class="pre">.vectors</span></code> is forced to lie
 at the very beginning of FLASH memory.
 The STM32 F4 can be configured to boot in different ways via strapping.
@@ -443,7 +443,7 @@ rather than assembly language.</p>
 <section id="nuttx-arch-arm-src-stm32-start-c">
 <h4>nuttx/arch/arm/src/stm32_start.c<a class="headerlink" href="#nuttx-arch-arm-src-stm32-start-c" title="Permalink to this heading"></a></h4>
 <p>The reset vector <code class="docutils literal notranslate"><span class="pre">__start</span></code> lies in the file
-<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32/stm32_start.c</span></code> and does the real,
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_start_m3m4_v1.c</span></code> and does the real,
 low-level architecture-specific initialization. This initialization includes:</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">stm32_clockconfig()</span></code> - Initialize the PLLs and peripheral clocking
@@ -472,7 +472,7 @@ is output if debug is enabled),</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stm32_boardinitialize()</span></code> - Board-specific logic is initialized by
 calling this function. For the case of the STM32F4Discovery board,
 this logic can be found at
-<code class="docutils literal notranslate"><span class="pre">nuttx/boards/arm/stm32/stm32f4discovery/src/stm32_boot.c</span></code> and does
+<code class="docutils literal notranslate"><span class="pre">nuttx/boards/arm/stm32f4/stm32f4discovery/src/stm32_boot.c</span></code> and does
 the following operations:</p>
 <ol class="loweralpha simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">stm32_spidev_initialize()</span></code> - Initialize SPI chip selects
@@ -548,17 +548,17 @@ as <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/s
 <code class="docutils literal notranslate"><span class="pre">nx_start()</span></code>. However, if the board supports multiple, discontiguous
 memory regions, any addition memory regions can be added to the heap
 by this function. For the STM32 F4, <code class="docutils literal notranslate"><span class="pre">up_addregion()</span></code> is implemented
-in <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32/stm32_allocateheap.c</span></code>.</p></li>
+in <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_allocateheap_m3m4_v1.c</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arm_pminitialize()</span></code> - If <code class="docutils literal notranslate"><span class="pre">CONFIG_PM</span></code> is defined, the function must
 initialize the power management subsystem. This MCU-specific function
-must be called very early in the intialization sequence before any other
+must be called very early in the initialization sequence before any other
 device drivers are initialized (since they may attempt to register with
 the power management subsystem). There is no implementation
 of <code class="docutils literal notranslate"><span class="pre">up_pminitialize()</span></code> for any STM32 platform.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arm_dmainitialize()</span></code> - Initialize the DMA subsystem.
 For the STM32 F4, this DMA initialization can be found in
-<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32/stm32_dma.c</span></code> (which includes
-<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32f4xxx_dma.c</span></code>).</p></li>
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_dma_m3m4_v1_8ch.c</span></code> (which includes
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_dma_m3m4_v1_8ch.c</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">devnull_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/null</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">devrandom_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/random</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">devurandom_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code>.</p></li>
@@ -566,12 +566,12 @@ For the STM32 F4, this DMA initialization can be found in
 <li><p><code class="docutils literal notranslate"><span class="pre">loop_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/loop</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">note_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/note</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arm_serialinit()</span></code> - Initialize the <strong>standard</strong> serial driver
-(found at <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32/stm32_serial.c</span></code> STM32 F4).</p></li>
+(found at <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_serial_m3m4_v1v2v3v4.c</span></code> STM32 F4).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arm_netinitialize()</span></code> - Initialize the network. For the STM32 F4,
-this function is in <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32/stm32_eth.c</span></code>.</p></li>
+this function is in <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_eth_m3m4_v1.c</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arm_usbinitialize()</span></code> - Initialize USB (host or device).
 For the STM32 F4, this function is in
-<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32/stm32_otgfsdev.c</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_otgfsdev_m3m4_v1.c</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arm_l2ccinitialize()</span></code> - Initialize the L2 cache if present
 and selected.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">up_ledon(LED_IRQSENABLED)</span></code> - Finally, <code class="docutils literal notranslate"><span class="pre">up_initialize()</span></code>
@@ -622,7 +622,7 @@ in <code class="docutils literal notranslate"><span class="pre">include/nuttx/wq
 as the “bottom half” for extended device driver processing but can be used
 for a variety of purposes like misc garbage clean-up.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nx_create_initthread()</span></code> - Once the operating system has been initialized,
-this funcions either directly calls <code class="docutils literal notranslate"><span class="pre">nx_start_application()</span></code> or creates
+this functions either directly calls <code class="docutils literal notranslate"><span class="pre">nx_start_application()</span></code> or creates
 a thread for running it</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nx_start_application()</span></code> - If set in the NuttX configuration,
 this function calls <code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code>.</p>
@@ -800,7 +800,7 @@ That function is not generally available to application level code in
 all configurations but can always be accesses via <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">board_app_initialize()</span></code> - For the STM32F4Discovery, this architecture
 specific initialization can be found at
-<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/src/stm32_appinit.c</span></code>.
+<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/src/stm32_appinit.c</span></code>.
 This it does things like:</p>
 <ol class="arabic simple">
 <li><p>Initialize SPI devices.</p></li>

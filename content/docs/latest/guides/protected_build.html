@@ -217,6 +217,7 @@
 <li class="toctree-l2"><a class="reference internal" href="optee.html">Interfacing with OP-TEE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qemu_tips.html">QEMU Tips</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lwl.html">Console over Lightweight Link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32_ports.html">STM32 ports</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../standards/index.html">Standards</a></li>
@@ -412,10 +413,10 @@ to automate these steps.</p>
 <p>Here is a summary of directories and files used by the STM32F4Discovery
 protected build:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/configs/kostest</span></code>. This is the kernel
+<li><p><code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/configs/kostest</span></code>. This is the kernel
 mode OS test configuration. The two standard configuration files
 can be found in this directory: (1) <code class="docutils literal notranslate"><span class="pre">defconfig</span></code> and (2) <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/kernel</span></code>. This is the first past
+<li><p><code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/kernel</span></code>. This is the first past
 build directory. The Makefile in this directory is invoked to
 produce the pass1 object (<code class="docutils literal notranslate"><span class="pre">nuttx_user.elf</span></code> in this case). The
 second pass object is created by <code class="docutils literal notranslate"><span class="pre">arch/arm/src/Makefile</span></code>. Also
@@ -423,7 +424,7 @@ in this directory is the file <code class="docutils literal notranslate"><span c
 contains a header that includes information need by the kernel
 blob in order to interface with the user-code. That header is
 defined in by this file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/scripts</span></code>. Linker scripts for
+<li><p><code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/scripts</span></code>. Linker scripts for
 the kernel mode build are found in this directory. This includes
 (1) <code class="docutils literal notranslate"><span class="pre">memory.ld</span></code> which hold the common memory map, (2) <code class="docutils literal notranslate"><span class="pre">user-space.ld</span></code>
 that is used for linking the pass1 user-mode blob, and (3)
@@ -534,17 +535,17 @@ technically feasible for th ARMv7-M family (Cortex-M3/4).</p>
 <section id="comparing-the-flat-build-configuration-with-the-protected-build-configuration">
 <h2>Comparing the “Flat” Build Configuration with the Protected Build Configuration<a class="headerlink" href="#comparing-the-flat-build-configuration-with-the-protected-build-configuration" title="Permalink to this heading"></a></h2>
 <p>Compare, for example the configuration
-<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/configs/ostest</span></code> and the
-configuration <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/configs/kostest</span></code>.
+<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/configs/ostest</span></code> and the
+configuration <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/configs/kostest</span></code>.
 These two configurations are identical except that one builds a
 “flat” version of OS test and the other builds a kernel version
-of the OS test. See the file <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/README.txt</span></code>
+of the OS test. See the file <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/README.txt</span></code>
 for more details about those configurations.</p>
 <p>The configurations can be compared using the <code class="docutils literal notranslate"><span class="pre">cmpconfig</span></code> tool:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>tools
 make<span class="w"> </span>-f<span class="w"> </span>Makefile.host<span class="w"> </span>cmpconfig
 <span class="nb">cd</span><span class="w"> </span>..
-tools/cmpconfig<span class="w"> </span>boards/arm/stm32/stm32f4discovery/configs/ostest/defconfig<span class="w"> </span>boards/arm/stm32/stm32f4discovery/configs/kostest/defconfig
+tools/cmpconfig<span class="w"> </span>boards/arm/stm32f4/stm32f4discovery/configs/ostest/defconfig<span class="w"> </span>boards/arm/stm32f4/stm32f4discovery/configs/kostest/defconfig
 </pre></div>
 </div>
 <p>Here is a summary of the meaning of all of the important differences in the
@@ -554,7 +555,7 @@ configuration from a “flat” to a protected build:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_2PASS=y</span></code>. This enables the two pass build.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_PROTECTED=y</span></code>. This option enables the “two pass”
 protected build.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PASS1_BUILDIR=&quot;boards/arm/stm32/stm32f4discovery/kernel&quot;</span></code>.
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PASS1_BUILDIR=&quot;boards/arm/stm32f4/stm32f4discovery/kernel&quot;</span></code>.
 This tells the build system the (relative) location of the pass1 build directory.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PASS1_OBJECT=&quot;&quot;</span></code>. In some “two pass” build configurations,
 the build system need to know the name of the first pass object.
@@ -599,7 +600,7 @@ is performed as part of the application start-up sequence.
 These includes such things as initializing device drivers.
 These same initialization steps must be performed in kernel
 mode for the protected build and <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_LATE_INITIALIZE</span></code>.
-See <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/src/up_boot.c</span></code> for an
+See <code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/src/up_boot.c</span></code> for an
 example of such board initialization code.</p></li>
 </ul>
 <p>Architecture-Specific Options:</p>
@@ -626,8 +627,8 @@ protection regions.</p></li>
 <p>The protected build will, or course, result in a FLASH image that is
 larger than that of the corresponding “flat” build. How much larger?
 I don’t have the numbers in hand, but you can build
-<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/configs/nsh</span></code> and
-<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32/stm32f4discovery/configs/kostest</span></code> and compare
+<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/configs/nsh</span></code> and
+<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/configs/kostest</span></code> and compare
 the resulting binaries for yourself using the <code class="docutils literal notranslate"><span class="pre">size</span></code> command.</p>
 <p>Increases in size are expected because:</p>
 <ul class="simple">

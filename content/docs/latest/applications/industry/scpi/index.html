@@ -150,7 +150,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../foc/index.html"><code class="docutils literal notranslate"><span class="pre">foc</span></code> Field Oriented Control user-space library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../modbus/index.html"><code class="docutils literal notranslate"><span class="pre">modbus</span></code> FreeModBus port</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nxmodbus/index.html"><code class="docutils literal notranslate"><span class="pre">nxmodbus</span></code> NuttX Modbus</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scpi</span></code> SCPI instrument side parser</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scpi</span></code> SCPI instrument side parser</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#source-location">Source Location</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#basic-configuration">Basic Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#unit-parser-configuration">Unit Parser Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-configuration">Example Configuration</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../inertial/index.html">Inertial Libraries Support</a></li>
@@ -210,6 +217,83 @@
              
   <section id="scpi-scpi-instrument-side-parser">
 <h1><code class="docutils literal notranslate"><span class="pre">scpi</span></code> SCPI instrument side parser<a class="headerlink" href="#scpi-scpi-instrument-side-parser" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">scpi</span></code> application integrates the
+<a class="reference external" href="https://github.com/j123b567/scpi-parser">scpi-parser</a> library with the
+NuttX application build system. SCPI, the Standard Commands for Programmable
+Instruments, is commonly used by test and measurement equipment to parse
+instrument commands and responses.</p>
+<p>The application provides the SCPI parser library for NuttX applications and can
+optionally build the upstream interactive demo program.</p>
+</section>
+<section id="source-location">
+<h2>Source Location<a class="headerlink" href="#source-location" title="Permalink to this heading"></a></h2>
+<p>The NuttX application wrapper is located in <code class="docutils literal notranslate"><span class="pre">apps/industry/scpi</span></code>. It
+downloads and builds <code class="docutils literal notranslate"><span class="pre">scpi-parser</span></code> version 2.2 unless an unpacked
+<code class="docutils literal notranslate"><span class="pre">scpi-parser</span></code> source tree is already present in that directory.</p>
+</section>
+<section id="basic-configuration">
+<h2>Basic Configuration<a class="headerlink" href="#basic-configuration" title="Permalink to this heading"></a></h2>
+<p>Enable the parser with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER</span></code> - Build the SCPI instrument-side parser library.</p></li>
+</ul>
+<p>Optional demo support is controlled by:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_DEMO</span></code> - Build the SCPI parser interactive demo program.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_DEMO_PRIORITY</span></code> - Demo task priority.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_DEMO_STACKSIZE</span></code> - Demo task stack size.</p></li>
+</ul>
+</section>
+<section id="unit-parser-configuration">
+<h2>Unit Parser Configuration<a class="headerlink" href="#unit-parser-configuration" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">scpi-parser</span></code> can include or exclude optional unit groups at compile time.
+NuttX exposes these as Kconfig options and maps each option to the matching
+upstream <code class="docutils literal notranslate"><span class="pre">USE_UNITS_*</span></code> compile-time define.</p>
+<p>The following unit groups are configurable:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_IMPERIAL</span></code> - Imperial units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_ANGLE</span></code> - Angle units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_PARTICLES</span></code> - Particle units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_DISTANCE</span></code> - Distance units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_MAGNETIC</span></code> - Magnetic units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_LIGHT</span></code> - Light units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_ENERGY_FORCE_MASS</span></code> - Energy, force, and mass
+units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_TIME</span></code> - Time units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_TEMPERATURE</span></code> - Temperature units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_RATIO</span></code> - Ratio units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_POWER</span></code> - Power units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_FREQUENCY</span></code> - Frequency units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_ELECTRIC</span></code> - Electric units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_ELECTRIC_CHARGE_CONDUCTANCE</span></code> - Electric charge
+and conductance units.</p></li>
+</ul>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_POWER</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_FREQUENCY</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_ELECTRIC</span></code> are enabled. The other optional unit
+groups are disabled by default and may be enabled individually.</p>
+<p>For example, enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_SCPI_PARSER_UNITS_TIME</span></code> passes
+<code class="docutils literal notranslate"><span class="pre">USE_UNITS_TIME=1</span></code> to <code class="docutils literal notranslate"><span class="pre">scpi-parser</span></code> during compilation.</p>
+</section>
+<section id="example-configuration">
+<h2>Example Configuration<a class="headerlink" href="#example-configuration" title="Permalink to this heading"></a></h2>
+<p>A minimal parser configuration can enable only the library:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CONFIG_SCPI_PARSER=y
+</pre></div>
+</div>
+<p>To build the parser with time-unit support:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CONFIG_SCPI_PARSER=y
+CONFIG_SCPI_PARSER_UNITS_TIME=y
+</pre></div>
+</div>
+<p>To include the interactive demo program:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CONFIG_SCPI_PARSER=y
+CONFIG_SCPI_PARSER_DEMO=y
+</pre></div>
+</div>
+</section>
 </section>
 
 

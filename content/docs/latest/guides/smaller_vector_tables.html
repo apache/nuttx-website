@@ -215,6 +215,7 @@
 <li class="toctree-l2"><a class="reference internal" href="optee.html">Interfacing with OP-TEE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qemu_tips.html">QEMU Tips</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lwl.html">Console over Lightweight Link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stm32_ports.html">STM32 ports</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../standards/index.html">Standards</a></li>
@@ -419,7 +420,7 @@ end of this section.]</cite></p>
 <code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_CMNVECTOR=y</span></code> that can be found in
 <code class="docutils literal notranslate"><span class="pre">arch/arm/src/armv7-m/</span></code>, and</p></li>
 <li><p>MCU-specific interrupt handling logic. For the
-STM32, this logic can be found at <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/gnu/stm32_vectors.S</span></code>.</p></li>
+STM32, this logic can be found at <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32f4/gnu/stm32_vectors.S</span></code>.</p></li>
 </ul>
 <p>The <cite>common</cite> vector logic is slightly more efficient,
 the MCU-specific logic is slightly more flexible.</p>
@@ -444,7 +445,7 @@ the physical vector numbers, this header file would
 define <code class="docutils literal notranslate"><span class="pre">only</span></code> the small set of 20 <code class="docutils literal notranslate"><span class="pre">mapped</span></code> IRQ numbers in
 the range from 0 through 19. It would also set <code class="docutils literal notranslate"><span class="pre">NR_IRQS</span></code>
 to the value 20.</p></li>
-<li><p>A new header file at <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/hardware</span></code>, say
+<li><p>A new header file at <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32f4/hardware</span></code>, say
 <code class="docutils literal notranslate"><span class="pre">xyz_vector.h</span></code>. It would be similar to the other vector
 definitions files in that directory: It will consist
 of a sequence of 100 <code class="docutils literal notranslate"><span class="pre">VECTOR</span></code> and <code class="docutils literal notranslate"><span class="pre">UNUSED</span></code> macros. It will
@@ -462,7 +463,7 @@ This has all been replaced with the common vector handling at
 </section>
 <section id="vector-definitions">
 <h2>Vector Definitions<a class="headerlink" href="#vector-definitions" title="Permalink to this heading"></a></h2>
-<p>In <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32/gnu/stm32_vector.S</span></code>, notice that the
+<p>In <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32f4/gnu/stm32_vectors.S</span></code>, notice that the
 <code class="docutils literal notranslate"><span class="pre">xyz_vector.h</span></code> file will be included twice. Before each
 inclusion, the macros <code class="docutils literal notranslate"><span class="pre">VECTOR</span></code> and <code class="docutils literal notranslate"><span class="pre">UNUSED</span></code> are defined.</p>
 <p>The first time that <code class="docutils literal notranslate"><span class="pre">xyz_vector.h</span></code> included, it defines the
@@ -497,7 +498,7 @@ file like this:</p>
 </pre></div>
 </div>
 <p>Where the value of <code class="docutils literal notranslate"><span class="pre">STM32_IRQ_USART1</span></code> was defined to
-be 12 in the <code class="docutils literal notranslate"><span class="pre">arch/arm/include/stm32/xyz_irq.h</span></code> header
+be 12 in the <code class="docutils literal notranslate"><span class="pre">arch/arm/include/stm32f4/xyz_irq.h</span></code> header
 file. When <code class="docutils literal notranslate"><span class="pre">xyz_vector.h</span></code> is included by <code class="docutils literal notranslate"><span class="pre">stm32_vectors.S</span></code>
 with the above definitions for <code class="docutils literal notranslate"><span class="pre">VECTOR</span></code> and <code class="docutils literal notranslate"><span class="pre">UNUSED</span></code>, the
 following would result:</p>
@@ -548,7 +549,7 @@ second time the <code class="docutils literal notranslate"><span class="pre">xzy
 <p>In the above USART1 example, a single handler would be
 generated that will provide the IRQ number 12. Remember
 that 12 is the expansion of the macro <code class="docutils literal notranslate"><span class="pre">STM32_IRQ_USART1</span></code>
-that is provided in the <code class="docutils literal notranslate"><span class="pre">arch/arm/include/stm32/xyz_irq.h</span></code>
+that is provided in the <code class="docutils literal notranslate"><span class="pre">arch/arm/include/stm32f4/xyz_irq.h</span></code>
 header file:</p>
 <div class="highlight-asm notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="na">.thumb_func</span>
 <span class="nl">stm32_usart1:</span>
