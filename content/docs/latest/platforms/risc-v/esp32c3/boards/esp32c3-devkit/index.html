@@ -437,6 +437,50 @@ hmac sha256 success
 </pre></div>
 </div>
 </section>
+<section id="dropbear">
+<h3>dropbear<a class="headerlink" href="#dropbear" title="Permalink to this heading"></a></h3>
+<p>This configuration brings up the <a class="reference external" href="https://matt.ucc.asn.au/dropbear/dropbear.html">Dropbear</a>
+SSH server so that an NSH session can be reached over the network. It pulls in
+Wi-Fi station mode, the DHCP client, the WAPI tooling and <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code> so the
+link is configured automatically at boot, and it persists the SSH host key and
+the user database on the SPIFFS partition mounted at <code class="docutils literal notranslate"><span class="pre">/data</span></code>.</p>
+<p>The Wi-Fi credentials shipped in the defconfig are placeholders. Set your own
+SSID and passphrase before flashing:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make menuconfig
+-&gt; Application Configuration
+    -&gt; Network Utilities
+        -&gt; Network initialization (NETUTILS_NETINIT [=y])
+            -&gt; WAPI Configuration
+</pre></div>
+</div>
+<p>When the board boots it joins the configured network, requests an address over
+DHCP and starts the Dropbear daemon. Check the assigned address with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifconfig
+wlan0   Link encap:Ethernet HWaddr 84:f7:03:xx:xx:xx at RUNNING mtu 1504
+        inet addr:192.168.1.xx DRaddr:192.168.1.x Mask:255.255.255.0
+</pre></div>
+</div>
+<p>The first time the daemon runs it generates an ECDSA host key and stores it at
+<code class="docutils literal notranslate"><span class="pre">/data/dropbear_ecdsa_host_key</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DROPBEAR_HOSTKEY_PATH</span></code>), and
+the user accounts are read from <code class="docutils literal notranslate"><span class="pre">/data/passwd</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_PATH</span></code>).
+Because both files live on the persistent <code class="docutils literal notranslate"><span class="pre">/data</span></code> partition, the host key and
+the credentials survive reboots, so clients do not see a changing host key.</p>
+<p>Add a user from the board before connecting (the password file is created on the
+first <code class="docutils literal notranslate"><span class="pre">useradd</span></code>):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; useradd admin mypassword
+</pre></div>
+</div>
+<p>From a host on the same network, open an SSH session and run NSH commands
+remotely:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ssh admin@192.168.1.xx
+admin@192.168.1.xx&#39;s password:
+nsh&gt;
+</pre></div>
+</div>
+<p>Each session runs over a pseudo-terminal (<code class="docutils literal notranslate"><span class="pre">CONFIG_PSEUDOTERM</span></code>), and <code class="docutils literal notranslate"><span class="pre">Ctrl-C</span></code>
+is forwarded to the remote NSH (<code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code>). The daemon keeps running
+after a session ends, so multiple clients can connect over time.</p>
+</section>
 <section id="efuse">
 <h3>efuse<a class="headerlink" href="#efuse" title="Permalink to this heading"></a></h3>
 <p>This configuration demonstrates the use of the eFuse driver. It can be accessed
