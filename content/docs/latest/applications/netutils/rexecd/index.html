@@ -180,7 +180,11 @@
 <li class="toctree-l3"><a class="reference internal" href="../pppd/index.html"><code class="docutils literal notranslate"><span class="pre">pppd</span></code> PPP server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ptpd/index.html"><code class="docutils literal notranslate"><span class="pre">ptpd</span></code> PTPD client/server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../rexec/index.html"><code class="docutils literal notranslate"><span class="pre">rexec</span></code> Remote execution client</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">rexecd</span></code> Remote Execution Server</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">rexecd</span></code> Remote Execution Server</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../rtptools/index.html"><code class="docutils literal notranslate"><span class="pre">rtptools</span></code> RTP Tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../smtp/index.html"><code class="docutils literal notranslate"><span class="pre">smtp</span></code> SMTP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../telnetc/index.html"><code class="docutils literal notranslate"><span class="pre">telnetc</span></code> Telnet client library</a></li>
@@ -245,6 +249,40 @@
              
   <section id="rexecd-remote-execution-server">
 <h1><code class="docutils literal notranslate"><span class="pre">rexecd</span></code> Remote Execution Server<a class="headerlink" href="#rexecd-remote-execution-server" title="Permalink to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">rexecd</span></code> is the daemon that serves remote execution requests from the
+<code class="docutils literal notranslate"><span class="pre">rexec</span></code> client. For the IP families it listens on the rexec port
+(<code class="docutils literal notranslate"><span class="pre">REXECD_PORT</span></code>, 512); for <code class="docutils literal notranslate"><span class="pre">AF_RPMSG</span></code> it listens on a corresponding
+RPMsg socket name. It authenticates the request and runs the requested
+command, piping its output back to the client.</p>
+<p>By default <code class="docutils literal notranslate"><span class="pre">rexecd</span></code> spawns a detached worker thread per accepted
+connection so that multiple sessions can run concurrently.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rexecd [-4|-6|-r] [-t]
+</pre></div>
+</div>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">-4</span></code></dt><dd><p>Specify the address family as <code class="docutils literal notranslate"><span class="pre">AF_INET</span></code> (IPv4). This is the default.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-6</span></code></dt><dd><p>Specify the address family as <code class="docutils literal notranslate"><span class="pre">AF_INET6</span></code> (IPv6).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-r</span></code></dt><dd><p>Specify the address family as <code class="docutils literal notranslate"><span class="pre">AF_RPMSG</span></code>. This serves the daemon over
+an RPMsg link instead of TCP/IP, allowing a remote processor in an AMP
+system to execute commands. See <a class="reference internal" href="../../../components/drivers/special/rpmsg/concepts.html"><span class="doc">RPMsg Core Concepts</span></a>
+for details on RPMsg.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-t</span></code></dt><dd><p>Serve each connection inline in the main task instead of spawning a
+per-connection worker thread. This avoids allocating the worker stack
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_REXECD_STACKSIZE</span></code>) from the heap, which helps on
+low-memory targets. With this option connections are served strictly
+one at a time: a long-running or interactive command blocks the accept
+loop until it finishes.</p>
+</dd>
+</dl>
+</section>
 </section>
 
 
