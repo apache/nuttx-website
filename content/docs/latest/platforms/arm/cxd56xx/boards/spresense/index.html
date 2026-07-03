@@ -280,124 +280,301 @@
              
   <section id="sony-spresense">
 <h1>Sony Spresense<a class="headerlink" href="#sony-spresense" title="Permalink to this heading"></a></h1>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-======
-
-Spresense is a compact development board based on Sony’s power-efficient
-multicore microcontroller CXD5602. It allows developers to create IoT
-applications in a very short time and is supported by the Arduino IDE as well
-as the more advanced NuttX based SDK.
-
-- Integrated GPS
-  The embedded GNSS with support for GPS, QZSS and GLONASS enables applications
-  where tracking is required.
-- Hi-res audio output and multi mic inputs
-  Advanced 192kHz/24 bit audio codec and amplifier for audio output, and
-  support for up to 8 mic input channels.
-- Multicore microcontroller
-  Spresense is powered by Sony&#39;s CXD5602 microcontroller (ARM® Cortex®-M4F × 6
-  cores), with a clock speed of 156 MHz.
-
-Refer to https://developer.sony.com/develop/spresense/ for further information
-about this board.
-
-NOTICE:
-
-To run the nuttx, bootloader for Spresense SDK 2.1.0 or later must be installed.
-
-Configuration sub-directories
------------------------------
-
-  elf
-
-    This is a configuration to test apps/examples/elf.
-
-  module
-
-    This is a configuration to test apps/examples/module.
-
-  posix_spawn
-
-    This is a configuration to test apps/examples/posix_spawn.
-
-  smp
-
-    This is a configuration to run Spresense in SMP mode.
-
-  wifi
-
-    This is a configuration for Spresense + Wi-Fi addon (Telit GS2200M) module.
-    With this configuration, (1) you can connect Spresense to an existing Wi-Fi
-    access point (2.4GHz 802.11b/g/n are supported) or (2) you can make
-    Spresense as a Wi-Fi access point. In both cases, you can login to the
-    Spresense with telnet, also access to a webserver (NOTE: this case you need
-    an extension board with microSDHC card)
-
-    (1) Station (STA) mode
-
-    To run the module in Station mode (i.e. to connect to an existing Wi-Fi
-    access point), You need to specify SSID with passcode.
-
-      nsh&gt; gs2200m ssid-to-connect passcode &amp;
-
-    If the connection succeeded, IP address is statically assigned.
-
-      nsh&gt; ifconfig
-      wlan0   Link encap:Ethernet HWaddr 3c:95:09:00:69:92 at UP
-      inet    addr:10.0.0.2 DRaddr:10.0.0.1 Mask:255.255.255.0
-
-    Then, you can run DHCP client (renew command) to obtain IP address as well
-    as DNS server information. (NOTE: In current configuration, DHCP client on
-    GS2200M is disabled. If you enable the internal DHCP client, you can not
-    use DNS client on NuttX)
-
-      nsh&gt; renew wlan0 &amp;
-      renew [6:100]
-      nsh&gt; ifconfig
-      wlan0   Link encap:Ethernet HWaddr 3c:95:09:00:69:92 at UP
-      inet    addr:192.168.1.101 DRaddr:192.168.1.1 Mask:255.255.255.0
-
-    Now, you can run telnetd and webserver on Spresense.
-
-      nsh&gt; telnetd &amp;
-      telnetd [7:100]
-      nsh&gt; webserver &amp;
-      webserver [9:100]
-      nsh&gt; Starting webserver
-
-    Also, you can run NTP client to adjust the RTC on Spresense. (NOTE: we
-    assume your network can access to pool.ntp.org, otherwise, you can specify
-    CONFIG_NETUTILS_NTPCLIENT_SERVER)
-
-      nsh&gt; date
-      Jan 01 00:00:36 1970
-      nsh&gt; ntpcstart
-      Started the NTP daemon as PID=11
-      nsh&gt; date
-      Jul 30 06:42:13 2019
-
-    (2) Access Point (AP) mode
-
-    To run the module in AP mode, you need to specify SSID to advertise and
-    WPA2-PSK passphrase or WEP-key. (NOTE: in AP mode, you can also specify
-    channel number to use. Also, you need to set CONFIG_WL_GS2200M_ENABLE_WEP=y
-    if you want to use WEP instead of WPA2-PSK)
-
-      nsh&gt; gs2200m -a ssid-to-advertise 8-to-63-wpa2-psk-passphrase &amp;
-      or
-      nsh&gt; gs2200m -a ssid-to-advertise 10-hex-digits-wep-key &amp;
-
-    If the module was initialized in AP mode, you can see a new IP address is
-    assigned.
-
-      nsh&gt; ifconfig
-      wlan0   Link encap:Ethernet HWaddr 3c:95:09:00:69:93 at UP
-      inet    addr:192.168.11.1 DRaddr:192.168.11.1 Mask:255.255.255.0
-
-    Now you can connect your PC to the AP with the above SSID and WPA2-PSK
-    passphrase or WEP-key which you specified.
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-cxd56xx.html"><span class="doc">chip:cxd56xx</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-cxd5602.html"><span class="doc">chip:cxd5602</span></a></p>
+<p>The <a class="reference external" href="https://developer.sony.com/develop/spresense/">Spresense</a> is a compact
+development board based on Sony’s power-efficient multicore microcontroller
+CXD5602. It allows developers to create IoT applications in a very short time
+and is supported by the Arduino IDE as well as the more advanced NuttX based
+SDK.</p>
+<p>Key features:</p>
+<ul class="simple">
+<li><p><strong>Integrated GNSS</strong>: the embedded GNSS with support for GPS, QZSS and
+GLONASS enables applications where tracking is required.</p></li>
+<li><p><strong>Hi-res audio output and multi mic inputs</strong>: advanced 192 kHz/24 bit audio
+codec and amplifier for audio output, and support for up to 8 mic input
+channels.</p></li>
+<li><p><strong>Multicore microcontroller</strong>: Spresense is powered by Sony’s CXD5602
+microcontroller (ARM® Cortex®-M4F × 6 cores), with a clock speed of 156 MHz.</p></li>
+</ul>
+<figure class="align-center" id="id1">
+<img alt="../../../../../_images/sony.png" src="../../../../../_images/sony.png" />
+<figcaption>
+<p><span class="caption-text">Spresense main board pinout (functional, Arduino-compatible and CXD5602
+pin names)</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<section id="extension-board">
+<h2>Extension Board<a class="headerlink" href="#extension-board" title="Permalink to this heading"></a></h2>
+<p>The Spresense extension board exposes the main board signals on an
+Arduino-compatible header layout and adds a microSD card slot, a headphone
+jack and multiple microphone inputs.</p>
+<figure class="align-center" id="id2">
+<img alt="../../../../../_images/sony-base-board.png" src="../../../../../_images/sony-base-board.png" />
+<figcaption>
+<p><span class="caption-text">Spresense extension (base) board pinout</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="camera-board">
+<h2>Camera Board<a class="headerlink" href="#camera-board" title="Permalink to this heading"></a></h2>
+<p>The CXD5602PWBCAM2 camera board connects to the dedicated camera connector on
+the main board and is supported by the <code class="docutils literal notranslate"><span class="pre">video</span></code>/<code class="docutils literal notranslate"><span class="pre">imager</span></code> drivers.</p>
+<figure class="align-center" id="id3">
+<img alt="../../../../../_images/sony-camera.png" src="../../../../../_images/sony-camera.png" />
+<figcaption>
+<p><span class="caption-text">Spresense camera board (CXD5602PWBCAM2)</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Sony CXD5602 microcontroller (ARM® Cortex®-M4F × 6 cores &#64; 156 MHz)</p></li>
+<li><p>8 MB SPI-Flash (main board), 1.5 MB SRAM</p></li>
+<li><p>Integrated GNSS (GPS, QZSS, GLONASS)</p></li>
+<li><p>Hi-res audio codec, up to 8 mic input channels</p></li>
+<li><p>Camera interface (CXD5602PWBCAM2 support)</p></li>
+<li><p>Arduino Uno compatible pin layout (via extension board)</p></li>
+<li><p>microSD card slot (via extension board)</p></li>
+<li><p>4 user LEDs and Reset / Boot Recovery buttons</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To run NuttX, the bootloader for Spresense SDK 2.1.0 or later must be
+installed on the board. See <a class="reference internal" href="#flashing-the-bootloader">Flashing the bootloader</a> below.</p>
+</div>
+</section>
+<section id="serial-console">
+<h2>Serial Console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
+<p>The default serial console is <strong>UART2</strong>, exposed on the <code class="docutils literal notranslate"><span class="pre">D00</span></code> (RX) and
+<code class="docutils literal notranslate"><span class="pre">D01</span></code> (TX) Arduino-compatible pins and routed to the USB connector through
+the on-board USB-to-serial bridge. It shows up on the host as
+<code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> (Linux) or <code class="docutils literal notranslate"><span class="pre">/dev/cu.SLAB_USBtoUART</span></code> (macOS) at 115200 baud,
+8N1.</p>
+</section>
+<section id="buttons-and-leds">
+<h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
+<p>The main board provides four user LEDs (<code class="docutils literal notranslate"><span class="pre">LED0</span></code> .. <code class="docutils literal notranslate"><span class="pre">LED3</span></code>), a power LED, a
+Reset button and a Boot Recovery button. The user LEDs are available to
+software through the standard NuttX user LED interface.</p>
+</section>
+<section id="flashing-the-bootloader">
+<h2>Flashing the bootloader<a class="headerlink" href="#flashing-the-bootloader" title="Permalink to this heading"></a></h2>
+<p>Before flashing any NuttX image, the Spresense loader/bootloader binaries must
+be installed. Download the loader package matching your SDK version from the
+<a class="reference external" href="https://developer.spresense.sony-semicon.com/downloads/main-board#firmware">Spresense firmware download page</a>
+and flash <strong>all</strong> of its files at once with <code class="docutils literal notranslate"><span class="pre">flash_writer.py</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./tools/flash_writer.py -s -c /dev/ttyUSB0 -d -b 115200 -n \
+    /path/to/spresense-binaries/*.espk \
+    /path/to/spresense-binaries/*.spk
 </pre></div>
 </div>
+<p>The <code class="docutils literal notranslate"><span class="pre">-n</span></code> (<code class="docutils literal notranslate"><span class="pre">--no-set-bootable</span></code>) option is used because these are loader
+components, not the bootable application. The tool relies on the Python
+<code class="docutils literal notranslate"><span class="pre">xmodem</span></code> module (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">xmodem</span></code> or <code class="docutils literal notranslate"><span class="pre">apt</span> <span class="pre">install</span> <span class="pre">python3-xmodem</span></code>).</p>
+</section>
+<section id="building-and-flashing">
+<h2>Building and Flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h2>
+<p>Once the bootloader is in place, configure, build and flash any of the
+board configurations below. Replace <code class="docutils literal notranslate"><span class="pre">&lt;example&gt;</span></code> with the configuration
+name you want (e.g. <code class="docutils literal notranslate"><span class="pre">wifi</span></code>, <code class="docutils literal notranslate"><span class="pre">smp</span></code>, <code class="docutils literal notranslate"><span class="pre">elf</span></code>):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh spresense:&lt;example&gt;
+$ make -j
+$ ./tools/flash_writer.py -s -c /dev/ttyUSB0 -d -b 115200 nuttx.spk
+</pre></div>
+</div>
+<p>The resulting <code class="docutils literal notranslate"><span class="pre">nuttx.spk</span></code> is flashed <strong>without</strong> <code class="docutils literal notranslate"><span class="pre">-n</span></code> so it is marked as
+the bootable application. Adjust <code class="docutils literal notranslate"><span class="pre">/dev/ttyUSB0</span></code> to match the serial port of
+your board.</p>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>Each of the following can be selected as <code class="docutils literal notranslate"><span class="pre">&lt;example&gt;</span></code> in the
+<a class="reference internal" href="#building-and-flashing">Building and Flashing</a> step above.</p>
+<section id="audio">
+<h3>audio<a class="headerlink" href="#audio" title="Permalink to this heading"></a></h3>
+<p>Audio playback and capture using the CXD5602 on-chip audio subsystem
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_CXD56</span></code>).</p>
+</section>
+<section id="audio-sdk">
+<h3>audio_sdk<a class="headerlink" href="#audio-sdk" title="Permalink to this heading"></a></h3>
+<p>Audio configuration using the SDK audio stack with microSD storage
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO</span></code> together with SDIO/MMCSD).</p>
+</section>
+<section id="camera">
+<h3>camera<a class="headerlink" href="#camera" title="Permalink to this heading"></a></h3>
+<p>Camera capture using the ISX012/ISX019 image sensors through the NuttX video
+stream interface.</p>
+</section>
+<section id="charger">
+<h3>charger<a class="headerlink" href="#charger" title="Permalink to this heading"></a></h3>
+<p>Battery charger example (<code class="docutils literal notranslate"><span class="pre">apps/examples/charger</span></code>) exercising the CXD5602
+power-management/charger interface.</p>
+</section>
+<section id="coremark">
+<h3>coremark<a class="headerlink" href="#coremark" title="Permalink to this heading"></a></h3>
+<p>EEMBC CoreMark CPU benchmark (<code class="docutils literal notranslate"><span class="pre">CONFIG_BENCHMARK_COREMARK</span></code>).</p>
+</section>
+<section id="elf">
+<h3>elf<a class="headerlink" href="#elf" title="Permalink to this heading"></a></h3>
+<p>Tests <code class="docutils literal notranslate"><span class="pre">apps/examples/elf</span></code> (loading and running ELF programs).</p>
+</section>
+<section id="example-camera">
+<h3>example_camera<a class="headerlink" href="#example-camera" title="Permalink to this heading"></a></h3>
+<p>Camera capture example with live preview on an attached LCD
+(<code class="docutils literal notranslate"><span class="pre">apps/examples/camera</span></code>).</p>
+</section>
+<section id="example-lcd">
+<h3>example_lcd<a class="headerlink" href="#example-lcd" title="Permalink to this heading"></a></h3>
+<p>NX graphics demos (<code class="docutils literal notranslate"><span class="pre">nxdemo</span></code>, <code class="docutils literal notranslate"><span class="pre">nxhello</span></code>, <code class="docutils literal notranslate"><span class="pre">nxlines</span></code>) rendered on an
+attached LCD.</p>
+</section>
+<section id="fmsynth">
+<h3>fmsynth<a class="headerlink" href="#fmsynth" title="Permalink to this heading"></a></h3>
+<p>FM sound synthesizer example (<code class="docutils literal notranslate"><span class="pre">apps/examples/fmsynth</span></code>).</p>
+</section>
+<section id="getprime">
+<h3>getprime<a class="headerlink" href="#getprime" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">getprime</span></code> timing/stress test (<code class="docutils literal notranslate"><span class="pre">apps/testing/getprime</span></code>).</p>
+</section>
+<section id="lcd">
+<h3>lcd<a class="headerlink" href="#lcd" title="Permalink to this heading"></a></h3>
+<p>LCD support together with a USB composite device (CDC/ACM + mass storage).</p>
+</section>
+<section id="lte">
+<h3>lte<a class="headerlink" href="#lte" title="Permalink to this heading"></a></h3>
+<p>LTE connectivity using the Spresense LTE extension board (Altair ALT1250
+modem).</p>
+</section>
+<section id="module">
+<h3>module<a class="headerlink" href="#module" title="Permalink to this heading"></a></h3>
+<p>Tests <code class="docutils literal notranslate"><span class="pre">apps/examples/module</span></code> (loadable kernel modules).</p>
+</section>
+<section id="mpy">
+<h3>mpy<a class="headerlink" href="#mpy" title="Permalink to this heading"></a></h3>
+<p>Peripheral demonstration enabling the on-chip ADC, PWM, the camera interface
+and microSD automount, started from the board <code class="docutils literal notranslate"><span class="pre">spresense_main</span></code> entry point.</p>
+</section>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>Basic NuttShell (NSH) console over the serial port.</p>
+</section>
+<section id="nsh-automount">
+<h3>nsh_automount<a class="headerlink" href="#nsh-automount" title="Permalink to this heading"></a></h3>
+<p>NSH with automatic mounting of an inserted microSD card.</p>
+</section>
+<section id="nsh-trace">
+<h3>nsh_trace<a class="headerlink" href="#nsh-trace" title="Permalink to this heading"></a></h3>
+<p>NSH with the system trace subsystem enabled for scheduler/syscall tracing.</p>
+</section>
+<section id="ostest">
+<h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this heading"></a></h3>
+<p>Standard NuttX OS test suite (<code class="docutils literal notranslate"><span class="pre">apps/testing/ostest</span></code>).</p>
+</section>
+<section id="posix-spawn">
+<h3>posix_spawn<a class="headerlink" href="#posix-spawn" title="Permalink to this heading"></a></h3>
+<p>Tests <code class="docutils literal notranslate"><span class="pre">apps/examples/posix_spawn</span></code>.</p>
+</section>
+<section id="rndis">
+<h3>rndis<a class="headerlink" href="#rndis" title="Permalink to this heading"></a></h3>
+<p>USB RNDIS Ethernet gadget with networking examples (FTP client/server, web
+server and tcpblaster).</p>
+</section>
+<section id="rndis-composite">
+<h3>rndis_composite<a class="headerlink" href="#rndis-composite" title="Permalink to this heading"></a></h3>
+<p>Same as <code class="docutils literal notranslate"><span class="pre">rndis</span></code> but exposed as part of a USB composite device.</p>
+</section>
+<section id="rndis-smp">
+<h3>rndis_smp<a class="headerlink" href="#rndis-smp" title="Permalink to this heading"></a></h3>
+<p>Same as <code class="docutils literal notranslate"><span class="pre">rndis</span></code> but running in SMP mode across the CXD5602 cores.</p>
+</section>
+<section id="smp">
+<h3>smp<a class="headerlink" href="#smp" title="Permalink to this heading"></a></h3>
+<p>Runs Spresense in SMP (symmetric multiprocessing) mode.</p>
+</section>
+<section id="usbmsc">
+<h3>usbmsc<a class="headerlink" href="#usbmsc" title="Permalink to this heading"></a></h3>
+<p>USB Mass Storage device example, exposing a microSD card as a USB drive via a
+composite (CDC/ACM + MSC) gadget.</p>
+</section>
+<section id="usbnsh">
+<h3>usbnsh<a class="headerlink" href="#usbnsh" title="Permalink to this heading"></a></h3>
+<p>NuttShell console over USB CDC/ACM instead of the physical UART.</p>
+</section>
+<section id="wifi">
+<h3>wifi<a class="headerlink" href="#wifi" title="Permalink to this heading"></a></h3>
+<p>This is a configuration for Spresense + Wi-Fi add-on (Telit GS2200M) module.
+With this configuration you can either (1) connect Spresense to an existing
+Wi-Fi access point (2.4 GHz 802.11b/g/n are supported) or (2) make Spresense
+act as a Wi-Fi access point. In both cases you can log in to the Spresense over
+telnet and access a web server (NOTE: for this you need an extension board with
+a microSDHC card).</p>
+<p><strong>(1) Station (STA) mode</strong></p>
+<p>To run the module in Station mode (i.e. to connect to an existing Wi-Fi access
+point), specify the SSID with its passcode:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gs2200m ssid-to-connect passcode &amp;
+</pre></div>
+</div>
+<p>If the connection succeeded, an IP address is statically assigned:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifconfig
+wlan0   Link encap:Ethernet HWaddr 3c:95:09:00:69:92 at UP
+inet    addr:10.0.0.2 DRaddr:10.0.0.1 Mask:255.255.255.0
+</pre></div>
+</div>
+<p>You can then run the DHCP client (<code class="docutils literal notranslate"><span class="pre">renew</span></code> command) to obtain an IP address as
+well as DNS server information. (NOTE: in the current configuration the DHCP
+client on the GS2200M is disabled. If you enable the internal DHCP client you
+cannot use the DNS client on NuttX):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; renew wlan0 &amp;
+renew [6:100]
+nsh&gt; ifconfig
+wlan0   Link encap:Ethernet HWaddr 3c:95:09:00:69:92 at UP
+inet    addr:192.168.1.101 DRaddr:192.168.1.1 Mask:255.255.255.0
+</pre></div>
+</div>
+<p>Now you can run <code class="docutils literal notranslate"><span class="pre">telnetd</span></code> and the web server on Spresense:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; telnetd &amp;
+telnetd [7:100]
+nsh&gt; webserver &amp;
+webserver [9:100]
+nsh&gt; Starting webserver
+</pre></div>
+</div>
+<p>You can also run the NTP client to adjust the RTC on Spresense. (NOTE: this
+assumes your network can reach pool.ntp.org, otherwise specify
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_NTPCLIENT_SERVER</span></code>):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; date
+Jan 01 00:00:36 1970
+nsh&gt; ntpcstart
+Started the NTP daemon as PID=11
+nsh&gt; date
+Jul 30 06:42:13 2019
+</pre></div>
+</div>
+<p><strong>(2) Access Point (AP) mode</strong></p>
+<p>To run the module in AP mode, specify the SSID to advertise and a WPA2-PSK
+passphrase or WEP key. (NOTE: in AP mode you can also specify the channel number
+to use. Also, set <code class="docutils literal notranslate"><span class="pre">CONFIG_WL_GS2200M_ENABLE_WEP=y</span></code> if you want to use WEP
+instead of WPA2-PSK):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gs2200m -a ssid-to-advertise 8-to-63-wpa2-psk-passphrase &amp;
+or
+nsh&gt; gs2200m -a ssid-to-advertise 10-hex-digits-wep-key &amp;
+</pre></div>
+</div>
+<p>If the module was initialized in AP mode, a new IP address is assigned:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifconfig
+wlan0   Link encap:Ethernet HWaddr 3c:95:09:00:69:93 at UP
+inet    addr:192.168.11.1 DRaddr:192.168.11.1 Mask:255.255.255.0
+</pre></div>
+</div>
+<p>Now you can connect your PC to the AP with the above SSID and WPA2-PSK
+passphrase or WEP key that you specified.</p>
+</section>
+<section id="wifi-smp">
+<h3>wifi_smp<a class="headerlink" href="#wifi-smp" title="Permalink to this heading"></a></h3>
+<p>Same as <a class="reference internal" href="#wifi">wifi</a> but running in SMP mode across the CXD5602 cores.</p>
+</section>
+</section>
 </section>
 
 
