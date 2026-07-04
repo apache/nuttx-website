@@ -244,7 +244,12 @@
 <li class="toctree-l4"><a class="reference internal" href="../ltr308/index.html"><code class="docutils literal notranslate"><span class="pre">ltr308</span></code> LTR308 ambient light sensor example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../lua_module/index.html"><code class="docutils literal notranslate"><span class="pre">lua_module</span></code> Hello World Lua module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../lvgldemo/index.html"><code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code> LVGL Demo</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> LVGL Terminal for NuttShell (NSH)</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> LVGL Terminal for NuttShell (NSH)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#input-variants">Input variants</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#font">Font</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../max31855/index.html"><code class="docutils literal notranslate"><span class="pre">max31855</span></code> max31855 example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../mcuboot/index.html"><code class="docutils literal notranslate"><span class="pre">mcuboot</span></code> MCUboot examples</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../media/index.html"><code class="docutils literal notranslate"><span class="pre">media</span></code> Media test</a></li>
@@ -403,16 +408,68 @@
              
   <section id="lvglterm-lvgl-terminal-for-nuttshell-nsh">
 <h1><code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> LVGL Terminal for NuttShell (NSH)<a class="headerlink" href="#lvglterm-lvgl-terminal-for-nuttshell-nsh" title="Permalink to this heading"></a></h1>
-<p>LVGL application that executes NuttShell (NSH) commands entered with a
-Touchscreen Keyboard and displays the NSH output. Prerequisite configuration
-settings:</p>
+<p>LVGL application that runs an interactive NuttShell (NSH) on the display.  NSH
+is started with its standard streams redirected through pipes, its output is
+rendered in an LVGL text area, and the input comes from one of two sources
+selected at build time.</p>
+<p>The shared code lives in <code class="docutils literal notranslate"><span class="pre">lvglterm.c</span></code> (NSH startup, output rendering, main
+loop); <code class="docutils literal notranslate"><span class="pre">lvglterm_touch.c</span></code> and <code class="docutils literal notranslate"><span class="pre">lvglterm_kbd.c</span></code> implement the two input
+variants.</p>
+<section id="input-variants">
+<h2>Input variants<a class="headerlink" href="#input-variants" title="Permalink to this heading"></a></h2>
+<p>The input source is chosen with the <em>LVGL Terminal input source</em> Kconfig
+choice (only one is built at a time):</p>
+<dl>
+<dt>On-screen keyboard (touch)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_INPUT_TOUCH</span></code> (default).  An LVGL keyboard
+widget operated by touch; a command line is typed and submitted with
+Enter.  Suits touchscreen boards and keeps the original behaviour.</p>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="../../../_images/lvglterm-touch.png"><img alt="LVGL Terminal with the on-screen touch keyboard" src="../../../_images/lvglterm-touch.png" style="width: 500px;" /></a>
+<figcaption>
+<p><span class="caption-text">On-screen keyboard (touch) variant</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</dd>
+<dt>Physical keyboard</dt><dd><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_INPUT_KBD</span></code>.  Key events are read from a
+<code class="docutils literal notranslate"><span class="pre">/dev/kbdN</span></code> keyboard device and streamed to the shell; the output fills
+the whole screen.  Requires <code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT_KEYBOARD</span></code>.</p>
+<p>The device defaults to <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_KBD_DEV</span></code>
+(<code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code>) and can be overridden at run time by passing the path as
+the first argument (<code class="docutils literal notranslate"><span class="pre">lvglterm</span> <span class="pre">/dev/kbd1</span></code>) when more than one keyboard is
+present.  Keyboards that report the Fn navigation cluster as cursor keys
+can scroll the output with Up/Down.</p>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="../../../_images/lvglterm-kbd.png"><img alt="LVGL Terminal driven by a physical keyboard" src="../../../_images/lvglterm-kbd.png" style="width: 500px;" /></a>
+<figcaption>
+<p><span class="caption-text">Physical keyboard variant</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</dd>
+</dl>
+</section>
+<section id="font">
+<h2>Font<a class="headerlink" href="#font" title="Permalink to this heading"></a></h2>
+<p>The monospaced terminal font is chosen with the <em>LVGL Terminal font</em> choice:
+<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_FONT_UNSCII_16</span></code> (default), or the smaller
+<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_FONT_UNSCII_8</span></code> for low-resolution displays where
+UNSCII 16 shows too few columns.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_CONSOLE=y</span></code> – NSH must be configured to use a console.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_EXECFUNCS=y</span></code> – posix_spawn() must be enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_EXECFUNCS=y</span></code> – <code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> must be enabled.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PIPES=y</span></code> – Pipes must be enabled.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_GRAPHICS_LVGL=y</span></code> – LVGL graphics must be enabled.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LV_FONT_UNSCII_16=y</span></code> – LVGL font UNSCII 16 must be enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_NSH=y</span></code> – the NSH library must be enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_GRAPHICS_LVGL=y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX=y</span></code> – LVGL with its
+NuttX integration.</p></li>
+<li><p>A display (<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX_LCD</span></code> or a framebuffer).  The touch variant
+also needs a touchscreen input (<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX_TOUCHSCREEN</span></code>); the
+keyboard variant needs a keyboard driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT_KEYBOARD</span></code>).</p></li>
+<li><p>The selected font (<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_FONT_UNSCII_8</span></code> or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_FONT_UNSCII_16</span></code>) is enabled automatically by the font choice.</p></li>
 </ul>
+<p>Reference: <a class="reference external" href="https://lupyuen.github.io/articles/terminal">NuttX RTOS for PinePhone: LVGL Terminal for NSH Shell</a>.</p>
+</section>
 </section>
 
 

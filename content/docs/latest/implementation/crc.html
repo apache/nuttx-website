@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hardfaults &mdash; NuttX latest documentation</title>
+  <title>CRC &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Per-Thread Interrupt Controls" href="interrupt_controls.html" />
-    <link rel="prev" title="File Descriptors" href="file_descriptors.html" /> 
+    <link rel="next" title="Critical Sections" href="critical_sections.html" />
+    <link rel="prev" title="Context Switches" href="context_switches.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -142,23 +142,25 @@
 <li class="toctree-l2"><a class="reference internal" href="cancellation_points.html">Cancellation Points</a></li>
 <li class="toctree-l2"><a class="reference internal" href="chip_h.html">chip.h</a></li>
 <li class="toctree-l2"><a class="reference internal" href="context_switches.html">Context Switches</a></li>
-<li class="toctree-l2"><a class="reference internal" href="crc.html">CRC</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CRC</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#crc32-variants">CRC32 Variants</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#crc32-nuttx-native">crc32() — NuttX Native</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#crc32-ieee-linux-zlib-compatible">crc32_ieee() — Linux/zlib Compatible</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#comparison">Comparison</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#incremental-calculation">Incremental Calculation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#other-crc32-variants">Other CRC32 Variants</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#crc16-and-crc8">CRC16 and CRC8</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="critical_sections.html">Critical Sections</a></li>
 <li class="toctree-l2"><a class="reference internal" href="device_drivers.html">Device Drivers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="device_nodes.html">Device Nodes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drivers_design.html">OS Drivers Design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="file_descriptors.html">File Descriptors</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Hardfaults</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#armv7">ARMv7</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#cortex-m3-and-cortex-m4">Cortex-M3 and Cortex-M4</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#svcall">SVCALL</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#disabling-interrupts-via-the-primask-register">Disabling Interrupts via the PRIMASK register</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hardfaults-and-debuggers">Hardfaults and Debuggers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#disabling-interrupts-via-the-basepri-register">Disabling Interrupts via the BASEPRI register</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="hardfaults.html">Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ioctl.html">ioctl</a></li>
 <li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html">Kernel Modules vs Shared Libraries</a></li>
@@ -212,9 +214,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Implementation Details</a></li>
-      <li class="breadcrumb-item active">Hardfaults</li>
+      <li class="breadcrumb-item active">CRC</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/implementation/hardfaults.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/implementation/crc.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -222,138 +224,97 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hardfaults">
-<span id="id1"></span><h1>Hardfaults<a class="headerlink" href="#hardfaults" title="Permalink to this heading"></a></h1>
-<section id="armv7">
-<h2>ARMv7<a class="headerlink" href="#armv7" title="Permalink to this heading"></a></h2>
-<section id="cortex-m3-and-cortex-m4">
-<h3>Cortex-M3 and Cortex-M4<a class="headerlink" href="#cortex-m3-and-cortex-m4" title="Permalink to this heading"></a></h3>
-<p>The most popular CPUs in current MCU designs are the Cortex-M3 (ARMv7-M) and
-the Cortex-M4 (ARMv7E-M). Handling of these two architectures is almost
-identical in NuttX (unless hardware floating point is enabled).</p>
+  <section id="crc">
+<h1>CRC<a class="headerlink" href="#crc" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>NuttX provides CRC (Cyclic Redundancy Check) implementations for CRC8, CRC16,
+and CRC32 in <code class="docutils literal notranslate"><span class="pre">libs/libc/misc/</span></code>. Each family offers multiple polynomial
+variants, following a consistent naming convention.</p>
 </section>
-<section id="svcall">
-<h3>SVCALL<a class="headerlink" href="#svcall" title="Permalink to this heading"></a></h3>
-<p>NuttX uses the SVCALL software interrupt in order to perform certain steps
-in the context switching for the Cortex-M3 and Cortext-M4.
-This sequence of logic appears in several places:</p>
+<section id="crc32-variants">
+<h2>CRC32 Variants<a class="headerlink" href="#crc32-variants" title="Permalink to this heading"></a></h2>
+<p>NuttX ships several CRC32 variants that differ in polynomial, init value,
+and final XOR. The two most commonly used are <code class="docutils literal notranslate"><span class="pre">crc32()</span></code> and <code class="docutils literal notranslate"><span class="pre">crc32_ieee()</span></code>.</p>
+<section id="crc32-nuttx-native">
+<h3>crc32() — NuttX Native<a class="headerlink" href="#crc32-nuttx-native" title="Permalink to this heading"></a></h3>
+<p>The original NuttX CRC32 implementation using the standard ISO 3309 / ITU-T
+V.42 polynomial (0xEDB88320 reflected). It uses <strong>init value 0</strong> with
+<strong>no final XOR</strong>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">crc32</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">len</span><span class="p">);</span>
+<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">crc32part</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">crc32val</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This is the default CRC32 used by internal NuttX subsystems (bbsram, sbram,
+etc.) and is maintained for backward compatibility.</p>
+</section>
+<section id="crc32-ieee-linux-zlib-compatible">
+<h3>crc32_ieee() — Linux/zlib Compatible<a class="headerlink" href="#crc32-ieee-linux-zlib-compatible" title="Permalink to this heading"></a></h3>
+<p>An IEEE-standard CRC32 compatible with Linux <code class="docutils literal notranslate"><span class="pre">crc32()</span></code> (from zlib). It uses
+the same polynomial but with <strong>init value 0xFFFFFFFF</strong> and <strong>final XOR
+0xFFFFFFFF</strong>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">crc32_ieee</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">len</span><span class="p">);</span>
+<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">crc32_ieeepart</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">crc32val</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Use this variant when interoperating with Linux systems, e.g., for CRC
+checksums in network protocols, file transfers, or UART communication layers.</p>
+</section>
+<section id="comparison">
+<h3>Comparison<a class="headerlink" href="#comparison" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Init Value</p></th>
+<th class="head"><p>Final XOR</p></th>
+<th class="head"><p>Polynomial</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>crc32()</p></td>
+<td><p>0x00000000</p></td>
+<td><p>None</p></td>
+<td><p>0xEDB88320</p></td>
+</tr>
+<tr class="row-odd"><td><p>crc32_ieee()</p></td>
+<td><p>0xFFFFFFFF</p></td>
+<td><p>0xFFFFFFFF</p></td>
+<td><p>0xEDB88320</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example: computing CRC32 of the string <code class="docutils literal notranslate"><span class="pre">&quot;123456789&quot;</span></code>:</p>
 <ul class="simple">
-<li><p>Create a short critical section by disabling exceptions,</p></li>
-<li><p>Perform some set-up,</p></li>
-<li><p>Initiate the software exception / SVCALL, and</p></li>
-<li><p>When the software exception processing returns, re-enable exceptions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crc32(&quot;123456789&quot;,</span> <span class="pre">9)</span></code>      returns <code class="docutils literal notranslate"><span class="pre">0x2DFD2D88</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crc32_ieee(&quot;123456789&quot;,</span> <span class="pre">9)</span></code> returns <code class="docutils literal notranslate"><span class="pre">0xCBF43926</span></code> (matches Linux/zlib)</p></li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>There is a technical difference between interrupts and exceptions.
-In this section the term exception will be used. It is probably
-more accurate since interrupts are really exceptions that result
-from device interrupt lines. Furthermore, when we refer to
-exceptions in this section, we are referring specifically to
-ARMv7-M configurable exceptions.</p>
+</section>
+<section id="incremental-calculation">
+<h3>Incremental Calculation<a class="headerlink" href="#incremental-calculation" title="Permalink to this heading"></a></h3>
+<p>Both variants support incremental (chunked) CRC calculation via the <code class="docutils literal notranslate"><span class="pre">_part</span></code>
+functions. For <code class="docutils literal notranslate"><span class="pre">crc32_ieee</span></code>, the first call should pass <code class="docutils literal notranslate"><span class="pre">0</span></code> as the initial
+value:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">crc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="n">crc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crc32_ieeepart</span><span class="p">(</span><span class="n">chunk1</span><span class="p">,</span><span class="w"> </span><span class="n">len1</span><span class="p">,</span><span class="w"> </span><span class="n">crc</span><span class="p">);</span>
+<span class="n">crc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crc32_ieeepart</span><span class="p">(</span><span class="n">chunk2</span><span class="p">,</span><span class="w"> </span><span class="n">len2</span><span class="p">,</span><span class="w"> </span><span class="n">crc</span><span class="p">);</span>
+<span class="cm">/* crc now contains the final CRC of chunk1+chunk2 */</span>
+</pre></div>
 </div>
 </section>
-<section id="disabling-interrupts-via-the-primask-register">
-<h3>Disabling Interrupts via the PRIMASK register<a class="headerlink" href="#disabling-interrupts-via-the-primask-register" title="Permalink to this heading"></a></h3>
-<p>The ARMv7-M architecture supports a register called the <code class="docutils literal notranslate"><span class="pre">PRIMASK</span></code> register.
-The <code class="docutils literal notranslate"><span class="pre">PRIMASK</span></code> register contains a single valid bit. If that bit is set to
-one, then exceptions are disabled. If that bit is zero, exceptions are enabled.
-More correctly, when this bit is set to one, it prevents the activation of all
-exceptions with configurable priority.</p>
-<p>The original NuttX implementation used this <code class="docutils literal notranslate"><span class="pre">PRIMASK</span></code> register to enable
-and disable exceptions. Things now get interesting in the sequence of logic
-listed above because the <code class="docutils literal notranslate"><span class="pre">PRIMASK</span></code> bit also disables the SVCALL exception!
-So, instead of taking the <code class="docutils literal notranslate"><span class="pre">SVCALL</span></code> exception vector, the Cortex-M3/4
-generates a hardfault exception (see ARM.com’s discussion of
-<a class="reference external" href="https://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/Chdbdfjf.html">Activation Levels</a>).</p>
-<p>These hardfaults are not really a problem. The design of the NuttX hardfault
-handler expects these exceptions and does the right thing.
-However, the occurrence of hardfaults may come as a surprise to many people
-and especially to some debuggers.</p>
-</section>
-<section id="hardfaults-and-debuggers">
-<h3>Hardfaults and Debuggers<a class="headerlink" href="#hardfaults-and-debuggers" title="Permalink to this heading"></a></h3>
-<p>These hardfaults only become a technical issue when dealing with a debugger.
-What does the debugger do when the hardfault occurs?</p>
-<p>We need to back off and think about some system philosophy here.
-The deep philosophical question here is: Who is in charge of system integrity?
-The debugger or the RTOS?</p>
-<p>If you are running a primitive NoOS program (like the famous blinky test
-program), then you are running a barebones system and you need
-all of the help you can get. So having the debugger make decisions about what
-is the proper behavior of the blinky program and what is not is a good
-thing for you.</p>
-<p>But if you are using an advanced RTOS, then the RTOS will want to take
-responsibility of the health of your system and now there is the possibility
-of inconsistencies between the decisions that the RTOS makes and the decisions
-that your debugger makes this hardfault handling is a perfect example here.</p>
-<p>In NuttX, the hardfaults are controlled by the RTOS, but some debuggers will
-break when the hardfault occurs and make debugging impossible.</p>
-<p>Some people might take issue with this. Breaking on hardfault can make
-debugging easier, since the break happens in the throwing context and you have
-a hope of obtaining a backtrace and debugging the throwing side callstack.
-However, I would suggest that putting a break point on <code class="docutils literal notranslate"><span class="pre">up_assert()</span></code> would
-accomplish the same thing without being so intrusive.</p>
-<p>How did the debugger know that the hardfault occurred? It knew because of
-settings in the “ARM’s Debug Exception and Monitor Control Register” or
-<code class="docutils literal notranslate"><span class="pre">DEMCR</span></code>. Proper settings of the <code class="docutils literal notranslate"><span class="pre">DEMCR</span></code> register will allow debugger
-to get break exceptions when a hardfault occrs.
-So one workaround is to just reconfigure the <code class="docutils literal notranslate"><span class="pre">DEMCR</span></code> register so that break
-exceptions are no longer generated when hardfaults occur.</p>
-<p>Here is an example of such logic for the LPC43xx MCU.
-Decoupling the hardfault from the break exception in this way does not work
-with all debuggers, however. Presumably because some debuggers re-enable break
-exceptions on hardfaults.</p>
-</section>
-<section id="disabling-interrupts-via-the-basepri-register">
-<h3>Disabling Interrupts via the BASEPRI register<a class="headerlink" href="#disabling-interrupts-via-the-basepri-register" title="Permalink to this heading"></a></h3>
-<p>The ARMv7-M architecture supports another way to disable exceptions using
-a register called the <code class="docutils literal notranslate"><span class="pre">BASEPRI</span></code> register. ARMv7-M exceptions are prioritized.
-Each exception can be assigned an 8-bit priority. If the <code class="docutils literal notranslate"><span class="pre">BASEPRI</span></code> register
-is set to a non-zero priority value, then it will filter exceptions in this sense:</p>
+<section id="other-crc32-variants">
+<h3>Other CRC32 Variants<a class="headerlink" href="#other-crc32-variants" title="Permalink to this heading"></a></h3>
+<p>NuttX also provides CRC32 variants using different polynomials:</p>
 <ul class="simple">
-<li><p>Exceptions with priority lower than or equal to the <code class="docutils literal notranslate"><span class="pre">BASEPRI</span></code> register
-will be disabled.</p></li>
-<li><p>Exceptions with priority higher than the <code class="docutils literal notranslate"><span class="pre">BASEPRI</span></code> register will still
-be enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crc32h04c11db7()</span></code> / <code class="docutils literal notranslate"><span class="pre">crc32h04c11db7_part()</span></code> — Castagnoli (CRC-32C)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">crc32hf4acfb13()</span></code> / <code class="docutils literal notranslate"><span class="pre">crc32hf4acfb13_part()</span></code> — CRC-32Q</p></li>
 </ul>
-<p>Normally this interrupt prioritization is used to support nested interrupt
-handling, but it can also be used for disabling of all exceptions
-if configured properly.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>In the ARMv7-M, higher values correspond to lower priority.
-This can be really confusing!</p>
-</div>
-<p>NuttX supports a configuration option called <code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_USEBASEPRI</span></code>.
-If this option is selected, then the exception prioritization and control
-logic will be configured to use the <code class="docutils literal notranslate"><span class="pre">BASEPRI</span></code> register instead of the
-<code class="docutils literal notranslate"><span class="pre">PRIMASK</span></code> register to disable exceptions.
-This configuration includes the following changes in the behavior:</p>
-<ul class="simple">
-<li><p>Normal interrupts and exceptions are restricted to the range
-<code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">lowest</span> <span class="pre">priority</span> <span class="pre">...</span> <span class="pre">(highest</span> <span class="pre">priority</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">}</span></code>.</p></li>
-<li><p>The priority of the <code class="docutils literal notranslate"><span class="pre">SVCALL</span></code> exception is set to highest priority.</p></li>
-<li><p>When exceptions are enabled, the <code class="docutils literal notranslate"><span class="pre">BASEPRI</span></code> register is set to zero,
-enabling exceptions of all priorities.</p></li>
-<li><p>When exceptions are disabled, the <code class="docutils literal notranslate"><span class="pre">BASEPRI</span></code> register is set to
-<code class="docutils literal notranslate"><span class="pre">(highest</span> <span class="pre">priority</span> <span class="pre">-</span> <span class="pre">1)</span></code>, disabling all exceptions except for the
-<code class="docutils literal notranslate"><span class="pre">SVCALL</span></code> exception.</p></li>
-</ul>
-<p>In this way, the <code class="docutils literal notranslate"><span class="pre">SVCALL</span></code> exception remains enabled when exceptions
-are disabled and no hardfault occurs.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The above is inaccurate on several counts. It was simplified
-to make the discussion sane. Not only do higher values correspond
-to lower priorities, but the increment between consecutive 8-bit
-priority values is probably not one. The supported maximum and
-minimum priority values (as well as the step in each priority value)
-may be different for each MCU. To handle this, these values are
-exported in NuttX for each ARMv7-M architecture by header files at
-<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/include/&lt;chip&gt;/chip.h</span></code>.</p>
-</div>
 </section>
+</section>
+<section id="crc16-and-crc8">
+<h2>CRC16 and CRC8<a class="headerlink" href="#crc16-and-crc8" title="Permalink to this heading"></a></h2>
+<p>CRC16 and CRC8 follow the same naming pattern with multiple variant functions.
+See <code class="docutils literal notranslate"><span class="pre">include/nuttx/crc16.h</span></code> and <code class="docutils literal notranslate"><span class="pre">include/nuttx/crc8.h</span></code> for available
+variants.</p>
 </section>
 </section>
 
@@ -361,8 +322,8 @@ exported in NuttX for each ARMv7-M architecture by header files at
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="file_descriptors.html" class="btn btn-neutral float-left" title="File Descriptors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="interrupt_controls.html" class="btn btn-neutral float-right" title="Per-Thread Interrupt Controls" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="context_switches.html" class="btn btn-neutral float-left" title="Context Switches" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="critical_sections.html" class="btn btn-neutral float-right" title="Critical Sections" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

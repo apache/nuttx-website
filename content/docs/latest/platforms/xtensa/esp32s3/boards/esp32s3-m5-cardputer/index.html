@@ -238,9 +238,9 @@
 </figure>
 <p>The <a class="reference external" href="https://docs.m5stack.com/en/core/Cardputer">M5Stack Cardputer</a> is a
 pocket-sized computer kit built around an M5Stamp S3 module (ESP32-S3FN8, dual
-Xtensa LX7 &#64; 240 MHz, 8 MB flash, no PSRAM).  It integrates a 1.14” ST7789
-TFT, an NS4168 I2S speaker, an SPM1423 microphone, an IR transmitter, a
-microSD slot and a Grove port.</p>
+Xtensa LX7 &#64; 240 MHz, 8 MB flash, no PSRAM).  It integrates a 56-key keyboard,
+a 1.14” ST7789 TFT, an NS4168 I2S speaker, an SPM1423 microphone, an IR
+transmitter, a microSD slot and a Grove port.</p>
 <figure class="align-center" id="id3">
 <img alt="M5Stack Cardputer" src="../../../../../_images/esp32-cardputer-image-2.png" />
 <figcaption>
@@ -252,6 +252,7 @@ microSD slot and a Grove port.</p>
 <ul class="simple">
 <li><p>ESP32-S3FN8 (dual Xtensa LX7 &#64; 240 MHz), 8 MB flash, no PSRAM</p></li>
 <li><p>Wi-Fi 4 (2.4 GHz) and Bluetooth LE (native ESP32-S3 radio)</p></li>
+<li><p>56-key keyboard (8x7 matrix behind a 74HC138 demultiplexer)</p></li>
 <li><p>1.14” 240x135 ST7789v2 TFT on SPI2</p></li>
 <li><p>NS4168 mono I2S Class-D speaker amplifier</p></li>
 <li><p>SPM1423 PDM microphone</p></li>
@@ -266,6 +267,24 @@ microSD slot and a Grove port.</p>
 on the USB Type-C connector.  It enumerates on the host as <code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code>
 (Linux).  No external USB-to-UART bridge is required.</p>
 </section>
+<section id="keyboard">
+<h2>Keyboard<a class="headerlink" href="#keyboard" title="Permalink to this heading"></a></h2>
+<p>The 56-key keyboard is an 8x7 matrix driven by a 74HC138 3-to-8 demultiplexer:
+three select lines (GPIO8/9/11) choose one of eight rows and seven column lines
+(GPIO13/15/3/4/5/6/7) are read back.  The <code class="docutils literal notranslate"><span class="pre">esp32s3_kbd.c</span></code> driver scans the
+matrix on the low-priority work queue and registers a keyboard device at
+<code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code>, reporting ASCII key codes with SHIFT/CTRL handling.  Enable it
+with <code class="docutils literal notranslate"><span class="pre">CONFIG_ESP32S3_M5_CARDPUTER_KEYBOARD</span></code> (the <code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> configuration
+turns it on).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The key-position-to-character table follows the M5Cardputer layout; verify
+it against the printed legends on first bring-up.  Applications read
+<code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code> for key events (for example the <code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> example, built
+with its physical-keyboard input variant, feeds it into an on-screen
+shell).</p>
+</div>
+</section>
 <section id="pin-mapping">
 <h2>Pin Mapping<a class="headerlink" href="#pin-mapping" title="Permalink to this heading"></a></h2>
 <table class="docutils align-default">
@@ -275,6 +294,12 @@ on the USB Type-C connector.  It enumerates on the host as <code class="docutils
 </tr>
 </thead>
 <tbody>
+<tr class="row-even"><td><p>Keyboard demux select</p></td>
+<td><p>8 (A0), 9 (A1), 11 (A2)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Keyboard columns</p></td>
+<td><p>13, 15, 3, 4, 5, 6, 7</p></td>
+</tr>
 <tr class="row-even"><td><p>ST7789 SPI2 SCLK/MOSI/CS</p></td>
 <td><p>36 / 35 / 37</p></td>
 </tr>
@@ -364,6 +389,16 @@ the 10.0.0.0/24 range and can reach the board at 10.0.0.1.</p>
 </dd>
 <dt>lvgl</dt><dd><p>Graphics support with LVGL on the ST7789 display.  Run the LVGL demo:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; lvgldemo
+</pre></div>
+</div>
+</dd>
+<dt>lvglterm</dt><dd><p>On-screen NuttShell terminal with LVGL and the physical keyboard.  Runs
+the <code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> example built with its physical-keyboard input variant:
+NSH output is rendered in an LVGL text area and the keyboard
+(<code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code>) feeds the input.  Wi-Fi is included, so the on-screen
+shell can associate with an access point using <code class="docutils literal notranslate"><span class="pre">wapi</span></code>.  <code class="docutils literal notranslate"><span class="pre">Fn</span></code> + <code class="docutils literal notranslate"><span class="pre">;</span></code> /
+<code class="docutils literal notranslate"><span class="pre">.</span></code> scroll the output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; lvglterm
 </pre></div>
 </div>
 </dd>
