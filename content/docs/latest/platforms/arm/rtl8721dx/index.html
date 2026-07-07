@@ -179,8 +179,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../rp23xx/index.html">Raspberry Pi rp2350</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../rtl8720f/index.html">Realtek RTL8720F</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Realtek RTL8721Dx</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#memory-map">Memory Map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#highlights">Highlights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#memory">Memory</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#vendor-sdk-dependency">Vendor SDK Dependency</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#toolchain">Toolchain</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-features">Supported Features</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#boards">Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/pke8721daf/index.html">PKE8721DAF</a></li>
@@ -282,58 +284,76 @@
              
   <section id="realtek-rtl8721dx">
 <h1>Realtek RTL8721Dx<a class="headerlink" href="#realtek-rtl8721dx" title="Permalink to this heading"></a></h1>
-<p>The Realtek RTL8721Dx is a dual-core Wi-Fi Host Controller (WHC) SoC:</p>
+<p>The Realtek RTL8721Dx is a low-power dual-band Wi-Fi and Bluetooth LE SoC from
+the Realtek Ameba IoT family, targeting smart-home control, wireless audio,
+battery-powered cameras, smart locks and other IoT products.</p>
+<p>NuttX runs on the <strong>KM4 application core</strong> — an Arm Cortex-M55-compatible core
+(Real-M300, Armv8.1-M) running at up to <strong>345 MHz</strong>, with a single-precision
+FPU, DSP extensions and Arm TrustZone-M.</p>
+<section id="highlights">
+<h2>Highlights<a class="headerlink" href="#highlights" title="Permalink to this heading"></a></h2>
 <ul class="simple">
-<li><p><strong>KM4</strong> — an ARM Cortex-M33 (ARMv8-M.main, with FPU) application/host core.
-NuttX runs here.</p></li>
-<li><p><strong>KM0</strong> — the network-processor (NP) core that owns the Wi-Fi MAC/PHY and
-runs a prebuilt vendor firmware image.</p></li>
+<li><p><strong>CPU:</strong> Arm Cortex-M55-compatible application core, up to 345 MHz, with
+FPU + DSP instructions, TrustZone-M, and 16 KB I-Cache + 16 KB D-Cache.</p></li>
+<li><p><strong>Memory:</strong> 512 KB on-chip SRAM; external QSPI NOR flash (up to 104 MHz)
+and/or DDR PSRAM (up to 200 MHz), depending on the part number.</p></li>
+<li><p><strong>Wireless:</strong> Wi-Fi 4 (802.11 a/b/g/n), dual-band 2.4 GHz / 5 GHz, 1T1R, up
+to 150 Mbps, WPA/WPA2/WPA3; Bluetooth LE 5.0.</p></li>
+<li><p><strong>Peripherals:</strong> UART x4, I2C x2, SPI x2, QSPI/OSPI, I2S x2, DMIC x2,
+PWM x8, ADC + cap-touch, USB 2.0 full-speed device, SDIO device, IR, RTC,
+independent/system watchdogs, GDMA, and up to 64 GPIO (count varies by
+package).</p></li>
+<li><p><strong>Security:</strong> Secure Boot, TrustZone-M, AES/SHA hardware crypto engine, OTP,
+and a true random number generator (PSA Level 2).</p></li>
+<li><p><strong>Packages:</strong> QFN48, QFN68 and BGA100.</p></li>
 </ul>
-<p>NuttX is the Wi-Fi <em>host</em>: it talks to the NP over the on-chip IPC transport
-(WHC, <code class="docutils literal notranslate"><span class="pre">WHC_HOST</span></code> + <code class="docutils literal notranslate"><span class="pre">WHC_INTF_IPC</span></code>) while the NP drives the radio. The
-IC-agnostic glue (os_wrapper backend, netdev, key-value store, flash MTD, WHC
-Wi-Fi glue) is shared from <code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba</span></code> with the other Ameba
-WHC parts; only the register-level drivers are IC-specific.</p>
-<section id="memory-map">
-<h2>Memory Map<a class="headerlink" href="#memory-map" title="Permalink to this heading"></a></h2>
+</section>
+<section id="memory">
+<h2>Memory<a class="headerlink" href="#memory" title="Permalink to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Block Name</p></th>
+<tr class="row-odd"><th class="head"><p>Block</p></th>
 <th class="head"><p>Start Address</p></th>
 <th class="head"><p>Length</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>SRAM (KM4)</p></td>
-<td><p>0x20020000</p></td>
-<td><p>288K</p></td>
+<tr class="row-even"><td><p>SRAM</p></td>
+<td><p>0x2000_0000</p></td>
+<td><p>512 KB</p></td>
 </tr>
 </tbody>
 </table>
-<p>The KM4 image2 RAM window is a slice of the on-chip SRAM; the flash is a SPI
-NOR accessed via the SDK XIP path and shared with the NP.</p>
+<p>The on-chip SRAM holds the system heap and application. The flash is an SPI
+NOR accessed through the SDK XIP path. The exact flash / PSRAM size depends on
+the part number — for example the RTL8721DAF has 4 MB of NOR flash and no
+PSRAM.</p>
 </section>
 <section id="vendor-sdk-dependency">
 <h2>Vendor SDK Dependency<a class="headerlink" href="#vendor-sdk-dependency" title="Permalink to this heading"></a></h2>
 <p>The build depends on Realtek’s open <code class="docutils literal notranslate"><span class="pre">ameba-rtos</span></code> SDK, which is <strong>not</strong> part
-of the NuttX tree. The first build auto-fetches the pinned revision (a shallow
-<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> of <code class="docutils literal notranslate"><span class="pre">https://gitee.com/ameba-aiot/ameba-rtos.git</span></code>) into
-<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/ameba-rtos</span></code> (git-ignored) and applies the
-out-of-SDK build patch under <code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/patches</span></code>. To use a
-local checkout instead of auto-fetching, export <code class="docutils literal notranslate"><span class="pre">AMEBA_SDK</span></code> to its path.</p>
+of the NuttX tree. It provides the Wi-Fi / Bluetooth firmware and the
+low-level chip libraries. The first build auto-fetches the pinned revision (a
+shallow <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> of <code class="docutils literal notranslate"><span class="pre">https://github.com/Ameba-AIoT/ameba-rtos.git</span></code>) into
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/ameba-rtos</span></code> (git-ignored) and builds against it
+unmodified. To use a local checkout instead of auto-fetching, export
+<code class="docutils literal notranslate"><span class="pre">AMEBA_SDK</span></code> to its path.</p>
+</section>
+<section id="toolchain">
+<h2>Toolchain<a class="headerlink" href="#toolchain" title="Permalink to this heading"></a></h2>
 <p>A matching Realtek ARM toolchain (<code class="docutils literal notranslate"><span class="pre">arm-none-eabi</span></code> from the Realtek asdk
-release) is required; NuttX links its own libc/libm and reuses the SDK’s
-<code class="docutils literal notranslate"><span class="pre">app_start()</span></code> as the image2 entry point.</p>
+release) is required and is fetched automatically by the board build. NuttX
+links its own libc / libm and reuses the SDK’s <code class="docutils literal notranslate"><span class="pre">app_start()</span></code> as the image
+entry point.</p>
 </section>
 <section id="supported-features">
 <h2>Supported Features<a class="headerlink" href="#supported-features" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>NSH over the LOG-UART console</p></li>
-<li><p>littlefs persistent storage at <code class="docutils literal notranslate"><span class="pre">/data</span></code> on the SPI NOR (a dedicated flash
+<li><p>littlefs persistent storage at <code class="docutils literal notranslate"><span class="pre">/data</span></code> on the SPI NOR flash (a dedicated
 partition), backing the Wi-Fi key-value store</p></li>
-<li><p>Wi-Fi STA (scan / connect) and SoftAP via the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
-<li><p>Networking (lwIP-free: NuttX’s own TCP/IP stack over the WHC netdev),
-DHCP client and DHCP server</p></li>
+<li><p>Wi-Fi station (scan / connect) and SoftAP via the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
+<li><p>Networking on NuttX’s own TCP/IP stack, with DHCP client and DHCP server</p></li>
 </ul>
 </section>
 <section id="boards">
