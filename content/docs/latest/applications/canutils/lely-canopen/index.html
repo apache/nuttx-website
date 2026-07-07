@@ -144,7 +144,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../candump/index.html"><code class="docutils literal notranslate"><span class="pre">candump</span></code> SocketCAN candump tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../canlib/index.html"><code class="docutils literal notranslate"><span class="pre">canlib</span></code> CAN utility library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../cansend/index.html"><code class="docutils literal notranslate"><span class="pre">cansend</span></code> SocketCAN cansend tool</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">lely-canopen</span></code> Lely CANopen support</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">lely-canopen</span></code> Lely CANopen support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#feature-selection">Feature selection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tools">Tools</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../libcanutils/index.html"><code class="docutils literal notranslate"><span class="pre">libcanutils</span></code> CAN-utils support library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../libdronecan/index.html"><code class="docutils literal notranslate"><span class="pre">libdronecan</span></code> libcanard DroneCAN Library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../libobd2/index.html"><code class="docutils literal notranslate"><span class="pre">libobd2</span></code> OBD-II Library</a></li>
@@ -214,6 +219,45 @@
              
   <section id="lely-canopen-lely-canopen-support">
 <h1><code class="docutils literal notranslate"><span class="pre">lely-canopen</span></code> Lely CANopen support<a class="headerlink" href="#lely-canopen-lely-canopen-support" title="Permalink to this heading"></a></h1>
+<p><a class="reference external" href="https://gitlab.com/lely_industries/lely-core">Lely CANopen</a> is an
+open-source CANopen (CiA 301/302/305/315) protocol stack.</p>
+<p>The port configuration (<code class="docutils literal notranslate"><span class="pre">LELY_NO_*</span></code> feature switches) is generated
+from Kconfig in <code class="docutils literal notranslate"><span class="pre">apps/include/canutils/lely/config.h</span></code>.</p>
+<section id="feature-selection">
+<h2>Feature selection<a class="headerlink" href="#feature-selection" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_CANUTILS_LELYCANOPEN</span></code> enables the build. The individual CANopen
+services are selected with the <code class="docutils literal notranslate"><span class="pre">CONFIG_CANUTILS_LELYCANOPEN_*</span></code> options,
+including:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SDEV</span></code> – static device description support (selects <code class="docutils literal notranslate"><span class="pre">OBJNAME</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MASTER</span></code> – NMT master support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EMCY</span></code> – emergency (EMCY) objects</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CSDO</span></code> / <code class="docutils literal notranslate"><span class="pre">SSDO</span></code> – client / server SDO</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RPDO</span></code> / <code class="docutils literal notranslate"><span class="pre">TPDO</span></code> / <code class="docutils literal notranslate"><span class="pre">MPDO</span></code> – process data objects</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SYNC</span></code> / <code class="docutils literal notranslate"><span class="pre">TIME</span></code> – SYNC and TIME producers/consumers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LSS</span></code> – layer setting services</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NG</span></code> / <code class="docutils literal notranslate"><span class="pre">NMTBOOT</span></code> / <code class="docutils literal notranslate"><span class="pre">NMTCFG</span></code> – node guarding and master boot/config</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OBJDEFAULT</span></code> / <code class="docutils literal notranslate"><span class="pre">OBJLIMITS</span></code> / <code class="docutils literal notranslate"><span class="pre">OBJNAME</span></code> / <code class="docutils literal notranslate"><span class="pre">OBJUPLOAD</span></code> /
+<code class="docutils literal notranslate"><span class="pre">OBJFILE</span></code> – object dictionary features</p></li>
+</ul>
+</section>
+<section id="tools">
+<h2>Tools<a class="headerlink" href="#tools" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_CANUTILS_LELYCANOPEN_TOOLS_COCTL</span></code> builds <code class="docutils literal notranslate"><span class="pre">coctl</span></code>, the Lely
+CANopen control tool (an interactive ASCII gateway). It requires SocketCAN
+(<code class="docutils literal notranslate"><span class="pre">NET_CAN</span></code>).</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>Two ready-to-run demos built on this library are provided:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../examples/lely_slave/index.html"><span class="doc">lely_slave Lely CANopen slave example</span></a> – a CANopen slave node</p></li>
+<li><p><a class="reference internal" href="../../examples/lely_master/index.html"><span class="doc">lely_master Lely CANopen master example</span></a> – a CANopen master node</p></li>
+</ul>
+<p>Both can run on the simulator over the CAN character driver. See
+<a class="reference internal" href="../../../platforms/sim/sim/boards/sim/index.html#testing-lely-canopen-sim"><span class="std std-ref">Testing a CANopen network on the simulator</span></a> for how to set up a virtual CAN network and
+observe the traffic.</p>
+</section>
 </section>
 
 

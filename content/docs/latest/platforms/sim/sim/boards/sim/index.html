@@ -1991,6 +1991,82 @@ Requirement: <code class="docutils literal notranslate"><span class="pre">canseq
 </li>
 </ol>
 </section>
+<section id="lely-and-lely-sock">
+<h2>lely and lely-sock<a class="headerlink" href="#lely-and-lely-sock" title="Permalink to this heading"></a></h2>
+<p>These configurations build the Lely CANopen demos over the CAN character
+driver. Both the slave (<code class="docutils literal notranslate"><span class="pre">coslave</span></code> built-in, node <code class="docutils literal notranslate"><span class="pre">0x02</span></code>) and the master
+(<code class="docutils literal notranslate"><span class="pre">comaster</span></code> built-in, node <code class="docutils literal notranslate"><span class="pre">0x01</span></code>) are embedded in the single image. See
+<a class="reference internal" href="../../../../../applications/examples/lely_slave/index.html"><span class="doc">lely_slave Lely CANopen slave example</span></a> and
+<a class="reference internal" href="../../../../../applications/examples/lely_master/index.html"><span class="doc">lely_master Lely CANopen master example</span></a>.</p>
+<p>The master orchestrates a small CANopen network: it reads the slave’s device
+type over an SDO transfer, commands the slave to OPERATIONAL with an NMT
+start, then produces SYNC while the slave streams a counter back in a
+synchronous TPDO which the master receives via an RPDO.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">sim:lely</span></code> configuration uses the CAN character driver; <code class="docutils literal notranslate"><span class="pre">sim:lely-sock</span></code>
+is the same demo over SocketCAN (<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_CANDEV_SOCK</span></code>). Both bridge to a
+host <code class="docutils literal notranslate"><span class="pre">vcan</span></code> interface named <code class="docutils literal notranslate"><span class="pre">can0</span></code>, which must exist and be up on the host:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo modprobe vcan
+sudo ip link add dev can0 type vcan
+sudo ip link set up can0
+</pre></div>
+</div>
+<p>The SocketCAN example brings its own NuttX interface up (via <code class="docutils literal notranslate"><span class="pre">netlib_ifup()</span></code>),
+so <code class="docutils literal notranslate"><span class="pre">coslave</span></code>/<code class="docutils literal notranslate"><span class="pre">comaster</span></code> can be started directly without a manual <code class="docutils literal notranslate"><span class="pre">ifup</span></code>.</p>
+<section id="testing-a-canopen-network-on-the-simulator">
+<span id="testing-lely-canopen-sim"></span><h3>Testing a CANopen network on the simulator<a class="headerlink" href="#testing-a-canopen-network-on-the-simulator" title="Permalink to this heading"></a></h3>
+<p>The simulator CAN character driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_CANDEV_CHAR</span></code>) bridges
+<code class="docutils literal notranslate"><span class="pre">/dev/can0</span></code> to a host SocketCAN interface named <code class="docutils literal notranslate"><span class="pre">can0</span></code> (the index is
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_CANDEV_CHAR_IDX</span></code>). Each simulator process owns one host socket,
+so the two nodes are run as <strong>two separate processes of the same image</strong> on
+the shared <code class="docutils literal notranslate"><span class="pre">can0</span></code> bus.</p>
+<ol class="arabic">
+<li><p>Create a virtual CAN interface named <code class="docutils literal notranslate"><span class="pre">can0</span></code> on the host:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>modprobe<span class="w"> </span>vcan
+<span class="gp">$ </span>sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>dev<span class="w"> </span>can0<span class="w"> </span><span class="nb">type</span><span class="w"> </span>vcan
+<span class="gp">$ </span>sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>up<span class="w"> </span>can0
+</pre></div>
+</div>
+</li>
+<li><p>Build the image:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>sim:lely
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+</li>
+<li><p>Run the slave in one terminal and the master in another (start the slave
+first so it is up when the master boots it):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>terminal<span class="w"> </span><span class="m">1</span>
+<span class="gp">$ </span>./nuttx
+<span class="go">nsh&gt; coslave &amp;</span>
+
+<span class="gp"># </span>terminal<span class="w"> </span><span class="m">2</span>
+<span class="gp">$ </span>./nuttx
+<span class="go">nsh&gt; comaster &amp;</span>
+</pre></div>
+</div>
+<p>The master prints the exchange it drives:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>SDO: slave device type (0x1000) = 0x00000000
+NMT: master + slave 0x02 OPERATIONAL
+PDO rx: counter = 17
+PDO rx: counter = 18
+PDO rx: counter = 19
+</pre></div>
+</div>
+</li>
+<li><p>Observe the bus from the host with <code class="docutils literal notranslate"><span class="pre">candump</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>candump<span class="w"> </span>can0
+<span class="go">can0  702   [1]  7F                         # slave heartbeat (pre-op)</span>
+<span class="go">can0  602   [8]  40 00 10 00 00 00 00 00    # master SDO upload request</span>
+<span class="go">can0  582   [8]  43 00 10 00 00 00 00 00    # slave SDO upload response</span>
+<span class="go">can0  000   [2]  01 02                      # NMT start node 0x02</span>
+<span class="go">can0  080   [0]                             # SYNC (master)</span>
+<span class="go">can0  182   [4]  11 00 00 00                # slave TPDO (counter)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
 <section id="nxscope">
 <h2>nxscope<a class="headerlink" href="#nxscope" title="Permalink to this heading"></a></h2>
 <p>Configuration demonstrating NxScope stream over simulated UART interface.</p>
