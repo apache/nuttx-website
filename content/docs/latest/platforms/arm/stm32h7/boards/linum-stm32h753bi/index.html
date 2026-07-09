@@ -1551,6 +1551,49 @@ rendered in an LVGL text area.:</p>
 <code class="docutils literal notranslate"><span class="pre">nsh&gt;</span> <span class="pre">&lt;command&gt;</span></code> and its output appear in the terminal area above the
 keyboard.</p>
 </section>
+<section id="lvglterm-kbda">
+<h3>lvglterm_kbda<a class="headerlink" href="#lvglterm-kbda" title="Permalink to this heading"></a></h3>
+<p><strong>Purpose:</strong> runs the <code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> example – an interactive NuttShell (NSH)
+terminal rendered on the display – driven by an external <strong>USB HID keyboard</strong>,
+demonstrating that the OTG FS USB host and the microSD card can be used at the
+same time on this board.</p>
+<p>The board’s OTG FS port is enabled as a USB host (VBUS power switch on PI12),
+so a USB HID keyboard plugged into the service connector is enumerated as
+<code class="docutils literal notranslate"><span class="pre">/dev/kbda</span></code> and its keys are streamed to NSH.  The microSD card is enabled as
+well and, because <code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_MMCSUPPORT</span></code> is disabled, an SD card is probed
+correctly (not as an MMC device) and registered as <code class="docutils literal notranslate"><span class="pre">/dev/mmcsd0</span></code>.</p>
+<p><strong>Build and flash:</strong></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>linum-stm32h753bi:lvglterm_kbda
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+<p>Flash the resulting <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> to the board.</p>
+<p><strong>How to test:</strong> plug a USB HID keyboard and an SD card, reset the board and
+check that both devices are present:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /dev
+/dev:
+ console
+ fb0
+ kbda
+ mmcsd0
+ null
+ rtc0
+ ttyS0
+ zero
+</pre></div>
+</div>
+<p>Start the terminal and type on the USB keyboard; the command line and its
+output appear on the display, and the Up/Down cursor keys scroll it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; lvglterm
+</pre></div>
+</div>
+<p>The SD card can be mounted and read while the keyboard is in use, confirming
+that the USB host and the SDMMC peripheral coexist:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /data
+nsh&gt; ls /data
+</pre></div>
+</div>
+</section>
 <section id="tone">
 <h3>tone<a class="headerlink" href="#tone" title="Permalink to this heading"></a></h3>
 <p>This example demonstrates how to use PWM4 and Timer17 to play music using the Tone library and the board’s buzzer.</p>

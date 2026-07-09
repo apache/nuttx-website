@@ -412,15 +412,17 @@
 <h1><code class="docutils literal notranslate"><span class="pre">lvglterm</span></code> LVGL Terminal for NuttShell (NSH)<a class="headerlink" href="#lvglterm-lvgl-terminal-for-nuttshell-nsh" title="Permalink to this heading"></a></h1>
 <p>LVGL application that runs an interactive NuttShell (NSH) on the display.  NSH
 is started with its standard streams redirected through pipes, its output is
-rendered in an LVGL text area, and the input comes from one of two sources
+rendered in an LVGL text area, and the input comes from one of three sources
 selected at build time.</p>
 <p>The shared code lives in <code class="docutils literal notranslate"><span class="pre">lvglterm.c</span></code> (NSH startup, output rendering, main
-loop); <code class="docutils literal notranslate"><span class="pre">lvglterm_touch.c</span></code> and <code class="docutils literal notranslate"><span class="pre">lvglterm_kbd.c</span></code> implement the two input
+loop); <code class="docutils literal notranslate"><span class="pre">lvglterm_touch.c</span></code> and <code class="docutils literal notranslate"><span class="pre">lvglterm_kbd.c</span></code> implement the input
 variants.</p>
 <section id="input-variants">
 <h2>Input variants<a class="headerlink" href="#input-variants" title="Permalink to this heading"></a></h2>
 <p>The input source is chosen with the <em>LVGL Terminal input source</em> Kconfig
-choice (only one is built at a time):</p>
+choice (only one is built at a time).  The physical-keyboard options differ in
+the data the keyboard device returns on <code class="docutils literal notranslate"><span class="pre">read()</span></code>, so the one that matches the
+hardware must be selected.</p>
 <dl>
 <dt>On-screen keyboard (touch)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_INPUT_TOUCH</span></code> (default).  An LVGL keyboard
 widget operated by touch; a command line is typed and submitted with
@@ -432,22 +434,36 @@ Enter.  Suits touchscreen boards and keeps the original behaviour.</p>
 </figcaption>
 </figure>
 </dd>
-<dt>Physical keyboard</dt><dd><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_INPUT_KBD</span></code>.  Key events are read from a
-<code class="docutils literal notranslate"><span class="pre">/dev/kbdN</span></code> keyboard device and streamed to the shell; the output fills
-the whole screen.  Requires <code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT_KEYBOARD</span></code>.</p>
-<p>The device defaults to <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_KBD_DEV</span></code>
-(<code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code>) and can be overridden at run time by passing the path as
-the first argument (<code class="docutils literal notranslate"><span class="pre">lvglterm</span> <span class="pre">/dev/kbd1</span></code>) when more than one keyboard is
-present.  Keyboards that report the Fn navigation cluster as cursor keys
-can scroll the output with Up/Down.</p>
+<dt>Matrix / upper-half keyboard</dt><dd><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_INPUT_KBD_MATRIX</span></code>.  <code class="docutils literal notranslate"><span class="pre">struct</span>
+<span class="pre">keyboard_event_s</span></code> events are read from a keyboard registered through the
+<code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT_KEYBOARD</span></code> upper half (for example the M5Stack Cardputer
+matrix keyboard on <code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code>) and streamed to the shell; the output
+fills the whole screen.  The Fn Up/Down cursor keys scroll the output.</p>
 <figure class="align-center" id="id2">
-<a class="reference internal image-reference" href="../../../_images/lvglterm-kbd.png"><img alt="LVGL Terminal driven by a physical keyboard" src="../../../_images/lvglterm-kbd.png" style="width: 500px;" /></a>
+<a class="reference internal image-reference" href="../../../_images/lvglterm-kbd.png"><img alt="LVGL Terminal driven by a matrix keyboard" src="../../../_images/lvglterm-kbd.png" style="width: 500px;" /></a>
 <figcaption>
-<p><span class="caption-text">Physical keyboard variant</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Matrix / upper-half keyboard variant</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</dd>
+<dt>USB HID keyboard</dt><dd><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_INPUT_KBD_USB</span></code>.  A USB HID keyboard (for
+example on <code class="docutils literal notranslate"><span class="pre">/dev/kbda</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_HIDKBD</span></code>) delivers a byte
+stream that is decoded with the keyboard codec and streamed to the shell.
+When the driver is built with <code class="docutils literal notranslate"><span class="pre">CONFIG_HIDKBD_ENCODED</span></code> the Up/Down cursor
+keys scroll the terminal.</p>
+<figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="../../../_images/lvglterm-usb.png"><img alt="LVGL Terminal driven by a USB HID keyboard" src="../../../_images/lvglterm-usb.png" style="width: 500px;" /></a>
+<figcaption>
+<p><span class="caption-text">USB HID keyboard variant</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd>
 </dl>
+<p>Both keyboard variants default the device to
+<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_LVGLTERM_KBD_DEV</span></code> (<code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code> for the matrix keyboard,
+<code class="docutils literal notranslate"><span class="pre">/dev/kbda</span></code> for USB) and can be overridden at run time by passing the path
+as the first argument (<code class="docutils literal notranslate"><span class="pre">lvglterm</span> <span class="pre">/dev/kbd1</span></code>) when more than one keyboard is
+present.</p>
 </section>
 <section id="font">
 <h2>Font<a class="headerlink" href="#font" title="Permalink to this heading"></a></h2>
@@ -464,9 +480,13 @@ UNSCII 16 shows too few columns.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_NSH=y</span></code> – the NSH library must be enabled.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_GRAPHICS_LVGL=y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX=y</span></code> – LVGL with its
 NuttX integration.</p></li>
-<li><p>A display (<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX_LCD</span></code> or a framebuffer).  The touch variant
-also needs a touchscreen input (<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX_TOUCHSCREEN</span></code>); the
-keyboard variant needs a keyboard driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT_KEYBOARD</span></code>).</p></li>
+<li><p>A display (<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX_LCD</span></code> or a framebuffer).  Each input variant
+also needs its own driver: a touchscreen
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_USE_NUTTX_TOUCHSCREEN</span></code>) for the touch variant,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_INPUT_KEYBOARD</span></code> for the matrix variant, or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_HIDKBD</span></code> for the USB variant.  The USB variant selects
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_KBDCODEC</span></code> automatically and, for the cursor keys, the driver
+should be built with <code class="docutils literal notranslate"><span class="pre">CONFIG_HIDKBD_ENCODED</span></code>.</p></li>
 <li><p>The selected font (<code class="docutils literal notranslate"><span class="pre">CONFIG_LV_FONT_UNSCII_8</span></code> or
 <code class="docutils literal notranslate"><span class="pre">CONFIG_LV_FONT_UNSCII_16</span></code>) is enabled automatically by the font choice.</p></li>
 </ul>
