@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ADXL372 &mdash; NuttX latest documentation</title>
+  <title>MPU6050 &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="AHT10" href="aht10.html" />
-    <link rel="prev" title="ADXL362" href="adxl362.html" /> 
+    <link rel="next" title="NAU7802" href="nau7802.html" />
+    <link rel="prev" title="MPL115A" href="mpl115a.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -168,13 +168,13 @@
 <li class="toctree-l5"><a class="reference internal" href="adt7320.html">ADT7320</a></li>
 <li class="toctree-l5"><a class="reference internal" href="adxl345.html">ADXL345</a></li>
 <li class="toctree-l5"><a class="reference internal" href="adxl362.html">ADXL362</a></li>
-<li class="toctree-l5 current"><a class="current reference internal" href="#">ADXL372</a></li>
+<li class="toctree-l5"><a class="reference internal" href="adxl372.html">ADXL372</a></li>
 <li class="toctree-l5"><a class="reference internal" href="aht10.html">AHT10</a></li>
 <li class="toctree-l5"><a class="reference internal" href="ak09912.html">AK09912</a></li>
 <li class="toctree-l5"><a class="reference internal" href="lsm330.html">LSM330_SPI</a></li>
 <li class="toctree-l5"><a class="reference internal" href="mcp9600.html">MCP9600</a></li>
 <li class="toctree-l5"><a class="reference internal" href="mpl115a.html">MPL115A</a></li>
-<li class="toctree-l5"><a class="reference internal" href="mpu6050.html">MPU6050</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">MPU6050</a></li>
 <li class="toctree-l5"><a class="reference internal" href="nau7802.html">NAU7802</a></li>
 <li class="toctree-l5"><a class="reference internal" href="qmi8658.html">QMI8658</a></li>
 <li class="toctree-l5"><a class="reference internal" href="sht4x.html">SHT4X</a></li>
@@ -265,9 +265,9 @@
           <li class="breadcrumb-item"><a href="../../index.html">Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Specialized Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="../sensors.html">Sensor Drivers</a></li>
-      <li class="breadcrumb-item active">ADXL372</li>
+      <li class="breadcrumb-item active">MPU6050</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/special/sensors/adxl372.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/special/sensors/mpu6050.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -275,26 +275,79 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="adxl372">
-<h1>ADXL372<a class="headerlink" href="#adxl372" title="Permalink to this heading"></a></h1>
-<p>Contributed by Bob Feretich</p>
-<p>The ADXL372 is a 200g tri-axis accelerometer that is capable of detecting
-and recording shock impact impact events. Recording trigger
-characteristics are programmed into the sensor via multiple threshold and
-duration registers.  The ADXL372 is a SPI only device that can transfer
-data at 10 MHz.  The data transfer performance of this part permits the
-sensor to be sampled “on demand” rather than periodically sampled by a
-worker task.</p>
-<p>See the description of the “Common Sensor Register Interface” below for more
-details. It also implements the “Sensor Cluster Driver Interface”.</p>
+  <section id="mpu6050">
+<span id="id1"></span><h1>MPU6050<a class="headerlink" href="#mpu6050" title="Permalink to this heading"></a></h1>
+<p>Contributed by Shriyans.</p>
+<p>The InvenSense MPU6050 is a high-performance 6-axis MotionTracking device that combines
+a 3-axis gyroscope and a 3-axis accelerometer on the same silicon die, communicating
+over an I2C serial bus.</p>
+<p>The driver uses the <a class="reference internal" href="sensors_uorb.html"><span class="doc">uorb</span></a> interface.</p>
+<section id="application-programming-interface">
+<h2>Application Programming Interface<a class="headerlink" href="#application-programming-interface" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/sensors/mpu6050.h&gt;</span>
+</pre></div>
+</div>
+<p>The MPU6050 registration function allows the driver to be registered as a uORB
+lower-half sensor driver. Registering this driver will cause two separate uORB
+topics to appear under <code class="docutils literal notranslate"><span class="pre">/dev/uorb/</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_accel&lt;n&gt;</span></code> - Accelerometer topic reporting linear acceleration in m/s² and temperature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_gyro&lt;n&gt;</span></code> - Gyroscope topic reporting angular velocity in rad/s and temperature.</p></li>
+</ul>
+<p>Where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the device number passed during device registration (e.g., 0).</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Example uORB sensor registration on I2C bus 0 at default address 0x68 */</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mpu6050_register</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">i2c_master</span><span class="p">,</span><span class="w"> </span><span class="n">MPU6050_ADDR_LOW</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">err</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">syslog</span><span class="p">(</span><span class="n">LOG_ERR</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Failed to register MPU6050: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">err</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_MPU6050</span></code> - Enables uORB driver support for the InvenSense MPU6050 6-axis MotionTracker over I2C.</p></li>
+</ul>
+</section>
+<section id="supported-operations">
+<h2>Supported Operations<a class="headerlink" href="#supported-operations" title="Permalink to this heading"></a></h2>
+<p>The MPU6050 uORB driver supports standard sensor operations (<cite>activate</cite>, <cite>fetch</cite>,
+<cite>set_interval</cite>, <cite>batch</cite>, and <cite>control</cite>). It acquires simultaneous 3-axis accelerometer
+and 3-axis gyroscope samples, applies appropriate scale conversions, and publishes them
+to their respective uORB topics.</p>
+<section id="example-usage-uorb-listener">
+<h3>Example Usage (<cite>uorb_listener</cite>)<a class="headerlink" href="#example-usage-uorb-listener" title="Permalink to this heading"></a></h3>
+<p>Once registered on target hardware, the MPU6050 topics can be verified directly from the
+NuttX shell (NSH) using the <cite>uorb_listener</cite> utility:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>uorb_listener<span class="w"> </span>sensor_accel0<span class="w"> </span><span class="m">5</span>
+TOPIC:<span class="w"> </span>sensor_accel0<span class="w"> </span><span class="c1">#0</span>
+timestamp:<span class="w"> </span><span class="m">12345678</span>
+x:<span class="w"> </span><span class="m">0</span>.0210
+y:<span class="w"> </span><span class="m">0</span>.0035
+z:<span class="w"> </span><span class="m">9</span>.8066
+temperature:<span class="w"> </span><span class="m">25</span>.4000
+
+nsh&gt;<span class="w"> </span>uorb_listener<span class="w"> </span>sensor_gyro0<span class="w"> </span><span class="m">5</span>
+TOPIC:<span class="w"> </span>sensor_gyro0<span class="w"> </span><span class="c1">#0</span>
+timestamp:<span class="w"> </span><span class="m">12345680</span>
+x:<span class="w"> </span><span class="m">0</span>.0012
+y:<span class="w"> </span>-0.0004
+z:<span class="w"> </span><span class="m">0</span>.0001
+temperature:<span class="w"> </span><span class="m">25</span>.4000
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="adxl362.html" class="btn btn-neutral float-left" title="ADXL362" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="aht10.html" class="btn btn-neutral float-right" title="AHT10" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="mpl115a.html" class="btn btn-neutral float-left" title="MPL115A" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nau7802.html" class="btn btn-neutral float-right" title="NAU7802" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

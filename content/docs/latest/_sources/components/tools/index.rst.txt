@@ -17,107 +17,141 @@ and host C programs that are important parts of the NuttX build system:
 mkpasswd — Build-time ``/etc/passwd`` Generation
 -------------------------------------------------
 
-``tools/mkpasswd`` is a C host tool (compiled from ``tools/mkpasswd.c``) that
-generates a single ``/etc/passwd`` entry at build time.  It is invoked
-automatically by the ROMFS build step when
-``CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y`` is set.
+``tools/mkpasswd`` (``tools/mkpasswd.c``) is a host program that writes a
+single ``/etc/passwd`` entry with a TEA-encrypted password hash.  The
+plaintext password is **not** stored in the firmware image.
 
-Why build-time generation?
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+When ``CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y``, the build invokes
+``mkpasswd`` automatically from ``boards/Board.mk`` (Make) or
+``cmake/nuttx_add_romfs.cmake`` (CMake).  You normally configure the
+password and keys in menuconfig; you do not run ``mkpasswd`` by hand.
 
-Shipping a hard-coded default password in firmware is a well-known security
-weakness (CWE-798).  By generating the ``/etc/passwd`` entry from a
-user-supplied plaintext password at build time, each firmware image carries
-unique credentials.  The build will fail if the password is left empty,
-preventing accidental deployments with no credentials.
+Prerequisites
+~~~~~~~~~~~~~
 
-For improved baseline security, the configured password must be at least
-8 characters long.
+Enable all of the following (via ``make menuconfig``):
 
-How it works
-~~~~~~~~~~~~
+* **Board Selection** → **Auto-generate /etc/passwd at build time**
+  (``CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE``)
+* **Application Configuration** → **NSH Library** → **Console Login**
+  (``CONFIG_NSH_CONSOLE_LOGIN``) with verification method **Encrypted
+  password file** (``CONFIG_NSH_LOGIN_PASSWD``)
+* **Application Configuration** → **File System Utilities** → **Password file
+  support** (``CONFIG_FSUTILS_PASSWD``)
 
-1. The host tool reads the plaintext password from
-   ``CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD``.
-2. The password is hashed using the Tiny Encryption Algorithm (TEA) — the
-   same implementation used at runtime in
-   ``libs/libc/misc/lib_tea_encrypt.c`` — with custom base64 encoding
-   matching ``apps/fsutils/passwd/passwd_encrypt.c``.
-3. The resulting hashed entry is written to
-   ``etctmp/<mountpoint>/passwd`` and then embedded into the ROMFS image.
-4. The **plaintext password is never stored in the firmware image**.
+Setup workflow
+~~~~~~~~~~~~~~
 
-Kconfig options
-~~~~~~~~~~~~~~~
+1. ``tools/configure.sh <board>:<config>``
+2. ``make menuconfig``:
 
-Enable the feature and configure credentials via ``make menuconfig``:
+   * **Board Selection** → Auto-generate /etc/passwd
+
+     * **Admin password** — required, at least 8 characters.  There is no
+       Kconfig default (the legacy ``Administrator`` password is rejected).
+     * **Generate random TEA encryption keys automatically** — recommended;
+       or disable this and set keys manually (see below).
+
+   * Confirm NSH uses **Encrypted password file** verification (above).
+
+3. ``make`` — on the first build, ``tools/passwd_keys.mk`` validates the
+   password and keys, may generate TEA keys, then ``mkpasswd`` runs before
+   ``config.h`` is created so the hash and firmware always agree.
+
+Build-time credentials (CI / automation)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These values are **not** written to defconfig by ``make savedefconfig``:
+
+* ``CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD``
+* ``CONFIG_FSUTILS_PASSWD_KEY1`` … ``CONFIG_FSUTILS_PASSWD_KEY4``
+
+For scripted or CI builds, export the admin password before ``configure.sh``
+or ``make``:
+
+.. code:: bash
+
+   export NUTTX_ROMFS_PASSWD_PASSWORD="your-password-here"
+
+``tools/update_romfs_password.sh`` copies this into ``.config`` when ROMFS
+passwd generation is enabled and the password field is still empty.  NuttX
+CI sets ``NuttXSimLogin1`` for the ``sim/login`` configuration (a documented
+sim-only test credential, not a product secret).
+
+TEA encryption keys
+~~~~~~~~~~~~~~~~~~~
+
+``mkpasswd`` and the firmware must use the **same** four 32-bit key words
+(``CONFIG_FSUTILS_PASSWD_KEY1`` … ``KEY4``).  Choose one approach:
+
+**Random generation** (``CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS=y``):
+
+  On the first ``make`` when keys are missing or still placeholders,
+  ``tools/gen_passwd_keys.sh`` writes random values to ``.config``.  A
+  build warning explains where to view or change them in menuconfig.  Key
+  values are never printed in the build log.
+
+**Manual keys** (``CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS`` disabled):
+
+  Set ``CONFIG_FSUTILS_PASSWD_KEY1`` … ``KEY4`` under **Application
+  Configuration** → **File System Utilities** → **Password file support**.
+  Each must be a unique non-zero value.  The legacy published defaults
+  ``0x12345678`` / ``0x9abcdef0`` are rejected.
+
+If random generation is enabled but keys are already present in ``.config``,
+they are **not** regenerated (subsequent builds stay consistent).
+
+How the build enforces security
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------------------------+-----------------------------------------------+
+| Check                     | Where                                         |
++===========================+===============================================+
+| Password set, min 8 chars | ``tools/passwd_keys.mk`` (before ``config.h``)|
+| Not ``Administrator``     | ``tools/mkpasswd.c`` (last line of defence)   |
+| TEA keys configured       | ``tools/check_passwd_keys.sh``                |
+| Not legacy default keys   | ``check_passwd_keys.sh`` + ``mkpasswd.c``     |
++---------------------------+-----------------------------------------------+
+
+Standalone ``mkpasswd`` (advanced)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For debugging only, you may run the host binary directly.  You must pass all
+four ``--key`` options with non-default values and a password of at least 8
+characters:
+
+.. code:: bash
+
+   ./tools/mkpasswd --user root --password 'my-secret' \
+     --key1 0x11111111 --key2 0x22222222 \
+     --key3 0x33333333 --key4 0x44444444
+
+Kconfig summary
+~~~~~~~~~~~~~~~~~
+
+Example ``.config`` fragment (password and keys normally **not** in defconfig):
 
 .. code:: kconfig
 
    CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y
-   CONFIG_NSH_CONSOLE_LOGIN=y                     # required to enforce login prompt
-   CONFIG_BOARD_ETC_ROMFS_PASSWD_USER="root"          # default: root
-   CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD="<secret>"  # required, min length 8
-   CONFIG_BOARD_ETC_ROMFS_PASSWD_UID=0
-   CONFIG_BOARD_ETC_ROMFS_PASSWD_GID=0
-   CONFIG_BOARD_ETC_ROMFS_PASSWD_HOME="/"
-
-The TEA encryption keys can be changed from their defaults via
-``CONFIG_FSUTILS_PASSWD_KEY1..4``.
+   CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS=y
+   CONFIG_BOARD_ETC_ROMFS_PASSWD_USER="root"
+   CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD="<set in menuconfig or env>"
+   CONFIG_NSH_CONSOLE_LOGIN=y
+   CONFIG_NSH_LOGIN_PASSWD=y
+   CONFIG_FSUTILS_PASSWD=y
 
 ``/etc/passwd`` file format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: text
 
-   user:x:uid:gid:home
-
-Where:
-
-* ``user`` — user name
-* ``x`` — TEA-hashed, base64-encoded password
-* ``uid`` — numeric user ID
-* ``gid`` — numeric group ID
-* ``home`` — login directory
-
-Verifying the generated entry
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-After enabling ``CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE`` and setting a
-password, rebuild and verify:
-
-1. **Configure and build**:
-
-   .. code:: console
-
-      $ make menuconfig   # enable BOARD_ETC_ROMFS_PASSWD_ENABLE and set password
-      $ make
-
-2. **Inspect the generated passwd line** (written to the board build tree):
-
-   .. code:: console
-
-      $ cat boards/<arch>/<chip>/<board>/src/etctmp/etc/passwd
-      root:8Tv+Hbmr3pLVb5HHZgd26D:0:0:/
-
-3. **Verify the plaintext is absent from firmware**:
-
-   .. code:: console
-
-      $ grep <your-password> boards/<arch>/<chip>/<board>/src/etctmp.c
-      # must print nothing
+   user:encrypted_hash:uid:gid:home
 
 Notes on ``savedefconfig``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To avoid leaking credentials into board defconfigs, ``make savedefconfig``
-does not save the following options in the generated defconfig:
-
-* ``CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD``
-* ``CONFIG_FSUTILS_PASSWD_KEY1``
-* ``CONFIG_FSUTILS_PASSWD_KEY2``
-* ``CONFIG_FSUTILS_PASSWD_KEY3``
-* ``CONFIG_FSUTILS_PASSWD_KEY4``
-
-If you need these values for local development, add them manually to your
-local defconfig after running ``make savedefconfig``.
+``make savedefconfig`` omits the password and ``KEY1``–``KEY4`` from the
+generated defconfig on purpose.  ``CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS``
+may remain in defconfig (policy, not a secret).  Do not commit passwords or
+key values to version control.
