@@ -167,6 +167,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#enabling-dropbear">Enabling Dropbear</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-transfer-with-scp">File transfer with scp</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#notes">Notes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
@@ -322,6 +323,32 @@ nsh&gt;
 </pre></div>
 </div>
 </section>
+<section id="file-transfer-with-scp">
+<h2>File transfer with scp<a class="headerlink" href="#file-transfer-with-scp" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DROPBEAR_SCP</span></code> is enabled (default <code class="docutils literal notranslate"><span class="pre">y</span></code>, requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PIPES=y</span></code>), Dropbear’s <code class="docutils literal notranslate"><span class="pre">scp</span></code> program is built as a builtin
+application and the server accepts SSH <code class="docutils literal notranslate"><span class="pre">exec</span></code> requests, allowing files to
+be copied to and from the board with a standard <code class="docutils literal notranslate"><span class="pre">scp</span></code> client.</p>
+<p>The port implements only the legacy scp protocol. OpenSSH 9.0 and later
+default to the SFTP protocol, which is not supported by this port, so a
+plain <code class="docutils literal notranslate"><span class="pre">scp</span></code> invocation from a recent Linux distribution fails. Pass the
+<code class="docutils literal notranslate"><span class="pre">-O</span></code> flag to force the legacy scp protocol.</p>
+<p>Copy a file from the host to the board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ scp -O &lt;file&gt; &lt;username&gt;@&lt;ip_address&gt;:/data/&lt;file&gt;
+</pre></div>
+</div>
+<p>Copy a file from the board back to the host:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ scp -O &lt;username&gt;@&lt;ip_address&gt;:/data/&lt;file&gt; .
+</pre></div>
+</div>
+<p>When Dropbear listens on a non-default port, add <code class="docutils literal notranslate"><span class="pre">-P</span> <span class="pre">&lt;port&gt;</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ scp -O -P 2222 &lt;file&gt; &lt;username&gt;@&lt;ip_address&gt;:/data/&lt;file&gt;
+</pre></div>
+</div>
+<p>Transfers must always be initiated from the host. Running <code class="docutils literal notranslate"><span class="pre">scp</span></code> on the
+target to push or pull files from another machine is not supported, since
+the port does not include an SSH client.</p>
+</section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h2>
 <ul class="simple">
@@ -360,6 +387,12 @@ refuse to connect because the key no longer matches the entry stored in
 </pre></div>
 </div>
 <p>Then reconnect normally. The client will prompt to accept the new host key.</p>
+<p><strong>scp fails with “subsystem request failed” or “Connection closed”</strong></p>
+<p>Recent OpenSSH clients use the SFTP protocol by default, which this port
+does not support. Retry forcing the legacy scp protocol:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ scp -O &lt;file&gt; &lt;username&gt;@&lt;ip_address&gt;:/data/&lt;file&gt;
+</pre></div>
+</div>
 <p><strong>Connection refused</strong></p>
 <p>Check that the board has obtained an IP address and that the Dropbear task is
 running:</p>
