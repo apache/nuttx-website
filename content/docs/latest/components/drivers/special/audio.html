@@ -114,6 +114,8 @@
     
     <option value="../../../../12.13.0" >12.13.0</option>
     
+    <option value="../../../../13.0.0" >13.0.0</option>
+    
     </select>
   </div>
 
@@ -142,7 +144,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../character/index.html">Character Device Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../block/index.html">Block Device Drivers</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="index.html">Specialized Device Drivers</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Audio Device Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Audio Device Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#audio-tone">Audio Tone</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="clk.html">Clock management (CLK)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="devicetree.html">Device Tree support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="devmem.html">DEVMEM Drivers</a></li>
@@ -255,6 +260,38 @@
 <h1>Audio Device Drivers<a class="headerlink" href="#audio-device-drivers" title="Permalink to this heading"></a></h1>
 <p>See <code class="docutils literal notranslate"><span class="pre">include/nuttx/audio/audio.h</span></code> for interface definitions.
 See also the audio subsystem at <code class="docutils literal notranslate"><span class="pre">nuttx/audio/</span></code>.</p>
+<section id="audio-tone">
+<h2>Audio Tone<a class="headerlink" href="#audio-tone" title="Permalink to this heading"></a></h2>
+<p>This driver has an interfaces which accepts a PWM lower-half and a oneshot timer
+lower-half. Its features are enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_TONE=y</span></code> You can register
+a tone driver as follows:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/audio/tone.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/timers/pwm.h&gt;</span>
+
+<span class="cm">/* Somewhere later in the code */</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">err</span><span class="p">;</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">pwm_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">pwm</span><span class="p">;</span><span class="w">         </span><span class="cm">/* Assume initialized */</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">oneshot_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">oneshot</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Assume initialized */</span>
+
+<span class="cm">/* Here, the argument &#39;1&#39; is the PWM channel to use */</span>
+
+<span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tone_register</span><span class="p">(</span><span class="s">&quot;/dev/tone0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pwm</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">oneshot</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">err</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">syslog</span><span class="p">(</span><span class="n">LOG_ERR</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Couldn&#39;t register /dev/tone0: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">err</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The PWM interface generates the tone output, and the one-shot driver is used to
+get the timing of musical notes correct.</p>
+<p>If you want to try playing sound after the device is registered, you can write
+<a class="reference external" href="https://en.wikipedia.org/wiki/Music_Macro_Language">Music Macro Language (MML)</a> to the character driver.
+For example, here is how you would play Ode to Joy:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; echo &quot;L8eefggfedccdeL6eL16dL4d&quot; &gt; /dev/tone0</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 

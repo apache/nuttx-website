@@ -1,0 +1,903 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NuttX Initialization Sequence &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_collapse.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="NuttX Tasking" href="nuttx_tasking.html" />
+    <link rel="prev" title="Naming of OS Internal Functions" href="naming_os_internals.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    <option value="../../12.7.0" >12.7.0</option>
+    
+    <option value="../../12.8.0" >12.8.0</option>
+    
+    <option value="../../12.9.0" >12.9.0</option>
+    
+    <option value="../../12.10.0" >12.10.0</option>
+    
+    <option value="../../12.11.0" >12.11.0</option>
+    
+    <option value="../../12.12.0" >12.12.0</option>
+    
+    <option value="../../12.13.0" >12.13.0</option>
+    
+    <option value="../../13.0.0" >13.0.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Implementation Details</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html">Bottom-Half Interrupt Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html">Cancellation Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="chip_h.html">chip.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context_switches.html">Context Switches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html">Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html">Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_nodes.html">Device Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers_design.html">OS Drivers Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html">File Descriptors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardfaults.html">Hardfaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ioctl.html">ioctl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html">Kernel Modules vs Shared Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_vs_pthreads.html">Kernel Threads vs. Pthreads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html">Make Build System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html">Memory Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html">Naming of Architecture, MCU, and Board Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html">Naming of OS Internal Functions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">NuttX Initialization Sequence</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#case-example-stm32-f4">Case example: STM32 F4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#phase-a-power-on-reset-initialization">Phase A - Power-On Reset Initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#memory-initialization">Memory Initialization</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#nuttx-arch-arm-src-stm32-vectors-s">nuttx/arch/arm/src/stm32_vectors.S</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#nuttx-arch-arm-src-stm32-start-c">nuttx/arch/arm/src/stm32_start.c</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#phase-b-nuttx-rtos-initialization">Phase B - NuttX RTOS Initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nx-start"><code class="docutils literal notranslate"><span class="pre">nx_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nx-bringup"><code class="docutils literal notranslate"><span class="pre">nx_bringup()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#idle-thread-activities">IDLE Thread Activities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stm32-f4-idle-thread">STM32 F4 IDLE thread</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#phase-c-application-initialization">Phase C - Application Initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#a-simple-hello-world-application">A Simple Hello World Application</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#a-nutt-shell-user-application-command">A Nutt Shell User Application/Command</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#nsh-initialize"><code class="docutils literal notranslate"><span class="pre">nsh_initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#boardctl"><code class="docutils literal notranslate"><span class="pre">boardctl()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#board-late-nitialize"><code class="docutils literal notranslate"><span class="pre">board_late_nitialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#apps-platform"><code class="docutils literal notranslate"><span class="pre">apps/platform</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html">NuttX Tasking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oneshot_timers_and_cpu_load.html">Oneshot Timers and CPU Load Measurement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="power_management.html">Power Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preemption_latency.html">Effects of Disabling Interrupts or Pre-Emption on Response Latency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html">Linux Processes vs NuttX Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="short_time_delays.html">Short Time Delays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signal_handlers.html">Signal Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">The NuttX Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html">SMP (Symmetric MultiProcessing)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html">SysLog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html">Tasks vs. Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html">Tickless OS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html">TLS: Thread Local Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_identity.html">User and Group Identity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb.html">USB (Universal Serial Bus)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/index.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../standards/index.html">Standards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Implementation Details</a></li>
+      <li class="breadcrumb-item active">NuttX Initialization Sequence</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/implementation/nuttx_initialization_sequence.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="nuttx-initialization-sequence">
+<span id="id1"></span><h1>NuttX Initialization Sequence<a class="headerlink" href="#nuttx-initialization-sequence" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>This initialization sequence is really quite simple because the system runs
+in single-thread mode up until the point the that is starts the application.
+That means the initialization sequence is just a simple, straight-line
+of function calls.
+It is until just before starting the application that system goes to
+multi-threaded mode and things can get more complex.</p>
+<p>At the highest level, the NuttX initialization sequence can be
+represented in three phases:</p>
+<ul class="simple">
+<li><p><strong>Phase A</strong> - The hardware-specific power-on reset initialization,</p></li>
+<li><p><strong>Phase B</strong> - NuttX RTOS initialization, and</p></li>
+<li><p><strong>Phase C</strong>  - Application Initialization.</p></li>
+</ul>
+<p>Each of these will be discussed in more detail in the following sections.</p>
+</section>
+<section id="case-example-stm32-f4">
+<h2>Case example: STM32 F4<a class="headerlink" href="#case-example-stm32-f4" title="Permalink to this heading"></a></h2>
+<p>In this discussion, we’ll use the STM32 F4 MCU and its popular evaluation
+board STM32F4Discovery as example but the explanation can be applied
+to any supported architecture.</p>
+<p>Here is the map of initialization function calls:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>__start()-arch/arm/src/common/stm32/stm32_start_m3m4_v1.c
+    |
+    +--*Set stack limit
+    +--stm32_clockconfig()
+    +--stm32_fpuconfig()
+    +--stm32_lowsetup()
+    +--stm32_gpioinit()
+    +--showprogress(&#39;A&#39;)
+    +--
+    +--
+    +--stm32_boardinitialize()-boards/arm/stm32f4/stm32f4discovery/src/stm32_boot.c
+    |    |
+    |    +--stm32_spidev_initialize()-stm32_spi.c:ONLY CHIP SELECTS
+    |    +--stm32_usbinitialize()-
+    |    +--stm32_netinitialize()-
+    |    +--board_autoled_initialize()-
+    |
+nx_start()-sched/init/nx_start.c
+    |
+    +--*Initialize global data structures
+    +--*Initialize OS facilities
+    +--net_initialize()-net/net_initialize.c
+    |    |
+    |    +--net_lockinitialize()
+    |    +--mld_initialize()
+    |    +--can_initialize()
+    |    +--netlink_initialize()
+    |    +--tcp_initialize()
+    |    +--udp_initialize()
+    |    +--usrsock_initialize()
+    |
+    +--up_initialize()-arch/arm/src/common/up_initialize.c
+    |    |
+    |    +--arm_dmainitialize()
+    |    +--Config basic /dev nodes
+    |    +--arm_serialinit()
+    |    +--Console Init
+    |    +--Crypto Config
+    |    +--arm_netinitialize()
+    |    |    |
+    |    |    +--stm32_spibus_initialize()
+    |    |
+    |    |
+    |    +--arm_usbinitialize()
+    |    +--L2 Cache Init
+    |
+    +--board_early_initialize()
+    +--g_nx_initstate = OSINIT_HARDWARE
+    +--shm_initialize()
+    +--lib_initialize()
+    +--binfmt_initialize()
+    +--Start SMP
+    +--syslog_initialize()
+    +--g_nx_initstate = OSINIT_OSREADY
+    +--DEBUGVERIFY(nx_bringup())-sched/init/nx_bringup.c
+    |    |
+    |    +--nx_pgworker()
+    |    +--nx_workqueues()
+    |    +--nx_create_initthread()-sched/init/nx_bringup.c
+    |         |
+    |         +----+different thread
+    |         :    :
+    |         :  nx_start_task()-sched/init/nx_bringup.c
+    |         :    :
+    |     same+----+--nx_start_application()-sched/init/nx_bringup.c
+    |     thread        |
+    |                   +--board_late_initialize()-stm32_boot.c:BOARD_DEPENDANT
+    |                   |    |
+    |                   |    +--stm32_bringup()
+    |                   |         |
+    |                   |         +--stm32_i2ctool()
+    |                   |         +--board_bmp180_initialize()
+    |                   |         +--stm32_sdio_initialize()
+    |                   |         +--stm32_usbhost_initialize()
+    |                   |         +--stm32_pwm_setup()
+    |                   |         +--stm32_can_setup()
+    |                   |         +--etc
+    |                   |
+    |                   +--
+    |
+    |
+    |
+    |
+    |
+    +--kmm_givesemaphore()
+    +--up_idle()
+</pre></div>
+</div>
+</section>
+<section id="phase-a-power-on-reset-initialization">
+<h2>Phase A - Power-On Reset Initialization<a class="headerlink" href="#phase-a-power-on-reset-initialization" title="Permalink to this heading"></a></h2>
+<p>The system begins execution when the processor is reset.
+This usually at power-on, but all resets are basically the same whether
+they occur because of power-on, pressing the reset button, or on a watchdog
+timer expiration.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The code that executes when the processor is reset is unique
+to the particular CPU architecture and is not a common part
+of NuttX.</p>
+</div>
+<p>The kind of things that must be done by the architecture-specific reset
+handling includes:</p>
+<ul class="simple">
+<li><p>Putting the processor in its operational state. This may include things
+like setting CPU modes; initializing co-processors, etc.</p></li>
+<li><p>Setting up clocking so that the software and peripherals operate as expected.</p></li>
+<li><p>Setting up the C stack pointer (and other processor registers).</p></li>
+<li><p>Initializing memory.</p></li>
+<li><p>Starting NuttX.</p></li>
+</ul>
+<section id="memory-initialization">
+<h3>Memory Initialization<a class="headerlink" href="#memory-initialization" title="Permalink to this heading"></a></h3>
+<p>In C implementations, there are two general classes of variable storage.
+First there are the initialized variables.
+For example, consider the global variable x:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The C code must be assured that after reset, the variable x has the value 5.
+Initialized variable of this kind are retained in a special memory section
+called data (or <code class="docutils literal notranslate"><span class="pre">.data</span></code>).</p>
+<p>Other variables are not initialized. Like the global variable y:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>But the C code will still expect y to have an initial value.
+That initial value will be zero.
+All uninitialized variables of this type need to have the value zero.
+These uninitialized variables are retained in a section called bss
+(or <code class="docutils literal notranslate"><span class="pre">.bss</span></code>).</p>
+<p>When we say that the reset handling logic initializes memory, we mean two things:</p>
+<ol class="arabic simple">
+<li><p>It provides the (initial) values of the initialized variables by copying
+the values from FLASH into the <code class="docutils literal notranslate"><span class="pre">.data</span></code> section, and</p></li>
+<li><p>It resets all of the uninitialized variables to zero.
+It clears the <code class="docutils literal notranslate"><span class="pre">.bss</span></code> section.</p></li>
+</ol>
+<p>Lets walk through reset sequence. This reset logic can be found in two files:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nuttx/arch/arm/src/stm32_vectors.S
+nuttx/arch/arm/src/stm32_start.c
+</pre></div>
+</div>
+<section id="nuttx-arch-arm-src-stm32-vectors-s">
+<h4>nuttx/arch/arm/src/stm32_vectors.S<a class="headerlink" href="#nuttx-arch-arm-src-stm32-vectors-s" title="Permalink to this heading"></a></h4>
+<p>This file provides all of the STM32 exception vectors and power-on reset
+is simply another exception vector.
+There are few important things to note about this file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">.section</span> <span class="pre">.vectors,</span> <span class="pre">ax</span></code>. This pseudo operation will place all of the
+vectors into a special section call <code class="docutils literal notranslate"><span class="pre">.vectors</span></code>.
+On of the STM32 F4 linker scripts is located at
+<code class="docutils literal notranslate"><span class="pre">nuttx/boards/arm/stm32f4/stm32f4discovery/scripts/ld.script</span></code>.
+In that file, you can see that section <code class="docutils literal notranslate"><span class="pre">.vectors</span></code> is forced to lie
+at the very beginning of FLASH memory.
+The STM32 F4 can be configured to boot in different ways via strapping.
+If it is strapped to boot from FLASH, then the STM32 FLASH memory will
+be aliased to address <code class="docutils literal notranslate"><span class="pre">0x0000</span> <span class="pre">0000</span></code> when the reset occurs.
+That is the address of the power-up reset interrupt vector.</p>
+<p>The first two 32-bit entries in the vector table represent the power-up
+exception vector (which we know will be positioned at address
+<code class="docutils literal notranslate"><span class="pre">0x0000</span> <span class="pre">0000</span></code> when the reset occurs). Those two entries are:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">.</span><span class="n">word</span><span class="w"> </span><span class="n">IDLE_STACK</span><span class="w"> </span><span class="cm">/* Vector  0: Reset stack pointer */</span>
+<span class="p">.</span><span class="n">word</span><span class="w"> </span><span class="n">__start</span><span class="w">    </span><span class="cm">/* Vector  1: Reset vector */</span>
+</pre></div>
+</div>
+<p>The Cortex-M family is unique in the way that is handles the reset vector.
+Notice that there are two values: the stack pointer for the start-up thread
+(the IDLE thread), and the entry point in the IDLE thread.</p>
+<p>When the reset occurs, the the stack pointer is automatically set
+to the first value and then the processor jumps to reset entry point
+<code class="docutils literal notranslate"><span class="pre">__start</span></code> specified in the second entry.</p>
+<p>This means that the reset exception handling code can be implemented in C
+rather than assembly language.</p>
+</section>
+<section id="nuttx-arch-arm-src-stm32-start-c">
+<h4>nuttx/arch/arm/src/stm32_start.c<a class="headerlink" href="#nuttx-arch-arm-src-stm32-start-c" title="Permalink to this heading"></a></h4>
+<p>The reset vector <code class="docutils literal notranslate"><span class="pre">__start</span></code> lies in the file
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_start_m3m4_v1.c</span></code> and does the real,
+low-level architecture-specific initialization. This initialization includes:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_clockconfig()</span></code> - Initialize the PLLs and peripheral clocking
+needed by the board.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_fpuconfig()</span></code> - If the STM32 F4’s hardware floating point
+is initialized, then configure the FPU and enable access to the FPU
+co-processors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_lowsetup()</span></code> - Enable the low-level UART. This is done very early
+in initialization so that we can get serial debug output to the console
+as soon as possible. If you are doing a board bring-up this
+is very important.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_gpioinit()</span></code> - Perform any GPIO remapping that is needed
+(this is a stub for the F4, but the F1 family requires this step).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">showprogress('A')</span></code> - This simply outputs the character <code class="docutils literal notranslate"><span class="pre">A</span></code> on the
+serial console (only if <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG</span></code> is enabled). If debug is enabled,
+you will always see the letters ABDE output on the console. That output
+all comes from this file.</p></li>
+<li><p>Next the memory is initialized:</p>
+<ol class="loweralpha simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">.bss</span></code> section is set to zero (Letter <code class="docutils literal notranslate"><span class="pre">B</span></code> is then output if
+<code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG</span></code> is enabled), then</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">.data</span></code> section is set to its initial values (The letter <code class="docutils literal notranslate"><span class="pre">C</span></code>
+is output if debug is enabled),</p></li>
+</ol>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_boardinitialize()</span></code> - Board-specific logic is initialized by
+calling this function. For the case of the STM32F4Discovery board,
+this logic can be found at
+<code class="docutils literal notranslate"><span class="pre">nuttx/boards/arm/stm32f4/stm32f4discovery/src/stm32_boot.c</span></code> and does
+the following operations:</p>
+<ol class="loweralpha simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_spidev_initialize()</span></code> - Initialize SPI chip selects
+if SPI is enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_usbinitialize()</span></code> - Initialize hardware USB devices if enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stm32_netinitialize()</span></code> - Initialize hardware network devices
+if enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_autoled_initialize()</span></code> - Configure on-board LEDs
+if LED support has been selected.</p></li>
+</ol>
+</li>
+</ol>
+<p>8. When <code class="docutils literal notranslate"><span class="pre">stm32_boardinitialize()</span></code> returns to <code class="docutils literal notranslate"><span class="pre">__start()</span></code>, the low-level,
+architecture-specific initialization is complete.</p>
+</section>
+</section>
+</section>
+<section id="phase-b-nuttx-rtos-initialization">
+<h2>Phase B - NuttX RTOS Initialization<a class="headerlink" href="#phase-b-nuttx-rtos-initialization" title="Permalink to this heading"></a></h2>
+<section id="nx-start">
+<h3><code class="docutils literal notranslate"><span class="pre">nx_start()</span></code><a class="headerlink" href="#nx-start" title="Permalink to this heading"></a></h3>
+<p>This function resides in the file <code class="docutils literal notranslate"><span class="pre">nuttx/sched/init/nx_start.c</span></code> and
+is the NuttX entry point.</p>
+<p>It is called by <code class="docutils literal notranslate"><span class="pre">__start()</span></code> and performs the next phase of RTOS-specific
+initialization before bringing up the application.</p>
+<p>The operations performed by <code class="docutils literal notranslate"><span class="pre">nx_start()</span></code> are summarized below.
+Note that many of these features can be disabled from the NuttX configuration
+file and in that case those operations are not performed:</p>
+<ol class="arabic simple">
+<li><p>Initializes some NuttX global data structures,</p></li>
+<li><p>Initializes the TCB for the IDLE (i.e, the thread that the initialization
+is performed on),</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nxsem_initialize()</span></code> - Initialize the POSIX semaphore facilities.
+This needs to be done first because almost all other OS features depend
+on POSIX counting semaphores.</p></li>
+<li><p>Memory organization - This includes heap configuration, memory manager,
+paging, I/O buffers, etc.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">task_initialize()</span></code> - Initialize task data structures.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fs_initialize()</span></code> - Initialize the file system (needed to support
+device drivers).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">irq_initialize()</span></code> - Initialize the interrupt handler subsystem.
+This initializes only data structures; CPU interrupts are still disabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wd_initialize()</span></code> - Initialize the NuttX watchdog timer facility,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clock_initialize()</span></code> - Initialize the system clock,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timer_initialize()</span></code> - Initialize the POSIX timer facilities,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nxsig_initialize()</span></code> - Initialize the POSIX signal facilities,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nxmq_initialize()</span></code> - Initialize the POSIX message queue facilities,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pthread_initialize()</span></code> - Initialize the POSIX pthread facilities,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">net_initialize()</span></code> - Initialize networking facilities,</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Up to this point, all of the initialization steps have only been
+software initializations. Nothing has interacted with the hardware.
+Rather, all of these steps simply prepared the environment so that
+things like interrupts and threads can function properly.
+The next phases depend upon that setup.</p>
+</div>
+<ol class="arabic" start="15">
+<li><p><code class="docutils literal notranslate"><span class="pre">up_initialize()</span></code> - The processor specific details of running
+the operating system will be handled here. Such things as setting up
+interrupt service routines and starting the clock are some of the things
+that are different for each processor and hardware platform.</p>
+<p>All ARM-based MCUs share a common <code class="docutils literal notranslate"><span class="pre">up_initialize()</span></code> implementation
+provided at <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/up_initialize.c</span></code>. The operations
+perform by this common ARM initialization will, however, call into
+facilities provided by the particular ARM chip.
+For the STM32 F4, those facilities would be provided by logic in files
+as <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32</span></code>. The common ARM initialization sequence is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">up_color_intstack()</span></code> - Colorize the interrupt stack.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arm_addregion()</span></code> - The basic heap was set up during processing by
+<code class="docutils literal notranslate"><span class="pre">nx_start()</span></code>. However, if the board supports multiple, discontiguous
+memory regions, any addition memory regions can be added to the heap
+by this function. For the STM32 F4, <code class="docutils literal notranslate"><span class="pre">up_addregion()</span></code> is implemented
+in <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_allocateheap_m3m4_v1.c</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arm_pminitialize()</span></code> - If <code class="docutils literal notranslate"><span class="pre">CONFIG_PM</span></code> is defined, the function must
+initialize the power management subsystem. This MCU-specific function
+must be called very early in the initialization sequence before any other
+device drivers are initialized (since they may attempt to register with
+the power management subsystem). There is no implementation
+of <code class="docutils literal notranslate"><span class="pre">up_pminitialize()</span></code> for any STM32 platform.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arm_dmainitialize()</span></code> - Initialize the DMA subsystem.
+For the STM32 F4, this DMA initialization can be found in
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_dma_m3m4_v1_8ch.c</span></code> (which includes
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_dma_m3m4_v1_8ch.c</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">devnull_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/null</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">devrandom_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/random</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">devurandom_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">devzero_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/zero</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loop_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/loop</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">note_register()</span></code> - Registers the standard <code class="docutils literal notranslate"><span class="pre">/dev/note</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arm_serialinit()</span></code> - Initialize the <strong>standard</strong> serial driver
+(found at <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_serial_m3m4_v1v2v3v4.c</span></code> STM32 F4).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arm_netinitialize()</span></code> - Initialize the network. For the STM32 F4,
+this function is in <code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_eth_m3m4_v1.c</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arm_usbinitialize()</span></code> - Initialize USB (host or device).
+For the STM32 F4, this function is in
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/common/stm32/stm32_otgfsdev_m3m4_v1.c</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arm_l2ccinitialize()</span></code> - Initialize the L2 cache if present
+and selected.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">up_ledon(LED_IRQSENABLED)</span></code> - Finally, <code class="docutils literal notranslate"><span class="pre">up_initialize()</span></code>
+illuminates board-specific LEDs to indicate the IRQs are now enabled.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_early_initialize()</span></code> - If <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_EARLY_INITIALIZE</span></code> is
+selected, then an additional initialization call will be performed in the
+boot-up sequence to a function called <code class="docutils literal notranslate"><span class="pre">board_early_initialize()</span></code>.
+It will be called immediately after <code class="docutils literal notranslate"><span class="pre">up_initialize()</span></code> (and may be
+thought of as a board-specific, extension of <code class="docutils literal notranslate"><span class="pre">up_initialize()</span></code>)
+and well <code class="docutils literal notranslate"><span class="pre">before</span> <span class="pre">board_late_initialize()</span></code> is called and the initial
+application is started.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g_nx_initstate</span> <span class="pre">=</span> <span class="pre">OSINIT_HARDWARE</span></code> - This signals that basic
+hardware setup is complete.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shm_initialize()</span></code> - Initialize shared memory support.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lib_initialize()</span></code> - Initialize the C libraries. This is done last
+because the libraries may depend on the above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binfmt_initialize()</span></code> - Initialize binary loader subsystem.</p></li>
+<li><p>Start SMP support in multi-core MCUs. This is not the case
+in STM32F4Discovery but relevant because here are created <code class="docutils literal notranslate"><span class="pre">stdin</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> for each CPU’s (even if there is only one)
+IDLE task. All tasks subsequently created by the IDLE thread will inherit
+these file descriptors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">syslog_initialize()</span></code> - Late initialization of the system logging
+device. Some SYSLOG channel must be initialized late in the initialization
+sequence because it may depend on having IDLE task file structures setup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nx_bringup()</span></code> - Create the initial tasks. This will be described
+in more detail below.</p></li>
+</ol>
+</section>
+<section id="nx-bringup">
+<h3><code class="docutils literal notranslate"><span class="pre">nx_bringup()</span></code><a class="headerlink" href="#nx-bringup" title="Permalink to this heading"></a></h3>
+<p>This function is called at the very end of the initialization sequence
+in <code class="docutils literal notranslate"><span class="pre">nx_start()</span></code>, just before entering the IDLE loop. It is located
+in <code class="docutils literal notranslate"><span class="pre">nuttx/sched/init/nx_bringup.c</span></code> and it starts all of the required
+threads and tasks needed to bring up the system.</p>
+<p>This function performed the following specific operations:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nx_pgworker()</span></code> - Start the page fill worker kernel thread that will
+resolve page faults. This should always be the first thread started because
+it may have to resolve page faults in other threads. This is the task that
+runs in order to satisfy page faults in processors that have an MMU and
+in configurations where on-demand paging is enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nx_workqueues()</span></code> - Start the worker thread. The worker thread may be used
+to execute any processing deferred to the worker thread via APIs provided
+in <code class="docutils literal notranslate"><span class="pre">include/nuttx/wqueue.h</span></code>. The worker thread’s primary function is
+as the “bottom half” for extended device driver processing but can be used
+for a variety of purposes like misc garbage clean-up.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nx_create_initthread()</span></code> - Once the operating system has been initialized,
+this functions either directly calls <code class="docutils literal notranslate"><span class="pre">nx_start_application()</span></code> or creates
+a thread for running it</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nx_start_application()</span></code> - If set in the NuttX configuration,
+this function calls <code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code>.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> is a last-minute, board-specific
+initialization. Note that there was earlier, board-specific initialization
+calls (to <code class="docutils literal notranslate"><span class="pre">stm32_board_initialize()</span></code> and
+to <code class="docutils literal notranslate"><span class="pre">board_early_initialize()</span></code>). The difference here is these first,
+low-level initialization calls were made before the OS was completely
+launched. <code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code>, on the other hand, is called
+at the end after the OS has been initialized but before any application
+tasks have been started.
+<code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> would be an ideal place to do board-specific
+initialization steps that depend on having a fully initialized OS
+such as memory allocations, initialization of complex device drivers,
+mounting of file systems, etc.</p></li>
+<li><p>After that, <code class="docutils literal notranslate"><span class="pre">nx_start_application()</span></code> launches the application either
+by creating a task for it or executing a program from a filesystem after
+mounting it.</p></li>
+<li><p>In the case of creating a task for the application, its entry has
+the name <code class="docutils literal notranslate"><span class="pre">user_start()</span></code>. <code class="docutils literal notranslate"><span class="pre">user_start()</span></code> is provided by application
+code and when it runs, it begins the application-specific phase of the
+initialization sequence as described below.</p></li>
+</ul>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The default <code class="docutils literal notranslate"><span class="pre">user_start()</span></code> entry point can be changed to use
+one of the named applications used by NSH. This is a start-up option
+that is not often used and will not be discussed further here.</p>
+</div>
+<p>And finally enter the IDLE loop. After completing the initialization, the role
+of the IDLE thread changes. It becomes the thread that executes only when
+there is nothing else to do in the system (hence, the name IDLE thread).</p>
+</section>
+<section id="idle-thread-activities">
+<h3>IDLE Thread Activities<a class="headerlink" href="#idle-thread-activities" title="Permalink to this heading"></a></h3>
+<p>As mention, the IDLE thread is the thread that executes only when there is
+nothing else to do in the system. It has the lowest priority in the system.
+It always has the priority 0. It is the only thread that is permitted to have
+the priority 0. And it can never be blocked (otherwise, what would run then?).</p>
+<p>As a result, the IDLE thread is always in the <code class="docutils literal notranslate"><span class="pre">g_readytorun</span></code> list and,
+in fact, since that list is prioritized, can guaranteed to always be
+the final entry at the tail of the <code class="docutils literal notranslate"><span class="pre">g_readytorun</span></code> list.</p>
+<p>The IDLE is an an infinite loop. But this does not make it a “CPU hog”.
+Since it is the lowest priority, the it can be suspended whenever anything
+else needs to run.</p>
+<p>The IDLE thread does two things in this infinite loop:</p>
+<ol class="arabic simple">
+<li><p>If the worker was not started (see <code class="docutils literal notranslate"><span class="pre">nx_bringup()</span></code> below), then the IDLE
+thread will perform memory clean-up. Memory clean is required to handle
+deferred memory deallocation. Memory allocations must be deferred when
+the memory is freed in a context where the software does not have access
+to the heap and, hence, cannot truly free the memory (such as
+in an interrupt handler). In this case, the memory is simply put into
+a list of freed memory and, eventually, cleaned up by the IDLE thread.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The worker thread’s primary function is as the “bottom half”
+for extended device driver processing. If the worker thread
+was started, then it will run at a higher priority than the
+IDLE thread. In this case, the worker thread will take over
+responsibility for cleaning up these deferred allocations.</p>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Then the loop calls <code class="docutils literal notranslate"><span class="pre">up_idle()</span></code>. The operations performed
+by <code class="docutils literal notranslate"><span class="pre">up_idle()</span></code> are architecture- and board-specific. In general,
+this is the location where CPU-specific reduced power operations
+may be performed.</p></li>
+</ol>
+</section>
+<section id="stm32-f4-idle-thread">
+<h3>STM32 F4 IDLE thread<a class="headerlink" href="#stm32-f4-idle-thread" title="Permalink to this heading"></a></h3>
+<p>The default STM32 F4 IDLE thread is located at
+<code class="docutils literal notranslate"><span class="pre">nuttx/arch/arm/src/stm32_idle.c</span></code>.
+This default version does very little:</p>
+<ol class="arabic simple">
+<li><p>It includes a example, “skeleton” function that illustrates that kinds
+of things that you can do if <code class="docutils literal notranslate"><span class="pre">CONFIG_PM</span></code> is enabled (this example code
+is not fully implemented in the default IDLE logic).</p></li>
+<li><p>The it executes the Cortex-M thumb2 instruction wfi which causes the CPU
+to sleep until the next interrupt occurs.</p></li>
+</ol>
+</section>
+</section>
+<section id="phase-c-application-initialization">
+<h2>Phase C - Application Initialization<a class="headerlink" href="#phase-c-application-initialization" title="Permalink to this heading"></a></h2>
+<p>At the conclusion of the OS initialization phase in <code class="docutils literal notranslate"><span class="pre">nx_start()</span></code>,
+the user application is started by creating a new task
+at the entry point <code class="docutils literal notranslate"><span class="pre">user_start()</span></code>.</p>
+<p>There must be exactly one entry point called <code class="docutils literal notranslate"><span class="pre">user_start()</span></code>
+in every application built on top of NuttX.</p>
+<p>Any additional initialization performed in the <code class="docutils literal notranslate"><span class="pre">user_start()</span></code> function
+is purely application dependent.</p>
+<section id="a-simple-hello-world-application">
+<h3>A Simple Hello World Application<a class="headerlink" href="#a-simple-hello-world-application" title="Permalink to this heading"></a></h3>
+<p>The simplest user application would be the “Hello, World!” example.
+See <code class="docutils literal notranslate"><span class="pre">apps/examples/hello</span></code>. Here is the whole example:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">user_start</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello, World!!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this case, no additional application initialization is needed.
+It just “says hello” and exits.</p>
+</section>
+<section id="a-nutt-shell-user-application-command">
+<h3>A Nutt Shell User Application/Command<a class="headerlink" href="#a-nutt-shell-user-application-command" title="Permalink to this heading"></a></h3>
+<p>The NuttShell (NSH) is a simple shell application that may be used with NuttX.
+It is described here. It supports a variety of commands and is (very) loosely
+based on the bash shell and the common utilities used
+in Unix shell programming.</p>
+<p>NSH is implemented as a library that can be found at <code class="docutils literal notranslate"><span class="pre">nuttx-apps/nshlib</span></code>.
+The NSH start-up sequence is very simple. As an example, the the code at
+<code class="docutils literal notranslate"><span class="pre">apps/examples/nsh/nsh_main.c</span></code> illustrates how to start NuttX.
+It simple does the following:</p>
+<ol class="arabic simple">
+<li><p>If you have C++ static initializers, it will call your implementation
+of <code class="docutils literal notranslate"><span class="pre">up_cxxinitialize()</span></code> which will, in turn, call those
+static initializers.</p></li>
+<li><p>This function then calls <code class="docutils literal notranslate"><span class="pre">nsh_initialize()</span></code> which initializes
+the NSH library. <code class="docutils literal notranslate"><span class="pre">nsh_initialize()</span></code> is described in more detail below.</p></li>
+<li><p>If the Telnet console is enabled, it calls <code class="docutils literal notranslate"><span class="pre">nsh_telnetstart()</span></code> which
+resides in the NSH library. <code class="docutils literal notranslate"><span class="pre">nsh_telnetstart()</span></code> will start the Telnet
+daemon that will listen for Telnet connections and start remote
+NSH sessions.</p></li>
+<li><p>If a local console is enabled (probably on a serial port), then
+<code class="docutils literal notranslate"><span class="pre">nsh_consolemain()</span></code> is called. <code class="docutils literal notranslate"><span class="pre">nsh_consolemain()</span></code> also resides
+in the NSH library. <code class="docutils literal notranslate"><span class="pre">nsh_consolemain()</span></code> does not return so that
+finished the entire NSH initialization sequence.</p></li>
+</ol>
+<section id="nsh-initialize">
+<h4><code class="docutils literal notranslate"><span class="pre">nsh_initialize()</span></code><a class="headerlink" href="#nsh-initialize" title="Permalink to this heading"></a></h4>
+<p>The NSH initialization function, <code class="docutils literal notranslate"><span class="pre">nsh_initialize()</span></code>, be found in
+<code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_init.c</span></code>. It does only three things:</p>
+<p><code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code> if so configured, it executes an NSH start-up script that
+can be found at <code class="docutils literal notranslate"><span class="pre">/etc/init.d/rcS</span></code> in the target file system.
+<code class="docutils literal notranslate"><span class="pre">/etc</span></code> is the location where a read-only, ROMFS file system is mounted by
+<code class="docutils literal notranslate"><span class="pre">nsh_romfsetc()</span></code>. The ROMFS image is, itself, just built into the firmware.
+By default, this rcS startup script contains the following logic:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a RAMDISK and mount it at XXXRDMOUNTPOUNTXXX</span>
+
+mkrd<span class="w"> </span>-m<span class="w"> </span>XXXMKRDMINORXXX<span class="w"> </span>-s<span class="w"> </span>XXMKRDSECTORSIZEXXX<span class="w"> </span>XXMKRDBLOCKSXXX
+mkfatfs<span class="w"> </span>/dev/ramXXXMKRDMINORXXX
+mount<span class="w"> </span>-t<span class="w"> </span>vfat<span class="w"> </span>/dev/ramXXXMKRDMINORXXX<span class="w"> </span>XXXRDMOUNTPOUNTXXX
+</pre></div>
+</div>
+<p>Where the <code class="docutils literal notranslate"><span class="pre">XXXX*XXXX</span></code> strings get replaced in the template
+when the ROMFS image is created:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">XXXMKRDMINORXXX</span></code> will become the RAM device minor number. Default: <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">XXMKRDSECTORSIZEXXX</span></code> will become the RAM device sector size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">XXMKRDBLOCKSXXX</span></code> will become the number of sectors in the device.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">XXXRDMOUNTPOUNTXXX</span></code> will become the configured mount point.
+Default: <code class="docutils literal notranslate"><span class="pre">/etc</span></code>.</p></li>
+</ul>
+<p>This script will, then, create a RAMDISK, format a FAT file system
+on the RAM disk, and then mount the FAT filesystem at a configured mountpoint.
+This rcS template file can be found at <code class="docutils literal notranslate"><span class="pre">apps/nshlib/rcS.template</span></code>.
+The resulting ROMFS file system can be found in
+<code class="docutils literal notranslate"><span class="pre">apps/nshlib/nsh_romfsimg.h</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> - Next any architecture-specific NSH initialization will be
+performed (if any). The NSH initialization logic will all the non-standard
+OS interface <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> like: <code class="docutils literal notranslate"><span class="pre">(void)boardctl(BOARDIOC_INIT,</span> <span class="pre">0);</span></code>.
+The first argument, the command <code class="docutils literal notranslate"><span class="pre">BOARDIOC_INIT</span></code>, indicates that the
+<code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> is being requested to perform application-oriented
+initialization. In response to this command, <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> will call the
+board-specific implementation of <code class="docutils literal notranslate"><span class="pre">board_app_initialize()</span></code>.
+That function is not generally available to application level code in
+all configurations but can always be accesses via <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">board_app_initialize()</span></code> - For the STM32F4Discovery, this architecture
+specific initialization can be found at
+<code class="docutils literal notranslate"><span class="pre">boards/arm/stm32f4/stm32f4discovery/src/stm32_appinit.c</span></code>.
+This it does things like:</p>
+<ol class="arabic simple">
+<li><p>Initialize SPI devices.</p></li>
+<li><p>Initialize SDIO.</p></li>
+<li><p>Mount any SD cards that may be inserted.</p></li>
+</ol>
+</li>
+</ul>
+<p>There are two possibilities then for application startup initialization:</p>
+<ol class="arabic simple">
+<li><p>In the application itself via <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_INIT,</span> <span class="pre">0)</span></code>, OR</p></li>
+<li><p>in the OS using <code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code>.</p></li>
+</ol>
+<p>Each works well in certain contexts but there are also things that I don’t
+like about either possibility.</p>
+</section>
+</section>
+<section id="boardctl">
+<h3><code class="docutils literal notranslate"><span class="pre">boardctl()</span></code><a class="headerlink" href="#boardctl" title="Permalink to this heading"></a></h3>
+<p>You can see this application-controlled initialization in, for example,
+the NSH application in <cite>nuttx-apps/nshlib`</cite>. This is seen as the call to
+<code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_INIT,</span> <span class="pre">0)</span></code>. This requires that the <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code>
+interface be enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_LIB_BOARDCTL</span></code>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_LIB_BOARDCTL=y</span></code>, board-specific OS internal logic must provide
+the interface <code class="docutils literal notranslate"><span class="pre">board_app_initilize()</span></code>. <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_INIT,</span> <span class="pre">0)</span></code> is the
+application level interface that provides the proper interface to
+<code class="docutils literal notranslate"><span class="pre">board_app_initilize()</span></code>. All board-specific, driver-level initialization may
+then be performed in <code class="docutils literal notranslate"><span class="pre">board_app_initilize()</span></code> under the control
+of the application.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_LIB_BOARDCTL=y</span></code>, there are two levels of application-specific
+initialization:
+(a) an OS/kernel level application initialization that needs to be performed
+before the application is started, and
+(b) a user/application level initialization that can be performed after
+the application has started.</p>
+</section>
+<section id="board-late-nitialize">
+<h3><code class="docutils literal notranslate"><span class="pre">board_late_nitialize()</span></code><a class="headerlink" href="#board-late-nitialize" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> is the OS/kernel level application initialization
+that is performed before the application has started. It usually works
+quite well and is usually a good alternative for <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_INIT)</span></code>.
+To avoid issues with trying to perform initialization on the IDLE thread,
+<code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> is called from an internal kernel thread.</p>
+<p>The IDLE thread has limitations: It cannot wait for events so
+it can only be used for simple, straight-line initialization logic.
+That may be insufficient in some cases.
+For this reason, <code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> must run on a kernel thread.</p>
+<p>Consider the <code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> calling sequence:
+<code class="docutils literal notranslate"><span class="pre">board_late_initialize()</span></code> is called directly from <code class="docutils literal notranslate"><span class="pre">do_app_start()</span></code> in
+<code class="docutils literal notranslate"><span class="pre">nuttx/sched/init/nx_bringup.c</span></code> just before starting the application task.
+<code class="docutils literal notranslate"><span class="pre">nx_create_initthread()</span></code> is, in turn, called from the function
+<code class="docutils literal notranslate"><span class="pre">nx_start_application()</span></code>. If <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_LATE_INITIALIZE</span></code> is
+not defined, then this is just a normal C function call.
+But if <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_LATE_INITIALIZE</span></code> is defined, then an intermediate,
+trampoline kernel thread is started. That kernel thread executes
+<code class="docutils literal notranslate"><span class="pre">do_app_start()</span></code> and moves the initialization off of the IDLE thread.
+This works great but is a little more complex than I would like.</p>
+</section>
+<section id="apps-platform">
+<h3><code class="docutils literal notranslate"><span class="pre">apps/platform</span></code><a class="headerlink" href="#apps-platform" title="Permalink to this heading"></a></h3>
+<p>There is also special place for user/application initialization.
+That is the <code class="docutils literal notranslate"><span class="pre">nuttx-apps/platform</span></code> platform directory. This directory
+should be a mirror of the <code class="docutils literal notranslate"><span class="pre">nuttx/configs</span></code> directory.
+There should be a board directory in <code class="docutils literal notranslate"><span class="pre">nuttx-apps/platform</span></code> for every
+board that is in <code class="docutils literal notranslate"><span class="pre">nuttx/configs</span></code>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="naming_os_internals.html" class="btn btn-neutral float-left" title="Naming of OS Internal Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nuttx_tasking.html" class="btn btn-neutral float-right" title="NuttX Tasking" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

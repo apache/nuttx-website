@@ -114,6 +114,8 @@
     
     <option value="../../../12.13.0" >12.13.0</option>
     
+    <option value="../../../13.0.0" >13.0.0</option>
+    
     </select>
   </div>
 
@@ -154,6 +156,7 @@
 <li class="toctree-l3"><a class="reference internal" href="netdev.html">Network Devices</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Network Drivers</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#how-to-change-full-network-driver-into-lower-half-one">How to change full network driver into lower-half one</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performance-tuning">Performance tuning</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lower-half-example">“Lower Half” Example</a></li>
 </ul>
 </li>
@@ -306,6 +309,41 @@ exceed the TX quota temporarily.</p></li>
 </ul>
 </li>
 </ol>
+</section>
+<section id="performance-tuning">
+<h2>Performance tuning<a class="headerlink" href="#performance-tuning" title="Permalink to this heading"></a></h2>
+<p>The following knobs matter most for throughput, especially for Wi-Fi drivers
+where the MAC runs on a companion core and packets are delivered to the host
+over an IPC:</p>
+<ul class="simple">
+<li><p><strong>RX quota as backpressure.</strong> The RX quota bounds how many received packets
+the driver holds before the upper half drains them.  It matters most for
+traffic without transport flow control (e.g. UDP): when the peer sends
+faster than the socket is drained, a large quota lets the driver copy many
+packets into the stack only to drop them at the bounded socket receive
+buffer – wasted work that also steals CPU from the packets that do get
+delivered.  A smaller quota drops the excess earlier and cheaply, at
+<code class="docutils literal notranslate"><span class="pre">netpkt_alloc</span></code>.  For TCP the advertised window already throttles the peer,
+so the quota rarely fills.</p></li>
+<li><p><strong>RX thread priority.</strong> With <code class="docutils literal notranslate"><span class="pre">NETDEV_RX_THREAD</span></code>, keep <code class="docutils literal notranslate"><span class="pre">priority</span></code> at or
+below the vendor task that moves packets from the device (companion core)
+into the driver.  A higher priority (e.g. <code class="docutils literal notranslate"><span class="pre">HPWORK</span></code>) starves that task,
+the device-to-host ring backs up, and packets are dropped upstream of the
+driver before <code class="docutils literal notranslate"><span class="pre">receive</span></code> ever sees them.</p></li>
+<li><p><strong>Socket receive buffer.</strong> <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_RECV_BUFSIZE</span></code> is the default
+SO_RCVBUF: it both caps the advertised TCP window and bounds the UDP
+read-ahead, both drawn from the shared IOB pool (<code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_NBUFFERS</span></code> x
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_BUFSIZE</span></code>).  On a lossy wireless path a large TCP window lets
+the peer put more in flight than the link can smooth (bursty loss and RTO
+stalls), so cap it near the out-of-order reassembly capacity and bound TX
+with <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_SEND_BUFSIZE</span></code>.  That same cap limits UDP read-ahead, so a
+UDP-throughput-critical socket should raise its own buffer via
+<code class="docutils literal notranslate"><span class="pre">setsockopt(SO_RCVBUF)</span></code> rather than changing the TCP-safe default.
+Enlarging the buffer helps only up to the rate the socket can be drained;
+sustained overload is dropped regardless.  Keeping out-of-order reassembly
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_OUT_OF_ORDER</span></code>) enabled lets a single loss recover in one
+round trip.</p></li>
+</ul>
 </section>
 <section id="lower-half-example">
 <h2>“Lower Half” Example<a class="headerlink" href="#lower-half-example" title="Permalink to this heading"></a></h2>

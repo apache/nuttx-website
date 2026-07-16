@@ -1,0 +1,527 @@
+<!--
+ Documentation/_templates/layout.html
+
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.  The
+ ASF licenses this file to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the
+ License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations
+ under the License.
+-->
+
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Implementation Details &mdash; NuttX latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_collapse.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bottom-Half Interrupt Handlers" href="bottomhalf_interrupt.html" />
+    <link rel="prev" title="zerocross Zero Crossing Device" href="../applications/examples/zerocross/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  
+    <a href="../index.html" class="icon icon-home"> NuttX
+  
+
+  
+  </a>
+
+  <!-- this version selector is quite ugly, should be probably replaced by something
+       more modern -->
+
+  <div class="version-selector">
+    <select onchange="javascript:location.href = this.value;">
+    
+    <option value="../../latest" selected="selected">latest</option>
+    
+    <option value="../../10.0.0" >10.0.0</option>
+    
+    <option value="../../10.0.1" >10.0.1</option>
+    
+    <option value="../../10.1.0" >10.1.0</option>
+    
+    <option value="../../10.2.0" >10.2.0</option>
+    
+    <option value="../../10.3.0" >10.3.0</option>
+    
+    <option value="../../11.0.0" >11.0.0</option>
+    
+    <option value="../../12.0.0" >12.0.0</option>
+    
+    <option value="../../12.1.0" >12.1.0</option>
+    
+    <option value="../../12.2.0" >12.2.0</option>
+    
+    <option value="../../12.2.1" >12.2.1</option>
+    
+    <option value="../../12.3.0" >12.3.0</option>
+    
+    <option value="../../12.4.0" >12.4.0</option>
+    
+    <option value="../../12.5.0" >12.5.0</option>
+    
+    <option value="../../12.5.1" >12.5.1</option>
+    
+    <option value="../../12.6.0" >12.6.0</option>
+    
+    <option value="../../12.7.0" >12.7.0</option>
+    
+    <option value="../../12.8.0" >12.8.0</option>
+    
+    <option value="../../12.9.0" >12.9.0</option>
+    
+    <option value="../../12.10.0" >12.10.0</option>
+    
+    <option value="../../12.11.0" >12.11.0</option>
+    
+    <option value="../../12.12.0" >12.12.0</option>
+    
+    <option value="../../12.13.0" >12.13.0</option>
+    
+    <option value="../../13.0.0" >13.0.0</option>
+    
+    </select>
+  </div>
+
+  
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Implementation Details</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html">Bottom-Half Interrupt Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html">Cancellation Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="chip_h.html">chip.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context_switches.html">Context Switches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html">Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html">Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_nodes.html">Device Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers_design.html">OS Drivers Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html">File Descriptors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardfaults.html">Hardfaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ioctl.html">ioctl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html">Kernel Modules vs Shared Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_vs_pthreads.html">Kernel Threads vs. Pthreads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html">Make Build System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html">Memory Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html">Naming of Architecture, MCU, and Board Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html">Naming of OS Internal Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_initialization_sequence.html">NuttX Initialization Sequence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html">NuttX Tasking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oneshot_timers_and_cpu_load.html">Oneshot Timers and CPU Load Measurement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="power_management.html">Power Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preemption_latency.html">Effects of Disabling Interrupts or Pre-Emption on Response Latency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html">Linux Processes vs NuttX Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="short_time_delays.html">Short Time Delays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signal_handlers.html">Signal Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">The NuttX Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html">SMP (Symmetric MultiProcessing)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html">SysLog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html">Tasks vs. Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html">Tickless OS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html">TLS: Thread Local Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_identity.html">User and Group Identity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb.html">USB (Universal Serial Bus)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/index.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../standards/index.html">Standards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_tags/tagsindex.html">Tags</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NuttX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Implementation Details</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/implementation/index.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="implementation-details">
+<h1>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bottomhalf_interrupt.html">Bottom-Half Interrupt Handlers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html#rtos-interrupts">RTOS Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html#extending-interrupt-processing">Extending interrupt processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html#high-priority-work-queue">High Priority Work Queue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html#setting-up-bottom-half-interrupt-processing">Setting Up Bottom Half Interrupt Processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cancellation_points.html">Cancellation Points</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#cancellation-types">Cancellation Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#enter-and-leave-cancelation-point">Enter and Leave Cancelation Point</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#pthread-cancel">pthread_cancel()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#select">select()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#application-interfaces">Application Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#task-deletion">Task Deletion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#design-issues">Design Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cancellation_points.html#issue-619-discussion">Issue 619 Discussion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chip_h.html">chip.h</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="chip_h.html#the-purpose-of-the-two-chip-h-files-in-each-arm-chip">The purpose of the two chip.h files in each arm chip</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="context_switches.html">Context Switches</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="context_switches.html#two-types-of-context-switches">Two Types of Context Switches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context_switches.html#synchronous-context-switches">Synchronous Context Switches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context_switches.html#system-calls">System Calls</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="critical_sections.html">Critical Sections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html#types-and-effects-of-critical-sections">Types and Effects of Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html#single-cpu-critical-sections">Single CPU Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html#smp-critical-sections">SMP Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html#the-critical-section-monitor">The Critical Section Monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="critical_sections.html#irq-monitor-and-worst-case-response-time">IRQ Monitor and Worst Case Response Time</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="device_drivers.html">Device Drivers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html#standard-device-drivers">Standard Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html#bus-drivers">Bus Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html#test-drivers">Test Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html#user-space-drivers">User Space Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html#communication-devices">Communication Devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_drivers.html#i-o-expander">I/O Expander</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="device_nodes.html">Device Nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="device_nodes.html#linux-device-nodes">Linux Device Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_nodes.html#nuttx-device-nodes">NuttX Device Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_nodes.html#usage-differences">Usage Differences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device_nodes.html#boardctl">boardctl()</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="drivers_design.html">OS Drivers Design</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="drivers_design.html#character-and-block-drivers">Character and Block Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers_design.html#mtd-drivers">MTD Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers_design.html#monolithic-drivers">Monolithic Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers_design.html#upper-half-and-lower-half-drivers">Upper Half and Lower Half Drivers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="file_descriptors.html">File Descriptors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html#drivers-within-drivers">Drivers within Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html#drivers-file-descriptors">Drivers File Descriptors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html#detaching-open-files">Detaching Open Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html#detached-file-helpers">Detached File Helpers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html#the-syslog-device-a-case-study">The SYSLOG Device: A Case Study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html#other-examples">Other Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_descriptors.html#socket-descriptors">Socket Descriptors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardfaults.html">Hardfaults</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardfaults.html#armv7">ARMv7</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ioctl.html">ioctl</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ioctl.html#not-a-typewriter">Not a Typewriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ioctl.html#nuttx">NuttX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ioctl.html#linux-explanation">Linux Explanation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html">Kernel Modules vs Shared Libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html#id1">Kernel Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html#shared-libraries">Shared Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html#flat-build">FLAT Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html#protected-build">PROTECTED Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html#better-flat-and-protected-mode-shared-libraries">Better FLAT and PROTECTED Mode Shared Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_modules_vs_shared_libraries.html#kernel-build">KERNEL Build</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="kernel_threads_vs_pthreads.html">Kernel Threads vs. Pthreads</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_vs_pthreads.html#why-can-t-kernel-threads-have-pthreads">Why Can’t Kernel Threads Have pthreads?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_vs_pthreads.html#the-flat-build">The FLAT build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel_threads_vs_pthreads.html#roadmap">Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="make_build_system.html">Make Build System</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#verbosity">Verbosity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#build-process">Build Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#win-mk">Win.mk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#unix-mk">Unix.mk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#config-mk">Config.mk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#flatlibs-mk">FlatLibs.mk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#protectedlibs-mk">ProtectedLibs.mk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#kernellibs-mk">KernelLibs.mk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#directories-mk">Directories.mk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_build_system.html#libtargets-mk">LibTargets.mk</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="memory_configurations.html">Memory Configurations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html#flat-embedded-build">Flat, Embedded Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html#on-demand-paging">On-Demand Paging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html#protected-build">Protected Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html#address-environments">Address Environments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html#kernel-build">Kernel Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html#the-roadmap-toward-processes">The Roadmap Toward Processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory_configurations.html#terminology">Terminology</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html">Naming of Architecture, MCU, and Board Interfaces</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html#common-microcontroller-interfaces">Common Microcontroller Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html#microcontroller-specific-interfaces">Microcontroller-Specific Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html#architecture-specific-interfaces">Architecture-Specific Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html#common-board-interfaces">Common Board Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_arch_mcu_board_interfaces.html#specific-interfaces">Specific Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="naming_os_internals.html">Naming of OS Internal Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html#legacy-smooshed-together-names">Legacy smooshed-together names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html#system-object-verb-naming">System-Object-Verb Naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html#system-verb-object-naming">System-Verb-Object Naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html#unit-suffixes">Unit Suffixes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html#implicit-get">Implicit get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html#other-naming">Other Naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="naming_os_internals.html#conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nuttx_initialization_sequence.html">NuttX Initialization Sequence</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_initialization_sequence.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_initialization_sequence.html#case-example-stm32-f4">Case example: STM32 F4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_initialization_sequence.html#phase-a-power-on-reset-initialization">Phase A - Power-On Reset Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_initialization_sequence.html#phase-b-nuttx-rtos-initialization">Phase B - NuttX RTOS Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_initialization_sequence.html#phase-c-application-initialization">Phase C - Application Initialization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nuttx_tasking.html">NuttX Tasking</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#an-rtos-as-a-library">An RTOS as a library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#kernel-threads">Kernel Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#the-scheduler">The Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#state-transition-diagram">State Transition Diagram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#scheduling-policies">Scheduling Policies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#task-ids">Task IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#nuttx-tasks">NuttX Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#the-pseudo-file-system-and-device-drivers">The Pseudo File System and Device Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#inheritance-of-the-task-environment-and-i-o-redirection">Inheritance of the Task Environment and I/O Redirection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#tasks-vs-pthreads">Tasks vs. Pthreads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuttx_tasking.html#process-ids-task-ids-pthread-ids">Process IDs / Task IDs / Pthread IDs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oneshot_timers_and_cpu_load.html">Oneshot Timers and CPU Load Measurement</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oneshot_timers_and_cpu_load.html#issues-with-cpu-load-measurement">Issues with CPU Load Measurement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oneshot_timers_and_cpu_load.html#external-clock">External Clock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oneshot_timers_and_cpu_load.html#using-a-oneshot-timer-to-drive-cpu-load-measurement">Using a Oneshot Timer to Drive CPU Load Measurement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oneshot_timers_and_cpu_load.html#entropy">Entropy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="power_management.html">Power Management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="power_management.html#power-management-pm-subsystem">Power Management (PM) Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="power_management.html#dynamic-clocking">Dynamic Clocking</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="preemption_latency.html">Effects of Disabling Interrupts or Pre-Emption on Response Latency</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="preemption_latency.html#rate-monotonic-scheduling">Rate Monotonic Scheduling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="processes_vs_tasks.html">Linux Processes vs NuttX Tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html#nuttx-build-types">NuttX Build Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html#initialization-of-global-variables">Initialization of Global Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html#global-variables-and-multiple-task-copies">Global Variables and Multiple Task Copies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processes_vs_tasks.html#memory-clean-up">Memory Clean-Up</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="short_time_delays.html">Short Time Delays</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="short_time_delays.html#system-timer-interrupt">System Timer Interrupt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="short_time_delays.html#timer-resolution">Timer Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="short_time_delays.html#usleep"><code class="docutils literal notranslate"><span class="pre">usleep()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="short_time_delays.html#timer-hook">Timer Hook</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="signal_handlers.html">Signal Handlers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="signal_handlers.html#sending-thread">Sending Thread</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signal_handlers.html#receiving-thread">Receiving Thread</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.html">The NuttX Simulation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#how-the-simulator-is-built">How the Simulator is Built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#the-nuttx-rel-blob">The nuttx.rel Blob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#the-hostobj-blob">The $(HOSTOBJ) Blob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#accessing-host-devices-using-fifos">Accessing Host Devices Using FIFOs?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#toward-a-general-design">Toward a General Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#what-is-wrong-with-that">What is Wrong With That?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#simulated-interrupts">Simulated Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html#supported-devices">Supported Devices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="smp.html">SMP (Symmetric MultiProcessing)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#definition">Definition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#development-status">Development Status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#enabling-smp">Enabling SMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#design-requirements">Design Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#data-structures">Data Structures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#system-startup">System Startup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#scheduler-interactions">Scheduler Interactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#interrupt-handling">Interrupt Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#system-calls">System Calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#critical-sections">Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#spinlocks">Spinlocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#disabling-pre-emption">Disabling Pre-emption</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#disabling-interrupts">Disabling Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#pre-emption-controls-and-critical-sections">Pre-Emption Controls and Critical Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#signal-handlers">Signal Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smp.html#thread-affinity">Thread Affinity</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="syslog.html">SysLog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html#standard-syslog-interfaces">Standard SysLog Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html#debug-interfaces">Debug Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html#syslog-channels">SYSLOG Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html#syslog-channel-options">SYSLOG Channel Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html#syslog-input-character-device">SYSLOG (Input) Character Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syslog.html#using-syslog-for-debug">Using SYSLOG for Debug</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tasks_vs_threads.html">Tasks vs. Threads</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html#what-is-the-difference-between-a-thread-and-a-task-in-nuttx">What is the difference between a thread and a task in Nuttx?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html#when-would-i-want-to-use-a-task-when-would-i-want-to-use-a-thread">When would I want to use a task? When would I want to use a thread?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html#how-do-signals-work-in-a-task-group-with-many-pthreads">How do signals work in a task group with many pthreads?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html#how-do-atexit-and-on-exit-work-with-task-groups">How do <code class="docutils literal notranslate"><span class="pre">atexit()</span></code> and <code class="docutils literal notranslate"><span class="pre">on_exit()</span></code> work with task groups?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html#how-does-waitpid-work-with-task-groups">How does <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> work with task groups?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_vs_threads.html#what-are-privileged-threads-how-are-threads-handled-differently-when-nuttx-is-built-as-a-kernel">What are privileged threads? How are threads handled differently when NuttX is built as a Kernel</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tickless_os.html">Tickless OS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html#default-system-timer">Default System Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html#tickless-os-advantages">Tickless OS Advantages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html#platform-support">Platform Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html#configuration-options">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html#system-interfaces">System Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tickless_os.html#issues">Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tls.html">TLS: Thread Local Storage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#historical-background">Historical Background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#errno"><code class="docutils literal notranslate"><span class="pre">errno</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#task-specific-globals-in-the-flat-and-protected-builds">Task-Specific Globals in the FLAT and PROTECTED builds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#re-entrant-getopt">Re-Entrant <code class="docutils literal notranslate"><span class="pre">getopt()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#unaligned-tls">Unaligned TLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#push-up-vs-push-down-stacks">Push-Up vs. Push-Down Stacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#tls-interfaces">TLS interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#pthread-specific-data">pthread-specific data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#accessing-the-errno-from-kernel-space">Accessing the <code class="docutils literal notranslate"><span class="pre">errno</span></code> from kernel space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#wild-ideas">Wild Ideas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tls.html#code-references">Code References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_identity.html">User and Group Identity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_identity.html#credentials">Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_identity.html#inheritance">Inheritance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_identity.html#privilege-transitions">Privilege Transitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_identity.html#configuration">Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usb.html">USB (Universal Serial Bus)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usb.html#naking-usb-out-in-tokens">NAKing USB OUT/IN Tokens</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../applications/examples/zerocross/index.html" class="btn btn-neutral float-left" title="zerocross Zero Crossing Device" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="bottomhalf_interrupt.html" class="btn btn-neutral float-right" title="Bottom-Half Interrupt Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
