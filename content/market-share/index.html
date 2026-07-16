@@ -4,6 +4,15 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <script>
+      (function () {
+        var savedTheme = localStorage.getItem('theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.style.backgroundColor = theme === 'dark' ? '#191a1a' : '#f8fafc';
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <title>Market Share and Products</title>
     <meta name="description" content="Market footprint and products built with Apache NuttX RTOS">
     <meta name="author" content="">
@@ -16,12 +25,16 @@
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
+    <!-- Local Fonts (load before other styles to avoid font swap on refresh) -->
+    <link rel="preload" href="/assets/themes/apache/fonts/DMSans-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/assets/themes/apache/fonts/DMSans-Medium.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/assets/themes/apache/fonts/DMSans-Bold.ttf" as="font" type="font/ttf" crossorigin>
+    <link href="/assets/themes/apache/css/fonts.css" rel="stylesheet" type="text/css">
+
     <!-- Le styles -->
     <link href="/assets/themes/apache/bootstrap/css/bootstrap.css" rel="stylesheet">
     <link href="/assets/themes/apache/css/modern.css" rel="stylesheet" type="text/css">
     <link href="/assets/themes/apache/css/syntax.css" rel="stylesheet"  type="text/css" media="screen" />
-    <!-- Local Fonts (CSP compliant) -->
-    <link href="/assets/themes/apache/css/fonts.css" rel="stylesheet" type="text/css">
     
     <!-- Le fav and touch icons -->
     <!-- Update these with your own images
@@ -1302,20 +1315,9 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
       const mobileThemeBtn = document.getElementById('themeBtn');
       const desktopThemeBtn = document.getElementById('desktopThemeBtn');
       
-      // Check for saved theme preference or default to system preference
-      const savedTheme = localStorage.getItem('theme');
-      let currentTheme;
-      
-      if (savedTheme) {
-        currentTheme = savedTheme;
-      } else {
-        // Use system preference
-        currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      
-      // Set initial theme
-      html.setAttribute('data-theme', currentTheme);
-      document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+      // Theme is applied in <head> before first paint to avoid flash.
+      const currentTheme = html.getAttribute('data-theme') || 'light';
+      html.classList.add('theme-ready');
       
       // Function to toggle theme
       function toggleTheme(e) {
@@ -1327,23 +1329,18 @@ html[data-theme="dark"] .nx-stat-asf .nx-asf-logo { filter: brightness(0) invert
         const theme = html.getAttribute('data-theme');
         const newTheme = theme === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-theme', newTheme);
+        html.style.backgroundColor = newTheme === 'dark' ? '#191a1a' : '#f8fafc';
+        html.style.colorScheme = newTheme;
         localStorage.setItem('theme', newTheme);
-        console.log('Theme toggled to:', newTheme);
       }
       
       // Add click listeners to both buttons
       if (mobileThemeBtn) {
         mobileThemeBtn.addEventListener('click', toggleTheme);
-        console.log('Mobile theme button listener attached');
       }
       
       if (desktopThemeBtn) {
         desktopThemeBtn.addEventListener('click', toggleTheme);
-        console.log('Desktop theme button listener attached');
-      }
-      
-      if (!mobileThemeBtn && !desktopThemeBtn) {
-        console.warn('Theme buttons not found');
       }
     })();
     
