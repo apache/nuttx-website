@@ -183,8 +183,14 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Realtek RTL8721Dx</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#highlights">Highlights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#memory">Memory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#vendor-sdk-dependency">Vendor SDK Dependency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#toolchain">Toolchain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vendor-sdk-and-toolchain">Vendor SDK and Toolchain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#building-and-flashing">Building and Flashing</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#with-make">With make</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#with-cmake">With CMake</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#flashing">Flashing</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-features">Supported Features</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#boards">Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/pke8721daf/index.html">PKE8721DAF</a></li>
@@ -331,22 +337,83 @@ NOR accessed through the SDK XIP path. The exact flash / PSRAM size depends on
 the part number — for example the RTL8721DAF has 4 MB of NOR flash and no
 PSRAM.</p>
 </section>
-<section id="vendor-sdk-dependency">
-<h2>Vendor SDK Dependency<a class="headerlink" href="#vendor-sdk-dependency" title="Permalink to this heading"></a></h2>
-<p>The build depends on Realtek’s open <code class="docutils literal notranslate"><span class="pre">ameba-rtos</span></code> SDK, which is <strong>not</strong> part
-of the NuttX tree. It provides the Wi-Fi / Bluetooth firmware and the
-low-level chip libraries. The first build auto-fetches the pinned revision (a
-shallow <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> of <code class="docutils literal notranslate"><span class="pre">https://github.com/Ameba-AIoT/ameba-rtos.git</span></code>) into
-<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/ameba-rtos</span></code> (git-ignored) and builds against it
-unmodified. To use a local checkout instead of auto-fetching, export
-<code class="docutils literal notranslate"><span class="pre">AMEBA_SDK</span></code> to its path.</p>
+<section id="vendor-sdk-and-toolchain">
+<h2>Vendor SDK and Toolchain<a class="headerlink" href="#vendor-sdk-and-toolchain" title="Permalink to this heading"></a></h2>
+<p>The build depends on Realtek’s open <code class="docutils literal notranslate"><span class="pre">ameba-rtos</span></code> SDK and its matching
+<code class="docutils literal notranslate"><span class="pre">arm-none-eabi</span></code> toolchain (from the Realtek asdk release), neither of which is
+part of the NuttX tree.  The SDK provides the Wi-Fi / Bluetooth firmware and the
+low-level chip libraries; NuttX links its own libc / libm and reuses the SDK’s
+<code class="docutils literal notranslate"><span class="pre">app_start()</span></code> as the image entry point.</p>
+<p>Both are fetched automatically — there is nothing to install by hand:</p>
+<ul class="simple">
+<li><p><strong>make</strong> fetches them on the first <code class="docutils literal notranslate"><span class="pre">make</span></code> (from its <code class="docutils literal notranslate"><span class="pre">PREBUILD</span></code> step).</p></li>
+<li><p><strong>CMake</strong> fetches them when you source <code class="docutils literal notranslate"><span class="pre">.</span> <span class="pre">tools/ameba/env.sh</span> <span class="pre">&lt;board&gt;</span></code>, which
+must run before <code class="docutils literal notranslate"><span class="pre">cmake</span></code> (CMake probes the compiler at configure time).  The
+make build resolves everything on demand, so it needs no sourcing.</p></li>
+</ul>
+<p>The SDK is a shallow <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> of the pinned revision of
+<code class="docutils literal notranslate"><span class="pre">https://github.com/Ameba-AIoT/ameba-rtos.git</span></code> into
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/ameba-rtos</span></code> (git-ignored) and is built unmodified;
+export <code class="docutils literal notranslate"><span class="pre">AMEBA_SDK</span></code> to use a local checkout instead.  The asdk version is
+pinned <strong>per IC</strong> by the SDK, so different Ameba ICs may use different toolchain
+versions — the build selects the matching one automatically.</p>
 </section>
-<section id="toolchain">
-<h2>Toolchain<a class="headerlink" href="#toolchain" title="Permalink to this heading"></a></h2>
-<p>A matching Realtek ARM toolchain (<code class="docutils literal notranslate"><span class="pre">arm-none-eabi</span></code> from the Realtek asdk
-release) is required and is fetched automatically by the board build. NuttX
-links its own libc / libm and reuses the SDK’s <code class="docutils literal notranslate"><span class="pre">app_start()</span></code> as the image
-entry point.</p>
+<section id="building-and-flashing">
+<h2>Building and Flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h2>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;board&gt;</span></code> below with an actual board (e.g. <code class="docutils literal notranslate"><span class="pre">pke8721daf</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">&lt;config&gt;</span></code> with one of its configurations.  The first build fetches the SDK
+and toolchain (see <a class="reference internal" href="#vendor-sdk-and-toolchain">Vendor SDK and Toolchain</a>).</p>
+<section id="with-make">
+<h3>With make<a class="headerlink" href="#with-make" title="Permalink to this heading"></a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>&lt;board&gt;:&lt;config&gt;
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+</section>
+<section id="with-cmake">
+<h3>With CMake<a class="headerlink" href="#with-cmake" title="Permalink to this heading"></a></h3>
+<p>CMake probes the compiler at configure time, so source the Ameba environment
+once first, <strong>passing the board</strong> so the asdk version that IC pins is on
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>.<span class="w"> </span>tools/ameba/env.sh<span class="w"> </span>&lt;board&gt;
+<span class="gp">$ </span>cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>&lt;board&gt;:&lt;config&gt;<span class="w"> </span>-GNinja
+<span class="gp">$ </span>cmake<span class="w"> </span>--build<span class="w"> </span>build
+</pre></div>
+</div>
+<p>make writes <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> to the top-level directory; CMake writes it under
+<code class="docutils literal notranslate"><span class="pre">build/</span></code>.  The bootloader <code class="docutils literal notranslate"><span class="pre">boot.bin</span></code> is a prebuilt binary under the board’s
+<code class="docutils literal notranslate"><span class="pre">prebuilt/</span></code> directory; the flash step writes both at the offsets taken from
+the generated flash layout, so none are entered by hand.</p>
+</section>
+<section id="flashing">
+<h3>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h3>
+<p><strong>CLI (Linux/macOS)</strong> — connect a USB-UART adapter and use the built-in flash
+target (the baud defaults to 1500000; override with <code class="docutils literal notranslate"><span class="pre">AMEBA_BAUD</span></code>):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ make flash AMEBA_PORT=/dev/ttyUSB0                            # make build
+$ AMEBA_PORT=/dev/ttyUSB0 cmake --build build --target flash    # CMake build
+</pre></div>
+</div>
+<p><strong>GUI (Windows)</strong> — use the Realtek AmebaImageTool (<code class="docutils literal notranslate"><span class="pre">AmebaImageTool.exe</span></code> under
+<code class="docutils literal notranslate"><span class="pre">tools/ameba/ImageTool/</span></code> in the SDK tree) to select <code class="docutils literal notranslate"><span class="pre">boot.bin</span></code> (from the
+board’s <code class="docutils literal notranslate"><span class="pre">prebuilt/</span></code> directory) and <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code>.  See the <a class="reference external" href="https://aiot.realmcu.com/en/latest/tools/image_tool/index.html">Realtek Ameba
+ImageTool guide</a>
+for the Windows GUI tool and download-mode entry (hold the download button /
+power-cycle with the <code class="docutils literal notranslate"><span class="pre">UART_LOG_TX</span></code> line asserted).</p>
+<p><strong>Serial console</strong> — after flashing, connect to the LOG-UART at 1500000 8N1:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ picocom -b 1500000 /dev/ttyUSB0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>The build-time options are the same for make and CMake (both edit the one
+Kconfig for the selected board); only the command that launches the menuconfig
+UI differs:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>menuconfig<span class="w">                       </span><span class="c1"># make build</span>
+<span class="gp">$ </span>cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>menuconfig<span class="w">     </span><span class="c1"># CMake build</span>
+</pre></div>
+</div>
 </section>
 <section id="supported-features">
 <h2>Supported Features<a class="headerlink" href="#supported-features" title="Permalink to this heading"></a></h2>

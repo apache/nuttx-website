@@ -183,8 +183,9 @@
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">Realtek RTL8721Dx</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#highlights">Highlights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#memory">Memory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../index.html#vendor-sdk-dependency">Vendor SDK Dependency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../index.html#toolchain">Toolchain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#vendor-sdk-and-toolchain">Vendor SDK and Toolchain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#building-and-flashing">Building and Flashing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#configuration">Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#supported-features">Supported Features</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#boards">Boards</a><ul class="current">
 <li class="toctree-l5 current"><a class="current reference internal" href="#">PKE8721DAF</a></li>
@@ -323,6 +324,8 @@ partition), backing the Wi-Fi key-value store</p></li>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>Build and flash any of these per the <a class="reference internal" href="../../index.html"><span class="doc">RTL8721Dx build instructions</span></a>; for the CMake build, source <code class="docutils literal notranslate"><span class="pre">.</span> <span class="pre">tools/ameba/env.sh</span>
+<span class="pre">pke8721daf</span></code> first (the make build needs no sourcing).</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>pke8721daf:&lt;config-name&gt;
 </pre></div>
 </div>
@@ -351,39 +354,6 @@ nsh&gt; dhcpd_start wlan0
 </pre></div>
 </div>
 <p>Stop the SoftAP with <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">essid</span> <span class="pre">wlan0</span> <span class="pre">&lt;ssid&gt;</span> <span class="pre">0</span></code>.</p>
-</section>
-<section id="building-and-flashing">
-<h2>Building and Flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h2>
-<p>The build auto-fetches the Realtek <code class="docutils literal notranslate"><span class="pre">ameba-rtos</span></code> SDK on first use and a
-Realtek <code class="docutils literal notranslate"><span class="pre">arm-none-eabi</span></code> toolchain must be on <code class="docutils literal notranslate"><span class="pre">PATH</span></code>; see the
-<a class="reference internal" href="../../index.html"><span class="doc">chip documentation</span></a> for both.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>pke8721daf:nsh
-<span class="gp">$ </span>make
-</pre></div>
-</div>
-<p>This produces <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> in the top-level build directory: the NuttX
-application image, which also bundles the prebuilt Wi-Fi firmware.  The
-bootloader <code class="docutils literal notranslate"><span class="pre">boot.bin</span></code> is a prebuilt binary kept under the board’s
-<code class="docutils literal notranslate"><span class="pre">prebuilt/</span></code> directory; <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code> writes both at the flash offsets
-taken from the generated flash layout, so no offsets are entered by hand.</p>
-<p>After a successful build, flash via one of these methods:</p>
-<p><strong>CLI (Linux/macOS)</strong> — connect a USB-UART adapter (PL2303) and use the
-built-in <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code> target:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>flash<span class="w"> </span><span class="nv">AMEBA_PORT</span><span class="o">=</span>/dev/ttyUSB0
-</pre></div>
-</div>
-<p>The baud rate defaults to 1500000; override with <code class="docutils literal notranslate"><span class="pre">AMEBA_BAUD</span></code> if needed.</p>
-<p><strong>GUI (Windows)</strong> — use the Realtek AmebaImageTool (<code class="docutils literal notranslate"><span class="pre">AmebaImageTool.exe</span></code>
-under <code class="docutils literal notranslate"><span class="pre">tools/ameba/ImageTool/</span></code> in the SDK tree) to select <code class="docutils literal notranslate"><span class="pre">boot.bin</span></code> (from
-the board’s <code class="docutils literal notranslate"><span class="pre">prebuilt/</span></code> directory) and <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code>.</p>
-<p>See the <a class="reference external" href="https://aiot.realmcu.com/en/latest/tools/image_tool/index.html">Realtek Ameba ImageTool guide</a> for the
-Windows GUI tool and download-mode entry (hold the download button /
-power-cycle with the <code class="docutils literal notranslate"><span class="pre">UART_LOG_TX</span></code> line asserted).</p>
-<p><strong>Serial console</strong> — after flashing, connect to the LOG-UART at 1500000 8N1:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ picocom -b 1500000 /dev/ttyUSB0
-</pre></div>
-</div>
-<p>Other tools: <code class="docutils literal notranslate"><span class="pre">screen</span> <span class="pre">/dev/ttyUSB0</span> <span class="pre">1500000</span></code> or <code class="docutils literal notranslate"><span class="pre">minicom</span> <span class="pre">-b</span> <span class="pre">1500000</span> <span class="pre">-D</span> <span class="pre">/dev/ttyUSB0</span></code>.</p>
 </section>
 <section id="license-exceptions">
 <h2>License Exceptions<a class="headerlink" href="#license-exceptions" title="Permalink to this heading"></a></h2>

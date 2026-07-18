@@ -507,6 +507,14 @@ nsh&gt; ping 8.8.8.8
 <p>Use <code class="docutils literal notranslate"><span class="pre">ifup</span> <span class="pre">wlan0</span></code>, not <code class="docutils literal notranslate"><span class="pre">ifconfig</span> <span class="pre">wlan0</span> <span class="pre">up</span></code>: <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code> interprets its
 second argument as an IP address.</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The station is WPA2-only. A WPA3-transition network (WPA2/WPA3 mixed
+mode) associates through WPA2-PSK; a WPA3(SAE)-only network is refused
+up front with <code class="docutils literal notranslate"><span class="pre">ENOTSUP</span></code> and a console message naming the unsupported
+AKM, instead of letting the prebuilt supplicant attempt the SAE
+handshake (which faults).</p>
+</div>
 <p>The RTC and the SNTP client are enabled, so the clock can be set from the
 network:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ntpcstart
@@ -631,9 +639,10 @@ foreground.</p>
 <p><code class="docutils literal notranslate"><span class="pre">wapi</span></code> plus BLE (<code class="docutils literal notranslate"><span class="pre">CONFIG_GD32VW55X_BLE</span></code>) and the demo GATT service
 (<code class="docutils literal notranslate"><span class="pre">CONFIG_GD32VW55X_BLE_GATT_DEMO</span></code>).  The board advertises a connectable set
 named <code class="docutils literal notranslate"><span class="pre">NuttX</span></code> and registers a minimal “transparent UART” service (16-bit
-UUIDs <code class="docutils literal notranslate"><span class="pre">0xffe0</span></code> / RX <code class="docutils literal notranslate"><span class="pre">0xffe1</span></code> / TX <code class="docutils literal notranslate"><span class="pre">0xffe2</span></code>).  A central connects,
-discovers the service, and a write to the RX characteristic is logged on the
-board console:</p>
+UUIDs <code class="docutils literal notranslate"><span class="pre">0xffe0</span></code> / RX <code class="docutils literal notranslate"><span class="pre">0xffe1</span></code> / TX <code class="docutils literal notranslate"><span class="pre">0xffe2</span></code>). Advertising restarts on
+every disconnection, so the device stays discoverable across connections. A
+central connects, discovers the service, and a write to the RX characteristic
+is logged on the board console:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; BLE RX (11): Hello world
 </pre></div>
 </div>

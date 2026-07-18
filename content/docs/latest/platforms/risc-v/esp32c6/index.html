@@ -184,7 +184,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#ulp-lp-core-coprocessor">ULP LP Core Coprocessor</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#features-of-the-ulp-lp-core">Features of the ULP LP-Core</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#loading-binary-into-ulp-lp-core">Loading Binary into ULP LP-Core</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#makefile-variables-for-ulp-core-build">Makefile Variables for ULP Core Build:</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#makefile-cmake-variables-for-ulp-core-build">Makefile/CMake Variables for ULP Core Build:</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#creating-an-ulp-lp-core-application">Creating an ULP LP-Core Application</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#accessing-the-ulp-lp-core-program-variables">Accessing the ULP LP-Core Program Variables</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#ulp-lp-core-wakeup-configuration">ULP LP-Core Wakeup Configuration</a></li>
@@ -507,18 +507,10 @@ $ cmake --build build -t flash
 </pre></div>
 </div>
 </section>
-<section id="cmake-limitations">
-<span id="esp32c6-debug"></span><h4>CMake limitations<a class="headerlink" href="#cmake-limitations" title="Permalink to this heading"></a></h4>
-<p>The following is <strong>not</strong> supported when building with CMake yet; use the Make-based build instead:</p>
-<ul class="simple">
-<li><p><strong>ULP / LP core</strong> — Low-power coprocessor support (<code class="docutils literal notranslate"><span class="pre">CONFIG_ESPRESSIF_USE_LP_CORE</span></code>) is
-not wired up for CMake (ULP/LP integration is TODO).</p></li>
-</ul>
-</section>
 </section>
 </section>
 <section id="debugging">
-<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h2>
+<span id="esp32c6-debug"></span><h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h2>
 <p>This section describes debugging techniques for the ESP32-C6.</p>
 <section id="debugging-with-openocd-and-gdb">
 <h3>Debugging with <code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">gdb</span></code><a class="headerlink" href="#debugging-with-openocd-and-gdb" title="Permalink to this heading"></a></h3>
@@ -1252,13 +1244,14 @@ and the resulting .bin file has to be integrated into NuttX. This workflow, whil
 using build system has some dependencies on example side.</p>
 <p>Both methods requires <code class="docutils literal notranslate"><span class="pre">CONFIG_ESPRESSIF_USE_LP_CORE</span></code> variable to enable ULP core
 and it can be set using <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> or <code class="docutils literal notranslate"><span class="pre">kconfig-tweak</span></code> commands.</p>
-<p>Additionally, a Makefile needs to be provided to specify the ULP application name,
+<p>Additionally, a Makefile or CMake file must be provided to specify the ULP application name,
 source path of the ULP application, and either the binary (for prebuilt) or the source files (for internal build).
-This Makefile must include the ULP makefile after the variable set process on <code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/espressif/esp_ulp.mk</span></code> integration script.
-For more information please refer to <a class="reference internal" href="../../xtensa/esp32s3/index.html#ulp-makefile"><span class="std std-ref">ulp example Makefile.</span></a></p>
+This file must include either ULP makefile after the variable set process on <code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/espressif/esp_ulp.mk</span></code>
+or <code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/espressif/esp_ulp.cmake</span></code> integration script depending on build system preference.
+For more information please refer to <a class="reference internal" href="../../xtensa/esp32s3/index.html#ulp-makefile"><span class="std std-ref">ulp example Makefile.</span></a> or <a class="reference internal" href="../esp32p4/index.html#ulp-cmake"><span class="std std-ref">ulp example CMake.</span></a></p>
 </section>
-<section id="makefile-variables-for-ulp-core-build">
-<h3>Makefile Variables for ULP Core Build:<a class="headerlink" href="#makefile-variables-for-ulp-core-build" title="Permalink to this heading"></a></h3>
+<section id="makefile-cmake-variables-for-ulp-core-build">
+<h3>Makefile/CMake Variables for ULP Core Build:<a class="headerlink" href="#makefile-cmake-variables-for-ulp-core-build" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code>: Sets name for the ULP application. This variable also be used as prefix (e.g. ULP application bin variable name)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ULP_APP_FOLDER</span></code>: Specifies the directory containing the ULP application’s source codes.</p></li>
@@ -1270,18 +1263,35 @@ For more information please refer to <a class="reference internal" href="../../x
 <p>Here is an Makefile example when using prebuilt binary for ULP core:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ULP_APP_NAME = esp_ulp</span>
 <span class="go">ULP_APP_FOLDER = $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)$(CHIP_SERIES)</span>
-<span class="go">ULP_APP_BIN = $(TOPDIR)$(DELIM)Documentation$(DELIM)platforms$(DELIM)$(CONFIG_ARCH)$(DELIM)$(CONFIG_ARCH_CHIP)$(DELIM)boards$(DELIM)$(CONFIG_ARCH_BOARD)$(DELIM)ulp_riscv_blink.bin</span>
+<span class="go">ULP_APP_BIN = $(TOPDIR)$(DELIM)Documentation$(DELIM)platforms$(DELIM)$(CONFIG_ARCH)$(DELIM)$(CONFIG_ARCH_CHIP)$(DELIM)boards$(DELIM)$(CONFIG_ARCH_BOARD)$(DELIM)ulp_blink.bin</span>
 
 <span class="go">include $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)common$(DELIM)espressif$(DELIM)esp_ulp.mk</span>
 </pre></div>
 </div>
-<p>Here is an example for enabling ULP and using the prebuilt test binary for ULP core:</p>
+<p>Here is an example for enabling ULP and using the prebuilt test binary for ULP core using make build system:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make distclean
 ./tools/configure.sh esp32c6-devkitc:nsh
 kconfig-tweak -e CONFIG_ESPRESSIF_USE_LP_CORE
 kconfig-tweak -e CONFIG_ESPRESSIF_ULP_USE_TEST_BIN
 make olddefconfig
 make -j
+</pre></div>
+</div>
+<p>Here is an CMake file example when using prebuilt binary for ULP core:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">ULP_APP_USE_TEST_BIN</span><span class="w"> </span><span class="s">TRUE</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">ULP_APP_NAME</span><span class="w"> </span><span class="s">esp_ulp</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">ULP_APP_FOLDER</span><span class="w"> </span><span class="o">${</span><span class="nv">NUTTX_CHIP_ABS_DIR</span><span class="o">}</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">ULP_APP_BIN</span><span class="w"> </span><span class="o">${</span><span class="nv">NUTTX_DIR</span><span class="o">}</span><span class="s">/Documentation/platforms/risc-v/</span><span class="o">${</span><span class="nv">CONFIG_ARCH_CHIP</span><span class="o">}</span><span class="s">/boards/</span><span class="o">${</span><span class="nv">CONFIG_ARCH_BOARD</span><span class="o">}</span><span class="s">/ulp_blink.bin</span><span class="p">)</span>
+
+<span class="nb">include</span><span class="p">(</span><span class="o">${</span><span class="nv">NUTTX_DIR</span><span class="o">}</span><span class="s">/arch/risc-v/src/common/espressif/esp_ulp.cmake</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here is an example for enabling ULP and using the prebuilt test binary for ULP core using CMake build system:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cmake -B build -DBOARD_CONFIG=esp32c6-devkitc:nsh -GNinja
+kconfig-tweak --file build/.config -e CONFIG_ESPRESSIF_USE_LP_CORE
+kconfig-tweak --file build/.config -e CONFIG_ESPRESSIF_ULP_USE_TEST_BIN
+cmake --build build -t olddefconfig
+cmake --build build
 </pre></div>
 </div>
 </section>
@@ -1291,7 +1301,7 @@ make -j
 <p>First, create a folder for the ULP source and header files into your NuttX example.
 This folder is just for ULP project and it is an independent project. Therefore, the NuttX example guide should not be followed
 for ULP example (folder location is irrelevant. It can be the same of the <cite>nuttx-apps</cite> repository, for instance).
-To include the ULP folder in the build system, don’t forget to include the ULP Makefile in the NuttX example Makefile. Lastly, configuration variables
+To include the ULP folder in the build system, don’t forget to include the ULP Makefile or Cmake integration in the NuttX example build file. Lastly, configuration variables
 needed to enable ULP core instructions can be found above.</p>
 <p>NuttX’s internal functions or POSIX calls are not supported.</p>
 <p>Here is an example:</p>
@@ -1336,12 +1346,35 @@ this example will demonstrate how to add ULP code into a custom application:</p>
 ├── nuttx/
 └── apps/
 └── ulp_example/
+    └── CMakeLists.txt
     └── Makefile
     └── Kconfig
     └── ulp_example.c
     └── ulp/
+        └── CMakeLists.txt
         └── Makefile
         └── ulp_main.c
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Contents in CMakeLists.txt:</p></li>
+</ul>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">include</span><span class="p">(</span><span class="s">ulp/CMakeLists.txt</span><span class="p">)</span>
+<span class="nb">nuttx_add_application</span><span class="p">(</span>
+<span class="w">   </span><span class="s">NAME</span>
+<span class="w">   </span><span class="o">${</span><span class="nv">CONFIG_EXAMPLES_ULP_EXAMPLE_PROGNAME</span><span class="o">}</span>
+<span class="w">   </span><span class="s">PRIORITY</span>
+<span class="w">   </span><span class="o">${</span><span class="nv">SCHED_PRIORITY_DEFAULT</span><span class="o">}</span>
+<span class="w">   </span><span class="s">STACKSIZE</span>
+<span class="w">   </span><span class="o">${</span><span class="nv">CONFIG_DEFAULT_TASK_STACKSIZE</span><span class="o">}</span>
+<span class="w">   </span><span class="s">MODULE</span>
+<span class="w">   </span><span class="o">${</span><span class="nv">CONFIG_EXAMPLES_ULP_EXAMPLE</span><span class="o">}</span>
+<span class="w">   </span><span class="s">INCLUDE_DIRECTORIES</span>
+<span class="w">   </span><span class="o">${</span><span class="nv">CMAKE_CURRENT_BINARY_DIR</span><span class="o">}</span>
+<span class="w">   </span><span class="s">SRCS</span>
+<span class="w">   </span><span class="s">ulp_example.c</span>
+<span class="w">   </span><span class="s">DEPENDS</span>
+<span class="w">   </span><span class="o">${</span><span class="nv">_ulp_example_deps</span><span class="o">}</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -1402,6 +1435,17 @@ this example will demonstrate how to add ULP code into a custom application:</p>
 <span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
+<ul class="simple" id="ulp-cmake">
+<li><p>Contents in ulp/CMakeLists.txt:</p></li>
+</ul>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">_ulp_example_deps</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">ULP_APP_NAME</span><span class="w"> </span><span class="s">ulp_example</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">ULP_APP_FOLDER</span><span class="w"> </span><span class="o">${</span><span class="nv">CMAKE_CURRENT_LIST_DIR</span><span class="o">}</span><span class="s">/ulp</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">ULP_APP_C_SRCS</span><span class="w"> </span><span class="s">ulp_main.c</span><span class="p">)</span>
+<span class="nb">include</span><span class="p">(</span><span class="o">${</span><span class="nv">NUTTX_DIR</span><span class="o">}</span><span class="s">/arch/risc-v/src/common/espressif/esp_ulp.cmake</span><span class="p">)</span>
+<span class="nb">list</span><span class="p">(</span><span class="s">APPEND</span><span class="w"> </span><span class="s">_ulp_example_deps</span><span class="w"> </span><span class="s">ulp_example_ulp_bin</span><span class="p">)</span>
+</pre></div>
+</div>
 <ul class="simple" id="ulp-makefile">
 <li><p>Contents in ulp/Makefile:</p></li>
 </ul>
@@ -1442,7 +1486,7 @@ this example will demonstrate how to add ULP code into a custom application:</p>
 </pre></div>
 </div>
 <ul>
-<li><p>Command to build:</p>
+<li><p>Command to build using make build system:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make distclean
 ./tools/configure.sh esp32c6-devkitc:nsh
 kconfig-tweak -e CONFIG_ESPRESSIF_GPIO_IRQ
@@ -1451,6 +1495,17 @@ kconfig-tweak -e CONFIG_ESPRESSIF_USE_LP_CORE
 kconfig-tweak -e CONFIG_EXAMPLES_ULP_EXAMPLE
 make olddefconfig
 make -j
+</pre></div>
+</div>
+</li>
+<li><p>Command to build using CMake build system:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cmake -B build -DBOARD_CONFIG=esp32c6-devkitc:nsh -GNinja
+kconfig-tweak --file build/.config -e CONFIG_ESPRESSIF_GPIO_IRQ
+kconfig-tweak --file build/.config -e CONFIG_DEV_GPIO
+kconfig-tweak --file build/.config -e CONFIG_ESPRESSIF_USE_LP_CORE
+kconfig-tweak --file build/.config -e CONFIG_EXAMPLES_ULP_EXAMPLE
+cmake --build build -t olddefconfig
+cmake --build build
 </pre></div>
 </div>
 </li>
@@ -1463,7 +1518,7 @@ applications are needed to create each ULP binary. This limitation only applies 
 build multiple ULP applications; it does not affect the ability to load multiple ULP applications built by other means.</p>
 <p>ULP binary can be included in NuttX application by adding
 <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&quot;ulp/ulp/ulp_code.h&quot;</span></code> line. Then, the ULP binary is accessible by using the ULP application
-prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP application Makefile) with the <code class="docutils literal notranslate"><span class="pre">bin</span></code> keyword to
+prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP application Makefile or CMake file) with the <code class="docutils literal notranslate"><span class="pre">bin</span></code> keyword to
 access the binary data (e.g., if <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is <code class="docutils literal notranslate"><span class="pre">ulp_test</span></code>, the binary variable will be <code class="docutils literal notranslate"><span class="pre">ulp_test_bin</span></code>)
 and <code class="docutils literal notranslate"><span class="pre">bin_len</span></code> keyword to access its length (e.g., <code class="docutils literal notranslate"><span class="pre">ulp_test_bin_len</span></code> for <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> is <code class="docutils literal notranslate"><span class="pre">ulp_test</span></code>).</p>
 </section>
@@ -1471,8 +1526,8 @@ and <code class="docutils literal notranslate"><span class="pre">bin_len</span><
 <h3>Accessing the ULP LP-Core Program Variables<a class="headerlink" href="#accessing-the-ulp-lp-core-program-variables" title="Permalink to this heading"></a></h3>
 <p>Global symbols defined in the ULP application are available to the HP core through a shared memory region. To read or write ULP variables,
 direct reading/writing to such memory positions are not allowed. POSIX calls are needed instead. To access the ULP variable through the HP core,
-consider that its name is defined by the ULP application prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP application Makefile) + the ULP application variable.
-For example if HP core tries to access a ULP application variable named <code class="docutils literal notranslate"><span class="pre">result</span></code> and <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> in the ULP application Makefile set as <code class="docutils literal notranslate"><span class="pre">ulp_app</span></code>, required name for
+consider that its name is defined by the ULP application prefix (defined by the <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> variable in the ULP Makefile or CMake integration) + the ULP application variable.
+For example if HP core tries to access a ULP application variable named <code class="docutils literal notranslate"><span class="pre">result</span></code> and <code class="docutils literal notranslate"><span class="pre">ULP_APP_NAME</span></code> in the ULP application build file set as <code class="docutils literal notranslate"><span class="pre">ulp_app</span></code>, required name for
 that variable will be <code class="docutils literal notranslate"><span class="pre">ulp_app_result</span></code>.
 <code class="docutils literal notranslate"><span class="pre">FIONREAD</span></code> or <code class="docutils literal notranslate"><span class="pre">FIONWRITE</span></code> ioctl calls are, then, performed with the address of a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">symtab_s</span></code> previously defined with the name of the variable to be read or written.</p>
 <div class="admonition warning">

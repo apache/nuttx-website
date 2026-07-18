@@ -167,7 +167,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../crypto/index.html"><code class="docutils literal notranslate"><span class="pre">crypto</span></code> crypto test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../cxx-oot-build/index.html"><code class="docutils literal notranslate"><span class="pre">cxx-oot-build</span></code> Out-of-Tree Build Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../cxxtest/index.html"><code class="docutils literal notranslate"><span class="pre">cxxtest</span></code> C++ test program</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">drivertest</span></code> cmocka driver test</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">drivertest</span></code> cmocka driver test</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-and-use">Configuration and use</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#current-test-coverage">Current test coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#watchdog-tests">Watchdog tests</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../fatutf8/index.html"><code class="docutils literal notranslate"><span class="pre">fatutf8</span></code> FAT UTF8 test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fdsantest/index.html"><code class="docutils literal notranslate"><span class="pre">fdsantest</span></code> vela cmocka fdsan test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fmemopen/index.html"><code class="docutils literal notranslate"><span class="pre">fmemopen</span></code> - fmemopen test tool</a></li>
@@ -248,7 +253,81 @@
              
   <section id="drivertest-cmocka-driver-test">
 <h1><code class="docutils literal notranslate"><span class="pre">drivertest</span></code> cmocka driver test<a class="headerlink" href="#drivertest-cmocka-driver-test" title="Permalink to this heading"></a></h1>
-<p>This is a test for specific driver or chip based on cmocka.</p>
+<p><code class="docutils literal notranslate"><span class="pre">drivertest</span></code> is a collection of applications that exercise NuttX driver
+interfaces with the <a class="reference internal" href="../cmocka/index.html"><span class="doc">cmocka</span></a> test
+framework.  It is not a single test runner.  Each test is registered as a
+separate application, such as <code class="docutils literal notranslate"><span class="pre">cmocka_driver_rtc</span></code> or
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_watchdog</span></code>, when its configuration dependencies are met.</p>
+<section id="configuration-and-use">
+<h2>Configuration and use<a class="headerlink" href="#configuration-and-use" title="Permalink to this heading"></a></h2>
+<p>Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_CMOCKA</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_DRIVER_TEST</span></code>.  The
+selected board configuration determines which driver test applications are
+built.  <code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_DRIVER_TEST_PRIORITY</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_DRIVER_TEST_STACKSIZE</span></code> set their common task priority and
+stack size.  The simple cmocka self-test and the oneshot test also require
+<code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_DRIVER_TEST_SIMPLE</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_ONESHOT_TEST</span></code>,
+respectively.</p>
+<p>Run an enabled test from NSH by entering its application name.  Some tests
+require real or simulated devices and may change device state, wait for an
+interrupt, or reset the board.  Check the test-specific behavior before adding
+one to an unattended test run.</p>
+</section>
+<section id="current-test-coverage">
+<h2>Current test coverage<a class="headerlink" href="#current-test-coverage" title="Permalink to this heading"></a></h2>
+<p>The available applications are grouped below.  Only applications whose
+dependencies are enabled are included in a given NuttX image.</p>
+<ul class="simple">
+<li><p>Basic and storage tests: <code class="docutils literal notranslate"><span class="pre">cmocka_driver_simple</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_block</span></code>.</p></li>
+<li><p>Time-related tests: <code class="docutils literal notranslate"><span class="pre">cmocka_driver_rtc</span></code>, <code class="docutils literal notranslate"><span class="pre">cmocka_driver_timer</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_oneshot</span></code>, <code class="docutils literal notranslate"><span class="pre">cmocka_posix_timer</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_watchdog</span></code>.</p></li>
+<li><p>Peripheral and bus tests: <code class="docutils literal notranslate"><span class="pre">cmocka_driver_pwm</span></code>, <code class="docutils literal notranslate"><span class="pre">cmocka_driver_adc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_i2c_spi</span></code>, <code class="docutils literal notranslate"><span class="pre">cmocka_driver_i2c_write</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_i2c_read</span></code>, <code class="docutils literal notranslate"><span class="pre">cmocka_driver_gpio</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_relay</span></code>, <code class="docutils literal notranslate"><span class="pre">cmocka_driver_uart</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_audio</span></code>.</p></li>
+<li><p>Display and input tests: <code class="docutils literal notranslate"><span class="pre">cmocka_driver_framebuffer</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_lcd</span></code>, and <code class="docutils literal notranslate"><span class="pre">cmocka_driver_touchpanel</span></code>.</p></li>
+<li><p>Power-management tests: <code class="docutils literal notranslate"><span class="pre">cmocka_driver_cpufreq</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_regulator</span></code>, <code class="docutils literal notranslate"><span class="pre">cmocka_driver_pm</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_pm_smp</span></code>, and <code class="docutils literal notranslate"><span class="pre">cmocka_driver_pm_runtime</span></code>.</p></li>
+<li><p>Arm MPS2 AN500 interrupt tests: <code class="docutils literal notranslate"><span class="pre">cmocka_driver_mps2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_mps2_zerointerrupt</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">cmocka_driver_mps2_isr_signal</span></code>.</p></li>
+</ul>
+</section>
+<section id="watchdog-tests">
+<h2>Watchdog tests<a class="headerlink" href="#watchdog-tests" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">cmocka_driver_watchdog</span></code> is built when <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG</span></code> is enabled with
+at least one of <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_RESET_CAUSE</span></code> or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_TIMEOUT_NOTIFIER</span></code>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_RESET_CAUSE</span></code>, the <code class="docutils literal notranslate"><span class="pre">-r</span></code> option selects a hardware
+watchdog test case:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-r</span> <span class="pre">0</span></code> feeds the watchdog for a configured interval and then stops
+feeding it.  The watchdog is expected to reset the board.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-r</span> <span class="pre">1</span></code> verifies that the watchdog resets the board while interrupts are
+disabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-r</span> <span class="pre">2</span></code> verifies that the watchdog resets the board when an interrupt-level
+watchdog callback does not return.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-r</span> <span class="pre">3</span></code> exercises the watchdog status, keepalive, capture, and stop
+interfaces.  This case is not included on Armv7-A TrustZone builds.</p></li>
+</ul>
+<p>Cases 0 through 2 intentionally reset the target and use the reset cause from
+the preceding boot to check the result.  They must therefore be run with a
+board that reports reset causes correctly and should not be treated as normal
+non-destructive unit tests.  The application accepts <code class="docutils literal notranslate"><span class="pre">-d</span></code> for the device
+path, <code class="docutils literal notranslate"><span class="pre">-o</span></code> for the timeout, <code class="docutils literal notranslate"><span class="pre">-t</span></code> for the total ping interval, <code class="docutils literal notranslate"><span class="pre">-l</span></code> for
+the delay between pings, <code class="docutils literal notranslate"><span class="pre">-a</span></code> for the status tolerance, and <code class="docutils literal notranslate"><span class="pre">-g</span></code> to skip
+the status check.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_TIMEOUT_NOTIFIER</span></code>, the application also runs two
+non-destructive notifier tests.  They verify callback priority ordering,
+duplicate registration, repeated delivery, unregister behavior, the selected
+automonitor action and payload, and concurrent register/notify/unregister
+operation.  These notifier tests do not require
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_RESET_CAUSE</span></code> or a watchdog device node.</p>
+</section>
 </section>
 
 
