@@ -503,6 +503,58 @@ configuration. This configuration uses USART1 for the serial console.
 USART1 is connected to the ST-link virtual com inside board.h to remove
 the need of a extra serial connection to use this board.</p>
 </section>
+<section id="dropbear">
+<h3>dropbear<a class="headerlink" href="#dropbear" title="Permalink to this heading"></a></h3>
+<p>This configuration brings up the <a class="reference external" href="https://matt.ucc.asn.au/dropbear/dropbear.html">Dropbear</a>
+SSH server so that an NSH session can be reached over the network. It pulls in
+the on-board Ethernet MAC, the DHCP client and <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code> so the link is
+configured automatically at boot, and it persists the SSH host key and the
+user database on the board’s on-board Micron N25Q QSPI NOR flash, mounted as
+LittleFS at <code class="docutils literal notranslate"><span class="pre">/data</span></code>.</p>
+<p>Connect an Ethernet cable to a router/switch before powering on the board.
+When it boots it requests an address over DHCP and starts the Dropbear
+daemon. Check the assigned address with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifconfig
+eth0    Link encap:Ethernet HWaddr 00:e0:de:ad:be:ef at RUNNING mtu 1486
+        inet addr:192.168.1.xx DRaddr:192.168.1.x Mask:255.255.255.0
+</pre></div>
+</div>
+<p>The first time the daemon runs it generates an ECDSA host key and stores it at
+<code class="docutils literal notranslate"><span class="pre">/data/dropbear_ecdsa_host_key</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DROPBEAR_HOSTKEY_PATH</span></code>), and
+the user accounts are read from <code class="docutils literal notranslate"><span class="pre">/data/passwd</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_PATH</span></code>).
+Because both files live on the persistent <code class="docutils literal notranslate"><span class="pre">/data</span></code> partition, the host key and
+the credentials survive reboots, so clients do not see a changing host key.</p>
+<p>Add a user from the board before connecting (the password file is created on the
+first <code class="docutils literal notranslate"><span class="pre">useradd</span></code>):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; useradd admin mypassword
+</pre></div>
+</div>
+<p>From a host on the same network, open an SSH session and run NSH commands
+remotely:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ssh admin@192.168.1.xx
+admin@192.168.1.xx&#39;s password:
+nsh&gt;
+</pre></div>
+</div>
+<p>Each session runs over a pseudo-terminal (<code class="docutils literal notranslate"><span class="pre">CONFIG_PSEUDOTERM</span></code>). The daemon
+keeps running after a session ends, so multiple clients can connect over time.</p>
+<p>This configuration also enables Dropbear’s <code class="docutils literal notranslate"><span class="pre">scp</span></code> helper
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DROPBEAR_SCP</span></code>), so files can be copied to and from the
+board from a host on the same network:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ scp -O localfile.txt admin@192.168.1.xx:/data/localfile.txt
+$ scp -O admin@192.168.1.xx:/data/localfile.txt .
+</pre></div>
+</div>
+<p>Only the legacy scp protocol is supported (no SFTP), so with OpenSSH 9.0 or
+newer the <code class="docutils literal notranslate"><span class="pre">-O</span></code> flag is required to force the client to use it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This board’s serial console (USART1, <code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code> over the
+on-board ST-LINK/V2-1 virtual COM port) remains available at the same time
+as the SSH sessions and is useful for the initial <code class="docutils literal notranslate"><span class="pre">useradd</span></code> and for
+recovery if the network is unreachable.</p>
+</div>
+</section>
 <section id="lgvl">
 <h3>lgvl<a class="headerlink" href="#lgvl" title="Permalink to this heading"></a></h3>
 <p>STM32F746G-DISCO LittlevGL demo example.</p>
