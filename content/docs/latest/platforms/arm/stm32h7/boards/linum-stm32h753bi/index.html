@@ -1447,6 +1447,90 @@ mcsonn_main: Connected
 </pre></div>
 </div>
 </section>
+<section id="curl">
+<h3>curl<a class="headerlink" href="#curl" title="Permalink to this heading"></a></h3>
+<p>Based on the <code class="docutils literal notranslate"><span class="pre">netnsh</span></code> configuration (ethernet + DHCP), this configuration adds
+the <code class="docutils literal notranslate"><span class="pre">curl</span></code> HTTP client command (<code class="docutils literal notranslate"><span class="pre">system/curl</span></code> on top of
+<code class="docutils literal notranslate"><span class="pre">netutils/webclient</span></code>), SD card support (same as the <code class="docutils literal notranslate"><span class="pre">sdcard</span></code> configuration,
+mounted manually) and a larger console line buffer (<code class="docutils literal notranslate"><span class="pre">CONFIG_LINE_MAX=256</span></code>) so
+long URLs and JSON bodies are not truncated when typed at the NSH prompt.</p>
+<p>It implements a subset of the real <code class="docutils literal notranslate"><span class="pre">curl</span></code> options: <code class="docutils literal notranslate"><span class="pre">-X</span></code> (method), <code class="docutils literal notranslate"><span class="pre">-H</span></code>
+(header), <code class="docutils literal notranslate"><span class="pre">-d</span></code> (request body, also <code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">&#64;file</span></code>), <code class="docutils literal notranslate"><span class="pre">-F</span> <span class="pre">name=&#64;file</span></code>
+(multipart/form-data upload), <code class="docutils literal notranslate"><span class="pre">-o</span></code> (save the response to a file) and <code class="docutils literal notranslate"><span class="pre">-v</span></code>
+(verbose). It is HTTP only (no HTTPS). For the full option semantics see the
+curl manual page: <a class="reference external" href="https://curl.se/docs/manpage.html">https://curl.se/docs/manpage.html</a></p>
+<p>Mount the SD card (destination for downloads) and bring up the network:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+nsh&gt; ifconfig
+eth0    Link encap:Ethernet HWaddr 00:e0:de:ad:be:ef at RUNNING mtu 1486
+        inet addr:192.168.15.3 DRaddr:192.168.15.1 Mask:255.255.255.0
+</pre></div>
+</div>
+<p>Download a file and save it on the SD card with <code class="docutils literal notranslate"><span class="pre">-o</span></code> (a public HTTP test
+service such as <code class="docutils literal notranslate"><span class="pre">httpbin.org</span></code> requires the gateway to have internet access):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; curl -o /mnt/dl.json http://httpbin.org/json
+curl: HTTP 200
+nsh&gt; cat /mnt/dl.json
+{
+  &quot;slideshow&quot;: {
+    &quot;author&quot;: &quot;Yours Truly&quot;,
+    &quot;title&quot;: &quot;Sample Slide Show&quot;,
+    ...
+  }
+}
+
+nsh&gt; curl -o /mnt/1kb.bin http://httpbin.org/bytes/1024
+curl: HTTP 200
+nsh&gt; curl -o /mnt/img.png http://httpbin.org/image/png
+curl: HTTP 200
+nsh&gt; ls -l /mnt/img.png
+ -rw-rw-rw-        8090 /mnt/img.png
+</pre></div>
+</div>
+<p>Send a JSON body with POST (<code class="docutils literal notranslate"><span class="pre">-d</span></code> selects POST automatically; <code class="docutils literal notranslate"><span class="pre">-H</span></code> sets the
+content type). The <code class="docutils literal notranslate"><span class="pre">httpbin.org/post</span></code> endpoint echoes back what it received:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; curl -H Content-Type:application/json -d &#39;{&quot;temp&quot;:25.3,&quot;hum&quot;:60}&#39; http://httpbin.org/post
+{
+  &quot;data&quot;: &quot;{\&quot;temp\&quot;:25.3,\&quot;hum\&quot;:60}&quot;,
+  &quot;headers&quot;: {
+    &quot;Content-Type&quot;: &quot;application/json&quot;,
+    &quot;Host&quot;: &quot;httpbin.org&quot;,
+    ...
+  },
+  &quot;json&quot;: {
+    &quot;hum&quot;: 60,
+    &quot;temp&quot;: 25.3
+  },
+  &quot;url&quot;: &quot;http://httpbin.org/post&quot;
+}
+curl: HTTP 200
+</pre></div>
+</div>
+<p>Select a different HTTP method with <code class="docutils literal notranslate"><span class="pre">-X</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; curl -X PUT -d &#39;{&quot;x&quot;:1}&#39; http://httpbin.org/put
+curl: HTTP 200
+</pre></div>
+</div>
+<p>Upload a file with multipart/form-data (<code class="docutils literal notranslate"><span class="pre">-F</span> <span class="pre">name=&#64;file</span></code>) and download it back
+with <code class="docutils literal notranslate"><span class="pre">-o</span></code> (this example targets a local server that stores the file and serves
+it again):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; curl -F file=@/mnt/nuttx_logo.png &quot;http://192.168.15.12:8000/api/projects/default/ota/upload?version=logo1&quot;
+{&quot;id&quot;:3,&quot;version&quot;:&quot;logo1&quot;,&quot;filename&quot;:&quot;nuttx_logo.png&quot;,&quot;sha256&quot;:&quot;ca278dcb...abed1ba&quot;,&quot;size_bytes&quot;:40343}curl: HTTP 201
+nsh&gt; curl -o /mnt/logo_back.png http://192.168.15.12:8000/api/api/ota/default/logo1/nuttx_logo.png
+curl: HTTP 200
+nsh&gt; ls -l /mnt
+ -rw-rw-rw-       40343 nuttx_logo.png
+ -rw-rw-rw-       40343 logo_back.png
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The webclient transfer buffer is small and the request has a ~10 s timeout,
+so prefer small files (a few KB up to ~100 KB). HTTPS is not supported; use
+plain <code class="docutils literal notranslate"><span class="pre">http://</span></code> URLs only. When there is no internet on the bench, point
+<code class="docutils literal notranslate"><span class="pre">curl</span></code> at a server on the local network instead of a public test service.</p>
+</div>
+</section>
 <section id="qencoder">
 <h3>qencoder<a class="headerlink" href="#qencoder" title="Permalink to this heading"></a></h3>
 <p>Configures and enables TIM5 on CH1(PA0) and CH2(PH11) to handle Quadrature Encoder:</p>

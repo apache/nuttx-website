@@ -734,29 +734,33 @@ mounted at /etc and will look like this at run-time:</p>
 <p><code class="docutils literal notranslate"><span class="pre">/etc/init.d/rc.sysinit</span></code> is system init script; <code class="docutils literal notranslate"><span class="pre">/etc/init.d/rcS</span></code> is the
 start-up script; <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> is the password file.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> file is auto-generated at build time when
-<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE</span></code> is set.  See <a class="reference internal" href="../../../../../components/tools/index.html#mkpasswd-autogen"><span class="std std-ref">mkpasswd — Build-time /etc/passwd Generation</span></a>
-for the full setup (admin password, TEA keys, NSH encrypted-password login).</p>
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE</span></code> is set.  See <a class="reference internal" href="../../../../../components/tools/index.html#mkpasswd-autogen"><span class="std std-ref">mkpasswd: Build-time /etc/passwd generation</span></a>
+for the full setup (root password, NSH encrypted-password login).</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_USER</span></code> (default: <code class="docutils literal notranslate"><span class="pre">root</span></code>)</p></li>
-<li><p>Admin password and TEA keys — set in menuconfig (not saved in defconfig)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code> (required; minimum 8 characters
+with uppercase, lowercase, digit, and special character.  See
+<a class="reference internal" href="../../../../../components/tools/index.html#mkpasswd-autogen"><span class="std std-ref">mkpasswd: Build-time /etc/passwd generation</span></a>)</p></li>
 </ul>
-<p>The password is hashed with TEA by <code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code>; the plaintext is <strong>not</strong>
-stored in the firmware.</p>
+<p>The password is hashed with PBKDF2-HMAC-SHA256 at build time by the host tool
+<code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code>; the plaintext is <strong>not</strong> stored in the firmware.</p>
+<p>For the full description of the mechanism, file format, and verification
+steps, see <a class="reference internal" href="../../../../../components/tools/index.html#mkpasswd-autogen"><span class="std std-ref">mkpasswd: Build-time /etc/passwd generation</span></a>.</p>
 <p>The format of the password file is:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>user:encrypted_hash:uid:gid:home
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>user:x:uid:gid:home
 
 Where:
 user:  User name
-encrypted_hash:  TEA-encrypted password (base64)
-uid:   User ID
-gid:   Group ID
-home:  Login directory
+x:     PBKDF2-HMAC-SHA256 hash (modular crypt format)
+uid:   User ID (0 for now)
+gid:   Group ID (0 for now)
+home:  Login directory (/ for now)
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">/etc/group</span></code> is a group file. It is not currently used.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; cat /etc/group</span>
-<span class="go">root:*:0:root,admin</span>
+<span class="go">root:*:0:root</span>
 </pre></div>
 </div>
 <p>The format of the group file is:</p>

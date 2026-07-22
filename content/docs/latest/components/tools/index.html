@@ -199,16 +199,14 @@
 <li class="toctree-l3"><a class="reference internal" href="uncrustify.html"><code class="docutils literal notranslate"><span class="pre">uncrustify.cfg</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="zds.html">zds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="zipme.html"><code class="docutils literal notranslate"><span class="pre">zipme.sh</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#mkpasswd-build-time-etc-passwd-generation">mkpasswd — Build-time <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> Generation</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#setup-workflow">Setup workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mkpasswd-build-time-etc-passwd-generation">mkpasswd: Build-time <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#quick-start">Quick start</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#build-flow">Build flow</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#build-time-credentials-ci-automation">Build-time credentials (CI / automation)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#tea-encryption-keys">TEA encryption keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#how-the-build-enforces-security">How the build enforces security</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#standalone-mkpasswd-advanced">Standalone <code class="docutils literal notranslate"><span class="pre">mkpasswd</span></code> (advanced)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#kconfig-summary">Kconfig summary</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#etc-passwd-file-format"><code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> file format</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#notes-on-savedefconfig">Notes on <code class="docutils literal notranslate"><span class="pre">savedefconfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#password-rules">Password rules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hash-format">Hash format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kconfig">Kconfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#host-files">Host files</a></li>
 </ul>
 </li>
 </ul>
@@ -319,144 +317,91 @@ and host C programs that are important parts of the NuttX build system:</p>
 </ul>
 </div>
 <section id="mkpasswd-build-time-etc-passwd-generation">
-<span id="mkpasswd-autogen"></span><h2>mkpasswd — Build-time <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> Generation<a class="headerlink" href="#mkpasswd-build-time-etc-passwd-generation" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code> (<code class="docutils literal notranslate"><span class="pre">tools/mkpasswd.c</span></code>) is a host program that writes a
-single <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> entry with a TEA-encrypted password hash.  The
-plaintext password is <strong>not</strong> stored in the firmware image.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y</span></code>, the build invokes
-<code class="docutils literal notranslate"><span class="pre">mkpasswd</span></code> automatically from <code class="docutils literal notranslate"><span class="pre">boards/Board.mk</span></code> (Make) or
-<code class="docutils literal notranslate"><span class="pre">cmake/nuttx_add_romfs.cmake</span></code> (CMake).  You normally configure the
-password and keys in menuconfig; you do not run <code class="docutils literal notranslate"><span class="pre">mkpasswd</span></code> by hand.</p>
-<section id="prerequisites">
-<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h3>
-<p>Enable all of the following (via <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>):</p>
-<ul class="simple">
-<li><p><strong>Board Selection</strong> → <strong>Auto-generate /etc/passwd at build time</strong>
-(<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE</span></code>)</p></li>
-<li><p><strong>Application Configuration</strong> → <strong>NSH Library</strong> → <strong>Console Login</strong>
-(<code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_CONSOLE_LOGIN</span></code>) with verification method <strong>Encrypted
-password file</strong> (<code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_LOGIN_PASSWD</span></code>)</p></li>
-<li><p><strong>Application Configuration</strong> → <strong>File System Utilities</strong> → <strong>Password file
-support</strong> (<code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD</span></code>)</p></li>
-</ul>
+<span id="mkpasswd-autogen"></span><h2>mkpasswd: Build-time <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> generation<a class="headerlink" href="#mkpasswd-build-time-etc-passwd-generation" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code> (<code class="docutils literal notranslate"><span class="pre">tools/mkpasswd.c</span></code>) writes one <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> line at
+build time when <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y</span></code>.</p>
+<section id="quick-start">
+<h3>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h3>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_ETC_ROMFS=y
+CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y
+CONFIG_FSUTILS_PASSWD=y
+CONFIG_FSUTILS_PASSWD_READONLY=y
+CONFIG_NSH_CONSOLE_LOGIN=y
+</pre></div>
+</div>
+<p>Set <strong>Board Selection → Auto-generate /etc/passwd at build time → Root password</strong>
+in menuconfig or at the <code class="docutils literal notranslate"><span class="pre">make</span></code> prompt, then build and log in as <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p>
+<p>See <a class="reference internal" href="../../applications/nsh/login.html"><span class="doc">Shell Login</span></a> for NSH login details.</p>
 </section>
-<section id="setup-workflow">
-<h3>Setup workflow<a class="headerlink" href="#setup-workflow" title="Permalink to this heading"></a></h3>
+<section id="build-flow">
+<h3>Build flow<a class="headerlink" href="#build-flow" title="Permalink to this heading"></a></h3>
+<p><strong>Makefile builds</strong> use <code class="docutils literal notranslate"><span class="pre">tools/board_romfs_mkpasswd.sh</span></code>, which validates the
+password (<code class="docutils literal notranslate"><span class="pre">tools/promptpasswd.sh</span></code> if needed) and invokes <code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code>.</p>
+<p><strong>CMake builds</strong> invoke <code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code> directly; set
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code> in <code class="docutils literal notranslate"><span class="pre">.config</span></code> (configure fails if
+it is missing).</p>
+<p>In both cases:</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tools/configure.sh</span> <span class="pre">&lt;board&gt;:&lt;config&gt;</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code>:</p>
-<ul class="simple">
-<li><p><strong>Board Selection</strong> → Auto-generate /etc/passwd</p>
-<ul>
-<li><p><strong>Admin password</strong> — required, at least 8 characters.  There is no
-Kconfig default (the legacy <code class="docutils literal notranslate"><span class="pre">Administrator</span></code> password is rejected).</p></li>
-<li><p><strong>Generate random TEA encryption keys automatically</strong> — recommended;
-or disable this and set keys manually (see below).</p></li>
-</ul>
-</li>
-<li><p>Confirm NSH uses <strong>Encrypted password file</strong> verification (above).</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">make</span></code> — on the first build, <code class="docutils literal notranslate"><span class="pre">tools/passwd_keys.mk</span></code> validates the
-password and keys, may generate TEA keys, then <code class="docutils literal notranslate"><span class="pre">mkpasswd</span></code> runs before
-<code class="docutils literal notranslate"><span class="pre">config.h</span></code> is created so the hash and firmware always agree.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tools/mkpasswd</span></code> hashes with PBKDF2-HMAC-SHA256 (same algorithm as
+<code class="docutils literal notranslate"><span class="pre">apps/fsutils/passwd</span></code>, which uses kernel cryptodev at runtime).</p></li>
+<li><p>The hash is written to <code class="docutils literal notranslate"><span class="pre">etctmp/.../passwd</span></code> and embedded in ROMFS.</p></li>
 </ol>
+<p>The plaintext password is used on the host during <code class="docutils literal notranslate"><span class="pre">make</span></code> only.  On an
+interactive terminal, <code class="docutils literal notranslate"><span class="pre">make</span></code> prompts for the root password (and confirmation)
+when it is not already configured; non-interactive builds must set
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code> or <code class="docutils literal notranslate"><span class="pre">NUTTX_ROMFS_PASSWD_PASSWORD</span></code>.</p>
 </section>
 <section id="build-time-credentials-ci-automation">
 <h3>Build-time credentials (CI / automation)<a class="headerlink" href="#build-time-credentials-ci-automation" title="Permalink to this heading"></a></h3>
-<p>These values are <strong>not</strong> written to defconfig by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">savedefconfig</span></code>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY1</span></code> … <code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY4</span></code></p></li>
-</ul>
-<p>For scripted or CI builds, export the admin password before <code class="docutils literal notranslate"><span class="pre">configure.sh</span></code>
-or <code class="docutils literal notranslate"><span class="pre">make</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code> is <strong>not</strong> written to defconfig by
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">savedefconfig</span></code>.  For scripted or CI builds, export the root password
+before <code class="docutils literal notranslate"><span class="pre">configure.sh</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">NUTTX_ROMFS_PASSWD_PASSWORD</span><span class="o">=</span><span class="s2">&quot;your-password-here&quot;</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">tools/update_romfs_password.sh</span></code> copies this into <code class="docutils literal notranslate"><span class="pre">.config</span></code> when ROMFS
 passwd generation is enabled and the password field is still empty.  NuttX
-CI sets <code class="docutils literal notranslate"><span class="pre">NuttXSimLogin1</span></code> for the <code class="docutils literal notranslate"><span class="pre">sim/login</span></code> configuration (a documented
-sim-only test credential, not a product secret).</p>
+CI sets <code class="docutils literal notranslate"><span class="pre">NuttXSim1!</span></code> for the <code class="docutils literal notranslate"><span class="pre">sim/login</span></code> configuration (a documented
+sim-only test credential, not a product secret).  The password must meet the
+complexity rules below.</p>
 </section>
-<section id="tea-encryption-keys">
-<h3>TEA encryption keys<a class="headerlink" href="#tea-encryption-keys" title="Permalink to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">mkpasswd</span></code> and the firmware must use the <strong>same</strong> four 32-bit key words
-(<code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY1</span></code> … <code class="docutils literal notranslate"><span class="pre">KEY4</span></code>).  Choose one approach:</p>
-<p><strong>Random generation</strong> (<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS=y</span></code>):</p>
-<blockquote>
-<div><p>On the first <code class="docutils literal notranslate"><span class="pre">make</span></code> when keys are missing or still placeholders,
-<code class="docutils literal notranslate"><span class="pre">tools/gen_passwd_keys.sh</span></code> writes random values to <code class="docutils literal notranslate"><span class="pre">.config</span></code>.  A
-build warning explains where to view or change them in menuconfig.  Key
-values are never printed in the build log.</p>
-</div></blockquote>
-<p><strong>Manual keys</strong> (<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS</span></code> disabled):</p>
-<blockquote>
-<div><p>Set <code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_KEY1</span></code> … <code class="docutils literal notranslate"><span class="pre">KEY4</span></code> under <strong>Application
-Configuration</strong> → <strong>File System Utilities</strong> → <strong>Password file support</strong>.
-Each must be a unique non-zero value.  The legacy published defaults
-<code class="docutils literal notranslate"><span class="pre">0x12345678</span></code> / <code class="docutils literal notranslate"><span class="pre">0x9abcdef0</span></code> are rejected.</p>
-</div></blockquote>
-<p>If random generation is enabled but keys are already present in <code class="docutils literal notranslate"><span class="pre">.config</span></code>,
-they are <strong>not</strong> regenerated (subsequent builds stay consistent).</p>
+<section id="password-rules">
+<h3>Password rules<a class="headerlink" href="#password-rules" title="Permalink to this heading"></a></h3>
+<p>Minimum 8 characters; at least one uppercase, lowercase, digit, and special
+character from <code class="docutils literal notranslate"><span class="pre">!&#64;#$%^&amp;*()_+-=[]{}|;:,.&lt;&gt;?</span></code>.</p>
 </section>
-<section id="how-the-build-enforces-security">
-<h3>How the build enforces security<a class="headerlink" href="#how-the-build-enforces-security" title="Permalink to this heading"></a></h3>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Check</p></th>
-<th class="head"><p>Where</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Password set, min 8 chars
-Not <code class="docutils literal notranslate"><span class="pre">Administrator</span></code>
-TEA keys configured
-Not legacy default keys</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">tools/passwd_keys.mk</span></code> (before <code class="docutils literal notranslate"><span class="pre">config.h</span></code>)
-<code class="docutils literal notranslate"><span class="pre">tools/mkpasswd.c</span></code> (last line of defence)
-<code class="docutils literal notranslate"><span class="pre">tools/check_passwd_keys.sh</span></code>
-<code class="docutils literal notranslate"><span class="pre">check_passwd_keys.sh</span></code> + <code class="docutils literal notranslate"><span class="pre">mkpasswd.c</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="standalone-mkpasswd-advanced">
-<h3>Standalone <code class="docutils literal notranslate"><span class="pre">mkpasswd</span></code> (advanced)<a class="headerlink" href="#standalone-mkpasswd-advanced" title="Permalink to this heading"></a></h3>
-<p>For debugging only, you may run the host binary directly.  You must pass all
-four <code class="docutils literal notranslate"><span class="pre">--key</span></code> options with non-default values and a password of at least 8
-characters:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./tools/mkpasswd<span class="w"> </span>--user<span class="w"> </span>root<span class="w"> </span>--password<span class="w"> </span><span class="s1">&#39;my-secret&#39;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--key1<span class="w"> </span>0x11111111<span class="w"> </span>--key2<span class="w"> </span>0x22222222<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--key3<span class="w"> </span>0x33333333<span class="w"> </span>--key4<span class="w"> </span>0x44444444
+<section id="hash-format">
+<h3>Hash format<a class="headerlink" href="#hash-format" title="Permalink to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$pbkdf2-sha256$&lt;iterations&gt;$&lt;base64url-salt&gt;$&lt;base64url-hash&gt;
 </pre></div>
 </div>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>root:$pbkdf2-sha256$10000$zhoo4phwEzyNFUAkB7asfw$P8qsjd9RQmZBLfM5zugiJeE5gKjI-CmTxyaVyOX2mE4
+</pre></div>
+</div>
+<p><strong>Breaking change:</strong> TEA-encoded entries are not compatible.  Regenerate with
+<code class="docutils literal notranslate"><span class="pre">mkpasswd</span></code> or NSH <code class="docutils literal notranslate"><span class="pre">passwd</span></code> / <code class="docutils literal notranslate"><span class="pre">useradd</span></code>.</p>
 </section>
-<section id="kconfig-summary">
-<h3>Kconfig summary<a class="headerlink" href="#kconfig-summary" title="Permalink to this heading"></a></h3>
-<p>Example <code class="docutils literal notranslate"><span class="pre">.config</span></code> fragment (password and keys normally <strong>not</strong> in defconfig):</p>
+<section id="kconfig">
+<h3>Kconfig<a class="headerlink" href="#kconfig" title="Permalink to this heading"></a></h3>
 <div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_BOARD_ETC_ROMFS_PASSWD_ENABLE=y
-CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS=y
+CONFIG_CRYPTO_CRYPTODEV=y
 CONFIG_BOARD_ETC_ROMFS_PASSWD_USER=&quot;root&quot;
-CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD=&quot;&lt;set<span class="w"> </span>in<span class="w"> </span><span class="k">menuconfig</span><span class="w"> </span>or<span class="w"> </span><span class="nb">env</span>&gt;&quot;
-CONFIG_NSH_CONSOLE_LOGIN=y
-CONFIG_NSH_LOGIN_PASSWD=y
-CONFIG_FSUTILS_PASSWD=y
+CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD=&quot;&lt;secret&gt;&quot;
+CONFIG_FSUTILS_PASSWD_PBKDF2_ITERATIONS=10000
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">savedefconfig</span></code> omits <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_PASSWORD</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD_PBKDF2_ITERATIONS</span></code> to avoid leaking credentials.</p>
 </section>
-<section id="etc-passwd-file-format">
-<h3><code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> file format<a class="headerlink" href="#etc-passwd-file-format" title="Permalink to this heading"></a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>user:encrypted_hash:uid:gid:home
-</pre></div>
-</div>
-</section>
-<section id="notes-on-savedefconfig">
-<h3>Notes on <code class="docutils literal notranslate"><span class="pre">savedefconfig</span></code><a class="headerlink" href="#notes-on-savedefconfig" title="Permalink to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">savedefconfig</span></code> omits the password and <code class="docutils literal notranslate"><span class="pre">KEY1</span></code>–<code class="docutils literal notranslate"><span class="pre">KEY4</span></code> from the
-generated defconfig on purpose.  <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_RANDOMIZE_KEYS</span></code>
-may remain in defconfig (policy, not a secret).  Do not commit passwords or
-key values to version control.</p>
+<section id="host-files">
+<h3>Host files<a class="headerlink" href="#host-files" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tools/mkpasswd.c</span></code> - PBKDF2 hash generation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tools/promptpasswd.sh</span></code> - interactive root password prompt, validation,
+and confirmation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tools/board_romfs_mkpasswd.sh</span></code> - Makefile ROMFS build wrapper</p></li>
+</ul>
 </section>
 </section>
 </section>
