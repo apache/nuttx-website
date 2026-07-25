@@ -156,6 +156,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#ldnxflat">ldnxflat</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mksymtab">mksymtab</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#making-an-nxflat-module">Making an NXFLAT module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#where-the-arm-pic-flags-come-from">Where the ARM PIC flags come from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reserving-r10-in-the-base-firmware">Reserving r10 in the base firmware</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#appendix-a-no-got-operation">Appendix A: No GOT Operation</a></li>
@@ -494,7 +496,8 @@ CFLAGS must be provided. First, the option <code class="docutils literal notrans
 the compiler to generate position independent code (other GCC options,
 like <code class="docutils literal notranslate"><span class="pre">-fno-jump-tables</span></code> might also be desirable). For ARM compilers,
 two additional compilation options are required: <code class="docutils literal notranslate"><span class="pre">-msingle-pic-base</span></code>
-and <code class="docutils literal notranslate"><span class="pre">-mpic-register=r10</span></code>.</p>
+and <code class="docutils literal notranslate"><span class="pre">-mpic-register=r10</span></code>.  On ARM these are supplied centrally rather
+than per board; see <a class="reference internal" href="#where-the-arm-pic-flags-come-from">Where the ARM PIC flags come from</a> below.</p>
 <p><strong>Target 2</strong>. Given the <code class="docutils literal notranslate"><span class="pre">hello.r1</span></code> relocatable object, this target
 will invoke <code class="docutils literal notranslate"><span class="pre">`mknxflat</span></code> &lt;#mknxflat&gt;`__ to make the <em>thunk</em> file,
 <code class="docutils literal notranslate"><span class="pre">hello-thunk.S</span></code>. This <em>thunk</em> file contains all of the information
@@ -531,6 +534,46 @@ object to create the final, NXFLAT module <code class="docutils literal notransl
 <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code>.</p>
 <p><strong>binfmt Registration</strong> NXFLAT calls <a class="reference internal" href="binfmt.html#c.register_binfmt" title="register_binfmt"><code class="xref c c-func docutils literal notranslate"><span class="pre">register_binfmt()</span></code></a> to
 incorporate itself into the system.</p>
+</section>
+<section id="where-the-arm-pic-flags-come-from">
+<h3>Where the ARM PIC flags come from<a class="headerlink" href="#where-the-arm-pic-flags-come-from" title="Permalink to this heading"></a></h3>
+<p>On ARM the compilation flags described under <strong>Target 1</strong> are supplied by
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/Toolchain.defs</span></code>, not by each board.  A board only has
+to say something when it differs from the default:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ARCHPICFLAGS ?= -fpic -msingle-pic-base -mpic-register=r10
+
+CPICFLAGS   = $(ARCHPICFLAGS) $(filter-out --fixed-r10,$(CFLAGS))
+CXXPICFLAGS = $(ARCHPICFLAGS) $(filter-out --fixed-r10,$(CXXFLAGS))
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ARCHPICFLAGS</span></code> uses <code class="docutils literal notranslate"><span class="pre">?=</span></code>, and the two derived variables use deferred
+<code class="docutils literal notranslate"><span class="pre">=</span></code>, so a board that includes this file may still override
+<code class="docutils literal notranslate"><span class="pre">ARCHPICFLAGS</span></code> afterwards or append to it, and <code class="docutils literal notranslate"><span class="pre">CFLAGS</span></code> is whatever the
+board finally set it to.  A few boards do differ: one adds <code class="docutils literal notranslate"><span class="pre">-ffixed-r10</span></code>
+and one conditionally adds <code class="docutils literal notranslate"><span class="pre">-mno-pic-data-is-text-relative</span></code>.</p>
+</section>
+<section id="reserving-r10-in-the-base-firmware">
+<h3>Reserving r10 in the base firmware<a class="headerlink" href="#reserving-r10-in-the-base-firmware" title="Permalink to this heading"></a></h3>
+<p>A module reaches its data through r10, and the base firmware has to leave
+that register alone – otherwise a call <em>back</em> from the firmware into module
+code arrives with the wrong data base.  <code class="docutils literal notranslate"><span class="pre">qsort()</span></code> with a comparison
+function inside the module is the usual way to meet this.  Under
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC</span></code> the firmware is therefore built with <code class="docutils literal notranslate"><span class="pre">--fixed-r10</span></code>.</p>
+<p>That flag goes into <code class="docutils literal notranslate"><span class="pre">ARCHCFLAGS</span></code> rather than <code class="docutils literal notranslate"><span class="pre">CFLAGS</span></code>, because nearly
+every board <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code> includes <code class="docutils literal notranslate"><span class="pre">Toolchain.defs</span></code> and then assigns:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CFLAGS := $(ARCHCFLAGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) ...
+</pre></div>
+</div>
+<p>with <code class="docutils literal notranslate"><span class="pre">:=</span></code>, which discards anything added to <code class="docutils literal notranslate"><span class="pre">CFLAGS</span></code> beforehand while
+re-expanding <code class="docutils literal notranslate"><span class="pre">ARCHCFLAGS</span></code>.  Losing the flag is silent, and the symptom is
+remote from the cause: everything builds, and only a callback into module
+code misbehaves.</p>
+<p>The two sides of that contract cannot both appear on one command line.  A
+module gets r10 through <code class="docutils literal notranslate"><span class="pre">-mpic-register=r10</span></code>, and GCC rejects it alongside
+<code class="docutils literal notranslate"><span class="pre">--fixed-r10</span></code> with <em>“unable to use ‘r10’ for PIC register”</em>.  Since
+<code class="docutils literal notranslate"><span class="pre">CPICFLAGS</span></code>, <code class="docutils literal notranslate"><span class="pre">CXXPICFLAGS</span></code>, <code class="docutils literal notranslate"><span class="pre">CELFFLAGS</span></code> and <code class="docutils literal notranslate"><span class="pre">CXXELFFLAGS</span></code> all derive
+from <code class="docutils literal notranslate"><span class="pre">CFLAGS</span></code>, the flag is filtered back out where they are defined,
+rather than in every board that builds modules.</p>
 </section>
 </section>
 <section id="appendix-a-no-got-operation">
