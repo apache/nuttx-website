@@ -191,6 +191,7 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#timer">Timer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tickless-os">Tickless OS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rtc">RTC</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#programming">Programming</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#programming-using-bootsel">Programming using BOOTSEL</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#programming-with-picotool">Programming with picotool</a></li>
@@ -407,6 +408,10 @@ If picotool is available a nuttx.uf2 file will be created</p></td>
 <td><p>Working</p></td>
 <td><p>Optional, RP2350 TIMER via the alarm/oneshot</p></td>
 </tr>
+<tr class="row-odd"><td><p>RTC</p></td>
+<td><p>Working</p></td>
+<td><p>POWMAN always-on timer, backs the system clock</p></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -572,6 +577,38 @@ exclusive with <cite>RP23XX_SYSTIMER_SYSTICK</cite>.</p>
 <p>The block chosen here is claimed exclusively by the scheduler and is removed
 from the <cite>/dev/timer</cite> driver’s choices (see the Timer section), so the tickless
 clock and a <cite>/dev/timer</cite> device can run at the same time on different blocks.</p>
+</section>
+<section id="rtc">
+<h2>RTC<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h2>
+<p>The RP2350 has no dedicated RTC block – the one on the RP2040 was removed –
+so NuttX drives the real-time clock from the POWMAN <em>always-on timer</em>
+instead. This is a 64-bit millisecond counter that can be clocked from the
+low-power oscillator (LPOSC, nominally 32.768 kHz), so it keeps counting
+across warm resets and through the low-power states managed by POWMAN.</p>
+<p>Enable it with <cite>RP23XX_RTC</cite> (which selects <cite>RTC</cite>). The driver
+(<cite>rp23xx_rtc.c</cite>) implements the lightweight <cite>up_rtc_initialize()</cite>,
+<cite>up_rtc_time()</cite> and <cite>up_rtc_settime()</cite> interface that backs the NuttX system
+clock at one-second resolution. <cite>up_rtc_initialize()</cite> sources the timer from
+the low-power oscillator at a 1 kHz tick and starts it, but preserves the
+current value if the bootrom (or a previous boot) already left it running, so
+the wall-clock time survives a warm reset.</p>
+<p>Two POWMAN details the driver has to honour:</p>
+<ul class="simple">
+<li><p>Every POWMAN register write must carry the <cite>0x5afe</cite> password in its top 16
+bits or it is silently ignored, so only the low 16 bits of each register
+hold data. The 64-bit time is therefore written and read through four
+16-bit registers, and bit operations use the atomic <cite>SET</cite>/<cite>CLR</cite> register
+aliases.</p></li>
+<li><p>The counter must be stopped (<cite>TIMER.RUN</cite> cleared) while a new value is
+loaded and then restarted, otherwise the write is not latched cleanly.</p></li>
+</ul>
+<p>The implementation follows the POWMAN “Always-on Timer” description in the
+Power chapter of the <a class="reference external" href="https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf">RP2350 datasheet</a> and the
+reference <a class="reference external" href="https://github.com/raspberrypi/pico-sdk/tree/master/src/rp2_common/hardware_powman">pico-sdk hardware_powman</a>
+library (<cite>powman_timer_start_lposc()</cite>, <cite>powman_timer_set_ms()</cite> and
+<cite>powman_timer_get_ms()</cite>), which the pico-sdk in turn exposes through its
+<a class="reference external" href="https://github.com/raspberrypi/pico-sdk/tree/master/src/rp2_common/pico_aon_timer">pico_aon_timer</a>
+wrapper.</p>
 </section>
 <section id="programming">
 <h2>Programming<a class="headerlink" href="#programming" title="Permalink to this heading"></a></h2>

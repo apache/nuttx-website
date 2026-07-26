@@ -194,6 +194,139 @@ capture, both watchdogs, progmem, TRNG and CRC), registered as ``/dev/i2c0``,
 ``/dev/spi0``, ``/dev/adc0``, ``/dev/pwm0``, ``/dev/capture0``,
 ``/dev/watchdog0`` and ``/dev/watchdog1``.  No radio.
 
+sht3x
+-----
+
+NSH plus I2C0, the i2ctool and the Sensirion SHT3x temperature/humidity
+driver -- a small example to validate the I2C master port against a real
+device. Because SPI is *off* here, I2C0 is routed to the J1 header on
+**PA2 (SCL)** and **PA3 (SDA)** (adjacent pins on the second row of J1, both
+AF4); with SPI on (the ``periph`` case) it falls back to PB0/PB1, whose SDA
+pin is not broken out. See the pin-header tables above.
+
+Wire the sensor to J1: SCL -> PA2, SDA -> PA3, VCC -> +3V3 (J2) or the module
+3.3 V, GND -> GND. A breakout with its own pull-ups is assumed; the pins are
+configured with the internal pull-ups as a fallback.
+
+The bus is registered as ``/dev/i2c0`` and the sensor as ``/dev/temp0``
+(``gd32_bringup()`` registers it at address 0x44). Confirm the address with
+the i2ctool using a zero-byte write probe (``-z``); the SHT3x NACKs the
+default one-byte read probe when it has no measurement pending, so plain
+``i2c dev`` would not show it::
+
+  nsh> i2c dev -z 0x03 0x77
+       0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+  00:          -- -- -- -- -- -- -- -- -- -- -- --
+  10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+  20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+  30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+  40: -- -- -- -- 44 -- -- -- -- -- -- -- -- -- -- --
+  50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+  60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+  70: -- -- -- -- -- -- -- --
+
+The ``44`` above is the SHT3x acknowledging. Then read it through the
+driver::
+
+  nsh> sht3x
+  Converting...
+  Temperature = 26.530098
+  Humidity    = 47.998001
+
+.. note::
+   If the sensor sits at 0x45, change the address passed to
+   ``sht3x_register()`` in ``gd32_bringup.c`` (the i2ctool still finds it at
+   its real address regardless).
+
+pwm
+---
+
+NSH plus the PWM driver on TIMER1, registered as ``/dev/pwm0`` and driven by
+the ``pwm`` example. Channel 0 (TIMER1_CH0) is routed to **PA0** on the J1
+header (AF1), so the waveform can be probed there.
+
+Run the example -- it drives a 5 s pulse train at the configured frequency and
+duty (100 Hz, 50 % by default)::
+
+  nsh> pwm
+  pwm_main: starting output with frequency: 100 channel: 1 duty: 00007fff
+  pwm_main: stopping output
+
+``pwm -f <hz> -d <pct> -t <seconds>`` overrides the frequency, duty and
+duration for a single run. Put an LED (with a series resistor) or a scope on
+PA0 to see it.
+
+sdcard
+------
+
+NSH plus an SD card on SPI0 with a FAT filesystem. The card is registered as
+``/dev/mmcsd0`` and ``gd32_bringup()`` mounts it on ``/mnt/sd``.
+
+Wire the card (or a microSD-over-SPI breakout) to the J1 header:
+
+======== ==========
+Signal   Pin
+======== ==========
+SCK      PA2
+MISO     PA1
+MOSI     PA0
+CS       PA4
+======== ==========
+
+.. note::
+   Power the breakout from **5 V**, not 3.3 V. These breakouts carry their
+   own 3.3 V regulator, and the SD card draws current bursts while it powers
+   up; feeding 3.3 V directly leaves the card stuck in the ACMD41 init loop
+   (it answers CMD0/CMD8 but never leaves the idle state). A decoupling
+   capacitor close to the card and short leads help too.
+
+The SPI runs its initialisation at ~625 kHz (PCLK2 / 256), slightly above the
+400 kHz of the SD spec, which the vast majority of cards tolerate.
+
+The block device shows up as ``/dev/mmcsd0`` and the bringup already mounts it
+on ``/mnt/sd``, so no manual ``mount`` is needed::
+
+  nsh> ls /dev/
+  /dev:
+   console
+   mmcsd0
+   null
+   ttyS0
+   zero
+  nsh> mount
+    /mnt/sd type vfat
+  nsh> echo "GD32 on NuttX" > /mnt/sd/hello.txt
+  nsh> cat /mnt/sd/hello.txt
+  GD32 on NuttX
+  nsh> ls -l /mnt/sd
+
+adc
+---
+
+NSH plus the ADC driver, registered as ``/dev/adc0`` and read by the ``adc``
+example. Channel 8 (ADC_IN8) is routed to **PB0** on the J1 header, so an
+analog voltage applied there is sampled.
+
+The ADC converts on demand rather than continuously, so the example is built
+with ``CONFIG_EXAMPLES_ADC_SWTRIG``: it issues a software trigger and then
+reads a group of samples. It is bounded to 20 groups
+(``CONFIG_EXAMPLES_ADC_NSAMPLES``) so it returns to the prompt::
+
+  nsh> adc
+  adc_main: g_adcstate.count: 20
+  adc_main: Hardware initialized. Opening the ADC device: /dev/adc0
+  Sample:
+  1: channel: 8 value: 2108
+  Sample:
+  1: channel: 8 value: 2115
+  Sample:
+  1: channel: 8 value: 2112
+  ...
+
+The reported ``value`` is the 12-bit conversion (0..4095) spanning 0..3.3 V; a
+1.65 V input (half of the reference) reads about 2048, and tying PB0 to GND or
+3.3 V drives it to the rails.
+
 littlefs
 --------
 
