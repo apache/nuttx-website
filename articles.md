@@ -29,7 +29,61 @@ limitations under the License.
 
 Here we have a list of articles and publications about NuttX.
 If you have a suggestion of article to be included to this page,
-please send an email to: private@nuttx.apache.org
+please send an email to: private@nuttx.apache.org .
+
+
+### NXDART: Distributed Automated Build and Runtime Test Environment for Apache NuttX RTOS
+
+#### Abstract
+
+This paper presents the concept and initial implementation of a distributed
+automated build and runtime test environment for NuttX, called NXDART.
+NuttX is Apache 2.0 licensed Free and Open-Source (FOSS) Real-Time Operating
+System (RTOS), created by Gregory Nutt and released to the public in 2007,
+with strong focus on portability, small footprint, scalability,
+and compatibility with POSIX, ANSI, and other standards commonly used
+by Unix and other RTOSes (e.g. VxWorks).
+
+NuttX community consists of volunteering hobbyists, academia,
+and small/medium/large enterprise professionals from around the world.
+NuttX supports over 15 different 8..64-bit CPU architectures (RISC-V, ARM,
+ARM64, AVR, CEVA, HC, MIPS, Misoc, OpenRISC, Renesas, SPARC, TriCore, x86,
+AMD64, Xtensa, Z16, Z80, FPGA) on over 340 unique hardware boards
+with over 1600 example target firmware configurations.
+Project development intensity is measured in thousands of files changed
+every month with hundreds thousands of code lines modifications.
+
+In order to assure self-compatibility and long term maintenance
+for supported platform all new source code contributions are always processed
+manually by independent reviewers and automated Continuous Integration (CI)
+software tools.
+Unfortunately, not all breaking changes can be detected that way.
+Code may build for various architectures and even run correctly
+on emulators but it may still not work as expected on real world hardware.
+Therefore, comprehensive runtime tests are required.
+
+Hardware testing of hundreds of different devices in one place turned out
+impossible for our free and community driven project. To address this problem
+we have invented distributed hardware-in-the-loop (HIL) test environment
+that is easy to set up and maintain as it reuses hardware components
+already owned by hundreds of users around the world.
+This approach assures maximum coverage of possible boards
+and build environments, independence and uninterrupted redundant availability
+of build and runtime test automation, with feedback logs reporting directly
+to the project upstream, at virtually zero cost.
+
+#### Author(s)
+
+Tomasz CEDRO, Gregory NUTT, Lup Yuen LEE, Grzegorz POŁUDNIEWSKI, Szymon WILK,
+Wojciech GLINKOWSKI.
+
+[PDF]({{ site.baseurl }}/static/articles/NuttX-2026-CedroNuttLeePoludniewkiWilkGlinkowski-NXDART-DistributedAutomatedBuildAndRuntimeTestEnvironmentForApacheNuttXRTOS-IJET-10_5571_Cedro_L_sk.pdf)
+/
+[IJET](https://ijet.pl/index.php/ijet/article/view/10.24425-ijet.2026.157953)
+/
+[DOI](https://doi.org/10.24425/ijet.2026.157953)
+
+---
 
 
 ### NuttX RTOS Driver for Single Unshielded Twisted Pair Communication
@@ -54,7 +108,7 @@ drive-by-wire demonstrator.
 
 #### Author(s)
 
-Michal Matiáš
+Michal Matiáš.
 
 [PDF]({{ site.baseurl }}/static/articles/NuttX-2025-Matias-NuttXRTOSDriverForSingleUnshieldedTwistedPairCommunication.pdf)
 /
@@ -81,10 +135,8 @@ to other operating systems.
 
 #### Author(s)
 
-Eduardo Menezes Moraes
-Rodrigo Teixeira de Souza
-Rafael Oliveira da Rocha
-Lourenc¸o Alves Pereira Jr.
+Eduardo Menezes Moraes, Rodrigo Teixeira de Souza, Rafael Oliveira da Rocha,
+Lourenc¸o Alves Pereira Jr. .
 
 [PDF]({{ site.baseurl }}/static/articles/NuttX-2022-MoraesSouzaRochaPereira-IpliteALightweightPacketFilterForNuttX.pdf)
 /
@@ -109,8 +161,7 @@ is critical.
 
 #### Author(s)
 
-Saurav Pal
-Alan C. Assis
+Saurav Pal, Alan C. Assis.
 
 [PDF]({{ site.baseurl }}/static/articles/NuttX-2021-PalAssis-MenmofsANANDFlashFilesystemForApacheNuttX.pdf)
 
@@ -141,7 +192,7 @@ in order to acquire the data that were used in the analysis
 
 #### Author(s)
 
-Diego Sánchez López
+Diego Sánchez López.
 
 [PDF]({{ site.baseurl }}/static/articles/NuttX-2013-Lopez-LowPowerEmbeddedSoftwareOptimizationForTheNuttXRTOS.pdf)
 /
