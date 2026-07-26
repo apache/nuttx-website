@@ -2145,10 +2145,21 @@ PDO rx: counter = 19
 <section id="nxscope">
 <h2>nxscope<a class="headerlink" href="#nxscope" title="Permalink to this heading"></a></h2>
 <p>Configuration demonstrating NxScope stream over simulated UART interface.</p>
-<p>The simulated UART must be created on host before running NuttX:</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_UART_PTY</span></code> is disabled, the simulated UART peer must be
+created on the host before running NuttX:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>socat PTY,link=/dev/ttySIM0 PTY,link=/dev/ttyNX0
 </pre></div>
 </div>
+<p>In that mode <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_UART0_NAME</span></code> is both the NuttX device name and
+the host path that the sim UART backend opens.  This works when the host
+path is stable, but it is inconvenient for automated tests and generated
+PTYs: the peer device must exist before the UART is opened, and changing
+the host path requires changing the NuttX configuration.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_UART_PTY</span></code> is enabled, NuttX creates the host
+pseudoterminal when the simulated UART is opened and prints the host
+PTY slave path.  The configured <code class="docutils literal notranslate"><span class="pre">SIM_UARTx_NAME</span></code> remains the NuttX
+device name, while the host PTY path is allocated at runtime and can be
+passed to the external simulator or test program.</p>
 <p>See <a class="reference internal" href="../../../../../applications/examples/nxscope/index.html"><span class="doc">nxscope NxScope library example</span></a> and
 <a class="reference internal" href="../../../../../applications/logging/nxscope/index.html"><span class="doc">NxScope Library</span></a> for more details.</p>
 <section id="romfs-system-init">

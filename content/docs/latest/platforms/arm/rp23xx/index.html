@@ -46,7 +46,7 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Raspberry Pi Pico 2" href="boards/raspberrypi-pico-2/index.html" />
+    <link rel="next" title="Pimoroni Pico Plus 2" href="boards/pimoroni-pico-2-plus/index.html" />
     <link rel="prev" title="Waveshare RP2040 Zero" href="../rp2040/boards/waveshare-rp2040-zero/index.html" /> 
 </head>
 
@@ -189,6 +189,8 @@
 <li class="toctree-l5"><a class="reference internal" href="#use-psram-as-a-separate-heap">Use PSRAM as a separate heap</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#timer">Timer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tickless-os">Tickless OS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#programming">Programming</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#programming-using-bootsel">Programming using BOOTSEL</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#programming-with-picotool">Programming with picotool</a></li>
@@ -196,7 +198,10 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#running-nuttx">Running NuttX</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#trng">TRNG</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#flash-mtd">Flash MTD</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="boards/pimoroni-pico-2-plus/index.html">Pimoroni Pico Plus 2</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/raspberrypi-pico-2/index.html">Raspberry Pi Pico 2</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/xiao-rp2350/index.html">Seeed Studio XIAO RP2350</a></li>
 </ul>
@@ -386,6 +391,22 @@ If picotool is available a nuttx.uf2 file will be created</p></td>
 <td><p>Working</p></td>
 <td><p>Three modes of heap allocation described below</p></td>
 </tr>
+<tr class="row-odd"><td><p>TRNG</p></td>
+<td><p>Working</p></td>
+<td><p>Hardware RNG at /dev/random and /dev/urandom</p></td>
+</tr>
+<tr class="row-even"><td><p>Flash MTD</p></td>
+<td><p>Working</p></td>
+<td><p>Unused flash tail as an MTD device, answers BIOC_XIPBASE</p></td>
+</tr>
+<tr class="row-odd"><td><p>Timer</p></td>
+<td><p>Working</p></td>
+<td><p>/dev/timerN on TIMER0/TIMER1, 1 us resolution</p></td>
+</tr>
+<tr class="row-even"><td><p>Tickless</p></td>
+<td><p>Working</p></td>
+<td><p>Optional, RP2350 TIMER via the alarm/oneshot</p></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -513,6 +534,45 @@ external PSRAM is configured as a separate user heap called
 <cite>g_psramheap</cite> after including <cite>rp23xx_heaps.h</cite></p>
 </section>
 </section>
+<section id="timer">
+<h2>Timer<a class="headerlink" href="#timer" title="Permalink to this heading"></a></h2>
+<p>The RP2350 has two system timer blocks, TIMER0 and TIMER1, each a
+free-running 64-bit counter incremented once per microsecond.  They are
+independent of the ARM SysTick that drives the OS tick, so they are
+available for application timers.</p>
+<p>Enable the driver with <cite>RP23XX_TIMER</cite> (which selects <cite>TIMER</cite>), then turn on
+each block you want: <cite>RP23XX_TIMER0</cite> registers <cite>/dev/timer0</cite> (TIMER0) and
+<cite>RP23XX_TIMER1</cite> registers <cite>/dev/timer1</cite> (TIMER1).  Each device implements the
+standard NuttX timer lower-half: single-shot or periodic timeouts with 1 us
+resolution and a maximum interval of 2^32 - 1 us (about 71.5 minutes), driven
+by ALARM0 of the block.</p>
+<p>A block claimed by the tickless-OS oneshot
+(<cite>RP23XX_SYSTIMER_TICKLESS</cite>) is removed from the choices above, so a
+<cite>/dev/timer</cite> device and the tickless OS time source never collide on the same
+block – you can run both at once (e.g. tickless on TIMER0, <cite>/dev/timer1</cite> on
+TIMER1).  With tickless disabled, both <cite>/dev/timer0</cite> and
+<cite>/dev/timer1</cite> are available.  The <cite>examples/timer</cite> application can exercise a
+device; point <cite>CONFIG_EXAMPLES_TIMER_DEVNAME</cite> at the block you enabled.</p>
+</section>
+<section id="tickless-os">
+<h2>Tickless OS<a class="headerlink" href="#tickless-os" title="Permalink to this heading"></a></h2>
+<p>By default the OS tick is a periodic ARM SysTick interrupt.  The RP2350 can
+instead run tickless, driving the scheduler from a hardware alarm so the CPU
+is only interrupted when a timer actually expires.</p>
+<p>Enable <cite>RP23XX_SYSTIMER_TICKLESS</cite> together with <cite>SCHED_TICKLESS</cite> and
+<cite>SCHED_TICKLESS_ALARM</cite>.  Choose the timer block with the “Tickless timer
+block” option (<cite>RP23XX_SYSTIMER_TICKLESS_TIMER0</cite>, the default, or
+<cite>RP23XX_SYSTIMER_TICKLESS_TIMER1</cite>).  The system time is then taken from that
+block – a free-running 64-bit microsecond counter – and its ALARM0 provides
+the next-event interrupt through the alarm/oneshot lower-half
+(<cite>rp23xx_oneshot.c</cite>).  Because the 64-bit counter is the monotonic time base,
+timekeeping is exact to 1 us, and a single alarm can schedule up to ~71
+minutes ahead, so long idle periods need no wake-ups.  This is mutually
+exclusive with <cite>RP23XX_SYSTIMER_SYSTICK</cite>.</p>
+<p>The block chosen here is claimed exclusively by the scheduler and is removed
+from the <cite>/dev/timer</cite> driver’s choices (see the Timer section), so the tickless
+clock and a <cite>/dev/timer</cite> device can run at the same time on different blocks.</p>
+</section>
 <section id="programming">
 <h2>Programming<a class="headerlink" href="#programming" title="Permalink to this heading"></a></h2>
 <section id="programming-using-bootsel">
@@ -543,10 +603,56 @@ GPIO 0 and 1 pins must be connected to the device such as USB-serial converter.<
 <p>The <cite>usbnsh</cite> configuration provides the console access by USB CDC/ACM serial
 device.  The console is available by using a terminal software on the USB host.</p>
 </section>
+<section id="trng">
+<h2>TRNG<a class="headerlink" href="#trng" title="Permalink to this heading"></a></h2>
+<p>The rp2350 has a hardware true random number generator (TRNG).  Enabling
+<code class="docutils literal notranslate"><span class="pre">RP23XX_RNG</span></code> builds the driver and selects <code class="docutils literal notranslate"><span class="pre">ARCH_HAVE_RNG</span></code>, which in turn
+makes <code class="docutils literal notranslate"><span class="pre">DEV_RANDOM</span></code> available.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">DEV_RANDOM</span></code> enabled the driver registers <code class="docutils literal notranslate"><span class="pre">/dev/random</span></code>.  Enabling
+<code class="docutils literal notranslate"><span class="pre">DEV_URANDOM</span></code> additionally registers <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code>; when a hardware RNG is
+present the architecture source (<code class="docutils literal notranslate"><span class="pre">DEV_URANDOM_ARCH</span></code>) is selected by default,
+so <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code> is served from the same TRNG rather than a software PRNG.</p>
+<p>Each read collects entropy from the TRNG’s 192-bit entropy holding register
+(EHR): the source is enabled, the driver waits for <code class="docutils literal notranslate"><span class="pre">TRNG_VALID</span></code>, reads the
+six 32-bit EHR words, and repeats until the request is satisfied.  For example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; dd if=/dev/random of=/dev/console bs=16 count=1
+</pre></div>
+</div>
+</section>
+<section id="flash-mtd">
+<h2>Flash MTD<a class="headerlink" href="#flash-mtd" title="Permalink to this heading"></a></h2>
+<p>The rp2350 executes in place from its external QSPI flash, and a NuttX image
+normally leaves most of that flash unused.  Enabling <code class="docutils literal notranslate"><span class="pre">RP23XX_FLASH_MTD</span></code>
+exposes the unused region as an MTD device, registered by the common board
+bringup as <code class="docutils literal notranslate"><span class="pre">/dev/rpflash</span></code>.</p>
+<p>The region is described by <code class="docutils literal notranslate"><span class="pre">RP23XX_FLASH_MTD_OFFSET</span></code> (byte offset from
+<code class="docutils literal notranslate"><span class="pre">0x10000000</span></code>) and <code class="docutils literal notranslate"><span class="pre">RP23XX_FLASH_MTD_SIZE</span></code>, both of which must be multiples
+of the 4096 byte erase sector.  The driver refuses to initialize if the region
+would overlap the NuttX image (it checks <code class="docutils literal notranslate"><span class="pre">__flash_binary_end</span></code>), so a bad
+offset fails at boot instead of corrupting the running firmware.</p>
+<p>Erase and program go through the bootrom flash routines.  Because those
+operations stall instruction fetch from the same flash, the driver runs them
+from SRAM with interrupts disabled and, on SMP builds, the other core parked;
+expect interrupt latency to suffer for the duration of a write.  Afterwards the
+QSPI interface is put back into execute-in-place mode – by default restoring
+the fast read mode the bootrom set up at boot, or, with
+<code class="docutils literal notranslate"><span class="pre">RP23XX_FLASH_MTD_SAFE_XIP</span></code>, always through the bootrom
+<code class="docutils literal notranslate"><span class="pre">flash_enter_cmd_xip</span></code> routine, which is slower to execute from but depends
+only on the documented bootrom entry point.</p>
+<p>The driver answers the <code class="docutils literal notranslate"><span class="pre">BIOC_XIPBASE</span></code> ioctl with the memory-mapped address of
+the region, so a filesystem that supports execute in place can hand out real
+flash pointers instead of copying into RAM.</p>
+<p>Any MTD-based filesystem can be layered on the device, for example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mksmartfs /dev/rpflash
+nsh&gt; mount -t smartfs /dev/rpflash /mnt
+</pre></div>
+</div>
+</section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="boards/pimoroni-pico-2-plus/index.html">Pimoroni Pico Plus 2</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boards/raspberrypi-pico-2/index.html">Raspberry Pi Pico 2</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boards/xiao-rp2350/index.html">Seeed Studio XIAO RP2350</a></li>
 </ul>
@@ -559,7 +665,7 @@ device.  The console is available by using a terminal software on the USB host.<
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../rp2040/boards/waveshare-rp2040-zero/index.html" class="btn btn-neutral float-left" title="Waveshare RP2040 Zero" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="boards/raspberrypi-pico-2/index.html" class="btn btn-neutral float-right" title="Raspberry Pi Pico 2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="boards/pimoroni-pico-2-plus/index.html" class="btn btn-neutral float-right" title="Pimoroni Pico Plus 2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1081,6 +1081,49 @@ filesystem’s metadata.</p>
 </dl>
 </dd></dl>
 
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ioctldir">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ioctldir</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">inode</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mountpt</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">fs_dirent_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dir</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">cmd</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ioctldir" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Carries out an ioctl command issued on a descriptor for the mountpoint
+directory rather than on a file inside the volume. It takes the same
+<code class="docutils literal notranslate"><span class="pre">(mountpt,</span> <span class="pre">dir)</span></code> pair as the other directory operations. Typical commands
+act on the volume as a whole rather than on any one open file, such as
+<code class="docutils literal notranslate"><span class="pre">FIOC_REFORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">FIOC_OPTIMIZE</span></code> or <code class="docutils literal notranslate"><span class="pre">FIOC_INTEGRITY</span></code>.</p>
+<p>The command reaches this method when it is issued on a descriptor for the
+mountpoint directory, which the caller obtains with
+<code class="docutils literal notranslate"><span class="pre">open(mountpoint,</span> <span class="pre">O_RDONLY</span> <span class="pre">|</span> <span class="pre">O_DIRECTORY)</span></code>. No file inside the volume
+needs to be open, which matters for commands that a file system refuses to
+perform while one is.</p>
+<p>The method is consulted before the VFS acts on the command, so it must
+answer <code class="docutils literal notranslate"><span class="pre">-ENOTTY</span></code> for anything it does not recognize; the VFS then applies
+its own handling.</p>
+<p>This method is optional. A file system that leaves it <code class="docutils literal notranslate"><span class="pre">NULL</span></code> behaves as
+before: the VFS answers <code class="docutils literal notranslate"><span class="pre">-ENOTTY</span></code> for any command on a directory
+descriptor that it does not handle itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mountpt</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">inode</span><span class="p">*</span></span></span>) – Mount point inode of the file system.</p></li>
+<li><p><strong>dir</strong> (<span><span class="c-expr sig sig-inline c">FAR<span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="n">fs_dirent_s</span><span class="p">*</span></span></span>) – The open mountpoint directory the
+command was issued on.</p></li>
+<li><p><strong>cmd</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">int</span></span></span>) – The command to carry out, as defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/fs/ioctl.h</span></code>.</p></li>
+<li><p><strong>arg</strong> (<span><span class="c-expr sig sig-inline c"><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span></span></span>) – Additional argument, if the command requires one.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status of the ioctl operation.</p>
+</dd>
+<dt class="field-odd">Return values<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>OK (0)</strong> – Success.</p></li>
+<li><p><strong>-ENOTTY</strong> – The file system does not recognize the command.</p></li>
+<li><p><strong>&lt; 0</strong> – Error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <p>The file systems can have their own implementations for these functions
 under-the-hood, but the user does not have to worry about the underlying file
 system during file I/O, as the file system has to expose its implementations

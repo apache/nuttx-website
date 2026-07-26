@@ -374,6 +374,17 @@ file system will increase the amount of wear on the FLASH if you use this
 frequently!</p>
 </dd>
 </dl>
+<p>Both act on the volume rather than on any one file, so issue them on a
+descriptor for the mountpoint directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>int fd = open(&quot;/mnt/nxffs&quot;, O_RDONLY | O_DIRECTORY);
+ioctl(fd, FIOC_REFORMAT, 0);
+close(fd);
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">FIOC_REFORMAT</span></code> in particular is only reachable this way.  It refuses to
+run while any file on the volume is open, so issuing it on a descriptor for
+a file <em>inside</em> the volume can never succeed – that descriptor is itself
+such a file, and the request returns <code class="docutils literal notranslate"><span class="pre">-EBUSY</span></code>.</p>
 </section>
 <section id="things-to-do">
 <h2>Things to Do<a class="headerlink" href="#things-to-do" title="Permalink to this heading"></a></h2>
