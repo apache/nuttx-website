@@ -201,8 +201,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#running-nuttx">Running NuttX</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#trng">TRNG</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#flash-mtd">Flash MTD</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otp">OTP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/pimoroni-pico-2-plus/index.html">Pimoroni Pico Plus 2</a></li>
+<li class="toctree-l5"><a class="reference internal" href="boards/pimoroni-pico-plus-2-w/index.html">Pimoroni Pico Plus 2 W</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/raspberrypi-pico-2/index.html">Raspberry Pi Pico 2</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/xiao-rp2350/index.html">Seeed Studio XIAO RP2350</a></li>
 </ul>
@@ -411,6 +413,10 @@ If picotool is available a nuttx.uf2 file will be created</p></td>
 <tr class="row-odd"><td><p>RTC</p></td>
 <td><p>Working</p></td>
 <td><p>POWMAN always-on timer, backs the system clock</p></td>
+</tr>
+<tr class="row-even"><td><p>OTP</p></td>
+<td><p>Working</p></td>
+<td><p>Reads via /dev/efuse; programming is opt-in</p></td>
 </tr>
 </tbody>
 </table>
@@ -685,11 +691,51 @@ nsh&gt; mount -t smartfs /dev/rpflash /mnt
 </pre></div>
 </div>
 </section>
+<section id="otp">
+<h2>OTP<a class="headerlink" href="#otp" title="Permalink to this heading"></a></h2>
+<p>The rp2350 has 4096 rows of 24 bit one-time-programmable memory.  Enabling
+<code class="docutils literal notranslate"><span class="pre">RP23XX_OTP</span></code> exposes it through the NuttX efuse interface, registered by the
+common board bringup as <code class="docutils literal notranslate"><span class="pre">/dev/efuse</span></code>.</p>
+<p>The driver uses the ECC interpretation of a row, in which 16 bits carry data
+and the remaining 8 carry a Hamming code.  The OTP therefore appears as a flat
+space of 4096 * 16 bits, which is what the efuse field descriptors index: a
+descriptor at bit offset N refers to bit <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">%</span> <span class="pre">16</span></code> of row <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">/</span> <span class="pre">16</span></code>.  The
+row numbers of the predefined fields are in
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/rp23xx/hardware/rp23xx_otp_data.h</span></code>.</p>
+<p>Reads use the chip’s ECC-translated window and have no side effects.  Single
+bit errors are corrected in hardware.  Rows live in pages of 64, each of which
+can be locked; a page locked against reads is reported as <code class="docutils literal notranslate"><span class="pre">EPERM</span></code> rather than
+being allowed to raise a bus fault.</p>
+<p>To read a field, fill in a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">efuse_param_s</span></code> with a NULL terminated list
+of field descriptors and call <code class="docutils literal notranslate"><span class="pre">EFUSEIOC_READ_FIELD</span></code>.  The bits are returned
+packed from bit 0 of the first byte.  For example, reading the 64 bit chip
+identifier held in rows 0 to 3:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>static const efuse_desc_t chipid = { 0, 64 };   /* row 0, 4 * 16 bits */
+static const efuse_desc_t *chipid_field[] = { &amp;chipid, NULL };
+
+uint8_t data[8];
+struct efuse_param_s param =
+  {
+    .field = chipid_field, .size = 64, .data = data
+  };
+
+ioctl(fd, EFUSEIOC_READ_FIELD, (unsigned long)&amp;param);
+</pre></div>
+</div>
+<p>Programming requires the separate <code class="docutils literal notranslate"><span class="pre">RP23XX_OTP_WRITE</span></code> option, which is off by
+default; without it <code class="docutils literal notranslate"><span class="pre">EFUSEIOC_WRITE_FIELD</span></code> fails with <code class="docutils literal notranslate"><span class="pre">EPERM</span></code>.  Programming
+is <strong>irreversible</strong>: a bit can only go from zero to one, and since the ECC bits
+cover the whole row, a row can only be programmed once – the driver rejects a
+write to a row that already holds data rather than corrupting its ECC.  Note
+that some rows control boot and debug behaviour, so an incorrect write can make
+a board unbootable or permanently lock out the debugger.</p>
+</section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="boards/pimoroni-pico-2-plus/index.html">Pimoroni Pico Plus 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boards/pimoroni-pico-plus-2-w/index.html">Pimoroni Pico Plus 2 W</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boards/raspberrypi-pico-2/index.html">Raspberry Pi Pico 2</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boards/xiao-rp2350/index.html">Seeed Studio XIAO RP2350</a></li>
 </ul>
