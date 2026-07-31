@@ -179,9 +179,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#privilege-transitions">Privilege Transitions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#setuid-and-setgid"><code class="docutils literal notranslate"><span class="pre">setuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setgid()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#seteuid-and-setegid"><code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setegid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#setreuid-and-setregid"><code class="docutils literal notranslate"><span class="pre">setreuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setregid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#getresuid-and-getresgid"><code class="docutils literal notranslate"><span class="pre">getresuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">getresgid()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pseudo-filesystem-ownership">Pseudo-Filesystem Ownership</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="usb.html">USB (Universal Serial Bus)</a></li>
@@ -274,6 +277,22 @@ the saved ID. Otherwise the function returns <code class="docutils literal notra
 <p>This implements the standard POSIX pattern of temporarily dropping privileges
 with <code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> or <code class="docutils literal notranslate"><span class="pre">setegid()</span></code> and later restoring them to the saved value.</p>
 </section>
+<section id="setreuid-and-setregid">
+<h3><code class="docutils literal notranslate"><span class="pre">setreuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setregid()</span></code><a class="headerlink" href="#setreuid-and-setregid" title="Permalink to this heading"></a></h3>
+<p>These functions set the real and/or effective IDs in a single call. When the
+effective ID is zero, any requested real and effective values may be assigned
+and the saved set-ID is updated accordingly. When the effective ID is
+non-zero, each requested value must equal the current effective ID, saved
+set-ID, or (for the effective argument only) the real ID; otherwise the call
+returns <code class="docutils literal notranslate"><span class="pre">-1</span></code> with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set to <code class="docutils literal notranslate"><span class="pre">EPERM</span></code>. When the real ID is changed,
+or the effective ID is changed to a value not equal to the real ID, the saved
+set-ID is set to the new effective ID.</p>
+</section>
+<section id="getresuid-and-getresgid">
+<h3><code class="docutils literal notranslate"><span class="pre">getresuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">getresgid()</span></code><a class="headerlink" href="#getresuid-and-getresgid" title="Permalink to this heading"></a></h3>
+<p>These functions return the real, effective, and saved set-IDs for the calling
+task group. Any output pointer may be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if that ID is not needed.</p>
+</section>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
@@ -285,6 +304,16 @@ root-only versions of all credential interfaces are provided.</p>
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>.</p>
 </dd>
 </dl>
+</section>
+<section id="pseudo-filesystem-ownership">
+<h2>Pseudo-Filesystem Ownership<a class="headerlink" href="#pseudo-filesystem-ownership" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_PSEUDOFS_ATTRIBUTES</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> are both
+enabled, <code class="docutils literal notranslate"><span class="pre">inode_alloc()</span></code> assigns <code class="docutils literal notranslate"><span class="pre">i_owner</span></code> and <code class="docutils literal notranslate"><span class="pre">i_group</span></code> from the
+caller’s effective credentials. This covers
+message queues (<code class="docutils literal notranslate"><span class="pre">mq_open()</span></code>), named semaphores (<code class="docutils literal notranslate"><span class="pre">sem_open()</span></code>), shared
+memory objects (<code class="docutils literal notranslate"><span class="pre">shm_open()</span></code>), FIFOs (<code class="docutils literal notranslate"><span class="pre">mkfifo()</span></code>), and pseudo-files
+created through the same inode reservation path. Open-time permission checks
+use <code class="docutils literal notranslate"><span class="pre">inode_checkopenperm()</span></code> (or <code class="docutils literal notranslate"><span class="pre">inode_checkperm()</span></code> for message queues).</p>
 </section>
 </section>
 
