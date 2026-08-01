@@ -268,6 +268,157 @@ and special command key press data streams.</p>
 released is needed by applications as well. Thus, in addition to
 normal and special key press events, it may also be necessary to
 encode normal and special key release events.</p>
+<section id="writing-a-keyboard-driver">
+<h2>Writing a Keyboard Driver<a class="headerlink" href="#writing-a-keyboard-driver" title="Permalink to this heading"></a></h2>
+<p>A keyboard driver registers with the keyboard upper half, which owns the
+character device and the buffering. This is the whole contract, and it is
+what makes a keyboard work with every application that reads one: the
+<code class="docutils literal notranslate"><span class="pre">kbd</span></code> dump, the LVGL terminal, NXDoom, and anything written later.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/input/keyboard.h&gt;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">mykbd_dev_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">keyboard_lowerhalf_s</span><span class="w"> </span><span class="n">lower</span><span class="p">;</span><span class="w">  </span><span class="cm">/* Must be found by container_of */</span>
+<span class="w">  </span><span class="p">...</span>
+<span class="p">};</span>
+
+<span class="cm">/* Register once, at board bring-up.  The open, close and write callbacks</span>
+<span class="cm"> * of the lower half are all optional:  a driver that has nothing to do</span>
+<span class="cm"> * when the device is opened can register with the structure zeroed.</span>
+<span class="cm"> */</span>
+
+<span class="n">keyboard_register</span><span class="p">(</span><span class="o">&amp;</span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/dev/kbd0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">CONFIG_MYKBD_NBUFFER</span><span class="p">);</span>
+
+<span class="cm">/* Report each key as it changes state */</span>
+
+<span class="n">keyboard_event</span><span class="p">(</span><span class="o">&amp;</span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="n">keycode</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Do not store the driver state in <code class="docutils literal notranslate"><span class="pre">lower.priv</span></code>. <code class="docutils literal notranslate"><span class="pre">keyboard_register()</span></code>
+overwrites that field with the upper half’s own state, so a lower half
+callback recovers the driver state with <code class="docutils literal notranslate"><span class="pre">container_of()</span></code> instead.</p>
+<section id="reporting-the-right-event-type">
+<h3>Reporting the Right Event Type<a class="headerlink" href="#reporting-the-right-event-type" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">type</span></code> has <strong>four</strong> values, and getting this wrong is a silent failure:
+the build is clean and the symptom is a key that does nothing.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Value</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">code</span></code> carries</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KEYBOARD_PRESS</span></code></p></td>
+<td><p>0</p></td>
+<td><p>The character that the key produces</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KEYBOARD_RELEASE</span></code></p></td>
+<td><p>1</p></td>
+<td><p>The character of the key that came up</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KEYBOARD_SPECPRESS</span></code></p></td>
+<td><p>2</p></td>
+<td><p>A value from <code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">kbd_keycode_e</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KEYBOARD_SPECREL</span></code></p></td>
+<td><p>3</p></td>
+<td><p>A value from <code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">kbd_keycode_e</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>A key that produces a character is reported with its character and the
+plain press and release types. A key that does not, such as an arrow, a
+function key or a modifier, is reported with a keycode and one of the SPEC
+types.</p>
+<p>The distinction matters because the two ranges overlap. <code class="docutils literal notranslate"><span class="pre">KEYCODE_UP</span></code> is
+7 and so is the ASCII bell, so an application that receives a 7 has no way
+to tell them apart other than by the event type. A driver that reports
+every key as <code class="docutils literal notranslate"><span class="pre">KEYBOARD_PRESS</span></code> will have its arrow keys silently dropped
+by any application that follows this contract.</p>
+</section>
+<section id="choosing-the-device-name">
+<h3>Choosing the Device Name<a class="headerlink" href="#choosing-the-device-name" title="Permalink to this heading"></a></h3>
+<p>Register as <code class="docutils literal notranslate"><span class="pre">/dev/kbd0</span></code>. Applications look for a keyboard under that
+name, and a keyboard registered anywhere else is out of reach of all of
+them unless the user knows to point each one at it by hand.</p>
+<p>The USB HID driver is the exception: it names its devices <code class="docutils literal notranslate"><span class="pre">/dev/kbda</span></code>
+onwards, because they come and go as keyboards are plugged in and more
+than one can be present at a time.</p>
+</section>
+<section id="matrix-keyboards">
+<h3>Matrix Keyboards<a class="headerlink" href="#matrix-keyboards" title="Permalink to this heading"></a></h3>
+<p>A matrix keyboard does not need a driver of its own. <code class="docutils literal notranslate"><span class="pre">INPUT_KMATRIX</span></code>
+scans the matrix, debounces it and reports the events, so a board provides
+a keymap and four GPIO callbacks and nothing more. See
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/input/kmatrix.h</span></code>.</p>
+<p>Wrap a keymap entry in <code class="docutils literal notranslate"><span class="pre">KMATRIX_SPECIAL()</span></code> to declare that it holds a
+keycode rather than a character, so that the key is reported with a SPEC
+event type:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">g_keymap</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="sc">&#39;1&#39;</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;2&#39;</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;3&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="n">KMATRIX_SPECIAL</span><span class="p">(</span><span class="n">KEYCODE_UP</span><span class="p">),</span><span class="w"> </span><span class="n">KMATRIX_SPECIAL</span><span class="p">(</span><span class="n">KEYCODE_DOWN</span><span class="p">),</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="testing-a-new-keyboard">
+<h3>Testing a New Keyboard<a class="headerlink" href="#testing-a-new-keyboard" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">system/kbd</span></code> prints every event that a keyboard reports, whatever the
+hardware behind it is, so it is the first thing to run on a new one:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; kbd /dev/kbd0
+kbd: reading /dev/kbd0, keyboard events
+press     code  97 &#39;a&#39;
+release   code  97 &#39;a&#39;
+specpress keycode 7
+specrel   keycode 7
+</pre></div>
+</div>
+<p>An application can also be brought up against a keyboard that does not
+exist yet. <code class="docutils literal notranslate"><span class="pre">UINPUT_KEYBOARD</span></code> registers <code class="docutils literal notranslate"><span class="pre">/dev/ukeyboard</span></code>, whose events
+are injected by writing <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">keyboard_event_s</span></code> to it, and <code class="docutils literal notranslate"><span class="pre">kbd</span> <span class="pre">-i</span></code>
+injects whatever it reads from its own stdin.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The leading u is for uinput, not for USB. It marks a device that
+software feeds rather than hardware, and the same prefix names
+<code class="docutils literal notranslate"><span class="pre">/dev/utouch</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/ubutton</span></code> and <code class="docutils literal notranslate"><span class="pre">/dev/usensor</span></code>. A USB keyboard
+is <code class="docutils literal notranslate"><span class="pre">/dev/kbda</span></code>, with no prefix at all.</p>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; kbd -i /dev/ukeyboard
+kbd: injecting into /dev/ukeyboard, type to send, Ctrl-D to stop
+</pre></div>
+</div>
+<p>Given a second device it forwards every key of one keyboard onto another
+instead of reading its own stdin, so a real keyboard and an injected one
+can drive the same application:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; kbd -i /dev/ukeyboard /dev/kbd0 &amp;
+kbd: forwarding /dev/kbd0 into /dev/ukeyboard
+</pre></div>
+</div>
+<p>An application cannot do that on its own, since it opens a single device.</p>
+<p>Point an application at <code class="docutils literal notranslate"><span class="pre">/dev/ukeyboard</span></code> and it is driven from the serial
+console, or from whatever is on the other end of it. This is the way to
+work on the application side of a board port before its keyboard driver
+exists, and the way to reach a board whose keyboard is not at hand.</p>
+<p>Raise <code class="docutils literal notranslate"><span class="pre">UINPUT_KEYBOARD_BUFNUMBER</span></code> before doing so. It counts events
+rather than keys, so the default of eight holds four keystrokes, and a
+console hands over a whole line at once. The upper half overwrites the
+oldest event when the buffer is full, so what arrives is the tail of the
+line and nothing says that the rest was dropped.</p>
+</section>
+</section>
+<section id="byte-stream-compatibility">
+<h2>Byte Stream Compatibility<a class="headerlink" href="#byte-stream-compatibility" title="Permalink to this heading"></a></h2>
+<p>An application that has not been converted to read events can select
+<code class="docutils literal notranslate"><span class="pre">INPUT_KEYBOARD_BYTESTREAM</span></code>, which makes every keyboard deliver the byte
+stream described below instead of events. This is a property of the build
+rather than of the driver, so it applies to every keyboard at once and a
+configuration cannot mix the two.</p>
+<p>The byte stream cannot express a key release, and it cannot express a
+special key at all unless <code class="docutils literal notranslate"><span class="pre">LIBC_KBDCODEC</span></code> is enabled. An application
+that needs either has to read the events.</p>
 <p><strong>Encoding/Decoding</strong> Layer. An optional encoding/decoding layer
 can be used with the basic character driver to encode the keyboard
 events into the text data stream. The function interfaces that
@@ -373,6 +524,7 @@ indicates the end of file.</p></li>
 <p><strong>I/O Streams</strong>. Notice the use of the abstract I/O streams in
 these interfaces. These stream interfaces are defined in
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/streams.h</span></code>.</p>
+</section>
 </section>
 
 
