@@ -148,7 +148,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#ci-stages">CI Stages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pull-request-labelling">Pull Request Labelling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#checkpatch">Checkpatch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#build">Build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#build">Build</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pull-request-dependencies">Pull Request Dependencies</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#memory-footprint-tracking">Memory Footprint Tracking</a></li>
 </ul>
 </li>
@@ -284,6 +287,68 @@ normalized (see <a class="reference internal" href="../components/tools/refresh.
 The name of this workflow is deceiving, as it does not only build
 configurations, but also normalizes them and runs <a class="reference internal" href="ntfc.html"><span class="doc">NTFC</span></a>
 tests on architectures that support it.</p>
+<section id="pull-request-dependencies">
+<h3>Pull Request Dependencies<a class="headerlink" href="#pull-request-dependencies" title="Permalink to this heading"></a></h3>
+<p>NuttX and <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> are built together. A change that spans both
+repositories may therefore need to test two pull requests together before
+either one is merged. A pull request targeting <code class="docutils literal notranslate"><span class="pre">master</span></code> can declare same- or
+cross-repository dependencies in its description.</p>
+<p>The recommended form is one dependency per line:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Depends-On: https://github.com/apache/nuttx-apps/pull/1234
+Depends-On: https://github.com/apache/nuttx/pull/5678
+</pre></div>
+</div>
+<p>Alternatively, multiple dependencies can use a single bracket list:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Depends-On: [apache/nuttx-apps/pull/1234 https://github.com/apache/nuttx/pull/5678]
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Depends-On:</span></code> marker is case-insensitive; <code class="docutils literal notranslate"><span class="pre">Depends-On:</span></code>,
+<code class="docutils literal notranslate"><span class="pre">depends-on:</span></code>, and mixed-case spellings are equivalent. This documentation
+uses <code class="docutils literal notranslate"><span class="pre">Depends-On:</span></code> as the canonical form.</p>
+<p>References may use either a complete <code class="docutils literal notranslate"><span class="pre">https://github.com/...</span></code> URL or the
+short <code class="docutils literal notranslate"><span class="pre">owner/repository/pull/number</span></code> form, and the forms may be mixed. Each
+accepted reference must identify a pull request in <code class="docutils literal notranslate"><span class="pre">apache/nuttx</span></code> or
+<code class="docutils literal notranslate"><span class="pre">apache/nuttx-apps</span></code>. Other tokens are ignored; a declaration is invalid only
+when a <code class="docutils literal notranslate"><span class="pre">Depends-On:</span></code> marker is present but no valid dependency can be parsed.
+Multiple declarations are applied in their listed order, and duplicate
+references are applied only once. Each declaration must remain on one line;
+Markdown bullet-list continuations are not supported. Pull requests without a
+<code class="docutils literal notranslate"><span class="pre">Depends-On:</span></code> declaration retain the normal CI source selection.
+Declarations in release and backport pull requests are ignored because
+dependencies are applied only when the target branch is <code class="docutils literal notranslate"><span class="pre">master</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Fetch-Source</span></code> job fetches each valid dependency’s exact head SHA and
+cherry-picks its commits into the corresponding checkout before the existing
+build matrix runs. Invalid declarations are not applied: CI continues with the
+normal source selection and posts a warning that the declaration could not be
+parsed. If a valid dependency cannot be fetched, has no common history, its
+commit list cannot be determined, or it causes a cherry-pick conflict,
+<code class="docutils literal notranslate"><span class="pre">Fetch-Source</span></code> fails instead of silently testing without the requested
+dependency.</p>
+<p>When a valid dependency report is available, the follow-up comment reports one
+of three outcomes:</p>
+<ul class="simple">
+<li><p>successfully applied dependencies and their fetched head SHAs (abbreviated in
+the comment)</p></li>
+<li><p>a declaration from which no valid dependency could be parsed</p></li>
+<li><p>valid dependencies that could not be applied and the failure reason</p></li>
+</ul>
+<p>The write-capable follow-up workflow does not execute fork code. It validates
+the untrusted report’s structure, repository allow-list, run and current PR
+head binding, and fixed rendering fields before commenting. These checks make
+posting the report safe, but do not independently attest that the dependency
+was applied; the comment reflects the result produced by the read-only Build
+workflow.</p>
+<p>Editing the pull request description triggers the CI dependency gate. The
+resource-intensive build jobs run again when the base branch or ordered parsed
+dependency state changes, so reordering dependencies also triggers a build.
+Unrelated description edits run only the gate and do not request cancellation
+of an already-running Build. GitHub may still replace an older pending run in
+the same concurrency group. Updating a dependency pull request does not
+automatically trigger the initiating pull request, so its CI must be rerun to
+test the new dependency head.</p>
+<p>The combined result belongs to the initiating pull request. It does not set a
+status on dependency pull requests, merge them automatically, or replace the
+need to coordinate their merge order.</p>
 <p>The steps executed in the build workflow are:</p>
 <ol class="arabic">
 <li><p>Fetch source: checks out <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> and <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> repos. The source files
@@ -322,6 +387,7 @@ resulting <code class="docutils literal notranslate"><span class="pre">nuttx.bin
 should be able to download the artifact, flash the NuttX image(s) to your target
 device and test them that way if you’d like to avoid building all of the images
 yourself!</p>
+</section>
 </section>
 <section id="memory-footprint-tracking">
 <h2>Memory Footprint Tracking<a class="headerlink" href="#memory-footprint-tracking" title="Permalink to this heading"></a></h2>
