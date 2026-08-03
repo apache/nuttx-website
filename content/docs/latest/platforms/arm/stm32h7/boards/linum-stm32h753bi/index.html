@@ -1722,6 +1722,33 @@ that the USB host and the SDMMC peripheral coexist:</p>
 nsh&gt; ls /data
 </pre></div>
 </div>
+<p><strong>Typing from the serial console instead.</strong> The terminal reads a keyboard
+device, and it does not care which one, so it can be driven from the serial
+console with no keyboard plugged in at all. This configuration enables
+<code class="docutils literal notranslate"><span class="pre">UINPUT_KEYBOARD</span></code>, which registers a virtual keyboard on
+<code class="docutils literal notranslate"><span class="pre">/dev/ukeyboard</span></code>, and <code class="docutils literal notranslate"><span class="pre">system/kbd</span></code>, which injects into it.</p>
+<p>Point the terminal at the virtual keyboard and bridge the console into it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; lvglterm /dev/ukeyboard &amp;
+nsh&gt; kbd -i /dev/ukeyboard
+</pre></div>
+</div>
+<p>Everything typed on the serial console from that point on appears on the
+display. This is how to work on the terminal without the keyboard at hand,
+and how to reach the board over a serial link from another machine.</p>
+<p>To use both at once, forward the USB keyboard into the same virtual
+keyboard before starting the terminal:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; kbd -i /dev/ukeyboard /dev/kbda &amp;
+nsh&gt; lvglterm /dev/ukeyboard &amp;
+nsh&gt; kbd -i /dev/ukeyboard
+</pre></div>
+</div>
+<p>The USB keyboard and the serial console now feed the same terminal, which
+an application cannot do on its own since it opens a single device.</p>
+<p><code class="docutils literal notranslate"><span class="pre">UINPUT_KEYBOARD_BUFNUMBER</span></code> is raised to 128 here. It counts events
+rather than keys, so the default of eight holds four keystrokes, and a
+console hands over a whole line at once. The keyboard upper half overwrites
+the oldest event when the buffer is full, so a line typed at the console
+would arrive with its beginning silently missing.</p>
 </section>
 <section id="tone">
 <h3>tone<a class="headerlink" href="#tone" title="Permalink to this heading"></a></h3>

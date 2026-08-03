@@ -235,10 +235,11 @@ TI AM6254 SoC.</p>
 <li><p>Four user LEDs</p></li>
 <li><p>Gigabit Ethernet, USB, Wi-Fi, and Bluetooth hardware on the board</p></li>
 </ul>
-<p>Current NuttX support is limited to early boot, the 16550 serial console,
-interactive NSH, and <code class="docutils literal notranslate"><span class="pre">procfs</span></code> mount during board bring-up. GPIO, LEDs,
-I2C, SPI, MMC/SD, Ethernet, Wi-Fi, Bluetooth, and USB runtime support are
-not implemented yet.</p>
+<p>Current NuttX support includes early boot, the 16550 serial console,
+interactive NSH, <code class="docutils literal notranslate"><span class="pre">procfs</span></code> mount during board bring-up, AM62x TISCI
+initialization, main-domain GPIO, and I2C0/I2C1 controller support in the
+<code class="docutils literal notranslate"><span class="pre">beagleplay:i2c</span></code> configuration. SPI, MMC/SD, Ethernet, Wi-Fi, Bluetooth,
+and USB runtime support are not implemented yet.</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
@@ -269,8 +270,8 @@ not implemented yet.</p>
 </tr>
 </tbody>
 </table>
-<p>The current NuttX port does not yet provide functional GPIO-backed LED
-control. The <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> hooks are present as placeholders only.</p>
+<p>The current NuttX port initializes the AM62x GPIO controller. Automatic
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> LED hooks remain placeholders only.</p>
 </section>
 <section id="serial-console">
 <h2>Serial Console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
@@ -299,7 +300,15 @@ expansion headers:</p>
 </tr>
 <tr class="row-even"><td><p>USR0-3</p></td>
 <td><p>GPIO1_22 through 1_25</p></td>
-<td><p>User LEDs, not yet driven by NuttX</p></td>
+<td><p>User LEDs on the main GPIO block</p></td>
+</tr>
+<tr class="row-odd"><td><p>I2C0</p></td>
+<td><p>I2C0</p></td>
+<td><p>Available in <code class="docutils literal notranslate"><span class="pre">beagleplay:i2c</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>I2C1</p></td>
+<td><p>I2C1</p></td>
+<td><p>Available in <code class="docutils literal notranslate"><span class="pre">beagleplay:i2c</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -350,12 +359,22 @@ nsh&gt;
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
-<dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">beagleplay:nsh</span></code></dt><dd><p>Interactive NSH configuration for serial bring-up and shell access.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">beagleplay:ostest</span></code></dt><dd><p>Hardware validation configuration that boots directly into <code class="docutils literal notranslate"><span class="pre">ostest_main</span></code>.</p>
-</dd>
-</dl>
+<p>Configure NuttX with <code class="docutils literal notranslate"><span class="pre">beagleplay:&lt;config-name&gt;</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>beagleplay:nsh
+</pre></div>
+</div>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>Interactive NSH configuration for serial bring-up and shell access.</p>
+</section>
+<section id="i2c">
+<h3>i2c<a class="headerlink" href="#i2c" title="Permalink to this heading"></a></h3>
+<p>NSH configuration with AM62x I2C0/I2C1 and the <code class="docutils literal notranslate"><span class="pre">i2c</span></code> tool enabled.</p>
+</section>
+<section id="ostest">
+<h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this heading"></a></h3>
+<p>Hardware validation configuration that boots directly into <code class="docutils literal notranslate"><span class="pre">ostest_main</span></code>.</p>
+</section>
 </section>
 </section>
 

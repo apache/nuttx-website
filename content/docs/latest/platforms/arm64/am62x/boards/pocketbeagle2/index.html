@@ -234,10 +234,11 @@ compact open-hardware board from BeagleBoard.org based on the TI AM6254 SoC.</p>
 <li><p>Expansion headers for GPIO, I2C, SPI, UART, PWM, and ADC</p></li>
 <li><p>User LEDs exposed by the board port</p></li>
 </ul>
-<p>Current NuttX support is limited to early boot, the 16550 serial console,
-interactive NSH, and <code class="docutils literal notranslate"><span class="pre">procfs</span></code> mount during board bring-up. GPIO, functional
-LED control, I2C, SPI, MMC/SD runtime support, Ethernet, and USB runtime
-support are not implemented yet.</p>
+<p>Current NuttX support includes early boot, the 16550 serial console,
+interactive NSH, <code class="docutils literal notranslate"><span class="pre">procfs</span></code> mount during board bring-up, AM62x TISCI
+initialization, main-domain GPIO, and I2C0/I2C2 controller support in the
+<code class="docutils literal notranslate"><span class="pre">pocketbeagle2:i2c</span></code> configuration. SPI, MMC/SD runtime support, Ethernet,
+and USB runtime support are not implemented yet.</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
@@ -264,7 +265,8 @@ support are not implemented yet.</p>
 </tr>
 </tbody>
 </table>
-<p>These LEDs are not driven yet because AM62x GPIO support has not been added.</p>
+<p>The AM62x GPIO controller is initialized by the board port. Automatic
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> LED hooks remain placeholders only.</p>
 </section>
 <section id="serial-console">
 <h2>Serial Console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
@@ -293,7 +295,15 @@ USB-C cable to your host and open the enumerated serial port at <strong>115200 8
 </tr>
 <tr class="row-even"><td><p>USR0-2</p></td>
 <td><p>Board user LEDs</p></td>
-<td><p>Not yet driven by NuttX GPIO support</p></td>
+<td><p>Available through the main GPIO block</p></td>
+</tr>
+<tr class="row-odd"><td><p>I2C0</p></td>
+<td><p>I2C0</p></td>
+<td><p>Available in <code class="docutils literal notranslate"><span class="pre">pocketbeagle2:i2c</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>I2C2</p></td>
+<td><p>Header I2C2</p></td>
+<td><p>Available in <code class="docutils literal notranslate"><span class="pre">pocketbeagle2:i2c</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -338,12 +348,22 @@ nsh&gt;
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
-<dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">pocketbeagle2:nsh</span></code></dt><dd><p>Interactive NSH configuration for serial bring-up and shell access.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pocketbeagle2:ostest</span></code></dt><dd><p>Hardware validation configuration that boots directly into <code class="docutils literal notranslate"><span class="pre">ostest_main</span></code>.</p>
-</dd>
-</dl>
+<p>Configure NuttX with <code class="docutils literal notranslate"><span class="pre">pocketbeagle2:&lt;config-name&gt;</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>pocketbeagle2:nsh
+</pre></div>
+</div>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>Interactive NSH configuration for serial bring-up and shell access.</p>
+</section>
+<section id="i2c">
+<h3>i2c<a class="headerlink" href="#i2c" title="Permalink to this heading"></a></h3>
+<p>NSH configuration with AM62x I2C0/I2C2 and the <code class="docutils literal notranslate"><span class="pre">i2c</span></code> tool enabled.</p>
+</section>
+<section id="ostest">
+<h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this heading"></a></h3>
+<p>Hardware validation configuration that boots directly into <code class="docutils literal notranslate"><span class="pre">ostest_main</span></code>.</p>
+</section>
 </section>
 </section>
 

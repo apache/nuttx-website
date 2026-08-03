@@ -150,6 +150,7 @@
 <li class="toctree-l2"><a class="reference internal" href="device_nodes.html">Device Nodes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drivers_design.html">OS Drivers Design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="file_descriptors.html">File Descriptors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_permission.html">Filesystem Permission Interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hardfaults.html">Hardfaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interrupt_controls.html">Per-Thread Interrupt Controls</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ioctl.html">ioctl</a></li>
@@ -301,7 +302,9 @@ task group. Any output pointer may be <code class="docutils literal notranslate"
 root-only versions of all credential interfaces are provided.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PERMISSION</span></code></dt><dd><p>Enables filesystem ownership and permission enforcement. Requires
-<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_PSEUDOFS_ATTRIBUTES</span></code>.
+See <a class="reference internal" href="file_permission.html#file-permission"><span class="std std-ref">Filesystem Permission Interface</span></a> for the VFS helpers, mount-crossing
+traverse rules, and testing notes.</p>
 </dd>
 </dl>
 </section>
@@ -312,8 +315,12 @@ enabled, <code class="docutils literal notranslate"><span class="pre">inode_allo
 caller’s effective credentials. This covers
 message queues (<code class="docutils literal notranslate"><span class="pre">mq_open()</span></code>), named semaphores (<code class="docutils literal notranslate"><span class="pre">sem_open()</span></code>), shared
 memory objects (<code class="docutils literal notranslate"><span class="pre">shm_open()</span></code>), FIFOs (<code class="docutils literal notranslate"><span class="pre">mkfifo()</span></code>), and pseudo-files
-created through the same inode reservation path. Open-time permission checks
-use <code class="docutils literal notranslate"><span class="pre">inode_checkopenperm()</span></code> (or <code class="docutils literal notranslate"><span class="pre">inode_checkperm()</span></code> for message queues).</p>
+created through the same inode reservation path.</p>
+<p>Path resolution requires directory search permission (<code class="docutils literal notranslate"><span class="pre">X_OK</span></code>) on ancestors
+via <code class="docutils literal notranslate"><span class="pre">inode_checkpathperm()</span></code>.  Open-time checks on the final node use
+<code class="docutils literal notranslate"><span class="pre">inode_checkopenperm()</span></code> (or <code class="docutils literal notranslate"><span class="pre">inode_checkperm()</span></code> for named IPC
+objects).  Full details, including mounts under private pseudoFS parents,
+are in <a class="reference internal" href="file_permission.html#file-permission"><span class="std std-ref">Filesystem Permission Interface</span></a>.</p>
 </section>
 </section>
 
