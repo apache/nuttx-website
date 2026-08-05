@@ -152,6 +152,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">NXDoom</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#minimum-requirements">Minimum requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#playing">Playing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tuning-the-display-for-a-board">Tuning the display for a board</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#other-notes">Other Notes</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#translations">Translations</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#source-comments">Source Comments</a></li>
@@ -259,16 +260,20 @@ NuttX, memory optimizations are particularly welcome.</p>
 <p>Sound support, multiplayer support, support for any of the wide array of
 input devices NuttX can provide are also highly welcomed.</p>
 </div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Currently, the only supported input device is keyboard input. However,
-NuttX’s keyboard codec is highly non-standard and therefore some things do
-not work as intended. For instance, pressing CTRL to fire does nothing since
-NuttX’s codec has no concept of CTRL. The keyboard codec will need to be
-amended before this works properly, but the port is upstreamed in the hopes
-of encouraging those changes or getting more contributors to add different
-input devices. The keyboard codec needs to be treated delicately since other
-things in the kernel depend on it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Keyboard input is the only input device supported so far, and other ones
+are welcome.</p>
+<p>The game binds fire, run and strafe to Ctrl, Shift and Alt. Those reach
+an application only if the keyboard driver reports a modifier as a key in
+its own right, which the codec keycodes <code class="docutils literal notranslate"><span class="pre">KEYCODE_LCTRL</span></code> through
+<code class="docutils literal notranslate"><span class="pre">KEYCODE_RGUI</span></code> exist for.</p>
+<p>The simulator always reports them. A USB HID keyboard reports them when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_HIDKBD_REPORT_MODIFIERS</span></code> is enabled, which is off by default,
+so a configuration that plays the game over USB has to turn it on. A
+driver that reports no modifiers at all, a matrix keyboard for instance,
+leaves those three actions on keys the game cannot see, and they have to
+be rebound to play.</p>
 </div>
 <section id="minimum-requirements">
 <h2>Minimum requirements<a class="headerlink" href="#minimum-requirements" title="Permalink to this heading"></a></h2>
@@ -300,6 +305,45 @@ file I tried did not run properly)</p>
 </pre></div>
 </div>
 <p>and replace the path with your WAD file’s path.</p>
+</section>
+<section id="tuning-the-display-for-a-board">
+<h2>Tuning the display for a board<a class="headerlink" href="#tuning-the-display-for-a-board" title="Permalink to this heading"></a></h2>
+<p>DOOM renders a 320x200 image with 8 bits per pixel and a palette, and the port
+scales that up and converts it to whatever the frame buffer wants. How much
+that costs depends a great deal on the board, so the following options are
+available. All of them are disabled by default, which leaves the behaviour
+unchanged, and each is worth enabling only where it pays.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_NXDOOM_FB_CMAP</span></code></dt><dd><p>Load the DOOM palette into the frame buffer’s colour map and blit the
+palette indices unconverted, letting the display convert them while it scans
+out. This needs a frame buffer that is 8 bits per pixel and supports
+<code class="docutils literal notranslate"><span class="pre">FBIOPUT_CMAP</span></code>, such as an STM32 LTDC layer configured for L8. It removes
+the conversion from the blit and halves the amount of data written per
+frame.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_NXDOOM_FILLSCREEN</span></code></dt><dd><p>Stretch the image over the whole display instead of scaling it by the
+largest whole number that fits. This fills a display whose size is not an
+exact multiple of 320x200, at the cost of a scale factor that is not uniform
+across the image. Without it the image is scaled by a whole number and
+centred, leaving a border.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_NXDOOM_ROWSTAGE</span></code></dt><dd><p>Build each output row in a staging buffer and copy it out, rather than
+writing the frame buffer a pixel at a time, so that the frame buffer only
+ever sees burst-friendly copies. Costs a few kilobytes of <code class="docutils literal notranslate"><span class="pre">.bss</span></code>. This is
+worth a lot when the frame buffer is external memory and the data cache is
+in write-through mode, and little otherwise.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_NXDOOM_STATIC_SCRNBUF</span></code></dt><dd><p>Place the buffer DOOM renders into in <code class="docutils literal notranslate"><span class="pre">.bss</span></code> rather than taking it from the
+heap, which puts it in internal RAM on a board whose heap is mostly external
+memory. The renderer draws in vertical columns, so consecutive writes are
+one screen width apart and none of them coalesce, which makes external memory
+close to the worst case for it. Costs 64000 bytes of RAM whether the game
+runs or not.</p>
+</dd>
+</dl>
+<p>As an illustration of the effect, on an STM32H753 driving a 1024x600 panel
+whose frame buffer lives in SDRAM, <code class="docutils literal notranslate"><span class="pre">ROWSTAGE</span></code> and <code class="docutils literal notranslate"><span class="pre">STATIC_SCRNBUF</span></code> are
+worth 2.7 times the frame rate between them.</p>
 </section>
 <section id="other-notes">
 <h2>Other Notes<a class="headerlink" href="#other-notes" title="Permalink to this heading"></a></h2>

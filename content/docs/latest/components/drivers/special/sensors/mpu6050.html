@@ -299,26 +299,59 @@ topics to appear under <code class="docutils literal notranslate"><span class="p
 <p>Where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the device number passed during device registration (e.g., 0).</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Example uORB sensor registration on I2C bus 0 at default address 0x68 */</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mpu6050_register</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">i2c_master</span><span class="p">,</span><span class="w"> </span><span class="n">MPU6050_ADDR_LOW</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mpu6050_register</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">i2c_master</span><span class="p">,</span><span class="w"> </span><span class="n">MPU6050_ADDR_LOW</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">err</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 <span class="w">  </span><span class="p">{</span>
 <span class="w">    </span><span class="n">syslog</span><span class="p">(</span><span class="n">LOG_ERR</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Failed to register MPU6050: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">err</span><span class="p">);</span>
 <span class="w">  </span><span class="p">}</span>
 </pre></div>
 </div>
+<p>The device samples at 100 Hz.</p>
+</section>
+<section id="acquisition-modes">
+<h2>Acquisition Modes<a class="headerlink" href="#acquisition-modes" title="Permalink to this heading"></a></h2>
+<p>The driver reads the device on demand by default: a sample is taken when the
+application reads the topic, and is timestamped at that moment.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_MPU6050_INT</span></code> the device drives the acquisition instead,
+through its data ready interrupt. Samples are then timestamped when they were
+measured rather than when they were asked for, and both topics are published
+from a single read, so accelerometer and gyroscope share one timestamp. This
+requires the INT pin to be wired, and the board to pass a
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mpu6050_config_s</span></code> whose <code class="docutils literal notranslate"><span class="pre">attach</span></code> member connects that pin to the
+driver:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">board_mpu6050_attach</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mpu6050_config_s</span><span class="w"> </span><span class="o">*</span><span class="n">config</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">xcpt_t</span><span class="w"> </span><span class="n">isr</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="cm">/* Configure the GPIO for a rising edge and attach isr to it */</span>
+<span class="p">}</span>
+
+<span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mpu6050_config_s</span><span class="w"> </span><span class="n">g_mpu6050_config</span><span class="w"> </span><span class="o">=</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="p">.</span><span class="n">attach</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">board_mpu6050_attach</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mpu6050_register</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">i2c_master</span><span class="p">,</span><span class="w"> </span><span class="n">MPU6050_ADDR_LOW</span><span class="p">,</span>
+<span class="w">                           </span><span class="o">&amp;</span><span class="n">g_mpu6050_config</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Registration fails with <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> if the option is enabled and no <code class="docutils literal notranslate"><span class="pre">attach</span></code>
+is supplied, since the interrupt is the only source of samples in that build.</p>
 </section>
 <section id="configuration-options">
 <h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_MPU6050</span></code> - Enables uORB driver support for the InvenSense MPU6050 6-axis MotionTracker over I2C.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SENSORS_MPU6050_INT</span></code> - Takes samples from the data ready interrupt instead of reading the device on demand. Requires board support, see <a class="reference internal" href="#acquisition-modes">Acquisition Modes</a>.</p></li>
 </ul>
 </section>
 <section id="supported-operations">
 <h2>Supported Operations<a class="headerlink" href="#supported-operations" title="Permalink to this heading"></a></h2>
-<p>The MPU6050 uORB driver supports standard sensor operations (<cite>activate</cite>, <cite>fetch</cite>,
-<cite>set_interval</cite>, <cite>batch</cite>, and <cite>control</cite>). It acquires simultaneous 3-axis accelerometer
-and 3-axis gyroscope samples, applies appropriate scale conversions, and publishes them
-to their respective uORB topics.</p>
+<p>The MPU6050 uORB driver supports standard sensor operations (<cite>activate</cite>,
+<cite>set_interval</cite>, <cite>batch</cite>, and <cite>control</cite>), plus <cite>fetch</cite> when reading on demand.
+An instance provides either <cite>fetch</cite> or interrupt driven delivery, never both.
+It acquires simultaneous 3-axis accelerometer and 3-axis gyroscope samples,
+applies appropriate scale conversions, and publishes them to their respective
+uORB topics.</p>
 <section id="example-usage-uorb-listener">
 <h3>Example Usage (<cite>uorb_listener</cite>)<a class="headerlink" href="#example-usage-uorb-listener" title="Permalink to this heading"></a></h3>
 <p>Once registered on target hardware, the MPU6050 topics can be verified directly from the
