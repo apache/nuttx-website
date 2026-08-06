@@ -147,6 +147,18 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Audio Subsystem</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#files-in-nuttx-audio">Files in nuttx/audio</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#related-header-files">Related Header Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#playback-and-capture-flow">Playback and Capture Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#buffer-ownership">Buffer Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polling-and-memory-mapping">Polling and Memory Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ioctl-commands">IOCTL Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#session-and-capability">Session and Capability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#buffer-management">Buffer Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transfer-control">Transfer Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#status-and-notification">Status and Notification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-applications">Multiple Applications</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration-settings">Configuration Settings</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#general-audio-settings">General Audio Settings</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#audio-format-support-selections">Audio Format Support Selections</a></li>
@@ -242,6 +254,253 @@ content for playback (or possibly recording in the future).</p></li>
 <h2>Related Header Files<a class="headerlink" href="#related-header-files" title="Permalink to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">include/nuttx/audio/audio.h</span></code> - Top level include file defining the audio interface
 <code class="docutils literal notranslate"><span class="pre">include/nuttx/audio/vs1053.h</span></code> - Specific driver initialization prototypes</p>
+</section>
+<section id="playback-and-capture-flow">
+<h2>Playback and Capture Flow<a class="headerlink" href="#playback-and-capture-flow" title="Permalink to this heading"></a></h2>
+<p>The upper half tracks a device-level state, held in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">audio_status_s</span></code>
+and readable with <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETSTATUS</span></code>.  <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_START</span></code> is only accepted
+once the device has left <code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_OPEN</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>AUDIO_STATE_OPEN --configure--&gt; AUDIO_STATE_PREPARED --start--&gt; AUDIO_STATE_RUNNING
+                                         ^                            |
+                                         |                       pause | resume
+                                         |                            v
+                                    stop |                  AUDIO_STATE_PAUSED
+                                         |
+          AUDIO_STATE_DRAINING &lt;----------+          (buffers under-run:
+                  |                                  AUDIO_STATE_XRUN)
+                  v
+          AUDIO_STATE_OPEN  (once the lower half reports completion)
+</pre></div>
+</div>
+<p>The states are defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/audio/audio.h</span></code> in ascending order of
+priority, which is how the upper half aggregates the state of several
+applications sharing one device:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>State</p></th>
+<th class="head"><p>Value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_OPEN</span></code></p></td>
+<td><p>0</p></td>
+<td><p>Opened, no format established yet</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_PREPARED</span></code></p></td>
+<td><p>1</p></td>
+<td><p>Format established, ready to be started</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_PAUSED</span></code></p></td>
+<td><p>2</p></td>
+<td><p>Started, then paused</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_XRUN</span></code></p></td>
+<td><p>3</p></td>
+<td><p>Started, but the application fell behind</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_DRAINING</span></code></p></td>
+<td><p>4</p></td>
+<td><p>Stop requested, waiting for queued buffers</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_RUNNING</span></code></p></td>
+<td><p>5</p></td>
+<td><p>Transferring</p></td>
+</tr>
+</tbody>
+</table>
+<p>A normal playback sequence is:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">open()</span></code> the device</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_RESERVE</span></code> to obtain a session (with <code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_MULTI_SESSION</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETCAPS</span></code> to query what the device supports</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_CONFIGURE</span></code> with <code class="docutils literal notranslate"><span class="pre">ac_type</span></code> set to <code class="docutils literal notranslate"><span class="pre">AUDIO_TYPE_OUTPUT</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">AUDIO_TYPE_INPUT</span></code>) to establish the stream format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETBUFFERINFO</span></code> to learn the preferred buffer size and count</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ALLOCBUFFER</span></code> for each buffer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_REGISTERMQ</span></code> so the driver can report buffer completion</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ENQUEUEBUFFER</span></code> to hand filled buffers to the driver</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_START</span></code> to begin transferring</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_STOP</span></code> when finished, then <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_FREEBUFFER</span></code> and
+<code class="docutils literal notranslate"><span class="pre">AUDIOIOC_RELEASE</span></code></p></li>
+</ol>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Step 4 is mandatory.  <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_CONFIGURE</span></code> is the only thing that moves the
+device from <code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_OPEN</span></code> to <code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_PREPARED</span></code>, so omitting it
+makes <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_START</span></code> fail with <code class="docutils literal notranslate"><span class="pre">-EPERM</span></code>.</p>
+<p>Note that a lower half configuring itself does not satisfy this: only a
+configuration arriving through the ioctl is observed by the upper half, so
+the state can still be <code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_OPEN</span></code> while the hardware is already
+programmed.  The application must issue <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_CONFIGURE</span></code> itself, with
+plausible non-zero values if it cannot determine the real ones.  Passing
+zeros is not a workaround - drivers reject a zero channel count or sample
+rate with <code class="docutils literal notranslate"><span class="pre">-ERANGE</span></code> or <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code>, and some assert on it.</p>
+</div>
+</section>
+<section id="buffer-ownership">
+<h2>Buffer Ownership<a class="headerlink" href="#buffer-ownership" title="Permalink to this heading"></a></h2>
+<p>Audio pipeline buffers (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ap_buffer_s</span></code>, “apb”) carry sample data
+between the application and the lower-half driver.  <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ALLOCBUFFER</span></code>
+takes a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">audio_buf_desc_s</span></code> and has two distinct modes, selected by the
+<code class="docutils literal notranslate"><span class="pre">u.pbuffer</span></code> field:</p>
+<p><strong>Private buffers</strong> (<code class="docutils literal notranslate"><span class="pre">u.pbuffer</span> <span class="pre">!=</span> <span class="pre">NULL</span></code>)</p>
+<blockquote>
+<div><p>The caller supplies the address of a pointer, and receives a buffer that it
+owns for its lifetime.  The upper half only forwards the request - to
+<code class="docutils literal notranslate"><span class="pre">lower-&gt;ops-&gt;allocbuffer()</span></code> if the driver implements it, otherwise to
+<code class="docutils literal notranslate"><span class="pre">apb_alloc()</span></code>.  These buffers are enqueued individually by passing
+<code class="docutils literal notranslate"><span class="pre">u.buffer</span></code> to <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ENQUEUEBUFFER</span></code>, and must be released with
+<code class="docutils literal notranslate"><span class="pre">AUDIOIOC_FREEBUFFER</span></code>.  On success the ioctl returns
+<code class="docutils literal notranslate"><span class="pre">sizeof(struct</span> <span class="pre">audio_buf_desc_s)</span></code>.</p>
+<p>This is the mode used by <code class="docutils literal notranslate"><span class="pre">nxplayer</span></code>, <code class="docutils literal notranslate"><span class="pre">nxrecorder</span></code> and <code class="docutils literal notranslate"><span class="pre">nxlooper</span></code>.</p>
+</div></blockquote>
+<p><strong>Shared ring buffers</strong> (<code class="docutils literal notranslate"><span class="pre">u.pbuffer</span> <span class="pre">==</span> <span class="pre">NULL</span></code>)</p>
+<blockquote>
+<div><p>The upper half allocates the buffer and keeps it in an internal ring, whose
+depth is bounded by the buffer count the lower half reported through
+<code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETBUFFERINFO</span></code>.  Buffers are not handed back to the caller;
+instead the application enqueues by passing a descriptor with
+<code class="docutils literal notranslate"><span class="pre">u.buffer</span> <span class="pre">==</span> <span class="pre">NULL</span></code>, and the upper half picks the next ring slot itself.
+This is what allows several applications to feed one device concurrently, and
+it is also the form that <code class="docutils literal notranslate"><span class="pre">mmap()</span></code> exposes.</p>
+<p>When the ring has already been populated - typically because another
+application attached first - <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ALLOCBUFFER</span></code> returns <code class="docutils literal notranslate"><span class="pre">0</span></code> rather
+than an error.  A second application is expected to treat that as success and
+proceed directly to <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ENQUEUEBUFFER</span></code>.</p>
+<p>No in-tree application uses this mode yet; the upper half provides it so that
+a client library needing concurrent access or zero-copy submission can be
+built on top of it.</p>
+</div></blockquote>
+<p>The two modes are independent of the stream format.  Buffer size and count are
+a property of the device (its DMA capabilities, FIFO depth or memory pool),
+expressed in bytes; the format is a property of the stream, expressed as a rate.
+Their ratio only determines how much audio one buffer represents, and the audio
+subsystem does not constrain it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETBUFFERINFO</span></code> is a query, but in the upper half it also records
+the reported buffer count for use as the shared ring depth.  A lower half
+that does not implement it leaves that count at zero, which disables shared
+ring allocation.  Implementing it is recommended for any driver that has a
+meaningful preference; it is normally guarded by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_DRIVER_SPECIFIC_BUFFERS</span></code>.</p>
+</div>
+</section>
+<section id="polling-and-memory-mapping">
+<h2>Polling and Memory Mapping<a class="headerlink" href="#polling-and-memory-mapping" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">poll()</span></code> reports <code class="docutils literal notranslate"><span class="pre">POLLIN</span> <span class="pre">|</span> <span class="pre">POLLOUT</span></code> while the shared ring has room for more
+data, and adds <code class="docutils literal notranslate"><span class="pre">POLLERR</span></code> when the application has fallen behind the hardware
+read pointer, that is, on an under-run.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mmap()</span></code> is available when <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_FILEMAP</span></code> is enabled, and the
+requested length selects what gets mapped:</p>
+<ul class="simple">
+<li><p>a length equal to one buffer’s <code class="docutils literal notranslate"><span class="pre">nmaxbytes</span></code> maps the shared ring buffer
+selected by <code class="docutils literal notranslate"><span class="pre">offset</span> <span class="pre">/</span> <span class="pre">nmaxbytes</span></code>, allowing an application to fill samples
+without copying;</p></li>
+<li><p>a length equal to <code class="docutils literal notranslate"><span class="pre">sizeof(struct</span> <span class="pre">audio_status_s)</span></code> maps the device status,
+letting an application observe <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">head</span></code> and <code class="docutils literal notranslate"><span class="pre">tail</span></code> without an
+ioctl.</p></li>
+</ul>
+<p>Any other length is rejected with <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code>.</p>
+</section>
+<section id="ioctl-commands">
+<h2>IOCTL Commands<a class="headerlink" href="#ioctl-commands" title="Permalink to this heading"></a></h2>
+<p>All commands are defined in <code class="docutils literal notranslate"><span class="pre">include/nuttx/audio/audio.h</span></code>.  Unrecognised
+commands are forwarded to the lower-half driver, so a driver may add its own.</p>
+<section id="session-and-capability">
+<h3>Session and Capability<a class="headerlink" href="#session-and-capability" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETCAPS</span></code>
+Query device capabilities.  Argument is a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">audio_caps_s</span></code> with
+<code class="docutils literal notranslate"><span class="pre">ac_type</span></code> and <code class="docutils literal notranslate"><span class="pre">ac_subtype</span></code> set to describe what is being asked.  Returns
+<code class="docutils literal notranslate"><span class="pre">ac_len</span></code> on success.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_RESERVE</span></code> / <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_RELEASE</span></code>
+Acquire and release a session.  With <code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_MULTI_SESSION</span></code> the
+argument receives, respectively supplies, the session handle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_SHUTDOWN</span></code>
+Ask the lower half to release its hardware resources.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_HWRESET</span></code>
+Reset the hardware, for error recovery.</p></li>
+</ul>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_CONFIGURE</span></code>
+Set a parameter.  Argument is a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">audio_caps_desc_s</span></code>, and <code class="docutils literal notranslate"><span class="pre">ac_type</span></code>
+selects what is being configured: <code class="docutils literal notranslate"><span class="pre">AUDIO_TYPE_OUTPUT</span></code> or
+<code class="docutils literal notranslate"><span class="pre">AUDIO_TYPE_INPUT</span></code> for the stream format, <code class="docutils literal notranslate"><span class="pre">AUDIO_TYPE_FEATURE</span></code> for
+volume, balance, bass and treble, <code class="docutils literal notranslate"><span class="pre">AUDIO_TYPE_PROCESSING</span></code> for the
+processing chain.  Only the format variants advance the state machine.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETAUDIOINFO</span></code>
+Retrieve the current format as a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">audio_info_s</span></code>.  The lower half is
+asked first; if it does not answer, the format last set through
+<code class="docutils literal notranslate"><span class="pre">AUDIOIOC_CONFIGURE</span></code> is returned instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETLATENCY</span></code>, <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETPOSITION</span></code>
+Query the current latency, respectively playback position.</p></li>
+</ul>
+</section>
+<section id="buffer-management">
+<h3>Buffer Management<a class="headerlink" href="#buffer-management" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETBUFFERINFO</span></code> / <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_SETBUFFERINFO</span></code>
+Query, respectively override, the preferred buffer size and count as a
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ap_buffer_info_s</span></code>.  See <a class="reference internal" href="#buffer-ownership">Buffer Ownership</a> for the side effect of
+the query on the shared ring depth.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ALLOCBUFFER</span></code> / <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_FREEBUFFER</span></code>
+Allocate and release audio pipeline buffers.  See <a class="reference internal" href="#buffer-ownership">Buffer Ownership</a> for the
+two allocation modes and their return values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_ENQUEUEBUFFER</span></code>
+Hand a buffer to the driver.  <code class="docutils literal notranslate"><span class="pre">u.buffer</span></code> names a private buffer, or is
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> to submit the next slot of the shared ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_FLUSH</span></code>
+Discard queued buffers.</p></li>
+</ul>
+</section>
+<section id="transfer-control">
+<h3>Transfer Control<a class="headerlink" href="#transfer-control" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_START</span></code>
+Begin transferring.  Requires the device to have left <code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_OPEN</span></code>,
+otherwise it fails with <code class="docutils literal notranslate"><span class="pre">-EPERM</span></code>.  If the device is paused this resumes it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_STOP</span></code>
+Stop transferring.  The device enters <code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_DRAINING</span></code> until the
+lower half has returned every queued buffer.  Excluded by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_EXCLUDE_STOP</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_PAUSE</span></code> / <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_RESUME</span></code>
+Suspend and resume transferring.  Excluded by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME</span></code>.</p></li>
+</ul>
+</section>
+<section id="status-and-notification">
+<h3>Status and Notification<a class="headerlink" href="#status-and-notification" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETSTATUS</span></code>
+Copy out the device status as a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">audio_status_s</span></code>, containing the
+state and the <code class="docutils literal notranslate"><span class="pre">head</span></code> and <code class="docutils literal notranslate"><span class="pre">tail</span></code> indices of the shared ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_RESETSTATUS</span></code>
+Move this application’s write position to the current ring tail, discarding
+the backlog.  Used to recover from an under-run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_REGISTERMQ</span></code> / <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_UNREGISTERMQ</span></code>
+Register, respectively remove, the message queue on which the driver reports
+<code class="docutils literal notranslate"><span class="pre">AUDIO_MSG_DEQUEUE</span></code>, <code class="docutils literal notranslate"><span class="pre">AUDIO_MSG_COMPLETE</span></code> and error events.</p></li>
+</ul>
+</section>
+</section>
+<section id="multiple-applications">
+<h2>Multiple Applications<a class="headerlink" href="#multiple-applications" title="Permalink to this heading"></a></h2>
+<p>A single audio device may be opened by several applications at once.  Each
+<code class="docutils literal notranslate"><span class="pre">open()</span></code> gets its own private state, while the device-level state exposed
+through <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETSTATUS</span></code> is the aggregate: the upper half takes the
+highest-priority state among the open instances, which is why the
+<code class="docutils literal notranslate"><span class="pre">AUDIO_STATE_*</span></code> values are ordered.  In practice this means one application
+pausing does not stop a device another application is still using, and the
+lower half is only stopped once every instance has finished.</p>
+<p>Concurrent use relies on the shared ring described in <a class="reference internal" href="#buffer-ownership">Buffer Ownership</a>,
+since that is the only mode in which the upper half, rather than a single
+application, owns the buffers.  The upper half implements this, but no in-tree
+application exercises it yet.</p>
 </section>
 <section id="configuration-settings">
 <h2>Configuration Settings<a class="headerlink" href="#configuration-settings" title="Permalink to this heading"></a></h2>

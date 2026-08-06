@@ -413,6 +413,23 @@ popd
 make -j
 </pre></div>
 </div>
+<p>With CMake the user-space applications and the ROMFS image are built as
+part of the normal build (<code class="docutils literal notranslate"><span class="pre">genromfs</span></code> and <code class="docutils literal notranslate"><span class="pre">xxd</span></code> must be available on
+the host):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cmake -B build -GNinja -DBOARD_CONFIG=qemu-intel64/knsh_romfs .
+cmake --build build
+</pre></div>
+</div>
+<p>Then run the image with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 2G -kernel build/nuttx \
+    -nographic -serial mon:stdio
+</pre></div>
+</div>
+<p>The applications are installed to <code class="docutils literal notranslate"><span class="pre">build/bin</span></code> and mounted from ROMFS
+at <code class="docutils literal notranslate"><span class="pre">/system/bin</span></code>. The configuration does not set <code class="docutils literal notranslate"><span class="pre">CONFIG_PATH_INITIAL</span></code>,
+so start applications with an absolute path (<code class="docutils literal notranslate"><span class="pre">/system/bin/hello</span></code>) or
+enable <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_PATH_INITIAL=&quot;/system/bin&quot;</span></code>
+to resolve bare command names.</p>
 </section>
 <section id="knsh-romfs-pci">
 <h3>knsh_romfs_pci<a class="headerlink" href="#knsh-romfs-pci" title="Permalink to this heading"></a></h3>
