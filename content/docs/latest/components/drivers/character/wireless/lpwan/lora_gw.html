@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SX126x LoRa driver &mdash; NuttX latest documentation</title>
+  <title>LoRa gateway (concentrator) API &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
@@ -46,8 +46,8 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="SX127x LoRa radio" href="sx127x.html" />
-    <link rel="prev" title="LoRa gateway (concentrator) API" href="lora_gw.html" /> 
+    <link rel="next" title="SX126x LoRa driver" href="sx126x.html" />
+    <link rel="prev" title="LPWAN" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -235,9 +235,9 @@
           <li class="breadcrumb-item"><a href="../../index.html">Character Device Drivers</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Wireless character drivers</a></li>
           <li class="breadcrumb-item"><a href="index.html">LPWAN</a></li>
-      <li class="breadcrumb-item active">SX126x LoRa driver</li>
+      <li class="breadcrumb-item active">LoRa gateway (concentrator) API</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/character/wireless/lpwan/sx126x.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/apache/nuttx/blob/master/Documentation/components/drivers/character/wireless/lpwan/lora_gw.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -245,67 +245,124 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="sx126x-lora-driver">
-<h1>SX126x LoRa driver<a class="headerlink" href="#sx126x-lora-driver" title="Permalink to this heading"></a></h1>
-<p><strong>Currently experimental. Changes can happen in the near future</strong></p>
-<section id="short-introduction-sx126x">
-<h2>Short introduction SX126x<a class="headerlink" href="#short-introduction-sx126x" title="Permalink to this heading"></a></h2>
-<figure class="align-right">
-<img alt="../../../../../_images/SX1262.jpg" src="../../../../../_images/SX1262.jpg" />
-</figure>
-<p>The SX126x is a LoRa chip by Semtech. Sometimes also found in chips with a different name but the same or similar sillicon underneath.
-The older variant is the SX127x, even with its higher number. The SX126x series promises to improve the link budget. They also added extra spreading factors.</p>
-</section>
-<section id="userspace-api">
-<h2>Userspace API<a class="headerlink" href="#userspace-api" title="Permalink to this heading"></a></h2>
-<p>This driver is controlled as a character device and using IOCTL commands. At the time of writing this 24 February, 2025, there is no common API <strong>yet</strong> for LoRa devices and other RF devices under <code class="docutils literal notranslate"><span class="pre">/lpwan</span></code>.
-Currently this driver is controlled using older and driver specific IOCTL commands.</p>
-<section id="basic-rf-ioctl">
-<h3>Basic RF IOCTL<a class="headerlink" href="#basic-rf-ioctl" title="Permalink to this heading"></a></h3>
-<p>See <code class="docutils literal notranslate"><span class="pre">nuttx/wireless/ioctl.h</span></code> : <code class="docutils literal notranslate"><span class="pre">WLIOC_x</span></code> for setting the basic radio parameters such as frequency and power.
-Please note that frequency and power may be limited by the lower driver part at board logic.</p>
-</section>
-<section id="driver-dedicated-ioctl">
-<h3>Driver dedicated IOCTL<a class="headerlink" href="#driver-dedicated-ioctl" title="Permalink to this heading"></a></h3>
-<p>See <code class="docutils literal notranslate"><span class="pre">nuttx/wireless/lpwan/sx126x.h</span></code> : <code class="docutils literal notranslate"><span class="pre">SX126XIOC_x</span></code> for the commands.</p>
+  <section id="lora-gateway-concentrator-api">
+<span id="lora-gw"></span><h1>LoRa gateway (concentrator) API<a class="headerlink" href="#lora-gateway-concentrator-api" title="Permalink to this heading"></a></h1>
+<p>A LoRa gateway does not listen to one channel at a time as an end device
+does: a concentrator demodulates several channels at once, on two radio
+front-ends, and every packet arrives with its own frequency, spreading factor
+and coding rate. The commands that configure a radio, <code class="docutils literal notranslate"><span class="pre">WLIOC_SETRADIOFREQ</span></code>
+and the <code class="docutils literal notranslate"><span class="pre">WLIOC_LORA_x</span></code> family, therefore have nothing to act upon on such a
+device, and what it needs instead is a channel plan, a way to be started and
+stopped, and the counter its timestamps are taken from.</p>
+<p>This is the device independent interface those drivers implement, declared in
+<code class="docutils literal notranslate"><span class="pre">nuttx/wireless/lpwan/lora_gw.h</span></code>. An application drives a gateway through it
+and never names a chip.</p>
+<section id="character-device">
+<h2>Character device<a class="headerlink" href="#character-device" title="Permalink to this heading"></a></h2>
+<p>A driver of this class registers a character device, <code class="docutils literal notranslate"><span class="pre">/dev/lora0</span></code> by
+convention, on which:</p>
 <ul class="simple">
-<li><p>The packet type is set using <code class="docutils literal notranslate"><span class="pre">SX126XIOC_PACKETTYPESET</span></code> which takes <code class="docutils literal notranslate"><span class="pre">sx126x_packet_type_e</span></code> enums. <strong>Currently only LoRa packet type is supported.</strong></p></li>
-<li><p>LoRa modulation and LoRa packets are configured using <code class="docutils literal notranslate"><span class="pre">SX126XIOC_LORACONFIGSET</span></code> which takes a pointer to a <code class="docutils literal notranslate"><span class="pre">sx126x_lora_config_s</span></code> struct. This struct contains two separate structures for modulation and packet config. It is recommended to follow the SX126x datasheet at <a class="reference external" href="https://www.semtech.com/products/wireless-rf/lora-connect/sx1262">https://www.semtech.com/products/wireless-rf/lora-connect/sx1262</a> that gives more details about each parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code> returns whole multiples of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lora_gw_rxpkt_s</span></code>, oldest
+first, as many as fit in the buffer. It blocks until at least one packet is
+available unless the file was opened with <code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code>, and fails with
+<code class="docutils literal notranslate"><span class="pre">EINVAL</span></code> if the buffer cannot hold one whole packet.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write</span></code> takes exactly one <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lora_gw_txpkt_s</span></code>. The packet carries
+its own frequency, power, modulation and, for a LoRaWAN downlink,
+<code class="docutils literal notranslate"><span class="pre">invert_pol</span></code>. It is sent immediately with <code class="docutils literal notranslate"><span class="pre">LORA_GW_TX_IMMEDIATE</span></code> or at a
+concentrator timestamp with <code class="docutils literal notranslate"><span class="pre">LORA_GW_TX_TIMESTAMPED</span></code>.</p></li>
 </ul>
+<p>Both structures follow the layout of the userspace HAL that Semtech publishes
+for this family of chips, which is what gateway software is written against
+on other systems, so that such an application ports by replacing its
+<code class="docutils literal notranslate"><span class="pre">lgw_receive</span></code> with <code class="docutils literal notranslate"><span class="pre">read</span></code> and its <code class="docutils literal notranslate"><span class="pre">lgw_send</span></code> with <code class="docutils literal notranslate"><span class="pre">write</span></code>. Two things
+deliberately differ:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Unit</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rssi_dbm10</span></code>, <code class="docutils literal notranslate"><span class="pre">snr_db10</span></code></p></td>
+<td><p>Tenths of a dBm or dB, as integers, so that no floating point is
+needed in a driver</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">datarate</span></code></p></td>
+<td><p>The spreading factor as a plain number, 7 to 12, not a bit mask</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bandwidth</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LORA_GW_BW_125K</span></code>, <code class="docutils literal notranslate"><span class="pre">_250K</span></code> or <code class="docutils literal notranslate"><span class="pre">_500K</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">coderate</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">wlioc_lora_cr_e</span></code>, shared with the end device drivers</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LORA_GW_STAT_CRC_OK</span></code>, <code class="docutils literal notranslate"><span class="pre">_CRC_BAD</span></code> or <code class="docutils literal notranslate"><span class="pre">_NO_CRC</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>A packet reported as <code class="docutils literal notranslate"><span class="pre">LORA_GW_STAT_CRC_BAD</span></code> must never be forwarded as if
+it were valid: those are mostly correlator false triggers.</p>
 </section>
-<section id="reading-writing">
-<h3>Reading / Writing<a class="headerlink" href="#reading-writing" title="Permalink to this heading"></a></h3>
-<p>Reading and writing is done with the <code class="docutils literal notranslate"><span class="pre">read</span></code> and <code class="docutils literal notranslate"><span class="pre">write</span></code> functions.</p>
+<section id="ioctl-commands">
+<h2>IOCTL commands<a class="headerlink" href="#ioctl-commands" title="Permalink to this heading"></a></h2>
+<p>See <code class="docutils literal notranslate"><span class="pre">nuttx/wireless/ioctl.h</span></code> : <code class="docutils literal notranslate"><span class="pre">WLIOC_GW_x</span></code>.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">write</span></code> directly transmits the given bytes using the IOCTL configured parameters. <strong>Does not support polling or timeout yet.</strong></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code> takes a pointer to <code class="docutils literal notranslate"><span class="pre">sx126x_read_header_s</span></code>, which contains information about the received packet. <strong>RSSI and SNR aren’t implemented yet</strong>. <em>Note that packets are always received, even when the CRC (checked using ``.crc_error``) failed.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WLIOC_GW_START</span></code> resets the chip, loads the firmware of its internal
+MCUs, calibrates it and starts receiving on the selected channel plan.
+<code class="docutils literal notranslate"><span class="pre">WLIOC_GW_STOP</span></code> stops it and <code class="docutils literal notranslate"><span class="pre">WLIOC_GW_RESET</span></code> does both in sequence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WLIOC_GW_SETREGION</span></code> selects a channel plan by name, for example
+<code class="docutils literal notranslate"><span class="pre">&quot;AU915&quot;</span></code>, while the concentrator is stopped. <code class="docutils literal notranslate"><span class="pre">WLIOC_GW_GETREGION</span></code>
+takes a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lora_gw_regionreq_s</span></code>: an <code class="docutils literal notranslate"><span class="pre">index</span></code> of -1 describes the
+active plan, and 0 upwards enumerates the supported ones until <code class="docutils literal notranslate"><span class="pre">ENODEV</span></code>.
+The description that comes back lists the centre frequency of each radio
+and the frequency, radio and type of every channel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WLIOC_GW_GETSTATUS</span></code> fills a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">lora_gw_status_s</span></code> with the state
+of the concentrator and its counters, including the packets dropped
+because their CRC failed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WLIOC_GW_GETTRIGCNT</span></code> reads the internal counter of the concentrator, in
+microseconds. This is the time base a LoRaWAN network server schedules
+downlinks against.</p></li>
 </ul>
+<p>Whether the units of the packet should instead follow the ones of the end
+device commands, that is, bandwidth in Hz and levels scaled by a hundred as
+in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">wlioc_rx_hdr_s</span></code>, is a question for the common LoRa API rather
+than for one driver, and is left as it is until that API materialises.</p>
 </section>
+<section id="sx1301-driver">
+<h2>SX1301 driver<a class="headerlink" href="#sx1301-driver" title="Permalink to this heading"></a></h2>
+<p>The Semtech SX1301 is the baseband processor of a LoRaWAN gateway: eight
+multi-SF demodulators, one LoRa standard demodulator and one FSK
+demodulator, driven by two SX125x radio front-ends that are reached through
+an SPI bridge inside the SX1301 itself. It is the first implementation of the
+interface above and is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301</span></code>.</p>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301_SPIFREQ</span></code> is the SPI clock, up to 10 MHz.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301_DEFAULT_REGION</span></code> is the channel plan selected when
+the driver is registered: one of AU915, AU915-1, US915, US915-1, EU868,
+AS923, KR920 or IN866. AU915 and US915 default to the second sub-band,
+which is what The Things Network and the Brazilian deployments use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301_PRIVATE_NETWORK</span></code> switches the frame synchronisation
+word from the public LoRaWAN one to the private one.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301_RXBADCRC</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301_RXNOCRC</span></code>
+deliver the packets that a gateway normally drops, which is useful when
+bringing a shield up against an unknown transmitter.</p></li>
+</ul>
 </section>
 <section id="board-implementation">
-<h2>Board implementation<a class="headerlink" href="#board-implementation" title="Permalink to this heading"></a></h2>
-<p>The driver can be registered in board logic using <code class="docutils literal notranslate"><span class="pre">sx126x_register</span></code>, which takes an SPI bus, lower driver and the path.
-More information about <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sx126x_lower_s</span></code> parameters can be found in detail under <code class="docutils literal notranslate"><span class="pre">nuttx/wireless/lpwan/sx126x.h</span></code> : <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sx126x_lower_s</span></code>.</p>
-<p>This driver supports multiple instances using <code class="docutils literal notranslate"><span class="pre">dev_number</span></code> found in <code class="docutils literal notranslate"><span class="pre">sx126x_lower_s</span></code>. This is done so multiple channels of LoRa can work at the same time.</p>
-<p><strong>Do not assign random numbers in get_pa_values. This can damage the device depending on model. Refer to the manual</strong></p>
+<h3>Board implementation<a class="headerlink" href="#board-implementation" title="Permalink to this heading"></a></h3>
+<p>The driver is registered with <code class="docutils literal notranslate"><span class="pre">sx1301_register</span></code>, which takes the device
+path, an SPI bus and a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sx1301_lower_s</span></code>. That structure carries the
+two things the chip needs from the board: a <code class="docutils literal notranslate"><span class="pre">reset</span></code> hook driving its reset
+line, and an optional <code class="docutils literal notranslate"><span class="pre">band_select</span></code> hook for the shields whose front-end
+filters are switched between 868 and 915 MHz by a pair of GPIOs. See
+<code class="docutils literal notranslate"><span class="pre">nuttx/wireless/lpwan/sx1301.h</span></code>.</p>
+<p>A worked example, with the wiring of an LRWAN_GS_HF1 shield, the expected
+boot output and a gateway forwarding to a public network, is in the
+<a class="reference internal" href="../../../../../platforms/arm/stm32f7/boards/nucleo-f746zg/index.html#nucleo-f746zg"><span class="std std-ref">Nucleo F746ZG</span></a> page.</p>
 </section>
-<section id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h2>
-<p>A simple ping-pong test is made to test the device. This code can be used as an example. It is found here <a class="reference external" href="https://pastebin.com/71CdKZvm">https://pastebin.com/71CdKZvm</a>
-It takes the following parameters:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">-f</span></code> sets frequency in hz. The range is board depended.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-b</span></code> sets the bandwidth in kHz and automatically selects the closest sx126x supported bandwidth.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-s</span></code> sets the spreading factor between 5 and 12.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-p</span></code> sets the power in dBm. The range is board depended. Also PA setting depended.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-t</span></code> perform transmit. Transmit the following bytes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-r</span></code> perform receive. Receives and print.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-x</span></code> perform transmit and receive. Transmits following bytes and attempts to receives immediately. To be used with <code class="docutils literal notranslate"><span class="pre">-e</span></code> echo</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-e</span></code> perform echo. Listen and repeat.</p></li>
-</ul>
-<figure class="align-center">
-<img alt="Running sx126x -f 869250000 -b 250 -s 10 -p 22 -x &quot;HELLO&quot;" src="../../../../../_images/command_run0.jpg" />
-</figure>
 </section>
 </section>
 
@@ -313,8 +370,8 @@ It takes the following parameters:</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="lora_gw.html" class="btn btn-neutral float-left" title="LoRa gateway (concentrator) API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="sx127x.html" class="btn btn-neutral float-right" title="SX127x LoRa radio" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="LPWAN" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sx126x.html" class="btn btn-neutral float-right" title="SX126x LoRa driver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -297,8 +297,11 @@
            <div itemprop="articleBody">
              
   <section id="st-nucleo-f746zg">
-<h1>ST Nucleo F746ZG<a class="headerlink" href="#st-nucleo-f746zg" title="Permalink to this heading"></a></h1>
+<span id="nucleo-f746zg"></span><h1>ST Nucleo F746ZG<a class="headerlink" href="#st-nucleo-f746zg" title="Permalink to this heading"></a></h1>
 <p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-stm32.html"><span class="doc">chip:stm32</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-stm32f7.html"><span class="doc">chip:stm32f7</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-stm32f746.html"><span class="doc">chip:stm32f746</span></a></p>
+<figure class="align-center">
+<img alt="../../../../../_images/nucleo-f746zg.jpg" src="../../../../../_images/nucleo-f746zg.jpg" />
+</figure>
 <p>This page discusses issues unique to NuttX configurations for the STMicro
 Nucleo-144 board.  See ST document STM32 Nucleo-144 boards (UM1974):</p>
 <p><a class="reference external" href="https://www.st.com/resource/en/user_manual/dm00244518.pdf">https://www.st.com/resource/en/user_manual/dm00244518.pdf</a></p>
@@ -654,6 +657,37 @@ DAT2   PC10 CN11-1
 CD     PC11 CN11-2
 </pre></div>
 </div>
+</section>
+<section id="lora-concentrator-shield">
+<h2>LoRa Concentrator Shield<a class="headerlink" href="#lora-concentrator-shield" title="Permalink to this heading"></a></h2>
+<p>The board supports a LoRa gateway shield of the LRWAN_GS_HF1 family, such as
+the RisingHF RHF0M301, which carries a Semtech SX1301 baseband processor and
+two SX1257 radio front ends. The shield is wired to SPI4 on the morpho
+connector:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FUNCTION      GPIO  CONNECTOR
+------------  ----  ---------
+SPI4_SCK      PE12  CN11-49
+SPI4_MISO     PE13  CN11-47
+SPI4_MOSI     PE14  CN11-45
+SPI4_CS       PE11  CN11-53
+SX1301_RESET  PE15  active high
+BAND_SET1     PD15  D9,  front end filter select
+BAND_SET2     PE9   D6,  front end filter select
+------------  ----  ---------
+</pre></div>
+</div>
+<p>The chip select is driven as a plain output rather than by the hardware NSS,
+as the concentrator needs it held low for a whole burst. The two band
+selection lines drive the filter bank of the shield: 915 MHz uses SET1 low
+and SET2 high, 868 MHz the other way around.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301</span></code> selected, the board registers the concentrator
+at <code class="docutils literal notranslate"><span class="pre">/dev/lora0</span></code>, behind the device independent gateway interface. That
+interface, the configuration options of the driver and the channel plans it
+supports are documented in <a class="reference internal" href="../../../../../components/drivers/character/wireless/lpwan/lora_gw.html#lora-gw"><span class="std std-ref">LoRa gateway (concentrator) API</span></a>.</p>
+<p>The same shields usually carry a serial NOR flash on SPI5 (PF7 SCK, PF8
+MISO, PF9 MOSI, PF6 CS). The pins are defined in <code class="docutils literal notranslate"><span class="pre">include/board.h</span></code> and the
+chip select is handled by the board, but no MTD driver is registered for it
+yet.</p>
 <section id="configurations">
 <h3>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h3>
 </section>
@@ -763,6 +797,67 @@ CONFIG_ARM_TOOLCHAIN_GNU_EABI=y      : ARM GNU for Linux
 </div>
 </li>
 </ol>
+</section>
+<section id="lorawan-gw">
+<h2>lorawan_gw<a class="headerlink" href="#lorawan-gw" title="Permalink to this heading"></a></h2>
+<p>Turns the board into a LoRaWAN gateway: the SX1301 concentrator on SPI4 and
+the Ethernet interface with DHCP and DNS. The console is the virtual COM port
+on USART3.</p>
+<p>Selecting <code class="docutils literal notranslate"><span class="pre">CONFIG_WIRELESS_LORA_PKT_FWD</span></code> adds the Semtech UDP packet
+forwarder of <code class="docutils literal notranslate"><span class="pre">apps/wireless/lora_pkt_fwd</span></code>, which is what turns the
+concentrator into a gateway and provides the <code class="docutils literal notranslate"><span class="pre">lora</span></code> command used below.</p>
+<figure class="align-center" id="id1">
+<img alt="../../../../../_images/nucleo-f746zg-lora-sx1301.png" src="../../../../../_images/nucleo-f746zg-lora-sx1301.png" />
+<figcaption>
+<p><span class="caption-text">The board with an LRWAN_GS_HF1 shield mounted on the morpho headers.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<p>Build and flash:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh nucleo-f746zg:lorawan_gw
+$ make
+$ cp nuttx.bin /media/&lt;user&gt;/NODE_F746ZG/
+</pre></div>
+</div>
+<p>The forwarder and the concentrator are driven by the <code class="docutils literal notranslate"><span class="pre">lora</span></code> command, which
+mirrors the AT command set of the vendor gateway firmwares:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; lora                        # list the subcommands
+nsh&gt; lora sys                    # identity, network and channel plan
+nsh&gt; lora ch                     # show the channel plan
+nsh&gt; lora ch EU868               # change region: AU915, AU915-1, US915,
+                                 # US915-1, EU868, AS923, KR920, IN866
+nsh&gt; lora server &lt;host&gt; [up] [down]   # network server, name or address
+nsh&gt; lora start                  # start the concentrator and forward
+nsh&gt; lora status                 # counters of both sides
+nsh&gt; lora stop
+nsh&gt; lora tx 917200000 7 hello   # transmit one packet, for bring-up
+</pre></div>
+</div>
+<p>The last one exists to bring a gateway up without a network server: it
+sends a single packet with the polarity of an uplink, so any LoRa receiver
+tuned to the same frequency, spreading factor and 125 kHz bandwidth sees
+it.</p>
+<p>The default region is the second sub-band of AU915 (channels 8 to 15 plus the
+500 kHz channel 65), which is what The Things Network and the Brazilian
+deployments use; <code class="docutils literal notranslate"><span class="pre">AU915-1</span></code> selects the first sub-band instead. The default
+server and the gateway identifier come from the configuration
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_LORA_PKT_FWD_SERVER</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_LORA_PKT_FWD_EUI</span></code>) and both can
+be changed at runtime.</p>
+<p>A working session looks like this:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; lora start
+sx1301_reg_probe: SX1301 detected, version 0x67
+sx1301_setup_radio: Radio A: PLL locked at 917100000 Hz
+sx1301_setup_radio: Radio B: PLL locked at 917900000 Hz
+sx1301_calibrate: Calibration done, status 0xbf
+sx1301_agc_start: AGC running, radio map 0xf0
+sx1301_start: Concentrator started, modems 0x0b
+lora: forwarding to au1.cloud.thethings.network (up 1700, down 1700)
+sx1301_receive: RX chain 0 SF10 915200000 Hz snr 14.0 dB size 23 status 0x10
+lora: forwarded 1 packet(s)
+</pre></div>
+</div>
+<p>Note that the sync word has to match the devices: the driver configures the
+concentrator for a public LoRaWAN network, and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LPWAN_SX1301_PRIVATE_NETWORK</span></code> switches it to a private one.</p>
 </section>
 </section>
 

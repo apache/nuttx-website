@@ -286,9 +286,325 @@
            <div itemprop="articleBody">
              
   <section id="st-b-l072z-lrwan1">
-<h1>ST B-L072Z-LRWAN1<a class="headerlink" href="#st-b-l072z-lrwan1" title="Permalink to this heading"></a></h1>
+<span id="b-l072z-lrwan1"></span><h1>ST B-L072Z-LRWAN1<a class="headerlink" href="#st-b-l072z-lrwan1" title="Permalink to this heading"></a></h1>
 <p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-stm32.html"><span class="doc">chip:stm32</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-stm32l0.html"><span class="doc">chip:stm32l0</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-stm32l072.html"><span class="doc">chip:stm32l072</span></a></p>
-<p>The B-L072Z-LRWAN1 is a development board based on CMWX1ZZABZ-091 (STM32L072CZ and an SX1276 transceiver).</p>
+<figure class="align-center">
+<img alt="../../../../../_images/b-l072z-lrwan1.jpg" src="../../../../../_images/b-l072z-lrwan1.jpg" />
+</figure>
+<p>The B-L072Z-LRWAN1 is a LoRa and Sigfox discovery board built around the
+Murata CMWX1ZZABZ-091 module, which packs an STM32L072CZ microcontroller and
+a Semtech SX1276 sub-GHz transceiver into a single package. The board
+carries an SMA connector with a whip antenna, an on-board ST-LINK/V2-1 and
+Arduino Uno R3 compatible headers.</p>
+<section id="board-information">
+<h2>Board information<a class="headerlink" href="#board-information" title="Permalink to this heading"></a></h2>
+<p>The board features:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Murata CMWX1ZZABZ-091 module: STM32L072CZ (Cortex-M0+ up to 32 MHz,
+192 KiB flash, 20 KiB RAM) plus an SX1276 transceiver</p></li>
+<li><p>Programmable RF power, up to +14 dBm on the RFO path and +20 dBm on
+PA_BOOST</p></li>
+<li><p>SMA and U.FL antenna connectors</p></li>
+<li><p>32 MHz TCXO for the radio, powered from a GPIO</p></li>
+<li><p>On-board ST-LINK/V2-1 with mass storage programming and a virtual COM
+port</p></li>
+<li><p>Arduino Uno R3 headers plus the ST morpho extension headers</p></li>
+<li><p>Four LEDs and one user button</p></li>
+<li><p>USB 2.0 full speed device connector</p></li>
+<li><p>Powered from USB, from an external supply or from a battery</p></li>
+</ul>
+</div></blockquote>
+<p>Board documentation:
+<a class="reference external" href="https://www.st.com/en/evaluation-tools/b-l072z-lrwan1.html">https://www.st.com/en/evaluation-tools/b-l072z-lrwan1.html</a></p>
+</section>
+<section id="clocking">
+<h2>Clocking<a class="headerlink" href="#clocking" title="Permalink to this heading"></a></h2>
+<p>NuttX runs the part from the internal 16 MHz RC oscillator through the PLL,
+which gives a 32 MHz system clock. No external crystal is needed for the
+microcontroller; the 32 MHz TCXO of the module belongs to the radio.</p>
+</section>
+<section id="serial-console">
+<h2>Serial console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
+<p>USART2 is wired to the virtual COM port of the on-board ST-LINK and is the
+NuttX console in every configuration:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>USART2_TX</p></td>
+<td><p>PA2</p></td>
+</tr>
+<tr class="row-odd"><td><p>USART2_RX</p></td>
+<td><p>PA3</p></td>
+</tr>
+</tbody>
+</table>
+<p>Settings are 115200 8N1. With the board plugged in, the port shows up as
+<code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code> on Linux.</p>
+</section>
+<section id="leds">
+<h2>LEDs<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h2>
+<p>The board has four LEDs, all active high:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>LED</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Colour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>LED1</p></td>
+<td><p>PA5</p></td>
+<td><p>Green, also Arduino D13</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED2</p></td>
+<td><p>PB5</p></td>
+<td><p>Green</p></td>
+</tr>
+<tr class="row-even"><td><p>LED3</p></td>
+<td><p>PB6</p></td>
+<td><p>Blue</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED4</p></td>
+<td><p>PB7</p></td>
+<td><p>Red</p></td>
+</tr>
+</tbody>
+</table>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> is selected, LED1 is driven by the OS to show the
+system state:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>State</p></th>
+<th class="head"><p>LED1</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Idle stack created</p></td>
+<td><p>ON</p></td>
+</tr>
+<tr class="row-odd"><td><p>In an interrupt</p></td>
+<td><p>Flashing</p></td>
+</tr>
+<tr class="row-even"><td><p>Signal handler, assertion</p></td>
+<td><p>Flashing</p></td>
+</tr>
+<tr class="row-odd"><td><p>The system has crashed</p></td>
+<td><p>Blinking</p></td>
+</tr>
+</tbody>
+</table>
+<p>Otherwise the four LEDs are available to the application through
+<code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code> when <code class="docutils literal notranslate"><span class="pre">CONFIG_USERLED</span></code> is selected.</p>
+</section>
+<section id="buttons">
+<h2>Buttons<a class="headerlink" href="#buttons" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Button</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>B1 USER</p></td>
+<td><p>PB2</p></td>
+<td><p>Pulled up, active low, EXTI capable</p></td>
+</tr>
+<tr class="row-odd"><td><p>B2 RESET</p></td>
+<td><p>NRST</p></td>
+<td><p>Resets the microcontroller</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="radio">
+<h2>Radio<a class="headerlink" href="#radio" title="Permalink to this heading"></a></h2>
+<p>The SX1276 sits inside the module and is reached over SPI1. Besides the bus
+and the interrupt lines, three GPIOs drive the antenna switch and one powers
+the TCXO that clocks the radio:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SPI1_NSS</p></td>
+<td><p>PA15</p></td>
+<td><p>Chip select, driven as a GPIO</p></td>
+</tr>
+<tr class="row-odd"><td><p>SPI1_SCK</p></td>
+<td><p>PB3</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>SPI1_MISO</p></td>
+<td><p>PA6</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>SPI1_MOSI</p></td>
+<td><p>PA7</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>RESET</p></td>
+<td><p>PC0</p></td>
+<td><p>Active low</p></td>
+</tr>
+<tr class="row-odd"><td><p>DIO0</p></td>
+<td><p>PB4</p></td>
+<td><p>Transmit and receive done, EXTI capable</p></td>
+</tr>
+<tr class="row-even"><td><p>DIO1</p></td>
+<td><p>PB1</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>DIO2</p></td>
+<td><p>PB0</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>DIO3</p></td>
+<td><p>PC13</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>TCXO power</p></td>
+<td><p>PA12</p></td>
+<td><p>Active high, needs about 5 ms to settle</p></td>
+</tr>
+<tr class="row-even"><td><p>RX enable</p></td>
+<td><p>PA1</p></td>
+<td><p>Antenna switch towards RFI_HF</p></td>
+</tr>
+<tr class="row-odd"><td><p>TX RFO enable</p></td>
+<td><p>PC2</p></td>
+<td><p>Antenna switch towards RFO_HF, up to +14 dBm</p></td>
+</tr>
+<tr class="row-even"><td><p>TX BOOST enable</p></td>
+<td><p>PC1</p></td>
+<td><p>Antenna switch towards PA_BOOST</p></td>
+</tr>
+</tbody>
+</table>
+<p>The board support code powers the TCXO before registering the driver and
+picks the antenna switch position from the operating mode and the requested
+power: the RFO path is used up to 14 dBm and PA_BOOST above that. This board
+is wired for the high frequency band.</p>
+<p>The driver itself, its configuration options and what has to match between
+two radios to make them hear each other are documented in <a class="reference internal" href="../../../../../components/drivers/character/wireless/lpwan/sx127x.html#sx127x"><span class="std std-ref">SX127x LoRa radio</span></a>.</p>
+</section>
+<section id="other-peripherals">
+<h2>Other peripherals<a class="headerlink" href="#other-peripherals" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Interface</p></th>
+<th class="head"><p>Pins</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>USART1</p></td>
+<td><p>PA9 (TX), PA10 (RX), on the Arduino header</p></td>
+</tr>
+<tr class="row-odd"><td><p>SPI2</p></td>
+<td><p>PB12 (NSS), PB13 (SCK), PB14 (MISO), PB15 (MOSI)</p></td>
+</tr>
+<tr class="row-even"><td><p>I2C1</p></td>
+<td><p>PB8 (SCL), PB9 (SDA)</p></td>
+</tr>
+<tr class="row-odd"><td><p>ADC</p></td>
+<td><p>PA0, PA4 and the other Arduino analogue pins</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="flashing">
+<h2>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h2>
+<p>The board can be programmed through its own ST-LINK or through an external
+debug probe on the SWD header.</p>
+<p>With the ST-LINK, the simplest route is the mass storage device it exposes;
+copying the raw binary to it programs the flash:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cp nuttx.bin /media/&lt;user&gt;/DIS_L072Z/
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">openocd</span></code> and <code class="docutils literal notranslate"><span class="pre">st-flash</span></code> work as well.</p>
+<p>With a SEGGER J-Link on the SWD pins, use a command script:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cat &gt; flash.jlink &lt;&lt; EOF
+h
+loadbin nuttx.bin, 0x08000000
+r
+g
+q
+EOF
+$ JLinkExe -device STM32L072CZ -if SWD -speed 4000 -autoconnect 1 \
+           -nogui 1 -CommanderScript flash.jlink
+</pre></div>
+</div>
+<p>The virtual COM port of a stand-alone J-Link is not connected to USART2 of
+this board, so the console still comes from the ST-LINK USB cable.</p>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>Each configuration is selected with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh b-l072z-lrwan1:&lt;name&gt;
+$ make
+</pre></div>
+</div>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>The basic NuttShell configuration over USART2, with the <code class="docutils literal notranslate"><span class="pre">hello</span></code> example
+built in. A good first check that the board boots.</p>
+</section>
+<section id="adc">
+<h3>adc<a class="headerlink" href="#adc" title="Permalink to this heading"></a></h3>
+<p>NuttShell plus the <code class="docutils literal notranslate"><span class="pre">adc</span></code> example, reading the ADC with software triggered
+conversions.</p>
+</section>
+<section id="nxlines-oled">
+<h3>nxlines_oled<a class="headerlink" href="#nxlines-oled" title="Permalink to this heading"></a></h3>
+<p>Runs the <code class="docutils literal notranslate"><span class="pre">nxlines</span></code> graphics example on an SSD1306 OLED display connected to
+I2C1 (PB8 and PB9), in one bit per pixel mode.</p>
+</section>
+<section id="sx127x">
+<h3>sx127x<a class="headerlink" href="#sx127x" title="Permalink to this heading"></a></h3>
+<p>NuttShell plus the <code class="docutils literal notranslate"><span class="pre">sx127x</span></code> example and the SX1276 driver registered at
+<code class="docutils literal notranslate"><span class="pre">/dev/sx127x</span></code>. The example defaults to FSK at 930 MHz; everything can be
+overridden from the command line:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; sx127x -h
+nsh&gt; sx127x -m 0 -f 917200000 -t -p 14 -l 32   # transmit LoRa frames
+nsh&gt; sx127x -m 0 -f 917200000 -r               # receive them
+</pre></div>
+</div>
+</section>
+<section id="lorawan-tx">
+<h3>lorawan_tx<a class="headerlink" href="#lorawan-tx" title="Permalink to this heading"></a></h3>
+<p>The same interactive setup, but with the radio defaults already matching a
+public LoRaWAN network in the 915 MHz band: LoRa modulation, 917.2 MHz,
+125 kHz bandwidth, spreading factor 7, CRC enabled and the 0x34 sync word.
+Useful to feed a gateway under test:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; sx127x -m 0 -f 917200000 -t -p 14 -l 32 -i 5 -d 60
+</pre></div>
+</div>
+</section>
+<section id="lorawan-beacon">
+<h3>lorawan_beacon<a class="headerlink" href="#lorawan-beacon" title="Permalink to this heading"></a></h3>
+<p>The same radio settings without a shell: the example itself is the entry
+point and starts transmitting as soon as the board boots, which is what is
+needed when the board is driven from a debug probe and no console is wired.
+The command line of the example comes from <code class="docutils literal notranslate"><span class="pre">CONFIG_INIT_ARGS</span></code>, and the
+frequency, the payload size and the power from
+<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_SX127X_RFFREQ</span></code>, <code class="docutils literal notranslate"><span class="pre">_TXDATA</span></code> and <code class="docutils literal notranslate"><span class="pre">_TXPOWER</span></code>.</p>
+</section>
+</section>
+<section id="talking-to-another-radio">
+<h2>Talking to another radio<a class="headerlink" href="#talking-to-another-radio" title="Permalink to this heading"></a></h2>
+<p>Two of these boards reach each other with the <code class="docutils literal notranslate"><span class="pre">lorawan_tx</span></code> configuration,
+one receiving and the other transmitting, and the same commands work against
+a LoRaWAN gateway. The recipes, and the settings that have to match on both
+sides, are in <a class="reference internal" href="../../../../../components/drivers/character/wireless/lpwan/sx127x.html#sx127x"><span class="std std-ref">SX127x LoRa radio</span></a>.</p>
+</section>
 </section>
 
 
