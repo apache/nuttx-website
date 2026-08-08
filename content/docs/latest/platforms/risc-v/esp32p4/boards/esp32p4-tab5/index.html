@@ -265,7 +265,8 @@ assignments are documented below so they can be added later.</p>
 <ul class="simple">
 <li><p>ESP32-P4 (dual RISC-V &#64; 360 MHz), 16 MB flash, 32 MB Octal PSRAM</p></li>
 <li><p>ESP32-C6-MINI-1U companion (Wi-Fi 6 / BLE / Thread) over SDIO2</p></li>
-<li><p>5” MIPI-DSI IPS display, 1280x720 (ILI9881C), GT911 capacitive touch</p></li>
+<li><p>5” MIPI-DSI IPS display, 720x1280 (ST7121 or ST7123 on supported
+units; older revisions use ILI9881C + GT911)</p></li>
 <li><p>ES8388 audio codec + NS4150B speaker amp, ES7210 microphone array</p></li>
 <li><p>SC2356 2 MP MIPI-CSI camera</p></li>
 <li><p>BMI270 6-axis IMU, RX8130CE RTC, INA226 power monitor</p></li>
@@ -295,11 +296,19 @@ assignments are documented below so they can be added later.</p>
 <tr class="row-odd"><td><p>GPIO / BOOT button</p></td>
 <td><p>Yes</p></td>
 </tr>
+<tr class="row-even"><td><p>IO Expander (both)</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>MIPI-DSI host</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>ST7121/ST7123</p></td>
+<td><p>Yes</p></td>
+</tr>
 </tbody>
 </table>
 <p>Not yet implemented (pins and I2C addresses documented below):</p>
 <ul class="simple">
-<li><p>MIPI-DSI display (ILI9881C) and GT911 touch</p></li>
 <li><p>Audio (ES8388 / ES7210), camera (SC2356)</p></li>
 <li><p>INA226 power monitor — battery rail, 5 mOhm shunt (bus voltage = battery
 voltage; positive current = discharging, negative = charging)</p></li>
@@ -346,7 +355,7 @@ voltage; positive current = discharging, negative = charging)</p></li>
 <td><p>LCD backlight enable (LEDA, via ME2212 boost)</p></td>
 </tr>
 <tr class="row-even"><td><p>23</p></td>
-<td><p>Touch interrupt (TP_INT, GT911)</p></td>
+<td><p>Touch interrupt (TP_INT; ST7121/ST7123 or GT911)</p></td>
 </tr>
 <tr class="row-odd"><td><p>26</p></td>
 <td><p>I2S DSDIN (audio data to ES8388)</p></td>
@@ -432,7 +441,7 @@ reset.  <code class="docutils literal notranslate"><span class="pre">LCD_EN</spa
 <td><p>ES8388 audio codec</p></td>
 </tr>
 <tr class="row-odd"><td><p>0x14</p></td>
-<td><p>GT911 touch controller</p></td>
+<td><p>GT911 touch (older ILI9881 units)</p></td>
 </tr>
 <tr class="row-even"><td><p>0x32</p></td>
 <td><p>RX8130CE RTC</p></td>
@@ -449,7 +458,10 @@ reset.  <code class="docutils literal notranslate"><span class="pre">LCD_EN</spa
 <tr class="row-even"><td><p>0x44</p></td>
 <td><p>PI4IOE5V6408-2 IO expander (USB / Wi-Fi enables)</p></td>
 </tr>
-<tr class="row-odd"><td><p>0x68</p></td>
+<tr class="row-odd"><td><p>0x55</p></td>
+<td><p>ST7123 touch controller</p></td>
+</tr>
+<tr class="row-even"><td><p>0x68</p></td>
 <td><p>BMI270 IMU</p></td>
 </tr>
 </tbody>
@@ -463,6 +475,34 @@ is printed because the upstream default targets rev &gt;= 3.0.</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<section id="lvgl-demo">
+<h3>lvgl_demo<a class="headerlink" href="#lvgl-demo" title="Permalink to this heading"></a></h3>
+<p>LVGL demo configuration with touch support.
+Requires the ST7123 touch controller version.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This configuration redirects the console to UART0 instead of the USB Serial/JTAG port
+and sets a custom entry point to open LVGL demo on screen.</p>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>esp32p4-tab5:lvgl_demo
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="lvgl-term">
+<h3>lvgl_term<a class="headerlink" href="#lvgl-term" title="Permalink to this heading"></a></h3>
+<p>LVGL terminal configuration with touch support.
+Requires the ST7123 touch controller version.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This configuration redirects the console to UART0 instead of the USB Serial/JTAG port
+and sets a custom entry point to open LVGL terminal on screen.</p>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>esp32p4-tab5:lvgl_term
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
 <p>Basic NuttShell configuration (console enabled over the USB Serial/JTAG port,
