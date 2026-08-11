@@ -319,7 +319,7 @@ over the address space.</p>
 <span id="id2"></span><h2>On-Demand Paging<a class="headerlink" href="#on-demand-paging" title="Permalink to this heading"></a></h2>
 <p>NuttX also supports on-demand paging via <code class="docutils literal notranslate"><span class="pre">CONFIG_PAGING</span></code>.
 On-demand paging is a method of virtual memory management and requires
-the the CPU architecutre support a MMU.</p>
+the the CPU architecture support a MMU.</p>
 <p>In a system that uses on-demand paging, the OS responds to a page fault
 by copying data from some storage media into physical memory and setting up
 the MMU to provided the necessary virtual address mapping.
@@ -632,7 +632,7 @@ of functions that:</p>
 <ol class="arabic simple">
 <li><p>Have only one <code class="docutils literal notranslate"><span class="pre">.text</span></code> space in RAM, but</p></li>
 <li><p>Separate <code class="docutils literal notranslate"><span class="pre">.data</span></code> and <code class="docutils literal notranslate"><span class="pre">.bass</span></code> space, and are</p></li>
-<li><p>Separately linked into with the program in each address environmnet.</p></li>
+<li><p>Separately linked into with the program in each address environment.</p></li>
 </ol>
 <p>(not implemented).</p>
 </section>
@@ -695,7 +695,7 @@ at least in its current form.</p>
 <p>That full implementation of <code class="docutils literal notranslate"><span class="pre">mmap()</span></code> plus the minor changes
 to the NuttX ELF loader are all that are required to support fully
 share-able <code class="docutils literal notranslate"><span class="pre">.text</span></code> sections – as well as the memory savings
-from not carrying aroung the relocation and symbol information</p>
+from not carrying around the relocation and symbol information</p>
 <p>(Not implemented).</p>
 </section>
 </section>
@@ -824,10 +824,13 @@ the contemplate in any real detail:</p>
 and swap the state into physical memory as needed?(not implemented).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mmap()</span></code>. True shared memory and true file mapping could be supported.
 I am repeating myself (not implemented).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fork()</span></code>. The <code class="docutils literal notranslate"><span class="pre">fork()</span></code> interface could be supported. NuttX currently
-supports the “crippled” version, <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> but with these process address
-environments, the real <code class="docutils literal notranslate"><span class="pre">fork()</span></code> interface could be supported.
-(not implemented).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fork()</span></code>. The real <code class="docutils literal notranslate"><span class="pre">fork()</span></code> interface can be supported on configurations
+with a duplicable process address environment: an architecture implements
+<code class="docutils literal notranslate"><span class="pre">up_addrenv_fork()</span></code> and selects <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_FORK</span></code>. What is not
+implemented is
+copy-on-write:  the duplication copies the parent’s pages eagerly, which
+needs as much free memory as the parent occupies. Demand paging would fix
+that.</p></li>
 <li><p>Dynamic Stack Allocation. Completely eliminate the need for constant tuning
 of static stack sizes.(not implemented).</p></li>
 <li><p>Shared Libraries. Am I repeating myself again?(not implemented).</p></li>
@@ -874,8 +877,8 @@ The child task would crash immediately thereafter.</p></li>
 <p>So how do you create new tasks/processes in such a context.
 There is only one way possible; by using an interface that takes a file name
 as an argument (rather than absolute address).
-New processes started with <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> and <code class="docutils literal notranslate"><span class="pre">exec()</span></code> or with
-<code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> should not have any of these issues.</p>
+New processes started with <code class="docutils literal notranslate"><span class="pre">fork()</span></code> or <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> and <code class="docutils literal notranslate"><span class="pre">exec()</span></code>, or with
+<code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code>, should not have any of these issues.</p>
 </section>
 </section>
 <section id="arm-memory-management">

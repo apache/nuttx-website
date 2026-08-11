@@ -290,11 +290,12 @@
   <section id="rtl8721f-evb">
 <h1>RTL8721F EVB<a class="headerlink" href="#rtl8721f-evb" title="Permalink to this heading"></a></h1>
 <p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-rtl8721f.html"><span class="doc">chip:rtl8721f</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-arm.html"><span class="doc">arch:arm</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/vendor-realtek.html"><span class="doc">vendor:realtek</span></a></p>
-<div class="admonition-todo admonition" id="id1">
-<p class="admonition-title">Todo</p>
-<p>Add a photo of the RTL8721F EVB board here as <code class="docutils literal notranslate"><span class="pre">rtl8721f_evb.png</span></code> in this
-directory, referenced with a <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">figure::</span></code> directive.</p>
-</div>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="../../../../../_images/rtl8721f_evb.png"><img alt="Realtek RTL8721F EVB development board" src="../../../../../_images/rtl8721f_evb.png" style="width: 300.0px; height: 400.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">The RTL8721F EVB development board.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <p>The RTL8721F EVB is a Realtek RTL8721F evaluation board. NuttX runs on the
 KM4TZ application core — an Arm Cortex-M55-compatible core running at up to
 320 MHz. See the <a class="reference internal" href="../../index.html"><span class="doc">RTL8721F chip documentation</span></a> for the
@@ -315,6 +316,10 @@ full SoC specifications and the vendor-SDK dependency.</p>
 partition)</p></li>
 <li><p>Wi-Fi station and SoftAP through the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
 <li><p>DHCP client (STA) and DHCP server (SoftAP)</p></li>
+<li><p>GPIO pins exposed as <code class="docutils literal notranslate"><span class="pre">/dev/gpioN</span></code> character devices (input, output and
+interrupt), driven directly on the SDK fwlib register layer</p></li>
+<li><p>General-purpose UARTs exposed as <code class="docutils literal notranslate"><span class="pre">/dev/ttySN</span></code> serial devices, driven
+directly on the SDK fwlib register layer</p></li>
 </ul>
 </section>
 <section id="buttons-and-leds">
@@ -344,6 +349,25 @@ nsh&gt; gpio -w 1 /dev/gpio2     # wait for a falling-edge interrupt
 <p>Pins are encoded with the <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> / <code class="docutils literal notranslate"><span class="pre">AMEBA_PB()</span></code> helpers from
 <code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/ameba_gpio.h</span></code> (port A/B, pin 0-31), matching the
 Ameba SDK <code class="docutils literal notranslate"><span class="pre">PinName</span></code> layout.</p>
+</section>
+<section id="uart">
+<h3>uart<a class="headerlink" href="#uart" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the general-purpose UART driver and the <code class="docutils literal notranslate"><span class="pre">serialrx</span></code> /
+<code class="docutils literal notranslate"><span class="pre">serialblaster</span></code> examples enabled (no Wi-Fi). The LOG-UART owns the console
+and <code class="docutils literal notranslate"><span class="pre">/dev/ttyS0</span></code>, so the board registers UART0 from its table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8721f/rtl8721f_evb/src/rtl8721f_uart.c</span></code>) as <code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code> at
+115200 8N1. Edit that table – controller, TX/RX pads and baud – to match a
+board’s wiring. The TX/RX pads use the same <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> / <code class="docutils literal notranslate"><span class="pre">AMEBA_PB()</span></code>
+encoding as the GPIO table; the driver muxes them to the UART function and
+pulls RX high through the SDK ROM. Exercise the port with the examples (loop TX
+back to RX, or wire it to a host serial adapter):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; serialrx /dev/ttyS1 2600 &amp;     # start the receiver first
+nsh&gt; serialblaster /dev/ttyS1 2600  # then loop TX back to RX
+</pre></div>
+</div>
+<p>The line format can be changed at runtime through <code class="docutils literal notranslate"><span class="pre">tcsetattr()</span></code> (the config
+enables <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_TERMIOS</span></code>). UART3 is shared with Bluetooth and is not
+exposed by the driver.</p>
 </section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>

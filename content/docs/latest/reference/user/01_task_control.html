@@ -265,9 +265,10 @@ Points</a>.</p>
 <li><p><a class="reference internal" href="#c.getpid" title="getpid"><code class="xref c c-func docutils literal notranslate"><span class="pre">getpid()</span></code></a></p></li>
 </ul>
 </div></blockquote>
-<p>Standard <code class="docutils literal notranslate"><span class="pre">vfork</span></code> and <code class="docutils literal notranslate"><span class="pre">exec[v|l]</span></code> interfaces:</p>
+<p>Standard <code class="docutils literal notranslate"><span class="pre">fork</span></code>/<code class="docutils literal notranslate"><span class="pre">vfork</span></code> and <code class="docutils literal notranslate"><span class="pre">exec[v|l]</span></code> interfaces:</p>
 <blockquote>
 <div><ul class="simple">
+<li><p><a class="reference internal" href="#c.fork" title="fork"><code class="xref c c-func docutils literal notranslate"><span class="pre">fork()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.vfork" title="vfork"><code class="xref c c-func docutils literal notranslate"><span class="pre">vfork()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.exec" title="exec"><code class="xref c c-func docutils literal notranslate"><span class="pre">exec()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.execv" title="execv"><code class="xref c c-func docutils literal notranslate"><span class="pre">execv()</span></code></a></p></li>
@@ -539,6 +540,49 @@ function registered with <code class="docutils literal notranslate"><span class=
 <dd></dd></dl>
 
 <dl class="c function">
+<dt class="sig sig-object c" id="c.fork">
+<a class="reference internal" href="structures.html#c.pid_t" title="pid_t"><span class="n"><span class="pre">pid_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fork</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.fork" title="Permalink to this definition"></a><br /></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">fork()</span></code> creates a new process.  The child process is an exact copy of
+the calling process:  it receives <strong>its own copy</strong> of the parent’s memory,
+at the same virtual addresses.  Writes by the child are invisible to the
+parent and writes by the parent are invisible to the child.  The child may
+modify anything, call any function, return from the function in which
+<code class="docutils literal notranslate"><span class="pre">fork()</span></code> was called, and run indefinitely; it runs concurrently with the
+parent.  None of <code class="docutils literal notranslate"><span class="pre">vfork()</span></code>’s restrictions apply.</p>
+<blockquote>
+<div><p>NOTE: <code class="docutils literal notranslate"><span class="pre">fork()</span></code> requires an address environment that can be
+duplicated, and so it is available only where <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_FORK</span></code>
+is selected – which in turn requires <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ADDRENV</span></code> and an
+architecture that implements <code class="docutils literal notranslate"><span class="pre">up_addrenv_fork()</span></code>.  <strong>Where it cannot
+be provided it is not provided at all</strong>:  the declaration is
+absent from <code class="docutils literal notranslate"><span class="pre">unistd.h</span></code> and code that calls it fails to build.  That
+is deliberate.  A build error naming the function is strictly better
+than a <code class="docutils literal notranslate"><span class="pre">fork()</span></code> that silently gives the child the parent’s memory.
+See <a class="reference internal" href="../../guides/fork_vfork_migration.html"><span class="doc">Migrating to separate fork/vfork</span></a> for how to move code that
+relied on the previous behaviour.</p>
+<p>There is no copy-on-write, because NuttX has no demand paging to build
+it on, so the copy is eager:  forking a large process needs as much free
+memory as the process occupies and fails with <code class="docutils literal notranslate"><span class="pre">ENOMEM</span></code> otherwise.
+Spawn-heavy code should prefer <a class="reference internal" href="#c.posix_spawn" title="posix_spawn"><code class="xref c c-func docutils literal notranslate"><span class="pre">posix_spawn()</span></code></a> or
+<a class="reference internal" href="#c.vfork" title="vfork"><code class="xref c c-func docutils literal notranslate"><span class="pre">vfork()</span></code></a>, on NuttX as anywhere.</p>
+<p>Applications that relied on the historical NuttX <code class="docutils literal notranslate"><span class="pre">fork()</span></code> behaviour –
+shared memory, private stack, both running – want
+<a class="reference internal" href="08_pthread.html#c.pthread_create" title="pthread_create"><code class="xref c c-func docutils literal notranslate"><span class="pre">pthread_create()</span></code></a>, which is that memory relationship spelled
+clearly, or <a class="reference internal" href="#c.posix_spawn" title="posix_spawn"><code class="xref c c-func docutils literal notranslate"><span class="pre">posix_spawn()</span></code></a>.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Upon successful completion, <code class="docutils literal notranslate"><span class="pre">fork()</span></code> returns 0 to the child
+process and returns the process ID of the child process to the parent
+process. Otherwise, -1 is returned to the parent, no child process is
+created, and <code class="docutils literal notranslate"><span class="pre">errno</span></code> is set to indicate the error.</p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> Compatible with the POSIX interface of the same
+name.</p>
+</dd></dl>
+
+<dl class="c function">
 <dt class="sig sig-object c" id="c.vfork">
 <a class="reference internal" href="structures.html#c.pid_t" title="pid_t"><span class="n"><span class="pre">pid_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">vfork</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.vfork" title="Permalink to this definition"></a><br /></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> function has the same effect as
@@ -548,13 +592,18 @@ by <code class="docutils literal notranslate"><span class="pre">vfork()</span></
 from the function in which <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> was called, or calls any other
 function before successfully calling <code class="docutils literal notranslate"><span class="pre">_exit()</span></code> or one of the <code class="docutils literal notranslate"><span class="pre">exec</span></code>
 family of functions.</p>
+<p>The child <strong>shares</strong> the parent’s memory – nothing is copied, which is the
+entire point of <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> and the reason a caller chooses it – and the
+parent is <strong>suspended</strong> until the child calls <code class="docutils literal notranslate"><span class="pre">_exit()</span></code> or one of the
+<code class="docutils literal notranslate"><span class="pre">exec</span></code> family.  That suspension is what makes the sharing safe, and it is
+also the price:  the restrictions above exist because the child is running
+in the parent’s address space on borrowed time.</p>
 <blockquote>
-<div><p>NOTE: <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> is not an independent NuttX feature, but is
-implemented in architecture-specific logic (using only helper
-functions from the NuttX core logic). As a result, <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> may
-not be available on all architectures. The current implementation in
-NuttX arm64 only guarantees that <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> works when
-CONFIG_BUILD_FLAT=y.</p>
+<div><p>NOTE: <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> is implementable with or without an MMU and is
+available wherever <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_VFORK</span></code> is selected.  The
+suspension lives in the kernel primitive rather than in a libc
+<code class="docutils literal notranslate"><span class="pre">waitpid()</span></code>, so the parent is resumed at <code class="docutils literal notranslate"><span class="pre">exec()</span></code> as POSIX requires,
+and <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> does not depend on <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_WAITPID</span></code>.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -651,7 +700,14 @@ normal, two-step process: (1) first call <code class="docutils literal notransla
 thread, then (2) call <code class="docutils literal notranslate"><span class="pre">execv()</span></code> or <code class="docutils literal notranslate"><span class="pre">execl()</span></code> to replace the new
 thread with a program from the file system. Since the new thread will be
 terminated by the <code class="docutils literal notranslate"><span class="pre">execv()</span></code> or <code class="docutils literal notranslate"><span class="pre">execl()</span></code> call, it really served no
-purpose other than to support POSIX compatibility.</p>
+purpose other than to support POSIX compatibility. <a class="reference internal" href="#c.posix_spawn" title="posix_spawn"><code class="xref c c-func docutils literal notranslate"><span class="pre">posix_spawn()</span></code></a>
+does the same job in one step and should be preferred.</p>
+<p>Note also that <code class="docutils literal notranslate"><span class="pre">exec()</span></code> does not overlay the calling process: it starts
+the new program as a separate task. <code class="docutils literal notranslate"><span class="pre">exec_swap()</span></code> then exchanges the two
+pids, so that from the parent’s point of view the pid <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> returned
+does name the running program – but the <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> stub itself exits, and
+it is that exit which releases the suspended <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> parent. The parent
+therefore resumes at <code class="docutils literal notranslate"><span class="pre">exec()</span></code>, as POSIX requires.</p>
 <p>The non-standard binfmt function <code class="docutils literal notranslate"><span class="pre">exec()</span></code> needs to have (1) a symbol
 table that provides the list of symbols exported by the base code, and
 (2) the number of symbols in that table. This information is currently
