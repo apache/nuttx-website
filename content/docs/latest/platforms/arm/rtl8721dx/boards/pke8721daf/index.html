@@ -321,6 +321,8 @@ partition), backing the Wi-Fi key-value store</p></li>
 interrupt), driven directly on the SDK fwlib register layer</p></li>
 <li><p>General-purpose UARTs exposed as <code class="docutils literal notranslate"><span class="pre">/dev/ttySN</span></code> serial devices, driven
 directly on the SDK fwlib register layer</p></li>
+<li><p>I2C master buses exposed as <code class="docutils literal notranslate"><span class="pre">/dev/i2cN</span></code> character devices, driven directly
+on the SDK fwlib register layer</p></li>
 </ul>
 </section>
 <section id="buttons-and-leds">
@@ -376,6 +378,20 @@ nsh&gt; serialrx         # receive and dump bytes from /dev/ttyS1
 <p>The line format can be changed at runtime through <code class="docutils literal notranslate"><span class="pre">tcsetattr()</span></code> (the config
 enables <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_TERMIOS</span></code>). UART2 is shared with Bluetooth and is not
 exposed by the driver.</p>
+</section>
+<section id="i2c">
+<h3>i2c<a class="headerlink" href="#i2c" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the I2C master driver and the <code class="docutils literal notranslate"><span class="pre">i2ctool</span></code> (<code class="docutils literal notranslate"><span class="pre">system/i2c</span></code>)
+enabled (no Wi-Fi). The board registers its I2C controllers from a table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8721dx/pke8721daf/src/rtl8721dx_i2c.c</span></code>): I2C0 at <code class="docutils literal notranslate"><span class="pre">/dev/i2c0</span></code>
+on PB20/PB21 and I2C1 at <code class="docutils literal notranslate"><span class="pre">/dev/i2c1</span></code> on PB18/PB19. Edit that table –
+controller and SCL/SDA pads – to match a board’s wiring; the pads use the
+same <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> / <code class="docutils literal notranslate"><span class="pre">AMEBA_PB()</span></code> encoding as the GPIO table and are muxed
+to the I2C function through the SDK ROM. The I2C bus is open-drain, so fit
+external pull-ups on SCL/SDA. Probe a bus with the tool:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev -b 0 0x03 0x77     # scan /dev/i2c0 for devices
+</pre></div>
+</div>
 </section>
 </section>
 <section id="wi-fi">

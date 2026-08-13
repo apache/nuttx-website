@@ -316,6 +316,12 @@ specifications and the vendor-SDK dependency.</p>
 partition), backing the Wi-Fi key-value store</p></li>
 <li><p>Wi-Fi station and SoftAP through the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
 <li><p>DHCP client (STA) and DHCP server (SoftAP)</p></li>
+<li><p>GPIO pins exposed as <code class="docutils literal notranslate"><span class="pre">/dev/gpioN</span></code> character devices (input, output and
+interrupt), driven directly on the SDK fwlib register layer</p></li>
+<li><p>General-purpose UARTs exposed as <code class="docutils literal notranslate"><span class="pre">/dev/ttySN</span></code> serial devices, driven
+directly on the SDK fwlib register layer</p></li>
+<li><p>I2C master buses exposed as <code class="docutils literal notranslate"><span class="pre">/dev/i2cN</span></code> character devices, driven directly
+on the SDK fwlib register layer</p></li>
 </ul>
 </section>
 <section id="buttons-and-leds">
@@ -329,6 +335,56 @@ partition), backing the Wi-Fi key-value store</p></li>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>rtl8720f_evb:&lt;config-name&gt;
 </pre></div>
 </div>
+<section id="gpio">
+<h3>gpio<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the GPIO driver and the <code class="docutils literal notranslate"><span class="pre">gpio</span></code> example enabled (no Wi-Fi).
+The board registers three pins from its pin table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8720f/rtl8720f_evb/src/rtl8720f_gpio.c</span></code>): an output at
+<code class="docutils literal notranslate"><span class="pre">/dev/gpio0</span></code>, an input at <code class="docutils literal notranslate"><span class="pre">/dev/gpio1</span></code> and an interrupt pin at
+<code class="docutils literal notranslate"><span class="pre">/dev/gpio2</span></code>. Edit that table to match a board’s wiring. Exercise them with
+the example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gpio -o 1 /dev/gpio0     # drive the output high
+nsh&gt; gpio /dev/gpio1          # read the input
+nsh&gt; gpio -w 1 /dev/gpio2     # wait for a falling-edge interrupt
+</pre></div>
+</div>
+<p>RTL8720F drives all GPIO through a single port A controller, so pins are
+encoded with the <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> helper from
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/ameba_gpio.h</span></code> (pin 0-31), matching the Ameba SDK
+<code class="docutils literal notranslate"><span class="pre">PinName</span></code> layout.</p>
+</section>
+<section id="uart">
+<h3>uart<a class="headerlink" href="#uart" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the general-purpose UART driver and the <code class="docutils literal notranslate"><span class="pre">serialrx</span></code> /
+<code class="docutils literal notranslate"><span class="pre">serialblaster</span></code> examples enabled (no Wi-Fi). The LOG-UART owns the console
+and <code class="docutils literal notranslate"><span class="pre">/dev/ttyS0</span></code>, so the board registers UART0 from its table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8720f/rtl8720f_evb/src/rtl8720f_uart.c</span></code>) as <code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code> at
+115200 8N1. Edit that table – controller, TX/RX pads and baud – to match a
+board’s wiring. The TX/RX pads use the same <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> encoding as the
+GPIO table; the driver muxes them to the UART function and pulls RX high
+through the SDK ROM. Exercise the port with the examples (loop TX back to RX,
+or wire it to a host serial adapter):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; serialrx /dev/ttyS1 2600 &amp;     # start the receiver first
+nsh&gt; serialblaster /dev/ttyS1 2600  # then loop TX back to RX
+</pre></div>
+</div>
+<p>The line format can be changed at runtime through <code class="docutils literal notranslate"><span class="pre">tcsetattr()</span></code> (the config
+enables <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_TERMIOS</span></code>). UART2 is not exposed by the driver.</p>
+</section>
+<section id="i2c">
+<h3>i2c<a class="headerlink" href="#i2c" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the I2C master driver and the <code class="docutils literal notranslate"><span class="pre">i2ctool</span></code> (<code class="docutils literal notranslate"><span class="pre">system/i2c</span></code>)
+enabled (no Wi-Fi). The board registers its I2C controllers from a table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8720f/rtl8720f_evb/src/rtl8720f_i2c.c</span></code>): I2C0 at <code class="docutils literal notranslate"><span class="pre">/dev/i2c0</span></code>
+on PA22/PA23 and I2C1 at <code class="docutils literal notranslate"><span class="pre">/dev/i2c1</span></code> on PA24/PA25. Edit that table –
+controller and SCL/SDA pads – to match a board’s wiring; the pads use the
+same <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> encoding as the GPIO table and are muxed to the I2C
+function through the SDK ROM. The I2C bus is open-drain, so fit external
+pull-ups on SCL/SDA. Probe a bus with the tool:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev -b 0 0x03 0x77     # scan /dev/i2c0 for devices
+</pre></div>
+</div>
+</section>
 <section id="nsh">
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
 <p>Networking-enabled NSH with littlefs at <code class="docutils literal notranslate"><span class="pre">/data</span></code> and the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> Wi-Fi tool.

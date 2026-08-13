@@ -31,6 +31,12 @@ Supported in this NuttX port:
   partition), backing the Wi-Fi key-value store
 * Wi-Fi station and SoftAP through the ``wapi`` tool
 * DHCP client (STA) and DHCP server (SoftAP)
+* GPIO pins exposed as ``/dev/gpioN`` character devices (input, output and
+  interrupt), driven directly on the SDK fwlib register layer
+* General-purpose UARTs exposed as ``/dev/ttySN`` serial devices, driven
+  directly on the SDK fwlib register layer
+* I2C master buses exposed as ``/dev/i2cN`` character devices, driven directly
+  on the SDK fwlib register layer
 
 Buttons and LEDs
 ================
@@ -47,6 +53,58 @@ rtl8720f_evb`` first (the make build needs no sourcing).
 .. code:: console
 
    $ ./tools/configure.sh rtl8720f_evb:<config-name>
+
+gpio
+----
+
+Minimal NSH with the GPIO driver and the ``gpio`` example enabled (no Wi-Fi).
+The board registers three pins from its pin table (see
+``boards/arm/rtl8720f/rtl8720f_evb/src/rtl8720f_gpio.c``): an output at
+``/dev/gpio0``, an input at ``/dev/gpio1`` and an interrupt pin at
+``/dev/gpio2``. Edit that table to match a board's wiring. Exercise them with
+the example::
+
+    nsh> gpio -o 1 /dev/gpio0     # drive the output high
+    nsh> gpio /dev/gpio1          # read the input
+    nsh> gpio -w 1 /dev/gpio2     # wait for a falling-edge interrupt
+
+RTL8720F drives all GPIO through a single port A controller, so pins are
+encoded with the ``AMEBA_PA()`` helper from
+``arch/arm/src/common/ameba/ameba_gpio.h`` (pin 0-31), matching the Ameba SDK
+``PinName`` layout.
+
+uart
+----
+
+Minimal NSH with the general-purpose UART driver and the ``serialrx`` /
+``serialblaster`` examples enabled (no Wi-Fi). The LOG-UART owns the console
+and ``/dev/ttyS0``, so the board registers UART0 from its table (see
+``boards/arm/rtl8720f/rtl8720f_evb/src/rtl8720f_uart.c``) as ``/dev/ttyS1`` at
+115200 8N1. Edit that table -- controller, TX/RX pads and baud -- to match a
+board's wiring. The TX/RX pads use the same ``AMEBA_PA()`` encoding as the
+GPIO table; the driver muxes them to the UART function and pulls RX high
+through the SDK ROM. Exercise the port with the examples (loop TX back to RX,
+or wire it to a host serial adapter)::
+
+    nsh> serialrx /dev/ttyS1 2600 &     # start the receiver first
+    nsh> serialblaster /dev/ttyS1 2600  # then loop TX back to RX
+
+The line format can be changed at runtime through ``tcsetattr()`` (the config
+enables ``CONFIG_SERIAL_TERMIOS``). UART2 is not exposed by the driver.
+
+i2c
+---
+
+Minimal NSH with the I2C master driver and the ``i2ctool`` (``system/i2c``)
+enabled (no Wi-Fi). The board registers its I2C controllers from a table (see
+``boards/arm/rtl8720f/rtl8720f_evb/src/rtl8720f_i2c.c``): I2C0 at ``/dev/i2c0``
+on PA22/PA23 and I2C1 at ``/dev/i2c1`` on PA24/PA25. Edit that table --
+controller and SCL/SDA pads -- to match a board's wiring; the pads use the
+same ``AMEBA_PA()`` encoding as the GPIO table and are muxed to the I2C
+function through the SDK ROM. The I2C bus is open-drain, so fit external
+pull-ups on SCL/SDA. Probe a bus with the tool::
+
+    nsh> i2c dev -b 0 0x03 0x77     # scan /dev/i2c0 for devices
 
 nsh
 ---

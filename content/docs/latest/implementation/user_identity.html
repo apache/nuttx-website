@@ -176,12 +176,14 @@
 <li class="toctree-l2"><a class="reference internal" href="tls.html">TLS: Thread Local Storage</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">User and Group Identity</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supplementary-groups">Supplementary Groups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inheritance">Inheritance</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#privilege-transitions">Privilege Transitions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#setuid-and-setgid"><code class="docutils literal notranslate"><span class="pre">setuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setgid()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#seteuid-and-setegid"><code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setegid()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#setreuid-and-setregid"><code class="docutils literal notranslate"><span class="pre">setreuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setregid()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#getresuid-and-getresgid"><code class="docutils literal notranslate"><span class="pre">getresuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">getresgid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#setresuid-and-setresgid"><code class="docutils literal notranslate"><span class="pre">setresuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setresgid()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
@@ -242,15 +244,35 @@ process credentials. All threads within a task group share the same credentials
 <li><p><code class="docutils literal notranslate"><span class="pre">tg_euid</span></code> / <code class="docutils literal notranslate"><span class="pre">tg_egid</span></code> — effective IDs used for permission checks.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tg_suid</span></code> / <code class="docutils literal notranslate"><span class="pre">tg_sgid</span></code> — saved set-IDs that allow a non-root process to
 restore a previously held effective ID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tg_groups</span></code> / <code class="docutils literal notranslate"><span class="pre">tg_ngroups</span></code> — supplementary group IDs (when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_NGROUPS</span></code> is greater than zero).</p></li>
 </ul>
-<p>All six fields are zero-initialized at task creation, so the initial task runs
-as root (UID/GID 0) unless explicitly changed.</p>
+<p>All six primary credential fields are zero-initialized at task creation, so
+the initial task runs as root (UID/GID 0) unless explicitly changed.  The
+supplementary list starts empty.</p>
+</section>
+<section id="supplementary-groups">
+<h2>Supplementary Groups<a class="headerlink" href="#supplementary-groups" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_NGROUPS</span></code> is greater than zero:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">setgroups()</span></code> replaces the calling task group’s supplementary list
+(requires effective UID 0).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">getgroups()</span></code> returns that list as stored (may be empty after
+<code class="docutils literal notranslate"><span class="pre">setgroups(0,</span> <span class="pre">NULL)</span></code>).  The effective GID is not invented into an
+empty list; use <code class="docutils literal notranslate"><span class="pre">getegid()</span></code> for the effective GID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initgroups()</span></code> builds a membership list with <code class="docutils literal notranslate"><span class="pre">getgrouplist()</span></code> (from
+<code class="docutils literal notranslate"><span class="pre">/etc/group</span></code> when <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_GROUP_FILE</span></code> is enabled) and installs it
+with <code class="docutils literal notranslate"><span class="pre">setgroups()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NGROUPS_MAX</span></code> equals <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_NGROUPS</span></code>.</p></li>
+</ul>
+<p>Filesystem DAC (<code class="docutils literal notranslate"><span class="pre">fs_checkmode()</span></code>) grants the group-class mode bits when the
+file’s group matches <code class="docutils literal notranslate"><span class="pre">tg_egid</span></code> <strong>or</strong> any entry in <code class="docutils literal notranslate"><span class="pre">tg_groups</span></code>.</p>
 </section>
 <section id="inheritance">
 <h2>Inheritance<a class="headerlink" href="#inheritance" title="Permalink to this heading"></a></h2>
 <p>When a new task is created, <code class="docutils literal notranslate"><span class="pre">group_inherit_identity()</span></code> in
-<code class="docutils literal notranslate"><span class="pre">sched/group/group_create.c</span></code> copies all six credential fields from the parent
-task group to the child task group.</p>
+<code class="docutils literal notranslate"><span class="pre">sched/group/group_create.c</span></code> copies all credential fields — including the
+supplementary group list — from the parent task group to the child.</p>
 </section>
 <section id="privilege-transitions">
 <h2>Privilege Transitions<a class="headerlink" href="#privilege-transitions" title="Permalink to this heading"></a></h2>
@@ -275,8 +297,8 @@ ID.</p>
 <p>When the effective ID is non-zero, the requested value must equal the real or
 the saved ID. Otherwise the function returns <code class="docutils literal notranslate"><span class="pre">-1</span></code> with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set to
 <code class="docutils literal notranslate"><span class="pre">EPERM</span></code>.</p>
-<p>This implements the standard POSIX pattern of temporarily dropping privileges
-with <code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> or <code class="docutils literal notranslate"><span class="pre">setegid()</span></code> and later restoring them to the saved value.</p>
+<p>This implements temporary privilege drop with <code class="docutils literal notranslate"><span class="pre">seteuid()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">setegid()</span></code> and later restore from the saved ID.</p>
 </section>
 <section id="setreuid-and-setregid">
 <h3><code class="docutils literal notranslate"><span class="pre">setreuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setregid()</span></code><a class="headerlink" href="#setreuid-and-setregid" title="Permalink to this heading"></a></h3>
@@ -294,12 +316,38 @@ set-ID is set to the new effective ID.</p>
 <p>These functions return the real, effective, and saved set-IDs for the calling
 task group. Any output pointer may be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if that ID is not needed.</p>
 </section>
+<section id="setresuid-and-setresgid">
+<h3><code class="docutils literal notranslate"><span class="pre">setresuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setresgid()</span></code><a class="headerlink" href="#setresuid-and-setresgid" title="Permalink to this heading"></a></h3>
+<p>These functions set the real, effective, and saved set-IDs in one call.
+Pass <code class="docutils literal notranslate"><span class="pre">(uid_t)-1</span></code> / <code class="docutils literal notranslate"><span class="pre">(gid_t)-1</span></code> to leave an ID unchanged.  When the
+effective UID is zero, any values may be assigned.  When the effective
+UID is non-zero, each new ID must equal the current real, effective, or
+saved ID.</p>
+<p>Soft drop (keep saved-root):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>setresgid(gid, gid, 0);
+setresuid(uid, uid, 0);
+</pre></div>
+</div>
+<p>Hard drop (clear saved-root):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>setresgid(gid, gid, gid);
+setresuid(uid, uid, uid);
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">setresgid()</span></code> requires effective UID zero to assign arbitrary GIDs.
+Change group IDs before dropping the effective UID.</p>
+</section>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code></dt><dd><p>Enables per-task-group credential tracking. Without this option, stub
 root-only versions of all credential interfaces are provided.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_NGROUPS</span></code></dt><dd><p>Maximum supplementary group IDs per task group (default 8).  Visible only
+when <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> is enabled.  Becomes <code class="docutils literal notranslate"><span class="pre">NGROUPS_MAX</span></code>.
+<code class="docutils literal notranslate"><span class="pre">getgrouplist()</span></code> / <code class="docutils literal notranslate"><span class="pre">initgroups()</span></code> return failure (they do <strong>not</strong>
+silently truncate) when membership exceeds this limit; <code class="docutils literal notranslate"><span class="pre">initgroups()</span></code>
+also logs a warning.  Increase <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_NGROUPS</span></code> if needed.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PERMISSION</span></code></dt><dd><p>Enables filesystem ownership and permission enforcement. Requires
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_PSEUDOFS_ATTRIBUTES</span></code>.
