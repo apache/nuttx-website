@@ -322,6 +322,8 @@ interrupt), driven directly on the SDK fwlib register layer</p></li>
 directly on the SDK fwlib register layer</p></li>
 <li><p>I2C master buses exposed as <code class="docutils literal notranslate"><span class="pre">/dev/i2cN</span></code> character devices, driven directly
 on the SDK fwlib register layer</p></li>
+<li><p>SPI master buses exposed as <code class="docutils literal notranslate"><span class="pre">/dev/spiN</span></code> character devices, driven directly
+on the SDK fwlib register layer</p></li>
 </ul>
 </section>
 <section id="buttons-and-leds">
@@ -382,6 +384,25 @@ same <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</sp
 to the I2C function through the SDK ROM. The I2C bus is open-drain, so fit
 external pull-ups on SCL/SDA. Probe a bus with the tool:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev -b 0 0x03 0x77     # scan /dev/i2c0 for devices
+</pre></div>
+</div>
+</section>
+<section id="spi">
+<h3>spi<a class="headerlink" href="#spi" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the SPI master driver and the <code class="docutils literal notranslate"><span class="pre">spi</span></code> tool
+(<code class="docutils literal notranslate"><span class="pre">system/spi</span></code>) enabled (no Wi-Fi). The board registers two buses from its
+table (see <code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8721f/rtl8721f_evb/src/rtl8721f_spi.c</span></code>): SPI0 at
+<code class="docutils literal notranslate"><span class="pre">/dev/spi0</span></code> with CLK/MOSI/MISO on PA14/PA15/PA16 and a software chip-select
+on PA17, and SPI1 at <code class="docutils literal notranslate"><span class="pre">/dev/spi1</span></code> with CLK/MOSI/MISO on PB13/PB14/PB15 and a
+software chip-select on PB16. Edit that table – controller, CLK/MOSI/MISO
+pads and CS pad – to match a board’s wiring; the pads use the same
+<code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> / <code class="docutils literal notranslate"><span class="pre">AMEBA_PB()</span></code> encoding as the GPIO table and are muxed to
+the SPI function through the SDK ROM, while the chip-select is driven as a
+plain GPIO. Note that SPI0 and SPI1 route to different pad groups in the chip
+pin-mux spec (SPI0 on the PA group, SPI1 on the PB/PC group); pick pads the
+spec lists for that controller. Exercise a bus with the tool:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; spi exch -b 0 -x 4 deadbeef     # full-duplex transfer on /dev/spi0
+nsh&gt; spi exch -b 1 -x 4 deadbeef     # full-duplex transfer on /dev/spi1
 </pre></div>
 </div>
 </section>
