@@ -363,14 +363,13 @@ one or more triggers (which must all be satisfied simultaneously).</p>
 triggers (also known as property triggers, e.g., property:a=b). Actions can
 include multiple action triggers but only one event trigger. Triggers can be
 combined with &amp;&amp; to represent “AND” conditions.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Currently, only event triggers are supported.</p>
-</div>
-<div class="admonition-todo admonition" id="id1">
-<p class="admonition-title">Todo</p>
-<p>Implement action triggers.</p>
-</div>
+<p>The value of a property trigger is matched with <code class="docutils literal notranslate"><span class="pre">fnmatch</span></code>, so glob
+patterns are accepted. Use <code class="docutils literal notranslate"><span class="pre">!=</span></code> to trigger when the value does not match,
+e.g. <code class="docutils literal notranslate"><span class="pre">property:a!=b</span></code>. An <code class="docutils literal notranslate"><span class="pre">on</span> <span class="pre">&lt;event&gt;</span></code> action fires only on the edge when
+its condition becomes satisfied, not on every subsequent property update.</p>
+<p>Property (action) trigger support requires the <code class="docutils literal notranslate"><span class="pre">init_property_*()</span></code> backend
+to be provided; <code class="docutils literal notranslate"><span class="pre">property_simple.c</span></code> offers a minimal implementation that
+forwards <code class="docutils literal notranslate"><span class="pre">setprop</span></code> to the action manager.</p>
 <section id="event-trigger-execution-order">
 <h3>1. Event Trigger Execution Order<a class="headerlink" href="#event-trigger-execution-order" title="Permalink to this heading"></a></h3>
 <ol class="arabic simple">
@@ -412,10 +411,10 @@ with all log levels additionally enabled to facilitate debugging of the
 init.rc script.</p>
 <p>defconfig:</p>
 <div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gi">+CONFIG_INIT_ENTRYPOINT=&quot;init_main&quot;</span>
-<span class="gi">+CONFIG_SYSTEM_INIT=y</span>
-<span class="gi">+CONFIG_SYSTEM_INIT_DEBUG=y</span>
-<span class="gi">+CONFIG_SYSTEM_INIT_INFO=y</span>
-<span class="gi">+CONFIG_SYSTEM_INIT_WARN=y</span>
+<span class="gi">+CONFIG_SYSTEM_NXINIT=y</span>
+<span class="gi">+CONFIG_SYSTEM_NXINIT_DEBUG=y</span>
+<span class="gi">+CONFIG_SYSTEM_NXINIT_INFO=y</span>
+<span class="gi">+CONFIG_SYSTEM_NXINIT_WARN=y</span>
 </pre></div>
 </div>
 <p>init.rc:</p>
@@ -423,6 +422,9 @@ init.rc script.</p>
     start console        /* Start the service named &quot;console&quot; */
     sleep 1              /* Block for 1 second */
     exec_start mkdir_tmp /* Start the &quot;mkdir_tmp&quot; service and wait for exit */
+
+on boot &amp;&amp; property:sys.boot.reason=bootloader
+    echo &quot;On boot, the reason is BL.&quot;
     start fastboot
 
 service console sh
