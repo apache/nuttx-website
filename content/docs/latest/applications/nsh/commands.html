@@ -229,6 +229,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#shutdown-shut-the-system-down"><code class="docutils literal notranslate"><span class="pre">shutdown</span></code> Shut the system down</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#sleep-wait-for-seconds"><code class="docutils literal notranslate"><span class="pre">sleep</span></code> Wait for Seconds</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#su-switch-user-identity"><code class="docutils literal notranslate"><span class="pre">su</span></code> Switch User Identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sudo-run-a-command-as-root-setuid-helper"><code class="docutils literal notranslate"><span class="pre">sudo</span></code> Run a Command as Root (setuid helper)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#telnetd-time-start-the-telnet-daemon"><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Time Start the Telnet Daemon</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#time-time-execution-of-another-command"><code class="docutils literal notranslate"><span class="pre">time</span></code> Time execution of another command</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#top-monitor-tasks"><code class="docutils literal notranslate"><span class="pre">top</span></code> Monitor Tasks</a></li>
@@ -2019,6 +2020,79 @@ root
 nsh# su testuser
 nsh$ whoami
 testuser
+</pre></div>
+</div>
+</section>
+<section id="sudo-run-a-command-as-root-setuid-helper">
+<span id="cmdsudo"></span><h2><code class="docutils literal notranslate"><span class="pre">sudo</span></code> Run a Command as Root (setuid helper)<a class="headerlink" href="#sudo-run-a-command-as-root-setuid-helper" title="Permalink to this heading"></a></h2>
+<p><strong>Command Syntax</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo &lt;command&gt; [args...]
+</pre></div>
+</div>
+<p><strong>Synopsis</strong>. Run a single command with root privileges using a
+Linux-style setuid-root helper program (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_SUDO</span></code>).  The
+kernel raises the effective UID to the file owner when the <code class="docutils literal notranslate"><span class="pre">sudo</span></code> ELF
+is loaded (<code class="docutils literal notranslate"><span class="pre">S_ISUID</span></code> via <code class="docutils literal notranslate"><span class="pre">nx_mode</span></code> in the application build).
+<code class="docutils literal notranslate"><span class="pre">sudo</span></code> then:</p>
+<ol class="arabic simple">
+<li><p>Identifies the invoking user from the real UID (<code class="docutils literal notranslate"><span class="pre">getuid()</span></code>).</p></li>
+<li><p>Checks that user against the sudoers allowlist (<code class="docutils literal notranslate"><span class="pre">/etc/sudoers</span></code> and/or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_SUDO_ALLOWED_USERS</span></code>).  Real UID 0 is always allowed.</p></li>
+<li><p>Verifies that user’s password with <code class="docutils literal notranslate"><span class="pre">passwd_verify()</span></code> in userspace.</p></li>
+<li><p>Calls <code class="docutils literal notranslate"><span class="pre">setresuid()</span></code> / <code class="docutils literal notranslate"><span class="pre">setresgid()</span></code> / <code class="docutils literal notranslate"><span class="pre">initgroups()</span></code> to become
+fully root.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">execvp()``s</span> <span class="pre">the</span> <span class="pre">requested</span> <span class="pre">command,</span> <span class="pre">replacing</span> <span class="pre">the</span> <span class="pre">``sudo</span></code> process.</p></li>
+</ol>
+<p>Unlike the NSH <code class="docutils literal notranslate"><span class="pre">su</span></code> builtin (which changes the shell session),
+<code class="docutils literal notranslate"><span class="pre">sudo</span></code> runs one command and exits.  After a hard credential drop
+(<code class="docutils literal notranslate"><span class="pre">setuid()</span></code> to a non-zero user), unprivileged code cannot call
+<code class="docutils literal notranslate"><span class="pre">seteuid(0)</span></code>; executing the setuid <code class="docutils literal notranslate"><span class="pre">sudo</span></code> binary is the supported
+way to regain root for a single command.</p>
+<p><strong>Requirements</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 60.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code></p></td>
+<td><p>UID/GID tracking and setuid-on-exec</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">passwd_verify()</span></code> password check</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_EXECFUNCS</span></code></p></td>
+<td><p>Load the <code class="docutils literal notranslate"><span class="pre">sudo</span></code> ELF (not builtin main)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_SUDO</span></code></p></td>
+<td><p>Build and install the setuid helper</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_ETC_ROMFS_PASSWD_EXTRA_ENABLE</span></code></p></td>
+<td><p>Unprivileged <code class="docutils literal notranslate"><span class="pre">user</span></code> plus <code class="docutils literal notranslate"><span class="pre">/etc/sudoers</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_HELLO_RESTRICTED</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/bin/hello</span></code> as <code class="docutils literal notranslate"><span class="pre">-rwxr--r--</span></code> root</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example</strong> (login as root, then drop to a sudoers user):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh# id
+uid=0(root) gid=0(root)
+nsh# ls -l /bin/sudo
+ -rwsr-xr-x    root     root            0 /bin/sudo
+nsh# ls -l /bin/hello
+ -rwxr--r--    root     root            0 /bin/hello
+nsh# su user
+nsh$ /bin/hello
+nsh: /bin/hello: Permission denied
+nsh$ sudo /bin/hello
+[sudo] password for user:
+Hello, World!!
 </pre></div>
 </div>
 </section>

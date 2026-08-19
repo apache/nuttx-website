@@ -174,7 +174,14 @@
 <li class="toctree-l4"><a class="reference internal" href="usbmisc.html">USB Miscellaneous Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usbmonitor.html">USB Monitor support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="usrsock.html">Usrsock Driver</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">MMCSD Device Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">MMCSD Device Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#registering-a-card-slot">Registering a card slot</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bus-width-and-speed">Bus width and speed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#passing-commands-to-a-card">Passing commands to a card</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#inspecting-a-card">Inspecting a card</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="net/index.html">Network interface drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pci/index.html">PCI(e) Bus Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pinctrl.html">Pinctrl Device Drivers</a></li>
@@ -256,13 +263,180 @@
              
   <section id="mmcsd-device-drivers">
 <h1>MMCSD Device Drivers<a class="headerlink" href="#mmcsd-device-drivers" title="Permalink to this heading"></a></h1>
+<p>NuttX presents an MMC or SD card as a block device, <code class="docutils literal notranslate"><span class="pre">/dev/mmcsdN</span></code>, which a
+file system is then mounted on. The driver is in two parts: a generic upper
+half that knows the card protocols, and a lower half that moves bytes over
+whichever bus the card is wired to.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/mmcsd.h</span></code>. All structures and APIs needed to
-work with MMCSD drivers are provided in this header file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/mmcsd.h</span></code>. All structures and APIs needed to work with
+MMCSD drivers are provided in this header file.</p></li>
+</ul>
+<p>There are two upper halves, because the two buses are not variations of one
+protocol:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/mmcsd/mmcsd_sdio.c</span></code> drives a card through a real SD/MMC host
+controller, over the <a class="reference internal" href="sdio.html"><span class="doc">SDIO interface</span></a>. This is the one that can
+use a wide bus and high speed timing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/mmcsd/mmcsd_spi.c</span></code> drives a card over SPI, which every card
+supports as a fallback. It is one bit wide, slower, and has no notion of
+bus width or speed switching.</p></li>
 </ul>
 <p>Implementers of SDIO lower-half drivers should refer to the
 <a class="reference internal" href="sdio.html"><span class="doc">SDIO Driver Documentation</span></a> for details on R2/CSD response
 handling and correctly implementing the lower-half interface.</p>
+<section id="registering-a-card-slot">
+<h2>Registering a card slot<a class="headerlink" href="#registering-a-card-slot" title="Permalink to this heading"></a></h2>
+<p>Board logic registers one slot per card, once the bus it is on exists. For a
+card on an SD host controller:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/mmcsd.h&gt;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">sdio_dev_s</span><span class="w"> </span><span class="o">*</span><span class="n">sdio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sdio_initialize</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="n">mmcsd_slotinitialize</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">sdio</span><span class="p">);</span><span class="w">      </span><span class="cm">/* becomes /dev/mmcsd0 */</span>
+</pre></div>
+</div>
+<p>The first argument is the minor number, which names the device. For a card
+on SPI instead:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">spi_dev_s</span><span class="w"> </span><span class="o">*</span><span class="n">spi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">board_spibus_initialize</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="n">mmcsd_spislotinitialize</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">spi</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>where the second argument is the slot number, meaningful only on boards with
+more than one, and bounded by <code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_NSLOTS</span></code>.</p>
+<p>Neither call needs a card to be present. An empty slot is not an error: the
+driver reports the slot as empty, arms the media inserted event and returns
+success, so a board does not have to know at start up whether a card is
+fitted.</p>
+</section>
+<section id="bus-width-and-speed">
+<h2>Bus width and speed<a class="headerlink" href="#bus-width-and-speed" title="Permalink to this heading"></a></h2>
+<p>A card comes out of reset on a one bit bus at a low clock, because that is
+all a card is guaranteed to answer on before anything is known about it. The
+upper half then negotiates upward, and each step is taken only if the card
+and the host both allow it:</p>
+<ol class="arabic simple">
+<li><p><strong>Identification.</strong> <code class="docutils literal notranslate"><span class="pre">CLOCK_IDMODE</span></code>, below 400kHz, while the card is
+identified and its CID and CSD are read.</p></li>
+<li><p><strong>Bus width.</strong> If the card’s SCR says it supports four bits and the host
+did not report <code class="docutils literal notranslate"><span class="pre">SDIO_CAPS_1BIT_ONLY</span></code>, ACMD6 widens the bus and the clock
+moves to <code class="docutils literal notranslate"><span class="pre">CLOCK_SD_TRANSFER_4BIT</span></code>. Otherwise the card stays at
+<code class="docutils literal notranslate"><span class="pre">CLOCK_SD_TRANSFER_1BIT</span></code>.</p></li>
+<li><p><strong>High speed timing.</strong> See below.</p></li>
+</ol>
+<p>An eMMC part follows the same shape with its own commands and its own
+<code class="docutils literal notranslate"><span class="pre">CLOCK_MMC_TRANSFER_*</span></code> rates, and can be eight bits wide where the host
+reports <code class="docutils literal notranslate"><span class="pre">SDIO_CAPS_8BIT</span></code>.</p>
+<section id="high-speed-timing">
+<h3>High speed timing<a class="headerlink" href="#high-speed-timing" title="Permalink to this heading"></a></h3>
+<p>A card in default speed is rated to 25MHz. High speed timing doubles that,
+and is usually the difference between a card that transfers at 10MB/s and one
+that transfers at 20MB/s.</p>
+<p>Getting there needs agreement from three parties, and the upper half checks
+each in turn:</p>
+<p><strong>The host must be able to clock it.</strong> A lower half that can drive 50MHz says
+so by reporting <code class="docutils literal notranslate"><span class="pre">SDIO_CAPS_SD_HS_MODE</span></code> from <code class="docutils literal notranslate"><span class="pre">SDIO_CAPSET</span></code>. A host that
+omits the capability is never asked, and its cards stay at the default rate.
+The capability exists rather than the upper half simply trying, because
+nothing in the card protocol tells the upper half what a particular board’s
+wiring will stand.</p>
+<p><strong>The card must support it.</strong> The upper half sends CMD6, SWITCH_FUNC, asking
+for function 1 of function group 1, the access mode group. Every other group
+is passed 0xF, “no influence”, so exactly one function is changed and nothing
+else about the card’s configuration moves.</p>
+<p><strong>The card must confirm it.</strong> CMD6 returns a 512 bit status data structure,
+in which the field for function group 1 reports the function the card
+actually selected. A card that cannot comply reports 0xF there and the
+command still succeeds, so the R1 response alone proves nothing. Only when
+that field reads 1 does the upper half raise the clock to
+<code class="docutils literal notranslate"><span class="pre">CLOCK_SD_TRANSFER_4BIT_HS</span></code>.</p>
+<p>Anything else, at any step, leaves the card at <code class="docutils literal notranslate"><span class="pre">CLOCK_SD_TRANSFER_4BIT</span></code>.
+That includes a card predating the switch: CMD6 arrived in version 1.10 of
+the physical layer specification, and the SCR says which version a card
+implements, so older cards are not asked at all.</p>
+<p>High speed is attempted only on the four bit path. A card narrow enough to
+need the one bit path predates the switch command in any case.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A lower half that reports <code class="docutils literal notranslate"><span class="pre">SDIO_CAPS_SD_HS_MODE</span></code> <strong>must</strong> handle
+<code class="docutils literal notranslate"><span class="pre">CLOCK_SD_TRANSFER_4BIT_HS</span></code> in its clock method. The card is clocked
+before the switch can have happened and again afterwards, so a driver that
+treated the two rates alike would run a card still in default speed timing
+past the 25MHz it is rated for.</p>
+</div>
+</section>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD</span></code> builds the family. The options worth knowing:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_NSLOTS</span></code></p></td>
+<td><p>Slots per host, for boards with more than one</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_MMCSUPPORT</span></code></p></td>
+<td><p>Recognise eMMC and MMC parts, not only SD</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_READONLY</span></code></p></td>
+<td><p>Refuse writes; the card is still readable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_MULTIBLOCK_LIMIT</span></code></p></td>
+<td><p>Largest multi-block transfer, 0 for no limit</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_IOCSUPPORT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MMC_IOC_CMD</span></code> and <code class="docutils literal notranslate"><span class="pre">MMC_IOC_MULTI_CMD</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_HAVE_CARDDETECT</span></code></p></td>
+<td><p>The board wires a card detect pin</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_HAVE_WRITEPROTECT</span></code></p></td>
+<td><p>The board wires a write protect pin</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_SPI</span></code></p></td>
+<td><p>Build the SPI upper half</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_SPICLOCK</span></code></p></td>
+<td><p>Clock for the SPI path, default 20MHz</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MMCSD_PROCFS</span></code></p></td>
+<td><p>Add <code class="docutils literal notranslate"><span class="pre">/proc/mmcsd</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="passing-commands-to-a-card">
+<h2>Passing commands to a card<a class="headerlink" href="#passing-commands-to-a-card" title="Permalink to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_IOCSUPPORT</span></code>, <code class="docutils literal notranslate"><span class="pre">MMC_IOC_CMD</span></code> sends one command to the
+card and <code class="docutils literal notranslate"><span class="pre">MMC_IOC_MULTI_CMD</span></code> sends a sequence of up to
+<code class="docutils literal notranslate"><span class="pre">MMC_IOC_MAX_CMDS</span></code> (255) of them without releasing the card in between.
+Both take the same descriptor as Linux, <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mmc_ioc_cmd</span></code>, so tooling
+written against that interface works unchanged. One transfer is bounded by
+<code class="docutils literal notranslate"><span class="pre">MMC_IOC_MAX_BYTES</span></code>, 512KiB.</p>
+<p>This is how RPMB and other vendor specific facilities are reached, and it is
+deliberately low level: it hands a command to the card and does not interpret
+the result.</p>
+</section>
+<section id="inspecting-a-card">
+<h2>Inspecting a card<a class="headerlink" href="#inspecting-a-card" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_MMCSD_PROCFS</span></code> adds <code class="docutils literal notranslate"><span class="pre">/proc/mmcsd</span></code>, with a directory per registered
+card holding:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SD</span></code> or <code class="docutils literal notranslate"><span class="pre">MMC</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cid</span></code></p></td>
+<td><p>The card identification register, as raw hex</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">csd</span></code></p></td>
+<td><p>The card specific data register, as raw hex</p></td>
+</tr>
+</tbody>
+</table>
+<p>The registers are reported as the card gives them rather than decoded, so
+reading them means having the specification to hand. They are the quickest
+way to tell whether the card the driver found is the card that was expected.</p>
+</section>
 </section>
 
 

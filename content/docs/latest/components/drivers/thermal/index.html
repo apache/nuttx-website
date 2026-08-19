@@ -224,7 +224,7 @@
 <li><dl class="simple">
 <dt>Support Zone, Cooling Device and Governor</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Zone</span></code>: Responsible for monitoring the temperature of the specified area, obtains the temperature through the temperature sensor, and the sensor driver returns the temperature through callback function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Cooling</span> <span class="pre">Device</span></code>: A cooling device is a device that can reduce the temperature by using resources such as cpufreq, fan, etc. The cpufreq cooling device driver is preset to simplify CPU frequency modulation temperature control.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Cooling</span> <span class="pre">Device</span></code>: A cooling device is a device that can reduce the temperature by using resources such as devfreq, fan, etc. The devfreq cooling device driver is preset to simplify frequency modulation temperature control: it caps the frequency of the devfreq device named by <code class="docutils literal notranslate"><span class="pre">CONFIG_THERMAL_CDEV_DEVFREQ_NAME</span></code>, which must be registered before <code class="docutils literal notranslate"><span class="pre">thermal_init()</span></code> runs.</p></li>
 <li><dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">Governor</span></code>: For temperature control, you can use the preset or custom registered one, preset “step_wise” governor:</dt><dd><ul>
 <li><p>When the temperature of the “Zone” reaches the temperature trip point, and the temperature change trend rises or stabilizes (“step_wise” obtains the value of the corresponding “Zone” every 20ms [<code class="docutils literal notranslate"><span class="pre">CONFIG_THERMAL_DUMMY_POLLING_DELAY=200</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK=100</span></code>]), the current temperature equals to OR greater than the last obtained temperature value), improve the state of the “Cooling Device” (trigger the cooling operation executed by the corresponding state, Through <code class="docutils literal notranslate"><span class="pre">set_state</span></code>).</p></li>
@@ -319,8 +319,8 @@ static struct dummy_zone_device_s g_dummy_zone =
 <li><p>Get binding info:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; cat /proc/thermal/cpu-thermal
 z:cpu-thermal t:77 t:1 h:16 l:0 c:fan0 s:7|7
-z:cpu-thermal t:77 t:1 h:3 l:3 c:cpufreq s:3|3
-z:cpu-thermal t:77 t:2 h:2 l:0 c:cpufreq s:3|2
+z:cpu-thermal t:77 t:1 h:3 l:3 c:cpu s:3|3
+z:cpu-thermal t:77 t:2 h:2 l:0 c:cpu s:3|2
 </pre></div>
 </div>
 </li>
@@ -372,7 +372,7 @@ static const struct thermal_zone_map_s g_dummy_maps[] =
 {
   {
     .trip_name = &quot;cpu_alert1&quot;,
-    .cdev_name = &quot;cpufreq&quot;,
+    .cdev_name = CONFIG_THERMAL_CDEV_DEVFREQ_NAME,
     .low    = 3,
     .high   = THERMAL_NO_LIMIT,
     .weight = 20
@@ -386,7 +386,7 @@ static const struct thermal_zone_map_s g_dummy_maps[] =
   },
   {
     .trip_name = &quot;cpu_alert0&quot;,
-    .cdev_name = &quot;cpufreq&quot;,
+    .cdev_name = CONFIG_THERMAL_CDEV_DEVFREQ_NAME,
     .low    = THERMAL_NO_LIMIT,
     .high   = 2,
     .weight = 20

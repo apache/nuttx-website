@@ -308,6 +308,18 @@ frequency. A device that would rather waste power than stall picks this.</p></li
 <li><p><code class="docutils literal notranslate"><span class="pre">DEVFREQ_CONFLICT_PREFER_LOW</span></code> clamps to the ceiling and chooses the lower
 frequency. A device protecting a thermal or power budget picks this.</p></li>
 </ul>
+<p>The thermal framework is one such requester. With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_THERMAL_CDEV_DEVFREQ</span></code> it registers a cooling device over the
+devfreq device named by <code class="docutils literal notranslate"><span class="pre">CONFIG_THERMAL_CDEV_DEVFREQ_NAME</span></code>, and each
+cooling state installs a ceiling one entry further down the table. Drivers
+that expect to be throttled should carry <code class="docutils literal notranslate"><span class="pre">DEVFREQ_CONFLICT_PREFER_LOW</span></code>, so
+that the ceiling wins against anything asking for more.</p>
+<p>A table of <em>n</em> usable frequencies gives the cooling device a maximum state of
+<em>n</em> - 1: state zero caps at the highest frequency, which leaves the device
+unthrottled, and the maximum state caps at the lowest. Entries of
+<code class="docutils literal notranslate"><span class="pre">DEVFREQ_ENTRY_INVALID</span></code> are not frequencies the device can be held at, so
+they earn no state, and the <code class="docutils literal notranslate"><span class="pre">low</span></code> and <code class="docutils literal notranslate"><span class="pre">high</span></code> bounds of a thermal zone’s
+cooling map therefore count usable frequencies rather than table positions.</p>
 <p>The resolved <code class="docutils literal notranslate"><span class="pre">[min,</span> <span class="pre">max]</span></code> is then snapped to the table: <code class="docutils literal notranslate"><span class="pre">min</span></code> rounds up to
 the lowest entry at or above it, <code class="docutils literal notranslate"><span class="pre">max</span></code> rounds down to the highest entry at
 or below it. The governor picks within that snapped range, and the lower half

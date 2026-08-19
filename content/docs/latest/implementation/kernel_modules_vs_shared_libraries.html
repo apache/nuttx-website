@@ -157,6 +157,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Kernel Modules vs Shared Libraries</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Kernel Modules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shared-libraries">Shared Libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building-a-shared-library">Building a Shared Library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flat-build">FLAT Build</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#protected-build">PROTECTED Build</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#opening-a-library-more-than-once">Opening a Library More Than Once</a></li>
@@ -272,6 +273,28 @@ The <code class="docutils literal notranslate"><span class="pre">.text</span></c
 The <code class="docutils literal notranslate"><span class="pre">.data</span></code> and <code class="docutils literal notranslate"><span class="pre">.bss</span></code> address space is in the same address space
 as the application that uses the shared library.
 So, they are shared in the sense that the <code class="docutils literal notranslate"><span class="pre">.text</span></code> is shared.</p>
+</section>
+<section id="building-a-shared-library">
+<h2>Building a Shared Library<a class="headerlink" href="#building-a-shared-library" title="Permalink to this heading"></a></h2>
+<p>Applications can declare a loadable shared library with the Android.mk-style
+helper in <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code>. Include <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code>, set the module name and its C
+or C++ sources, then include <code class="docutils literal notranslate"><span class="pre">BUILD_SHARED_LIBRARY</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>include $(APPDIR)/Make.defs
+
+LOCAL_PATH := $(CURDIR)
+LOCAL_MODULE := my-new-lib
+LOCAL_SRC_FILES := my-source-file.cpp another-file.cpp
+
+include $(BUILD_SHARED_LIBRARY)
+</pre></div>
+</div>
+<p>The build writes the relocatable ELF library to
+<code class="docutils literal notranslate"><span class="pre">$(BINDIR)/$(LOCAL_MODULE)</span></code>. Set <code class="docutils literal notranslate"><span class="pre">LOCAL_MODULE_FILENAME</span></code> when the runtime
+interface requires another name, such as <code class="docutils literal notranslate"><span class="pre">libmy-new-lib.so</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LOCAL_CFLAGS</span></code>, <code class="docutils literal notranslate"><span class="pre">LOCAL_CXXFLAGS</span></code>, <code class="docutils literal notranslate"><span class="pre">LOCAL_LDFLAGS</span></code>, and <code class="docutils literal notranslate"><span class="pre">LOCAL_LDLIBS</span></code>
+add module-specific options. The selected architecture must provide the NuttX
+module compiler and linker flags. Exported symbols must have default
+visibility for <code class="docutils literal notranslate"><span class="pre">dlsym()</span></code> or use by another library.</p>
 </section>
 <section id="flat-build">
 <h2>FLAT Build<a class="headerlink" href="#flat-build" title="Permalink to this heading"></a></h2>

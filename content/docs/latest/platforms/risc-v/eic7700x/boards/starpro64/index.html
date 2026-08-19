@@ -47,7 +47,7 @@
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
     <link rel="next" title="Espressif ESP32-C3 (Legacy)" href="../../../esp32c3-legacy/index.html" />
-    <link rel="prev" title="ESWIN EIC7700X" href="../../index.html" /> 
+    <link rel="prev" title="ESWIN EIC7700 EVB" href="../eic7700-evb/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -152,6 +152,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../c906/index.html">THEAD C906</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html">ESWIN EIC7700X</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="../eic7700-evb/index.html">ESWIN EIC7700 EVB</a></li>
 <li class="toctree-l5 current"><a class="current reference internal" href="#">PINE64 StarPro64</a></li>
 </ul>
 </li>
@@ -231,6 +232,7 @@
              
   <section id="pine64-starpro64">
 <h1>PINE64 StarPro64<a class="headerlink" href="#pine64-starpro64" title="Permalink to this heading"></a></h1>
+<p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-eic7700x.html"><span class="doc">chip:eic7700x</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-risc-v.html"><span class="doc">arch:risc-v</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/vendor-pine64.html"><span class="doc">vendor:pine64</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning reference internal" href="../../../../../_tags/experimental.html"><span class="doc">experimental</span></a></p>
 <p><a class="reference external" href="https://lupyuen.github.io/articles/starpro64">PINE64 StarPro64</a>
 is a RISC-V Single-Board Computer based on the ESWIN EIC7700X RISC-V SoC
 with Quad-Core 64-bit RISC-V CPU, 32 GB LPDDR5 RAM and 100 Mbps Ethernet.</p>
@@ -311,15 +313,20 @@ to the <code class="docutils literal notranslate"><span class="pre">PATH</span><
 <span class="gp">$ </span>tools/mkimport.sh<span class="w"> </span>-z<span class="w"> </span>-x<span class="w"> </span>../nuttx/nuttx-export-*.tar.gz
 <span class="gp">$ </span>make<span class="w"> </span>import
 <span class="gp">$ </span><span class="nb">popd</span>
-<span class="gp">$ </span>genromfs<span class="w"> </span>-f<span class="w"> </span>initrd<span class="w"> </span>-d<span class="w"> </span>../apps/bin<span class="w"> </span>-V<span class="w"> </span><span class="s2">&quot;NuttXBootVol&quot;</span>
 </pre></div>
 </div>
-<p>This generates the Initial RAM Disk <code class="docutils literal notranslate"><span class="pre">initrd</span></code>.</p>
-<p>Package the NuttX Kernel and Initial RAM Disk into a NuttX Image:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>head<span class="w"> </span>-c<span class="w"> </span><span class="m">65536</span><span class="w"> </span>/dev/zero<span class="w"> </span>&gt;/tmp/nuttx.pad
-<span class="gp">$ </span>cat<span class="w"> </span>nuttx.bin<span class="w"> </span>/tmp/nuttx.pad<span class="w"> </span>initrd<span class="w"> </span>&gt;Image-starpro64
+<p>Package the NuttX Kernel and the applications into a NuttX Image:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>boards/risc-v/eic7700x/common/tools/mkimage.sh
 </pre></div>
 </div>
+<p>The image is the kernel, then padding, then a RAM disk holding the
+applications.  Use the script rather than padding by hand.  The RAM disk is
+found at run time by searching memory for its header, and that search runs
+after BSS has been cleared, so the disk has to start above <code class="docutils literal notranslate"><span class="pre">_ebss</span></code> or it
+is zeroed before anything looks for it.  The script reads <code class="docutils literal notranslate"><span class="pre">_ebss</span></code> from the
+kernel and pads to suit; a fixed pad works only until BSS grows past it, and
+when it does the board hangs during start up with nothing on the console at
+all, because the failure happens before there is a console to report it.</p>
 <p>The NuttX Image <code class="docutils literal notranslate"><span class="pre">Image-starpro64</span></code> will be copied to the TFTP Server in the next step.</p>
 </section>
 <section id="booting">
@@ -392,7 +399,7 @@ Serial Console is enabled on UART0 at 115.2 kbps.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../index.html" class="btn btn-neutral float-left" title="ESWIN EIC7700X" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../eic7700-evb/index.html" class="btn btn-neutral float-left" title="ESWIN EIC7700 EVB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../../../esp32c3-legacy/index.html" class="btn btn-neutral float-right" title="Espressif ESP32-C3 (Legacy)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

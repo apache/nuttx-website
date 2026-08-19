@@ -289,6 +289,30 @@ higher level device driver.</p></li>
 <h2>Implementing an SDIO lower-half<a class="headerlink" href="#implementing-an-sdio-lower-half" title="Permalink to this heading"></a></h2>
 <p>When implementing a new SDMMC controller driver (SDIO lower-half), it must
 provide the interface defined in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sdio_dev_s</span></code>.</p>
+<section id="high-speed-timing">
+<h3>High speed timing<a class="headerlink" href="#high-speed-timing" title="Permalink to this heading"></a></h3>
+<p>A lower-half that can clock a card above the default rate says so in the
+capabilities it reports from <code class="docutils literal notranslate"><span class="pre">SDIO_CAPSET</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SDIO_CAPS_MMC_HS_MODE</span></code> for eMMC, and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SDIO_CAPS_SD_HS_MODE</span></code> for SD cards.</p></li>
+</ul>
+<p>The upper-half only performs the CMD6 switch that puts a card into high
+speed timing if the corresponding capability is reported, so a host that
+cannot clock 50MHz simply omits it and its cards stay at the default rate.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SDIO_CLOCK</span></code> is then called with one of two additional rates once the
+card has confirmed the switch:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CLOCK_MMC_TRANSFER_4BIT</span></code> and <code class="docutils literal notranslate"><span class="pre">CLOCK_SD_TRANSFER_4BIT</span></code> are the
+default speed rates, up to 25MHz for SD and 26MHz for eMMC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CLOCK_SD_TRANSFER_4BIT_HS</span></code> is high speed, up to 50MHz.</p></li>
+</ul>
+<p>A lower-half reporting <code class="docutils literal notranslate"><span class="pre">SDIO_CAPS_SD_HS_MODE</span></code> must handle the high speed
+rate in its clock method.  The card is clocked twice during
+initialization, once before the switch can have happened, so a driver that
+treats the two rates alike would run a card in default speed past the
+25MHz it is rated for.</p>
+</section>
 <section id="call-flow-simplified-example">
 <h3>Call-flow (simplified example)<a class="headerlink" href="#call-flow-simplified-example" title="Permalink to this heading"></a></h3>
 <p>The full SDIO/MMCSD call-flow for card identification and initialization

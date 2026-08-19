@@ -152,6 +152,7 @@
 <li class="toctree-l4"><a class="reference internal" href="efuse.html">EFUSE Drivers</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">GPIO Drivers</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#application-programming-interface">Application Programming Interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#proc-gpio">/proc/gpio</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#io-expander-device-drivers">IO Expander Device Drivers</a></li>
 </ul>
@@ -413,6 +414,68 @@ path <code class="docutils literal notranslate"><span class="pre">examples/gpio<
 to read, write or configure GPIO pins.</p>
 </section>
 </section>
+<section id="proc-gpio">
+<h2>/proc/gpio<a class="headerlink" href="#proc-gpio" title="Permalink to this heading"></a></h2>
+<p>The pins are visible in <code class="docutils literal notranslate"><span class="pre">/dev</span></code> and each can be read through its own node
+with the commands above, but doing that for a whole board means an open and
+two ioctls per pin, and the signal and interrupt counters are not exposed
+that way at all.  <code class="docutils literal notranslate"><span class="pre">CONFIG_GPIO_PROCFS</span></code> adds <code class="docutils literal notranslate"><span class="pre">/proc/gpio</span></code>, which puts
+every registered pin in one place:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>gpio0        type:INPUT             val:1 regs:0 ints:0 pad:GPIO27 port:A.27
+gpio1        type:OUTPUT            val:0 regs:0 ints:0 pad:GPIO28 port:A.28
+gpio2        type:INT_BOTH          val:1 regs:1 ints:42 pad:GPIO29 port:A.29 armed:both
+</pre></div>
+</div>
+<p>Every line carries the same <code class="docutils literal notranslate"><span class="pre">key:value</span></code> tokens in the same order, so the
+file can be parsed as well as read:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Token</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p>The pin type, from <code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">gpio_pintype_e</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val</span></code></p></td>
+<td><p>The pin’s current value, or <code class="docutils literal notranslate"><span class="pre">-</span></code> if it cannot be read</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regs</span></code></p></td>
+<td><p>How many times the pin has been registered for signals</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ints</span></code></p></td>
+<td><p>How many interrupts the pin has taken</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Anything after those comes from the pin’s lower half.</p>
+<section id="describing-a-pin-from-the-lower-half">
+<h3>Describing a pin from the lower half<a class="headerlink" href="#describing-a-pin-from-the-lower-half" title="Permalink to this heading"></a></h3>
+<p>The upper half already knows a pin’s type, value and counters, so a lower
+half only supplies what it alone can say: which pad carries the line, how
+the trigger is configured, and so on. That is the optional
+<code class="docutils literal notranslate"><span class="pre">go_describe</span></code> method, which writes further <code class="docutils literal notranslate"><span class="pre">key:value</span></code> fields and
+leaves the rest of the line to the renderer:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">mychip_describe</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">gpio_dev_s</span><span class="w"> </span><span class="o">*</span><span class="n">dev</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">extra</span><span class="p">,</span>
+<span class="w">                           </span><span class="kt">size_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mychip_gpio_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mychip_gpio_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">dev</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">snprintf</span><span class="p">(</span><span class="n">extra</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pad:%u port:%c.%u&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">pad</span><span class="p">,</span>
+<span class="w">           </span><span class="sc">&#39;A&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">port</span><span class="p">,</span><span class="w"> </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">pin</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It is optional: a pin whose lower half omits it is listed with the common
+tokens and nothing more. A lower half needs no procfs knowledge of its
+own, since the renderer owns the line.</p>
+<p>The option depends on <code class="docutils literal notranslate"><span class="pre">FS_PROCFS_REGISTER</span></code> and is off by default.</p>
+</section>
+</section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
 <p>This section describes GPIO driver configuration in <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code>. The reader
@@ -421,7 +484,8 @@ should refer to target documentation for target specific configuration.</p>
 <code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_NPOLLWAITERS</span></code> is used to specify the maximum number of threads
 that can be waiting on poll with default set to one. It is also possible
 to register signals with the GPIO driver. The number of allowed signals
-is configured with <code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_NSIGNALS</span></code>.</p>
+is configured with <code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_NSIGNALS</span></code>. <code class="docutils literal notranslate"><span class="pre">CONFIG_GPIO_PROCFS</span></code> adds
+<code class="docutils literal notranslate"><span class="pre">/proc/gpio</span></code>, described above.</p>
 </section>
 <section id="io-expander-device-drivers">
 <h2>IO Expander Device Drivers<a class="headerlink" href="#io-expander-device-drivers" title="Permalink to this heading"></a></h2>

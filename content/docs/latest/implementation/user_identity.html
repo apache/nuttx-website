@@ -186,6 +186,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#setresuid-and-setresgid"><code class="docutils literal notranslate"><span class="pre">setresuid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setresgid()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#setuid-on-exec">Setuid-on-exec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pseudo-filesystem-ownership">Pseudo-Filesystem Ownership</a></li>
 </ul>
@@ -336,6 +337,17 @@ setresuid(uid, uid, uid);
 <p><code class="docutils literal notranslate"><span class="pre">setresgid()</span></code> requires effective UID zero to assign arbitrary GIDs.
 Change group IDs before dropping the effective UID.</p>
 </section>
+</section>
+<section id="setuid-on-exec">
+<h2>Setuid-on-exec<a class="headerlink" href="#setuid-on-exec" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">binfmt</span></code> loads an executable with the set-user-ID bit set
+(<code class="docutils literal notranslate"><span class="pre">S_ISUID</span></code> in <code class="docutils literal notranslate"><span class="pre">nx_mode</span></code>), the new task group’s effective and saved
+UIDs become the file owner’s UID while the real UID remains the caller’s.
+This is the mechanism used by the setuid-root <code class="docutils literal notranslate"><span class="pre">sudo</span></code> helper
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_SUDO</span></code>); see <a class="reference internal" href="../applications/nsh/commands.html#cmdsudo"><span class="std std-ref">sudo Run a Command as Root (setuid helper)</span></a>.  A valid test logs in as
+root, drops to an unprivileged sudoers account (<code class="docutils literal notranslate"><span class="pre">su</span> <span class="pre">user</span></code>), confirms
+that account cannot exec a root-only binary, then runs that binary
+through <code class="docutils literal notranslate"><span class="pre">sudo</span></code>.</p>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
