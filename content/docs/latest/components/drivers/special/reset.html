@@ -159,7 +159,14 @@
 <li class="toctree-l4"><a class="reference internal" href="lcd.html">LCD Character Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mtd/index.html">Memory Technology Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="regmap.html">drivers/regmap</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Reset Driver</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Reset Driver</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#consumer-interface">Consumer interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#controller-interface">Controller interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#reading-the-lines-back">Reading the lines back</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#proc-reset">/proc/reset</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#remote-controllers">Remote controllers</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="rpmsg/index.html">RPMsg</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rptun/index.html">RPTUN (Remoteproc Tunnel)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rwbuffer.html"><code class="docutils literal notranslate"><span class="pre">rwbuffer.c</span></code></a></li>
@@ -256,6 +263,233 @@
              
   <section id="reset-driver">
 <h1>Reset Driver<a class="headerlink" href="#reset-driver" title="Permalink to this heading"></a></h1>
+<p>Many SoCs hold their peripherals in reset until software releases them, and
+share one reset line between several peripherals.  The reset framework lets a
+driver ask for the line its device needs and assert or release it, without
+knowing which register holds the bit or who else shares it.</p>
+<p>A <strong>reset controller</strong> is the hardware block that owns the lines, described by
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">reset_controller_dev</span></code> and registered by an architecture or board.  A
+<strong>reset control</strong> is one consumer’s handle on one line, obtained by name or by
+index and released when the consumer is done.</p>
+<p><code class="docutils literal notranslate"><span class="pre">include/nuttx/reset/reset.h</span></code> declares what a consumer uses;
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/reset/reset-controller.h</span></code> declares what a controller
+implements.  <code class="docutils literal notranslate"><span class="pre">CONFIG_RESET</span></code> builds the framework.</p>
+<section id="consumer-interface">
+<h2>Consumer interface<a class="headerlink" href="#consumer-interface" title="Permalink to this heading"></a></h2>
+<p>A consumer obtains a handle on one line of a named controller, uses it, and
+puts it back:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">reset_control</span><span class="w"> </span><span class="o">*</span><span class="n">rstc</span><span class="p">;</span>
+
+<span class="n">rstc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reset_control_get_exclusive_by_index</span><span class="p">(</span><span class="s">&quot;mychip-reset&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">rstc</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ENODEV</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="n">reset_control_deassert</span><span class="p">(</span><span class="n">rstc</span><span class="p">);</span><span class="w">           </span><span class="cm">/* let the peripheral run */</span>
+<span class="p">...</span>
+<span class="n">reset_control_put</span><span class="p">(</span><span class="n">rstc</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">reset_control_get()</span></code> takes the controller name, the line’s index, and
+whether the handle is shared and already acquired.  The wrappers name the
+usual combinations, and are what a driver should normally call:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Handle</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reset_control_get_exclusive()</span></code></p></td>
+<td><p>exclusive, acquired</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reset_control_get_exclusive_released()</span></code></p></td>
+<td><p>exclusive, not yet acquired</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reset_control_get_shared()</span></code></p></td>
+<td><p>shared</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reset_control_get_exclusive_by_index()</span></code></p></td>
+<td><p>exclusive, acquired, by index</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reset_control_get_shared_by_index()</span></code></p></td>
+<td><p>shared, by index</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">reset_control_array_get()</span></code> takes several lines of one controller as a
+single handle, so that one call asserts or releases all of them.</p>
+<p>The operations are:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">reset_control_assert()</span></code></dt><dd><p>Put the line into reset and leave it there.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reset_control_deassert()</span></code></dt><dd><p>Take the line out of reset.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reset_control_reset()</span></code></dt><dd><p>Pulse a self deasserting reset: the controller asserts and releases the line
+itself.  For a line that resets automatically this is the only correct
+operation; asserting such a line by hand is not meaningful.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reset_control_status()</span></code></dt><dd><p>Report the line’s state.  Returns 1 while the line is asserted, 0 once it is
+released, or a negated errno.  <code class="docutils literal notranslate"><span class="pre">-ENOTSUP</span></code> means the controller cannot read
+the line back.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reset_control_acquire()</span></code> and <code class="docutils literal notranslate"><span class="pre">reset_control_release()</span></code></dt><dd><p>Take and give back the right to drive an exclusive line.  A handle from
+<code class="docutils literal notranslate"><span class="pre">reset_control_get_exclusive()</span></code> arrives already acquired; one from
+<code class="docutils literal notranslate"><span class="pre">reset_control_get_exclusive_released()</span></code> does not, and asserting it before
+acquiring returns <code class="docutils literal notranslate"><span class="pre">-EPERM</span></code>.  This lets two drivers share a line in turn
+without either holding it permanently.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reset_control_put()</span></code></dt><dd><p>Give the handle back.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reset_control_device_reset()</span></code></dt><dd><p>Pulse the reset of a named device without holding a handle across the call.</p>
+</dd>
+</dl>
+<section id="shared-and-exclusive-lines">
+<h3>Shared and exclusive lines<a class="headerlink" href="#shared-and-exclusive-lines" title="Permalink to this heading"></a></h3>
+<p>One line often resets several peripherals at once, and a <strong>shared</strong> handle is
+how a driver says it is not the only user.  Shared handles are counted:
+<code class="docutils literal notranslate"><span class="pre">reset_control_deassert()</span></code> releases the line on the first call and only
+counts on later ones, and <code class="docutils literal notranslate"><span class="pre">reset_control_assert()</span></code> asserts it only when the
+last consumer has asserted.  A driver therefore gets its peripheral running
+without deciding on behalf of the others when it may stop.</p>
+<p>An <strong>exclusive</strong> handle assumes a single owner and drives the line
+immediately.  Mixing the two on one line defeats the counting, so ask for what
+the hardware really is: an exclusive handle on a shared line lets one driver
+reset a peripheral another is still using.</p>
+<p>Shared handles must not be pulsed and asserted by the same consumer:
+<code class="docutils literal notranslate"><span class="pre">reset_control_reset()</span></code> and <code class="docutils literal notranslate"><span class="pre">reset_control_assert()</span></code> each refuse with
+<code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> if the other has been used on that handle.</p>
+</section>
+</section>
+<section id="controller-interface">
+<h2>Controller interface<a class="headerlink" href="#controller-interface" title="Permalink to this heading"></a></h2>
+<p>A controller fills in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">reset_controller_dev</span></code> and calls
+<code class="docutils literal notranslate"><span class="pre">reset_controller_register()</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">reset_controller_dev</span><span class="w"> </span><span class="n">g_mychip_rcdev</span><span class="w"> </span><span class="o">=</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="p">.</span><span class="n">name</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mychip-reset&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">ops</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">g_mychip_reset_ops</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">nlines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MYCHIP_NRESETS</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="n">reset_controller_register</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_mychip_rcdev</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">name</span></code> identifies the controller to <code class="docutils literal notranslate"><span class="pre">reset_control_get()</span></code> and heads its
+section in <code class="docutils literal notranslate"><span class="pre">/proc/reset</span></code>.  <code class="docutils literal notranslate"><span class="pre">nlines</span></code> bounds the ids <code class="docutils literal notranslate"><span class="pre">get_line()</span></code> is asked
+about, which are 0 to <code class="docutils literal notranslate"><span class="pre">nlines</span> <span class="pre">-</span> <span class="pre">1</span></code>; since controllers commonly leave gaps it
+is an id space rather than a count of real lines.  Leave it zero if the
+controller does not implement <code class="docutils literal notranslate"><span class="pre">get_line()</span></code>.  The structure must outlive registration, since the
+framework stores the pointer rather than copying.</p>
+<p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">reset_control_ops</span></code> is the call table.  Every member is optional; a
+consumer calling an operation the controller does not provide gets an error
+rather than silence, though which error depends on the path:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reset</span></code></p></td>
+<td><p>Pulse a self deasserting reset on one line</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">assert</span></code></p></td>
+<td><p>Put one line into reset</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deassert</span></code></p></td>
+<td><p>Take one line out of reset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
+<td><p>Report whether one line is asserted; 1 asserted, 0 not</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">acquire</span></code></p></td>
+<td><p>Claim a shared line</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">release</span></code></p></td>
+<td><p>Give a shared line back</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_line</span></code></p></td>
+<td><p>Describe one line for <code class="docutils literal notranslate"><span class="pre">/proc/reset</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Each takes the line’s <code class="docutils literal notranslate"><span class="pre">id</span></code>, whose meaning is the controller’s own: usually an
+index into its own register layout, and often with gaps where an id inside the
+range names no line.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reset_controller_unregister()</span></code> removes a controller.  Consumers must have
+put their handles back first.</p>
+</section>
+<section id="reading-the-lines-back">
+<h2>Reading the lines back<a class="headerlink" href="#reading-the-lines-back" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">status()</span></code> answers for one line at a time, and only for a caller that already
+knows the id.  Nothing else in the interface says how many lines a controller
+has or what any of them is for, so the framework cannot enumerate them on a
+controller’s behalf.</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_line</span></code> supplies exactly what is missing.  It is <strong>optional</strong>: a controller
+without it is still listed in <code class="docutils literal notranslate"><span class="pre">/proc/reset</span></code>, with a note.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">reset_lineinfo_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">name</span><span class="p">[</span><span class="n">RESET_NAME_MAX</span><span class="p">];</span><span class="w">    </span><span class="cm">/* What this line resets */</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">extra</span><span class="p">[</span><span class="n">RESET_EXTRA_MAX</span><span class="p">];</span><span class="w">  </span><span class="cm">/* Controller specific key:value text */</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Both members are optional too.  An empty name reports the line by its id alone.
+<code class="docutils literal notranslate"><span class="pre">extra</span></code> carries anything the structure has no member for, in the same
+<code class="docutils literal notranslate"><span class="pre">key:value</span></code> form, and is appended to the line’s entry.</p>
+<p>The state is <strong>not</strong> in the structure: the framework calls <code class="docutils literal notranslate"><span class="pre">status()</span></code> for it,
+so a controller does not report the same fact twice.</p>
+<p>Return <code class="docutils literal notranslate"><span class="pre">-ENODEV</span></code> for an id that names no line.  That is how a gap in the
+numbering is reported, and the renderer skips it:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">mychip_getline</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">reset_controller_dev</span><span class="w"> </span><span class="o">*</span><span class="n">rcdev</span><span class="p">,</span>
+<span class="w">                          </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">id</span><span class="p">,</span>
+<span class="w">                          </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">reset_lineinfo_s</span><span class="w"> </span><span class="o">*</span><span class="n">info</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">nitems</span><span class="p">(</span><span class="n">g_mychip_lines</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">g_mychip_lines</span><span class="p">[</span><span class="n">id</span><span class="p">].</span><span class="n">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ENODEV</span><span class="p">;</span><span class="w">              </span><span class="cm">/* a gap in the numbering */</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">strlcpy</span><span class="p">(</span><span class="n">info</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">g_mychip_lines</span><span class="p">[</span><span class="n">id</span><span class="p">].</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">info</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">));</span>
+
+<span class="w">  </span><span class="cm">/* Anything the structure has no member for */</span>
+
+<span class="w">  </span><span class="n">snprintf</span><span class="p">(</span><span class="n">info</span><span class="o">-&gt;</span><span class="n">extra</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">info</span><span class="o">-&gt;</span><span class="n">extra</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;reg:0x%03x bit:%u&quot;</span><span class="p">,</span>
+<span class="w">           </span><span class="n">MYCHIP_RESET_REG</span><span class="p">(</span><span class="n">id</span><span class="p">),</span><span class="w"> </span><span class="n">MYCHIP_RESET_BIT</span><span class="p">(</span><span class="n">id</span><span class="p">));</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="proc-reset">
+<h2>/proc/reset<a class="headerlink" href="#proc-reset" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RESET_PROCFS</span></code> adds <code class="docutils literal notranslate"><span class="pre">/proc/reset</span></code>, which lists every registered
+controller and, for those implementing <code class="docutils literal notranslate"><span class="pre">get_line</span></code>, one line per reset line.
+Every line carries the same tokens in the same order, so the file can be
+parsed:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>eic7700x-reset:
+0    noc_nsp                  state:released reg:0x400 bit:0
+9    gpio0                    state:held     reg:0x400 bit:9
+</pre></div>
+</div>
+<p>A controller with no <code class="docutils literal notranslate"><span class="pre">get_line</span></code> appears as its name and a note.  <code class="docutils literal notranslate"><span class="pre">state:-</span></code>
+means the controller has no <code class="docutils literal notranslate"><span class="pre">status()</span></code> or the call failed.</p>
+<p>The option depends on <code class="docutils literal notranslate"><span class="pre">FS_PROCFS_REGISTER</span></code> and is off by default.</p>
+</section>
+<section id="remote-controllers">
+<h2>Remote controllers<a class="headerlink" href="#remote-controllers" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RESET_RPMSG</span></code> lets a consumer on one core drive a reset controller
+owned by another, over rpmsg.  The consumer side calls <code class="docutils literal notranslate"><span class="pre">reset_rpmsg_get()</span></code>
+for a handle to the remote controller; the core that owns the hardware runs
+<code class="docutils literal notranslate"><span class="pre">reset_rpmsg_server_init()</span></code>.  Consumers use the ordinary interface either
+way.</p>
+</section>
 </section>
 
 
