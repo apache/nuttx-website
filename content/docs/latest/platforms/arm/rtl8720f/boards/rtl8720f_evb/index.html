@@ -328,6 +328,8 @@ on the SDK fwlib register layer</p></li>
 on the SDK fwlib register layer</p></li>
 <li><p>PWM output exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> character device, driven directly on
 the SDK fwlib timer register layer</p></li>
+<li><p>ADC channels exposed as an <code class="docutils literal notranslate"><span class="pre">/dev/adc0</span></code> character device, driven directly
+on the SDK fwlib register layer</p></li>
 </ul>
 </section>
 <section id="buttons-and-leds">
@@ -422,6 +424,21 @@ GPIO table and are muxed to the PWM function through the crossbar. Set
 <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_NCHANNELS</span></code> to the number of channels used. Exercise it with the
 example:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; pwm -d 25 -f 1000     # 1 kHz, 25% duty on /dev/pwm0
+</pre></div>
+</div>
+</section>
+<section id="adc">
+<h3>adc<a class="headerlink" href="#adc" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the ADC driver and the <code class="docutils literal notranslate"><span class="pre">adc</span></code> example enabled (no Wi-Fi).
+The board registers its channels from a table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8720f/rtl8720f_evb/src/rtl8720f_adc.c</span></code>): <code class="docutils literal notranslate"><span class="pre">/dev/adc0</span></code> samples
+CH0 on PA13 and CH1 on PA14. Edit that table – channel numbers and the analog
+pad each is wired to – to match a board’s wiring; the external channels
+CH0..CH5 map to pads PA13..PA18 and are muxed to the ADC function through the
+SDK ROM, while internal channels carry <code class="docutils literal notranslate"><span class="pre">AMEBA_ADC_PIN_NC</span></code>. Every listed
+channel is sampled, in order, on each trigger. Read the channels with the
+example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; adc -n 1                        # one sweep of /dev/adc0
 </pre></div>
 </div>
 </section>

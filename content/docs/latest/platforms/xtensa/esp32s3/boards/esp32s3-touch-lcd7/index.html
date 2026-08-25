@@ -388,6 +388,89 @@ ESP32-S3-WROOM-1 module.</p>
 </tbody>
 </table>
 </div></blockquote>
+<p>The panel is an EK9716 driven over a 16-bit parallel RGB565 bus by the
+LCD_CAM peripheral.  Its timing is:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Resolution</p></td>
+<td><p>800x480</p></td>
+</tr>
+<tr class="row-odd"><td><p>Pixel clock</p></td>
+<td><p>16 MHz</p></td>
+</tr>
+<tr class="row-even"><td><p>HSYNC pulse width</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p>HSYNC back porch</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-even"><td><p>HSYNC front porch</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><p>VSYNC pulse width</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td><p>VSYNC back porch</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><p>VSYNC front porch</p></td>
+<td><p>8</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The RGB bus takes most of the usable pins, so the panel reset and the
+display enable are not wired to GPIOs.  They hang off a CH422G I/O
+expander, reached over the I2C bus shared with the touch controller:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Connection</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SDA</p></td>
+<td><p>GPIO8</p></td>
+<td><p>I2C data, expander and touch</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCL</p></td>
+<td><p>GPIO9</p></td>
+<td><p>I2C clock, expander and touch</p></td>
+</tr>
+<tr class="row-even"><td><p>TP_RST</p></td>
+<td><p>CH422G EXIO1</p></td>
+<td><p>GT911 touch controller reset</p></td>
+</tr>
+<tr class="row-odd"><td><p>DISP</p></td>
+<td><p>CH422G EXIO2</p></td>
+<td><p>Display and backlight enable</p></td>
+</tr>
+<tr class="row-even"><td><p>LCD_RST</p></td>
+<td><p>CH422G EXIO3</p></td>
+<td><p>Panel reset</p></td>
+</tr>
+<tr class="row-odd"><td><p>SD_CS</p></td>
+<td><p>CH422G EXIO4</p></td>
+<td><p>TF card chip select</p></td>
+</tr>
+<tr class="row-even"><td><p>USB_SEL</p></td>
+<td><p>CH422G EXIO5</p></td>
+<td><p>USB / CAN transceiver select</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>A 800x480 RGB565 framebuffer is 768000 bytes and does not fit in internal
+RAM, so any configuration that drives the panel must also enable the
+onboard 8MB octal PSRAM and leave it in the common heap.</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
@@ -399,6 +482,47 @@ ESP32-S3-WROOM-1 module.</p>
 </div>
 <section id="configuration-directories">
 <h3>Configuration Directories<a class="headerlink" href="#configuration-directories" title="Permalink to this heading"></a></h3>
+</section>
+<section id="lcd">
+<h3>lcd<a class="headerlink" href="#lcd" title="Permalink to this heading"></a></h3>
+<p>Brings up the onboard 7 inch 800x480 panel as a framebuffer character
+driver at <code class="docutils literal notranslate"><span class="pre">/dev/fb0</span></code>, on top of the <code class="docutils literal notranslate"><span class="pre">usbnsh</span></code> console.  The CH422G I/O
+expander is used to take the panel out of reset and to switch the display
+on once the framebuffer exists, and the PSRAM the framebuffer is allocated
+from is enabled.</p>
+<p>Note that the console is on UART0, GPIO43 and GPIO44, reached through the
+USB-to-UART bridge on the UART USB-C connector.  It is deliberately not on
+the native USB peripheral, because that is the connector a USB host
+configuration drives.</p>
+<p><code class="docutils literal notranslate"><span class="pre">apps/examples/fb</span></code> is included to prove the panel out.  It reports the
+geometry of the framebuffer it found and then draws a series of nested
+rectangles over the whole display:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; fb
+VideoInfo:
+      fmt: 11
+     xres: 800
+     yres: 480
+  nplanes: 1
+PlaneInfo (plane 0):
+    fbmem: 0x3c050040
+    fblen: 1536000
+   stride: 1600
+  display: 0
+      bpp: 16
+Mapped FB: 0x3c050040
+Use consecutive fbmem2 = 0x3c10b840, yoffset = 480
+ 0: (  0,  0) (800,480)
+ 1: ( 72, 43) (656,394)
+ 2: (144, 86) (512,308)
+ 3: (216,129) (368,222)
+ 4: (288,172) (224,136)
+ 5: (360,215) ( 80, 50)
+Test finished
+</pre></div>
+</div>
+<p>The framebuffer is in PSRAM, which is why <code class="docutils literal notranslate"><span class="pre">fbmem</span></code> is in the 0x3c000000
+range, and <code class="docutils literal notranslate"><span class="pre">fblen</span></code> is 1536000 rather than 768000 because the driver is
+double buffered by default.</p>
 </section>
 <section id="usbnsh">
 <h3>usbnsh<a class="headerlink" href="#usbnsh" title="Permalink to this heading"></a></h3>
