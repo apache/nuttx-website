@@ -202,6 +202,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../samd5e5/index.html">Microchip samd5e5</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../samv7/index.html">Microchip SAM V7</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32c0/index.html">ST STM32C0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../stm32c5/index.html">ST STM32C5</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32f0/index.html">ST STM32F0</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32f1/index.html">ST STM32F1</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../stm32f2/index.html">ST STM32F2</a></li>
@@ -330,6 +331,8 @@ on the SDK fwlib register layer</p></li>
 the SDK fwlib timer register layer</p></li>
 <li><p>ADC channels exposed as an <code class="docutils literal notranslate"><span class="pre">/dev/adc0</span></code> character device, driven directly
 on the SDK fwlib register layer</p></li>
+<li><p>On-chip RTC exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/rtc0</span></code> date/time character device with
+alarm support, driven directly on the SDK fwlib register layer</p></li>
 </ul>
 </section>
 <section id="buttons-and-leds">
@@ -441,6 +444,20 @@ the ADC function through the SDK ROM, while internal channels carry
 <code class="docutils literal notranslate"><span class="pre">AMEBA_ADC_PIN_NC</span></code>. Every listed channel is sampled, in order, on each
 trigger. Read the channels with the example:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; adc -n 1                        # one sweep of /dev/adc0
+</pre></div>
+</div>
+</section>
+<section id="rtc">
+<h3>rtc<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the on-chip RTC driver and the <code class="docutils literal notranslate"><span class="pre">alarm</span></code> example enabled
+(no Wi-Fi). The RTC is registered at <code class="docutils literal notranslate"><span class="pre">/dev/rtc0</span></code> from the board bring-up
+(<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8721f/rtl8721f_evb/src/rtl8721f_rtc.c</span></code>); it has no board
+wiring (it is an internal clock). The hardware stores year + day-of-year, so
+the shared driver bridges to a full calendar. Read and set the clock with the
+NSH <code class="docutils literal notranslate"><span class="pre">date</span></code> command, and arm a one-shot wakeup with the example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; date                            # read /dev/rtc0
+nsh&gt; date -s &quot;Jun 16 12:00:00 2026&quot;  # set the RTC
+nsh&gt; alarm 10                        # fire an alarm in 10 seconds
 </pre></div>
 </div>
 </section>

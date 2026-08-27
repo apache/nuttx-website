@@ -212,7 +212,11 @@
 <li class="toctree-l5"><a class="reference internal" href="#action-triggers-checking">2. Action Triggers Checking</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#commands">Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#built-in-properties">Built-in Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#commands">Commands</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#compound-commands">Compound Commands</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
@@ -390,6 +394,49 @@ is updated (e.g., property:a=b is checked when a’s value changes).</p></li>
 </ul>
 </section>
 </section>
+<section id="built-in-properties">
+<h2>Built-in Properties<a class="headerlink" href="#built-in-properties" title="Permalink to this heading"></a></h2>
+<p>NXInit sets one built-in property on its own, before the <code class="docutils literal notranslate"><span class="pre">boot</span></code> event
+fires:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">sys.boot.reason</span></code>: the cause of the last board reset. It is queried
+once at startup via <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_RESET_CAUSE,</span> <span class="pre">...)</span></code>; applications
+do not need to set it themselves. This requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_RESET_CAUSE</span></code> and a board-provided
+<code class="docutils literal notranslate"><span class="pre">board_reset_cause()</span></code> implementation.</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_RESET_CAUSE</span></code> is not enabled, <code class="docutils literal notranslate"><span class="pre">sys.boot.reason</span></code>
+is never set, so any trigger referencing it (e.g.
+<code class="docutils literal notranslate"><span class="pre">property:sys.boot.reason=...</span></code>) simply never matches; there is no
+dedicated “unset” value to trigger on.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_RESET_CAUSE</span></code> is enabled but the <code class="docutils literal notranslate"><span class="pre">boardctl()</span></code>
+call itself fails (the board reports an error), NXInit aborts startup.</p></li>
+</ul>
+<p>The value has one of two forms:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;cause&gt;,&lt;subreason&gt;</span></code> for hardware reset causes, where
+<code class="docutils literal notranslate"><span class="pre">&lt;subreason&gt;</span></code> is a numeric flag (e.g. the watchdog timer index):
+<code class="docutils literal notranslate"><span class="pre">cold</span></code>, <code class="docutils literal notranslate"><span class="pre">watchdog</span></code>, <code class="docutils literal notranslate"><span class="pre">undervoltage</span></code>, <code class="docutils literal notranslate"><span class="pre">warm</span></code>, <code class="docutils literal notranslate"><span class="pre">powerkey</span></code>,
+<code class="docutils literal notranslate"><span class="pre">lowpower</span></code>, <code class="docutils literal notranslate"><span class="pre">unknown</span></code>. For example, a watchdog reset from timer 4
+sets the property to <code class="docutils literal notranslate"><span class="pre">watchdog,4</span></code>.</p></li>
+<li><p>A single soft-reset reason string, for software-triggered resets
+(<code class="docutils literal notranslate"><span class="pre">BOARDIOC_RESETCAUSE_CPU_SOFT</span></code>): <code class="docutils literal notranslate"><span class="pre">reboot</span></code>, <code class="docutils literal notranslate"><span class="pre">assert</span></code>,
+<code class="docutils literal notranslate"><span class="pre">kernel_panic</span></code>, <code class="docutils literal notranslate"><span class="pre">bootloader</span></code>, <code class="docutils literal notranslate"><span class="pre">recovery</span></code>, <code class="docutils literal notranslate"><span class="pre">factory_reset</span></code>,
+<code class="docutils literal notranslate"><span class="pre">factory_reset_inquiry</span></code>, <code class="docutils literal notranslate"><span class="pre">thermal</span></code>.</p></li>
+</ol>
+<p>Since the property is matched with <code class="docutils literal notranslate"><span class="pre">fnmatch</span></code> and alternatives can be
+separated with <code class="docutils literal notranslate"><span class="pre">|</span></code>, a trigger can match on the cause, the subreason, or
+a set of soft-reset reasons:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>on init &amp;&amp; property:sys.boot.reason=watchdog,4
+    ...
+
+on init &amp;&amp; property:sys.boot.reason=bootloader|recovery|thermal
+    ...
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
 <section id="commands">
 <h2>Commands<a class="headerlink" href="#commands" title="Permalink to this heading"></a></h2>
 <p>The commands supported by an action fall into three types: the built-in
@@ -405,6 +452,22 @@ class_start/class_stop (batch start/stop service categories).</p></li>
 owner, and encryption settings), copy/write (copy files/write file content).</p></li>
 <li><p>Others: trigger (trigger events).</p></li>
 </ul>
+<section id="compound-commands">
+<h3>Compound Commands<a class="headerlink" href="#compound-commands" title="Permalink to this heading"></a></h3>
+<p>A single line inside an action body may chain multiple commands with
+<code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> and <code class="docutils literal notranslate"><span class="pre">||</span></code>, using the familiar shell short-circuit semantics: the
+next command in an <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> chain only runs if the previous one exited with
+status 0 (success), and the next command in an <code class="docutils literal notranslate"><span class="pre">||</span></code> chain only runs if
+the previous one exited non-zero (failure). A quoted argument
+(<code class="docutils literal notranslate"><span class="pre">&quot;...&quot;</span></code>) may contain <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>/<code class="docutils literal notranslate"><span class="pre">||</span></code> without being treated as an
+operator.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>on boot
+    echo &quot;start&quot; &amp;&amp; hello &amp;&amp; echo &quot;done&quot;
+    ls /missing || echo &quot;not found&quot;
+    echo &quot;A&quot; &amp;&amp; echo &quot;B&quot; || echo &quot;fallback&quot;
+</pre></div>
+</div>
+</section>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
