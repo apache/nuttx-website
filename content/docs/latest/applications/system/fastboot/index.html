@@ -178,6 +178,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../dumpstack/index.html"><code class="docutils literal notranslate"><span class="pre">dumpstack</span></code> Task Call Stack Backtrace</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">fastboot</span></code> fastbootd</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#prepare">Prepare</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transports">Transports</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#commands">Commands</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
@@ -187,6 +188,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../gcov/index.html"><code class="docutils literal notranslate"><span class="pre">gcov</span></code> gcov tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gdbstub/index.html"><code class="docutils literal notranslate"><span class="pre">gdbstub</span></code> GDBSTUB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../gprof/index.html"><code class="docutils literal notranslate"><span class="pre">gprof</span></code> profiling command</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../grep/index.html"><code class="docutils literal notranslate"><span class="pre">grep</span></code> system ‘grep’ command</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hex2bin/index.html"><code class="docutils literal notranslate"><span class="pre">hex2bin</span></code> Intel HEX to binary conversion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hexed/index.html"><code class="docutils literal notranslate"><span class="pre">hexed</span></code> Hex editor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../hostname/index.html"><code class="docutils literal notranslate"><span class="pre">hostname</span></code> “hostname” command</a></li>
@@ -302,8 +304,18 @@
 <ul class="simple">
 <li><p>Check fastboot tool(Host): <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">--version</span></code></p></li>
 <li><p>Download fastboot tool and install(Host): <a class="reference external" href="https://developer.android.com/tools/releases/platform-tools">platform-tools</a></p></li>
-<li><p>Enable the fastbootd application(Device): <code class="code docutils literal notranslate"><span class="pre">CONFIG_USBFASTBOOT=y</span></code> and <code class="code docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_FASTBOOTD=y</span></code></p></li>
+<li><p>Enable the fastbootd application(Device): <code class="code docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_FASTBOOTD=y</span></code></p></li>
+<li><p>Enable at least one transport: USB (<code class="code docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_FASTBOOTD_USB=y</span></code>), TCP (<code class="code docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_FASTBOOTD_TCP=y</span></code>), or Serial (<code class="code docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_FASTBOOTD_SERIAL=y</span></code>)</p></li>
 <li><p>Start fastbootd(Device): <code class="code docutils literal notranslate"><span class="pre">fastbootd</span> <span class="pre">&amp;</span></code></p></li>
+</ul>
+</section>
+<section id="transports">
+<h2>Transports<a class="headerlink" href="#transports" title="Permalink to this heading"></a></h2>
+<p>The fastboot daemon supports multiple transport backends concurrently. Each transport can be individually enabled via Kconfig.</p>
+<ul class="simple">
+<li><p><strong>USB</strong>: Native USB fastboot protocol. Requires <code class="code docutils literal notranslate"><span class="pre">CONFIG_USBFASTBOOT=y</span></code>. Host: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">-s</span> <span class="pre">&lt;SN&gt;</span> <span class="pre">&lt;command&gt;</span></code> or just <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">&lt;command&gt;</span></code></p></li>
+<li><p><strong>TCP</strong>: Fastboot TCP v1 protocol on port 5554. Requires <code class="code docutils literal notranslate"><span class="pre">CONFIG_NET_TCP=y</span></code>. Host: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">-s</span> <span class="pre">tcp:&lt;device-ip&gt;[:port]</span> <span class="pre">&lt;command&gt;</span></code></p></li>
+<li><p><strong>Serial</strong>: UART transport using TCP v1 wire framing. Use <code class="docutils literal notranslate"><span class="pre">socat</span></code> on the host to bridge the serial port to a TCP socket. Host: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">-s</span> <span class="pre">tcp:&lt;host&gt;:&lt;socat-port&gt;</span> <span class="pre">&lt;command&gt;</span></code></p></li>
 </ul>
 </section>
 <section id="commands">
@@ -341,9 +353,10 @@
 <li><p>Exit fastboot mode: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">reboot</span></code></p></li>
 <li><p>Flash app.bin to partition /dev/app: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">flash</span> <span class="pre">app</span> <span class="pre">./app.bin</span></code></p></li>
 <li><p>Erase partition /dev/userdata: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">erase</span> <span class="pre">userdata</span></code></p></li>
-<li><p>Dump partition /dev/app: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">filedump</span> <span class="pre">/dev/app</span></code> and then <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">get_staged</span> <span class="pre">./dump_app.bin</span></code></p></li>
+<li><p>Dump partition /dev/app: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">oem</span> <span class="pre">filedump</span> <span class="pre">/dev/app</span></code> and then <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">get_staged</span> <span class="pre">./dump_app.bin</span></code></p></li>
 <li><p>Dump memory from 0x44000000 to 0x440b6c00: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">oem</span> <span class="pre">memdump</span> <span class="pre">0x44000000</span> <span class="pre">0xb6c00</span></code> and then <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">get_staged</span> <span class="pre">./mem_44000000_440b6c00.bin</span></code></p></li>
 <li><p>Create RAM disk “/dev/ram10” of size 320KB: <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">oem</span> <span class="pre">shell</span> <span class="pre">&quot;mkrd</span> <span class="pre">-m</span> <span class="pre">10</span> <span class="pre">-s</span> <span class="pre">512</span> <span class="pre">640&quot;</span></code></p></li>
+<li><p>Serial transport via socat: <code class="code docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">socat</span> <span class="pre">-t</span> <span class="pre">0</span> <span class="pre">PTY,link=/dev/ttyFB,raw,echo=0</span> <span class="pre">TCP-LISTEN:5556,reuseaddr,fork,nodelay</span> <span class="pre">&amp;</span></code> then <code class="code docutils literal notranslate"><span class="pre">fastboot</span> <span class="pre">-s</span> <span class="pre">tcp:127.0.0.1:5556</span> <span class="pre">getvar</span> <span class="pre">version</span></code></p></li>
 </ul>
 </section>
 </section>
