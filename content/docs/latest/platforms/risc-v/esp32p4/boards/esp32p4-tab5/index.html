@@ -474,6 +474,53 @@ reset.  <code class="docutils literal notranslate"><span class="pre">LCD_EN</spa
 <code class="docutils literal notranslate"><span class="pre">CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y</span></code> accordingly.  A harmless boot warning
 is printed because the upstream default targets rev &gt;= 3.0.</p>
 </section>
+<section id="display-panel-and-touch-controller">
+<h2>Display panel and touch controller<a class="headerlink" href="#display-panel-and-touch-controller" title="Permalink to this heading"></a></h2>
+<p>The Tab5 ships in two hardware variants, and they always come as a pair:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variant</p></th>
+<th class="head"><p>Panel</p></th>
+<th class="head"><p>Touch controller</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Earlier units</p></td>
+<td><p>ILI9881C</p></td>
+<td><p>GT911 (I2C <code class="docutils literal notranslate"><span class="pre">0x14</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Later units</p></td>
+<td><p>ST7121 / ST7123</p></td>
+<td><p>ST7123 (I2C <code class="docutils literal notranslate"><span class="pre">0x55</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The panels need different initialization tables and different display
+timings, so the wrong selection leaves the panel lit but black, and the wrong
+touch selection fails the bring-up with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ERROR: failed to register ST7123: -5
+</pre></div>
+</div>
+<p>Identify the board by scanning I2C0 with the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration. The
+address that answers tells which variant is fitted, and therefore which
+panel to select as well:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev -b 0 0x03 0x77
+</pre></div>
+</div>
+<p>Select the panel with <code class="docutils literal notranslate"><span class="pre">ESP32P4_TAB5_LCD_ST7121</span></code> (the default),
+<code class="docutils literal notranslate"><span class="pre">ESP32P4_TAB5_LCD_ST7123</span></code> or <code class="docutils literal notranslate"><span class="pre">ESP32P4_TAB5_LCD_ILI9881C</span></code>, and the touch
+controller with <code class="docutils literal notranslate"><span class="pre">ESP32P4_TAB5_TOUCH_ST7123</span></code> (the default) or
+<code class="docutils literal notranslate"><span class="pre">ESP32P4_TAB5_TOUCH_GT911</span></code>, both under the board menu.</p>
+<p>Both panels report their identification at boot, which confirms the
+selection. The ILI9881C answers <code class="docutils literal notranslate"><span class="pre">98</span> <span class="pre">81</span></code> in the first two ID registers:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ili9881c: panel ID 98 81 5c
+gt911: product &quot;911&quot; (39 31 31 00) fw 1060
+</pre></div>
+</div>
+<p>On the GT911 units the touch interrupt line has a pull-up to 3V3 that keeps
+the controller from scanning, so the board drives it low instead of using it
+as an interrupt. Contacts are picked up when the device is read.</p>
+</section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
 <section id="gpio">
@@ -494,8 +541,7 @@ above command, connect it to 3.3V.</p>
 </section>
 <section id="lvgl-demo">
 <h3>lvgl_demo<a class="headerlink" href="#lvgl-demo" title="Permalink to this heading"></a></h3>
-<p>LVGL demo configuration with touch support.
-Requires the ST7123 touch controller version.</p>
+<p>LVGL demo configuration with touch support.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This configuration redirects the console to UART0 instead of the USB Serial/JTAG port
@@ -508,12 +554,13 @@ and sets a custom entry point to open LVGL demo on screen.</p>
 </section>
 <section id="lvgl-term">
 <h3>lvgl_term<a class="headerlink" href="#lvgl-term" title="Permalink to this heading"></a></h3>
-<p>LVGL terminal configuration with touch support.
-Requires the ST7123 touch controller version.</p>
+<p>LVGL terminal configuration with touch support.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This configuration redirects the console to UART0 instead of the USB Serial/JTAG port
-and sets a custom entry point to open LVGL terminal on screen.</p>
+<p>This configuration starts the LVGL terminal on the panel as its entry
+point, and it runs its own NSH on a pseudo-terminal. The console is kept
+on the USB Serial/JTAG port (exposed as <code class="docutils literal notranslate"><span class="pre">ttyACM</span></code> on the host), which
+carries the system log.</p>
 </div>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>esp32p4-tab5:lvgl_term
 <span class="gp">$ </span>make<span class="w"> </span>-j
