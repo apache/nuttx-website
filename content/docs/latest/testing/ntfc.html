@@ -47,7 +47,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="NXDART (NuttX Distributed Automation for Build and Runtime Testing)" href="nxdart.html" />
-    <link rel="prev" title="Running CI Runtime Test Suites Locally" href="citests.html" /> 
+    <link rel="prev" title="NuttX CI Process" href="nuttx-ci.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -145,8 +145,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Testing</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="nuttx-ci.html">NuttX CI Process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="citests.html">Running CI Runtime Test Suites Locally</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">NTFC (NuttX Test Framework for Community)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">NTFC (NuttX Test Framework for Community)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-a-ci-test-target-locally">Running a CI Test Target Locally</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="nxdart.html">NXDART (NuttX Distributed Automation for Build and Runtime Testing)</a></li>
 </ul>
 </li>
@@ -194,7 +196,7 @@ executes applicable tests using pytest-based test cases.</p>
 <li><p><a class="reference external" href="https://github.com/apache/nuttx-ntfc-testing">https://github.com/apache/nuttx-ntfc-testing</a></p></li>
 </ul>
 <p>Detailed documentation is available in the framework repository.</p>
-<p>CI migration to NTFC is in progress. Configurations currently using NTFC:</p>
+<p>CI runtime test cases use NTFC. Configurations with an NTFC runner include:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../platforms/risc-v/qemu-rv/index.html"><span class="doc">risc-v/qemu-rv</span></a>: <code class="docutils literal notranslate"><span class="pre">rv-virt/citest64</span></code></p></li>
 <li><p><a class="reference internal" href="../platforms/risc-v/qemu-rv/index.html"><span class="doc">risc-v/qemu-rv</span></a>: <code class="docutils literal notranslate"><span class="pre">rv-virt/citest</span></code></p></li>
@@ -203,17 +205,58 @@ executes applicable tests using pytest-based test cases.</p>
 <li><p><a class="reference internal" href="../platforms/arm64/qemu/boards/qemu-armv8a/index.html"><span class="doc">arm64/qemu</span></a>: <code class="docutils literal notranslate"><span class="pre">qemu-armv8a/citest</span></code></p></li>
 <li><p><a class="reference internal" href="../platforms/arm64/qemu/boards/qemu-armv8a/index.html"><span class="doc">arm64/qemu</span></a>: <code class="docutils literal notranslate"><span class="pre">qemu-armv8a/citest_smp</span></code></p></li>
 </ul>
+<section id="running-a-ci-test-target-locally">
+<h2>Running a CI Test Target Locally<a class="headerlink" href="#running-a-ci-test-target-locally" title="Permalink to this heading"></a></h2>
+<p>Run NTFC from the top-level NuttX source directory.  The relative paths in a
+target’s <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file, including the NuttX configuration and image
+paths, are resolved from that directory.  A working NuttX build environment
+and any emulator or hardware required by the target must already be available.</p>
+<p>Create a Python 3.10 or newer virtual environment and install the NTFC and test
+case versions currently used by NuttX CI:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>../ntfc-venv
+<span class="gp">$ </span>.<span class="w"> </span>../ntfc-venv/bin/activate
+<span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">ntfc</span><span class="o">==</span><span class="m">0</span>.0.1
+<span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>--branch<span class="w"> </span>release-0.0.2<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>https://github.com/apache/nuttx-ntfc-testing<span class="w"> </span>../nuttx-ntfc-testing
+</pre></div>
+</div>
+<p>Build the target in the usual way.  For example, the simulator CI
+configuration uses the Make build:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>sim:citest
+<span class="gp">$ </span>make
+</pre></div>
+</div>
+<p>Configurations whose <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> refers to <code class="docutils literal notranslate"><span class="pre">./build/nuttx</span></code> require an
+out-of-tree CMake build instead.  For example, build <code class="docutils literal notranslate"><span class="pre">qemu-armv8a:citest</span></code>
+with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DBOARD_CONFIG<span class="o">=</span>qemu-armv8a:citest<span class="w"> </span>-GNinja
+<span class="gp">$ </span>cmake<span class="w"> </span>--build<span class="w"> </span>build
+</pre></div>
+</div>
+<p>Then pass the test case checkout and the target’s NTFC configuration files to
+NTFC.  For <code class="docutils literal notranslate"><span class="pre">sim:citest</span></code> this is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>ntfc<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--testpath<span class="o">=</span>../nuttx-ntfc-testing<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--confpath<span class="o">=</span>boards/sim/sim/sim/configs/citest/config.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--jsonconf<span class="o">=</span>boards/sim/sim/sim/configs/citest/session.json
+</pre></div>
+</div>
+<p>For another target, replace the build target and both configuration paths with
+the files from that target’s <code class="docutils literal notranslate"><span class="pre">configs/&lt;configuration&gt;</span></code> directory.  NTFC
+selects the applicable tests from the NuttX configuration and image and stores
+the test results under <code class="docutils literal notranslate"><span class="pre">result/</span></code> by default.</p>
 <p>NTFC exports test logs as CI artifacts. This allows test logs (including
 <a class="reference internal" href="../applications/testing/ostest/index.html"><span class="doc">ostest</span></a> output) to be downloaded
 directly from the CI for all targets where the <code class="docutils literal notranslate"><span class="pre">citest</span></code> configuration is
 enabled.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="citests.html" class="btn btn-neutral float-left" title="Running CI Runtime Test Suites Locally" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nuttx-ci.html" class="btn btn-neutral float-left" title="NuttX CI Process" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="nxdart.html" class="btn btn-neutral float-right" title="NXDART (NuttX Distributed Automation for Build and Runtime Testing)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
