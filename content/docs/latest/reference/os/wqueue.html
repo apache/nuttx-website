@@ -351,10 +351,26 @@ mode work queue is identical to that of the kernel-mode work queues
 and the user-mode work queue is functionally equivalent to the high
 priority work queue. It differs in that its implementation does not
 depend on internal, kernel-space facilities.</p>
+<p><strong>Custom User Work Queues</strong>. Applications can use
+<code class="docutils literal notranslate"><span class="pre">work_queue_create()</span></code> to create additional user-mode queues with a
+configurable priority and worker pool. The returned handle is passed to
+the <code class="docutils literal notranslate"><span class="pre">*_wq()</span></code> interfaces and to <code class="docutils literal notranslate"><span class="pre">work_queue_free()</span></code>. The predefined
+<code class="docutils literal notranslate"><span class="pre">USRWORK</span></code> queue remains available through the queue-ID interfaces. Custom
+user-mode queues require pthread support; the predefined <code class="docutils literal notranslate"><span class="pre">USRWORK</span></code> queue
+does not require pthread support in a protected build.</p>
+<p><strong>Execution Context</strong>. The user-mode implementation uses mutexes and
+semaphores for synchronization. Its queue, cancel, create, priority, and
+destroy interfaces must therefore only be called from task context and
+must not be called from an interrupt handler. Kernel-mode and flat-build
+<code class="docutils literal notranslate"><span class="pre">work_queue()</span></code>, <code class="docutils literal notranslate"><span class="pre">work_queue_wq()</span></code>, <code class="docutils literal notranslate"><span class="pre">work_cancel()</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">work_cancel_wq()</span></code> remain safe for interrupt handlers. Creation,
+destruction, and synchronous cancellation are task-context operations in
+all build modes.</p>
 <p><strong>Configuration Options</strong>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_USRWORK</span></code>. If CONFIG_LIBC_USRWORK is also defined
-then the user-mode work queue will be enabled.</p></li>
+then the user-mode work queue will be enabled. Dynamically allocated
+user-mode work queues require pthread support.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_USRWORKPRIORITY</span></code>. The execution priority of the
 user-mode priority worker thread. Default: 100</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_USRWORKSTACKSIZE</span></code>. The stack size allocated for
@@ -405,7 +421,7 @@ performed by the work queue interfaces described below.</p></li>
 <h3>Work Queue Interfaces<a class="headerlink" href="#work-queue-interfaces" title="Permalink to this heading"></a></h3>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.work_queue">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_queue</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">qid</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span>, <span class="n"><span class="pre">worker_t</span></span><span class="w"> </span><span class="n"><span class="pre">worker</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue" title="Permalink to this definition"></a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_queue</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">qid</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span>, <span class="n"><span class="pre">worker_t</span></span><span class="w"> </span><span class="n"><span class="pre">worker</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span>, <span class="n"><span class="pre">clock_t</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Queue work to be performed at a later time. All
 queued work will be performed on the worker thread of execution
 (not the caller’s).</p>
@@ -437,6 +453,67 @@ immediately.</p></li>
 </dd></dl>
 
 <dl class="c function">
+<dt class="sig sig-object c" id="c.work_queue_create">
+<span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">kwork_wqueue_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">work_queue_create</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">name</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">priority</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">stack_addr</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">stack_size</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">nthreads</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue_create" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Create a custom work queue containing <code class="docutils literal notranslate"><span class="pre">nthreads</span></code> workers. All
+workers use the requested name, priority, and stack size. If
+<code class="docutils literal notranslate"><span class="pre">stack_addr</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, each worker stack is allocated by the
+thread creation logic. Otherwise, <code class="docutils literal notranslate"><span class="pre">stack_addr</span></code> must identify storage
+for <code class="docutils literal notranslate"><span class="pre">nthreads</span> <span class="pre">*</span> <span class="pre">stack_size</span></code> bytes.</p>
+<p>This interface must only be called from task context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A work queue handle on success; <code class="docutils literal notranslate"><span class="pre">NULL</span></code> on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_queue_free">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_queue_free</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">kwork_wqueue_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wqueue</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue_free" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Destroy a custom queue, discard pending work, and wait for all running
+callbacks and worker threads to finish. Pending work structures become
+available for reuse before the function returns. The predefined
+<code class="docutils literal notranslate"><span class="pre">HPWORK</span></code>, <code class="docutils literal notranslate"><span class="pre">LPWORK</span></code>, and <code class="docutils literal notranslate"><span class="pre">USRWORK</span></code> queues cannot be destroyed.</p>
+<p>This interface must only be called from task context and cannot be
+called from one of the queue’s own callbacks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Zero on success, <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> for an invalid or predefined
+queue, or <code class="docutils literal notranslate"><span class="pre">-EDEADLK</span></code> when called by one of the queue’s workers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_queue_wq">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_queue_wq</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">kwork_wqueue_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wqueue</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span>, <span class="n"><span class="pre">worker_t</span></span><span class="w"> </span><span class="n"><span class="pre">worker</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span>, <span class="n"><span class="pre">clock_t</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue_wq" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Queue work on a custom queue. If the work structure is already pending
+on the same queue, the pending instance is replaced. A work structure
+must be cancelled before it is moved to another queue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Zero on success, <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> for invalid arguments, or
+<code class="docutils literal notranslate"><span class="pre">-ESHUTDOWN</span></code> after queue destruction starts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_queue_next_wq">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_queue_next_wq</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">kwork_wqueue_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wqueue</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span>, <span class="n"><span class="pre">worker_t</span></span><span class="w"> </span><span class="n"><span class="pre">worker</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span>, <span class="n"><span class="pre">clock_t</span></span><span class="w"> </span><span class="n"><span class="pre">delay</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue_next_wq" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Queue the next invocation relative to the work structure’s previous
+expiration time. This avoids accumulating callback execution time in a
+periodic schedule. It is normally called from the work callback.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Zero on success, <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> for invalid arguments, or
+<code class="docutils literal notranslate"><span class="pre">-ESHUTDOWN</span></code> after queue destruction starts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
 <dt class="sig sig-object c" id="c.work_cancel">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_cancel</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">qid</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_cancel" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Cancel previously queued work. This removes work
@@ -451,12 +528,48 @@ re-queued by calling <code class="docutils literal notranslate"><span class="pre
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>Zero is returned on success; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> is returned on
-failure.</p>
+failure. Cancelling work that is not queued is a successful no-op.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ENOENT</span></code>: There is no such work queued.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>: An invalid work queue was specified.</p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_cancel_wq">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_cancel_wq</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">kwork_wqueue_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wqueue</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_cancel_wq" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cancel pending work on a custom queue. Cancelling work that is not
+queued is a successful no-op.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Zero on success or <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> for an invalid argument.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_cancel_sync_wq">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_cancel_sync_wq</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">kwork_wqueue_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wqueue</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">work_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">work</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_cancel_sync_wq" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cancel pending work and wait for callbacks already using the same work
+structure to finish. If called from that work’s own callback, the caller
+is excluded from the wait to avoid self-deadlock.</p>
+<p>This interface must only be called from task context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Zero on success or <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> for an invalid argument.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.work_queue_priority_wq">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_queue_priority_wq</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">kwork_wqueue_s</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">wqueue</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.work_queue_priority_wq" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return the common scheduling priority of a custom queue’s worker pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The worker priority on success or a negated errno on failure.</p>
 </dd>
 </dl>
 </dd></dl>
