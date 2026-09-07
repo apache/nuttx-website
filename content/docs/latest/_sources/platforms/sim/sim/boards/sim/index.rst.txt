@@ -1450,9 +1450,8 @@ tflm
 ----
 
 Builds TensorFlow Lite for Microcontrollers from
-``apps/mlearning/tflite-micro``, including the ``tflm`` command-line tool.
-A CMake build of this configuration also includes the ``tflm_hello``
-example.
+``apps/mlearning/tflite-micro``, including the ``tflm`` command-line tool
+and the ``tflm_hello`` example.
 
 .. code-block:: console
 
@@ -1466,10 +1465,10 @@ With CMake::
    $ cmake --build build
    $ ./build/nuttx
 
-From NSH, ``tflm -h`` prints the tool usage. ``tflm_hello`` (CMake image)
-runs the upstream sine-model test.
-
-See :doc:`/applications/mlearning/tflite-micro/index`.
+From NSH, ``tflm -h`` prints the tool usage. ``tflm_hello`` runs the
+upstream sine-model test and prints ``~~~ALL TESTS PASSED~~~`` on
+success. See :doc:`/applications/mlearning/tflite-micro/index` for the
+full test procedure.
 
 touchscreen
 -----------

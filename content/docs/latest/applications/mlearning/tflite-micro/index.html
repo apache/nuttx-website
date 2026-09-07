@@ -164,6 +164,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#building">Building</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#using-the-tflm-tool">Using the <code class="docutils literal notranslate"><span class="pre">tflm</span></code> tool</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#hello-world-example">Hello-world example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#testing">Testing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#embedding-a-model-in-an-application">Embedding a model in an application</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#patches-applied-by-nuttx">Patches applied by NuttX</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#see-also">See also</a></li>
@@ -255,20 +256,21 @@ from <code class="docutils literal notranslate"><span class="pre">apps/mlearning
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO</span></code></dt><dd><p>Enable the TFLM library.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_DEBUG</span></code></dt><dd><p>Keep TFLM error strings and print memory-use information
-(<code class="docutils literal notranslate"><span class="pre">TF_LITE_SHOW_MEMORY_USE</span></code>). When disabled, <code class="docutils literal notranslate"><span class="pre">TF_LITE_STRIP_ERROR_STRINGS</span></code>
-is set to reduce code size.</p>
+(<code class="docutils literal notranslate"><span class="pre">TF_LITE_SHOW_MEMORY_USE</span></code>).</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_SYSLOG</span></code></dt><dd><p>Route TFLM logging through NuttX syslog via <code class="docutils literal notranslate"><span class="pre">tflm_syslog.cc</span></code>.
 <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_SYSLOG_LEVEL</span></code> selects the syslog priority
-(default <code class="docutils literal notranslate"><span class="pre">6</span></code>, <code class="docutils literal notranslate"><span class="pre">LOG_INFO</span></code>). See <code class="docutils literal notranslate"><span class="pre">include/syslog.h</span></code>.</p>
+(default <code class="docutils literal notranslate"><span class="pre">6</span></code>, <code class="docutils literal notranslate"><span class="pre">LOG_INFO</span></code>). See <code class="docutils literal notranslate"><span class="pre">include/syslog.h</span></code>.
+When neither debug nor syslog is enabled, <code class="docutils literal notranslate"><span class="pre">TF_LITE_STRIP_ERROR_STRINGS</span></code>
+is set to reduce code size.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_TOOL</span></code></dt><dd><p>Build the <code class="docutils literal notranslate"><span class="pre">tflm</span></code> NSH command from <code class="docutils literal notranslate"><span class="pre">tflm_tool.cc</span></code>.
 <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_TOOL_PRIORITY</span></code> and
 <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_TOOL_STACKSIZE</span></code> set the task attributes
 (defaults: priority 100, stack 4096).</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_HELLOWORLD</span></code></dt><dd><p>Build the <code class="docutils literal notranslate"><span class="pre">tflm_hello</span></code> example (CMake builds only). The example runs
-the upstream TFLM hello-world float and INT8 sine models.
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_HELLOWORLD</span></code></dt><dd><p>Build the <code class="docutils literal notranslate"><span class="pre">tflm_hello</span></code> example. The example runs the upstream TFLM
+hello-world float and INT8 sine models.
 <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_HELLOWORLD_PRIORITY</span></code> and
 <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_HELLOWORLD_STACKSIZE</span></code> set the task attributes
 (defaults: priority 100, stack 4096).</p>
@@ -279,7 +281,7 @@ the upstream TFLM hello-world float and INT8 sine models.
 <h2>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">sim:tflm</span></code> defconfig enables TFLM, the <code class="docutils literal notranslate"><span class="pre">tflm</span></code> tool, the hello-world
 example, libc++, FlatBuffers, gemmlowp, KissFFT, and Ruy.</p>
-<p>Makefile build (produces the <code class="docutils literal notranslate"><span class="pre">tflm</span></code> tool; hello-world is CMake-only):</p>
+<p>Makefile build (produces <code class="docutils literal notranslate"><span class="pre">tflm</span></code> and <code class="docutils literal notranslate"><span class="pre">tflm_hello</span></code>):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>nuttx
 <span class="gp">$ </span>make<span class="w"> </span>distclean
 <span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>sim:tflm
@@ -301,45 +303,92 @@ unpacked tree under <code class="docutils literal notranslate"><span class="pre"
 <section id="using-the-tflm-tool">
 <h2>Using the <code class="docutils literal notranslate"><span class="pre">tflm</span></code> tool<a class="headerlink" href="#using-the-tflm-tool" title="Permalink to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">tflm</span></code> loads a <code class="docutils literal notranslate"><span class="pre">.tflite</span></code> file from the filesystem, constructs a
-<code class="docutils literal notranslate"><span class="pre">tflite::MicroInterpreter</span></code>, and can invoke the model once for profiling
-or emit compiled C++ (when TFLM was built with <code class="docutils literal notranslate"><span class="pre">TFLITE_MODEL_COMPILER</span></code>).</p>
+<code class="docutils literal notranslate"><span class="pre">tflite::MicroInterpreter</span></code>, calls <code class="docutils literal notranslate"><span class="pre">AllocateTensors()</span></code>, and can invoke
+the model once for profiling or emit compiled C++ (when TFLM was built
+with <code class="docutils literal notranslate"><span class="pre">TFLITE_MODEL_COMPILER</span></code>).</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; tflm -h</span>
 
 <span class="go">Utility to use tflite micro on nuttx.</span>
 <span class="go">[ -C       ] Compile tflite model into c++ codes.</span>
 <span class="go">[ -E       ] Do once evaluation (for profiling).</span>
 <span class="go">[ -i &lt;str&gt; ] Readable model file path.</span>
-<span class="go">[ -o &lt;str&gt; ] Writable c++ file path.</span>
+<span class="go">[ -o &lt;str&gt; ] Writable c++ file path (required with -C).</span>
 <span class="go">[ -p &lt;str&gt; ] Prefix of compiled code.</span>
 <span class="go">[ -a &lt;int&gt; ] Arena size (mempool).</span>
 <span class="go">[ -h       ] Print this message.</span>
 </pre></div>
 </div>
-<p>Both <code class="docutils literal notranslate"><span class="pre">-i</span></code> and <code class="docutils literal notranslate"><span class="pre">-o</span></code> are required. Defaults are prefix <code class="docutils literal notranslate"><span class="pre">NXAI</span></code> and
-arena size 8192 bytes.</p>
-<p>The built-in operator resolver registers eight INT8-oriented ops:</p>
+<p><code class="docutils literal notranslate"><span class="pre">-i</span></code> is required. <code class="docutils literal notranslate"><span class="pre">-o</span></code> is required only with <code class="docutils literal notranslate"><span class="pre">-C</span></code>. Defaults are
+prefix <code class="docutils literal notranslate"><span class="pre">NXAI</span></code> and arena size 8192 bytes.</p>
+<p>The built-in operator resolver registers eight generic (float and
+quantized) ops:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONV_2D</span></code> (INT8)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MAX_POOL_2D</span></code> (INT8)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">QUANTIZE</span></code> (float32 to INT8)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DEQUANTIZE</span></code> (INT8)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MEAN</span></code> (INT8)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONV_2D</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MAX_POOL_2D</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">QUANTIZE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DEQUANTIZE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MEAN</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">RESHAPE</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">FULLY_CONNECTED</span></code> (INT8)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SOFTMAX</span></code> (INT8)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FULLY_CONNECTED</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SOFTMAX</span></code></p></li>
 </ul>
 <p>Models that need other operators must change the resolver in
 <code class="docutils literal notranslate"><span class="pre">apps/mlearning/tflite-micro/tflm_tool.cc</span></code>.</p>
 </section>
 <section id="hello-world-example">
 <h2>Hello-world example<a class="headerlink" href="#hello-world-example" title="Permalink to this heading"></a></h2>
-<p>With a CMake <code class="docutils literal notranslate"><span class="pre">sim:tflm</span></code> image:</p>
+<p>With a <code class="docutils literal notranslate"><span class="pre">sim:tflm</span></code> image:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; tflm_hello</span>
 </pre></div>
 </div>
 <p>This runs the upstream hello-world test: it profiles memory and latency,
 then loads the float and INT8 sine models that are converted to C arrays
-at build time with <code class="docutils literal notranslate"><span class="pre">xxd</span></code>.</p>
+at build time with <code class="docutils literal notranslate"><span class="pre">xxd</span></code>. Success ends with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>~~~ALL TESTS PASSED~~~
+</pre></div>
+</div>
+</section>
+<section id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">sim:tflm</span></code> configuration is the supported way to test TFLM on the
+host. It enables <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_DEBUG</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_TOOL</span></code>, and <code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO_HELLOWORLD</span></code>.</p>
+<p>The host needs a C++ toolchain, <code class="docutils literal notranslate"><span class="pre">curl</span></code>, <code class="docutils literal notranslate"><span class="pre">unzip</span></code>, <code class="docutils literal notranslate"><span class="pre">patch</span></code>, <code class="docutils literal notranslate"><span class="pre">xxd</span></code>,
+and the NuttX apps tree next to <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> (<code class="docutils literal notranslate"><span class="pre">../apps</span></code> or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_APPS_DIR</span></code>).</p>
+<ol class="arabic">
+<li><p>Configure and build:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd nuttx
+$ make distclean
+$ ./tools/configure.sh sim:tflm
+$ make -j$(nproc)
+</pre></div>
+</div>
+<p>The first build downloads TFLM and its math/FlatBuffers dependencies.
+A successful link prints <code class="docutils literal notranslate"><span class="pre">LD:</span>&#160; <span class="pre">nuttx</span></code>. The apps registry must list
+both <code class="docutils literal notranslate"><span class="pre">tflm</span></code> and <code class="docutils literal notranslate"><span class="pre">tflm_hello</span></code>.</p>
+</li>
+<li><p>Run the simulator and the hello-world test:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./nuttx
+nsh&gt; tflm -h
+nsh&gt; tflm_hello
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tflm</span> <span class="pre">-h</span></code> prints the usage text above. <code class="docutils literal notranslate"><span class="pre">tflm_hello</span></code> prints
+allocator and profiler information, then
+<code class="docutils literal notranslate"><span class="pre">~~~ALL</span> <span class="pre">TESTS</span> <span class="pre">PASSED~~~</span></code>.</p>
+</li>
+<li><p>Optional: invoke a <code class="docutils literal notranslate"><span class="pre">.tflite</span></code> file from the host filesystem (the
+sim configuration includes hostfs):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; tflm -E -i /path/to/model.tflite -a 8192
+</pre></div>
+</div>
+<p>The tool fails with <code class="docutils literal notranslate"><span class="pre">AllocateTensors</span> <span class="pre">failed</span></code> if the arena is too
+small or the model uses operators outside the eight registered ops.</p>
+</li>
+</ol>
+<p>CMake is equivalent: <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-B</span> <span class="pre">build</span> <span class="pre">-DBOARD_CONFIG=sim:tflm</span> <span class="pre">-GNinja</span></code>
+then <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">--build</span> <span class="pre">build</span></code> and <code class="docutils literal notranslate"><span class="pre">./build/nuttx</span></code>.</p>
 </section>
 <section id="embedding-a-model-in-an-application">
 <h2>Embedding a model in an application<a class="headerlink" href="#embedding-a-model-in-an-application" title="Permalink to this heading"></a></h2>
@@ -366,8 +415,7 @@ circular buffer.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0002-quantize-int8.patch</span></code> — <code class="docutils literal notranslate"><span class="pre">Register_QUANTIZE_FLOAT32_INT8()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0003-mean-int8.patch</span></code> — <code class="docutils literal notranslate"><span class="pre">Register_MEAN_INT8()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0004-tflite-add-extern-C-to-main-function-to-avoid-c-mang.patch</span></code> —
-<code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code> on the hello-world <code class="docutils literal notranslate"><span class="pre">main</span></code> so NuttX can call it
-(applied by the CMake fetch).</p></li>
+<code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code> on the hello-world <code class="docutils literal notranslate"><span class="pre">main</span></code> so NuttX can call it.</p></li>
 </ul>
 </section>
 <section id="see-also">

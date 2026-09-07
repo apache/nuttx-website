@@ -41,13 +41,14 @@ From :menuselection:`Application Configuration --> Machine Learning Support`:
 
 ``CONFIG_TFLITEMICRO_DEBUG``
   Keep TFLM error strings and print memory-use information
-  (``TF_LITE_SHOW_MEMORY_USE``). When disabled, ``TF_LITE_STRIP_ERROR_STRINGS``
-  is set to reduce code size.
+  (``TF_LITE_SHOW_MEMORY_USE``).
 
 ``CONFIG_TFLITEMICRO_SYSLOG``
   Route TFLM logging through NuttX syslog via ``tflm_syslog.cc``.
   ``CONFIG_TFLITEMICRO_SYSLOG_LEVEL`` selects the syslog priority
   (default ``6``, ``LOG_INFO``). See ``include/syslog.h``.
+  When neither debug nor syslog is enabled, ``TF_LITE_STRIP_ERROR_STRINGS``
+  is set to reduce code size.
 
 ``CONFIG_TFLITEMICRO_TOOL``
   Build the ``tflm`` NSH command from ``tflm_tool.cc``.
@@ -56,8 +57,8 @@ From :menuselection:`Application Configuration --> Machine Learning Support`:
   (defaults: priority 100, stack 4096).
 
 ``CONFIG_TFLITEMICRO_HELLOWORLD``
-  Build the ``tflm_hello`` example (CMake builds only). The example runs
-  the upstream TFLM hello-world float and INT8 sine models.
+  Build the ``tflm_hello`` example. The example runs the upstream TFLM
+  hello-world float and INT8 sine models.
   ``CONFIG_TFLITEMICRO_HELLOWORLD_PRIORITY`` and
   ``CONFIG_TFLITEMICRO_HELLOWORLD_STACKSIZE`` set the task attributes
   (defaults: priority 100, stack 4096).
@@ -68,7 +69,7 @@ Building
 The ``sim:tflm`` defconfig enables TFLM, the ``tflm`` tool, the hello-world
 example, libc++, FlatBuffers, gemmlowp, KissFFT, and Ruy.
 
-Makefile build (produces the ``tflm`` tool; hello-world is CMake-only):
+Makefile build (produces ``tflm`` and ``tflm_hello``):
 
 .. code-block:: console
 
@@ -95,8 +96,9 @@ Using the ``tflm`` tool
 =======================
 
 ``tflm`` loads a ``.tflite`` file from the filesystem, constructs a
-``tflite::MicroInterpreter``, and can invoke the model once for profiling
-or emit compiled C++ (when TFLM was built with ``TFLITE_MODEL_COMPILER``).
+``tflite::MicroInterpreter``, calls ``AllocateTensors()``, and can invoke
+the model once for profiling or emit compiled C++ (when TFLM was built
+with ``TFLITE_MODEL_COMPILER``).
 
 .. code-block:: console
 
@@ -106,24 +108,25 @@ or emit compiled C++ (when TFLM was built with ``TFLITE_MODEL_COMPILER``).
    [ -C       ] Compile tflite model into c++ codes.
    [ -E       ] Do once evaluation (for profiling).
    [ -i <str> ] Readable model file path.
-   [ -o <str> ] Writable c++ file path.
+   [ -o <str> ] Writable c++ file path (required with -C).
    [ -p <str> ] Prefix of compiled code.
    [ -a <int> ] Arena size (mempool).
    [ -h       ] Print this message.
 
-Both ``-i`` and ``-o`` are required. Defaults are prefix ``NXAI`` and
-arena size 8192 bytes.
+``-i`` is required. ``-o`` is required only with ``-C``. Defaults are
+prefix ``NXAI`` and arena size 8192 bytes.
 
-The built-in operator resolver registers eight INT8-oriented ops:
+The built-in operator resolver registers eight generic (float and
+quantized) ops:
 
-- ``CONV_2D`` (INT8)
-- ``MAX_POOL_2D`` (INT8)
-- ``QUANTIZE`` (float32 to INT8)
-- ``DEQUANTIZE`` (INT8)
-- ``MEAN`` (INT8)
+- ``CONV_2D``
+- ``MAX_POOL_2D``
+- ``QUANTIZE``
+- ``DEQUANTIZE``
+- ``MEAN``
 - ``RESHAPE``
-- ``FULLY_CONNECTED`` (INT8)
-- ``SOFTMAX`` (INT8)
+- ``FULLY_CONNECTED``
+- ``SOFTMAX``
 
 Models that need other operators must change the resolver in
 ``apps/mlearning/tflite-micro/tflm_tool.cc``.
@@ -131,7 +134,7 @@ Models that need other operators must change the resolver in
 Hello-world example
 ===================
 
-With a CMake ``sim:tflm`` image:
+With a ``sim:tflm`` image:
 
 .. code-block:: console
 
@@ -139,7 +142,52 @@ With a CMake ``sim:tflm`` image:
 
 This runs the upstream hello-world test: it profiles memory and latency,
 then loads the float and INT8 sine models that are converted to C arrays
-at build time with ``xxd``.
+at build time with ``xxd``. Success ends with::
+
+  ~~~ALL TESTS PASSED~~~
+
+Testing
+=======
+
+The ``sim:tflm`` configuration is the supported way to test TFLM on the
+host. It enables ``CONFIG_TFLITEMICRO``, ``CONFIG_TFLITEMICRO_DEBUG``,
+``CONFIG_TFLITEMICRO_TOOL``, and ``CONFIG_TFLITEMICRO_HELLOWORLD``.
+
+The host needs a C++ toolchain, ``curl``, ``unzip``, ``patch``, ``xxd``,
+and the NuttX apps tree next to ``nuttx`` (``../apps`` or
+``CONFIG_APPS_DIR``).
+
+1. Configure and build::
+
+     $ cd nuttx
+     $ make distclean
+     $ ./tools/configure.sh sim:tflm
+     $ make -j$(nproc)
+
+   The first build downloads TFLM and its math/FlatBuffers dependencies.
+   A successful link prints ``LD:  nuttx``. The apps registry must list
+   both ``tflm`` and ``tflm_hello``.
+
+2. Run the simulator and the hello-world test::
+
+     $ ./nuttx
+     nsh> tflm -h
+     nsh> tflm_hello
+
+   ``tflm -h`` prints the usage text above. ``tflm_hello`` prints
+   allocator and profiler information, then
+   ``~~~ALL TESTS PASSED~~~``.
+
+3. Optional: invoke a ``.tflite`` file from the host filesystem (the
+   sim configuration includes hostfs)::
+
+     nsh> tflm -E -i /path/to/model.tflite -a 8192
+
+   The tool fails with ``AllocateTensors failed`` if the arena is too
+   small or the model uses operators outside the eight registered ops.
+
+CMake is equivalent: ``cmake -B build -DBOARD_CONFIG=sim:tflm -GNinja``
+then ``cmake --build build`` and ``./build/nuttx``.
 
 Embedding a model in an application
 ===================================
@@ -168,8 +216,7 @@ Patches applied by NuttX
 - ``0002-quantize-int8.patch`` — ``Register_QUANTIZE_FLOAT32_INT8()``.
 - ``0003-mean-int8.patch`` — ``Register_MEAN_INT8()``.
 - ``0004-tflite-add-extern-C-to-main-function-to-avoid-c-mang.patch`` —
-  ``extern "C"`` on the hello-world ``main`` so NuttX can call it
-  (applied by the CMake fetch).
+  ``extern "C"`` on the hello-world ``main`` so NuttX can call it.
 
 See also
 ========
