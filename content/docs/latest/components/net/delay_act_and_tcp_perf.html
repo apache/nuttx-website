@@ -167,6 +167,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#uip-delayed-acks-and-split-packets">uIP, Delayed ACKs, and Split Packets</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#the-nuttx-tcp-ip-stack-and-delay-acks">The NuttX TCP/IP Stack and Delay ACKs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#the-nuttx-split-packet-configuration">The NuttX Split Packet Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-delayed-ack-threshold-configuration">The Delayed ACK Threshold Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#write-buffering">Write Buffering</a></li>
 </ul>
 </li>
@@ -346,6 +347,26 @@ the average size of the user buffers, then your throughput
 can probably be greatly improved by enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_SPLIT=y</span></code></p>
 <p>NOTE: NuttX is <cite>not</cite> an RFC 1122 recipient; NuttX will ACK
 every TCP/IP packet that it receives.</p>
+</section>
+<section id="the-delayed-ack-threshold-configuration">
+<h2>The Delayed ACK Threshold Configuration<a class="headerlink" href="#the-delayed-ack-threshold-configuration" title="Permalink to this heading"></a></h2>
+<p>The delayed ACK logic is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_DELAYED_ACK</span></code>.
+When enabled, the number of received data segments that trigger one
+ACK can be configured with <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_ACK_FREQUENCY</span></code>:</p>
+<ul class="simple">
+<li><p>Value 1 degenerates to an immediate ACK per received segment
+(delayed ACK effectively disabled).</p></li>
+<li><p>Value 2 (default) is the RFC 1122 compliant behavior: an ACK for
+at least every second segment in a stream of full-sized segments.</p></li>
+<li><p>Values above 2 reduce ACK traffic and can improve throughput when
+bulk data is received, at the cost of a coarser ACK clock and
+slower peer congestion window growth.</p></li>
+</ul>
+<p>NOTE: RFC 1122 Section 4.2.3.2 states that in a stream of full-sized
+segments there SHOULD be an ACK for at least every second segment.
+Setting <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_ACK_FREQUENCY</span></code> above 2 no longer meets
+that requirement. The delayed ACK timer still forces an ACK after
+at most 0.5 seconds as required by RFC 1122.</p>
 </section>
 <section id="write-buffering">
 <h2>Write Buffering<a class="headerlink" href="#write-buffering" title="Permalink to this heading"></a></h2>
