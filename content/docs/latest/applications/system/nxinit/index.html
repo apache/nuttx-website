@@ -205,6 +205,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#actions-and-commands">1. Actions and Commands</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#services-and-options">2. Services and Options</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#the-console-option">The <code class="docutils literal notranslate"><span class="pre">console</span></code> Option</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#triggers">Triggers</a><ul>
@@ -355,10 +356,41 @@ systems).</p></li>
 via the override option).</p></li>
 <li><p>Options are modifiers for services, affecting their running mode and timing.
 Examples include class (specify service category for batch start/stop),
+console (redirect the service’s stdio to a console device; see below),
 override (override previously defined services), restart_period (interval
 for restarting exited services), and reboot_on_failure (critical services
 trigger device reboot on startup failure or abnormal exit).</p></li>
 </ul>
+</section>
+<section id="the-console-option">
+<h3>The <code class="docutils literal notranslate"><span class="pre">console</span></code> Option<a class="headerlink" href="#the-console-option" title="Permalink to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>service &lt;name&gt; &lt;pathname&gt; [ &lt;argument&gt; ]*
+   console [ &lt;device&gt; ]
+</pre></div>
+</div>
+<p>A service does not open a console device on its own - it simply inherits
+whatever stdin/stdout/stderr NXInit itself has, which for many boards is
+never set up at all (there is no <code class="docutils literal notranslate"><span class="pre">/dev/console</span></code> unless
+<code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_CONSOLE</span></code> is enabled). <code class="docutils literal notranslate"><span class="pre">console</span></code> fixes this by opening
+<code class="docutils literal notranslate"><span class="pre">&lt;device&gt;</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_NXINIT_CONSOLE_DEV</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/console</span></code> by
+default, if omitted) and duplicating it onto the service’s stdin, stdout
+and stderr before it is spawned.</p>
+<p>This is required for a plain shell service (e.g. <code class="docutils literal notranslate"><span class="pre">service</span> <span class="pre">console</span> <span class="pre">sh</span></code>)
+to actually be usable as an interactive console. It is not needed for
+<code class="docutils literal notranslate"><span class="pre">nsh</span></code> (the full NSH application, as opposed to plain <code class="docutils literal notranslate"><span class="pre">sh</span></code>), which
+already does the equivalent internally via <code class="docutils literal notranslate"><span class="pre">nsh_consolemain()</span></code>.</p>
+<p>For a USB gadget console (<code class="docutils literal notranslate"><span class="pre">CONFIG_CDCACM_CONSOLE</span></code>/<code class="docutils literal notranslate"><span class="pre">CONFIG_PL2303_CONSOLE</span></code>),
+the device does not exist until the gadget is actually registered with the
+USB stack - unlike a plain UART, this does not happen implicitly during
+early boot. The gadget must be brought up once, before any service using
+<code class="docutils literal notranslate"><span class="pre">console</span></code> is started, e.g. via <code class="docutils literal notranslate"><span class="pre">apps/system/cdcacm</span></code>’s <code class="docutils literal notranslate"><span class="pre">sercon</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>on init
+    exec -- sercon
+
+service console sh
+    console
+</pre></div>
+</div>
 </section>
 </section>
 <section id="triggers">
