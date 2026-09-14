@@ -363,19 +363,20 @@ which links the module into the NXFLAT binary format.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mknxflat</span></code> is part of NuttX, in <code class="docutils literal notranslate"><span class="pre">tools/nxflat</span></code>.  The build produces it as
 <code class="docutils literal notranslate"><span class="pre">tools/mknxflat</span></code> whenever <code class="docutils literal notranslate"><span class="pre">CONFIG_NXFLAT</span></code> is selected, so there is
 nothing to install.</p>
-<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> is not part of NuttX and has to be built from the buildroot
-package, which can be downloaded from
-<a class="reference external" href="https://bitbucket.org/nuttx/buildroot/downloads">Bitbucket.org</a>.  You
-will need version 0.1.7 or later:</p>
-<ul class="simple">
-<li><p>Unpack the package and <code class="docutils literal notranslate"><span class="pre">cd</span></code> into the resulting directory.</p></li>
-<li><p>Copy a configuration file into the top buildroot directory:
-<code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">boards/abc-defconfig-x.y.z</span> <span class="pre">.config</span></code>.</p></li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> and select the NXFLAT toolchain.  Building GCC
-can be omitted if you already have a toolchain of your own.</p></li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">make</span></code>.  The tool binaries are left under
-<code class="docutils literal notranslate"><span class="pre">build_abc/staging_dir/bin</span></code>; put that directory on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p></li>
-</ul>
+<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> is not part of NuttX and cannot be: it is GPL and derives from
+elf2flt.  It lives in the NuttX buildroot toolchain, at
+<a class="reference external" href="https://github.com/patacongo/buildroot">patacongo/buildroot</a>, under
+<code class="docutils literal notranslate"><span class="pre">toolchain/nxflat</span></code>.</p>
+<p>Only that one tool is needed.  The rest of the buildroot toolchain is not:
+an ordinary <code class="docutils literal notranslate"><span class="pre">arm-none-eabi</span></code> GCC compiles and links NXFLAT modules, so a
+board does not have to select <code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_BUILDROOT</span></code> to use
+them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> reads its input through libbfd, so it is built against a
+binutils source tree and a binutils build of the same version.
+<code class="docutils literal notranslate"><span class="pre">toolchain/nxflat/Makefile</span></code> takes those as <code class="docutils literal notranslate"><span class="pre">BINUTILS_DIR</span></code> and
+<code class="docutils literal notranslate"><span class="pre">BINUTILS_DIR1</span></code>, and expects an <code class="docutils literal notranslate"><span class="pre">arch</span></code> symbolic link naming the target,
+<code class="docutils literal notranslate"><span class="pre">thumb2</span></code> or <code class="docutils literal notranslate"><span class="pre">arm</span></code>.  Where the binutils build leaves <code class="docutils literal notranslate"><span class="pre">libbfd.a</span></code> varies,
+so the library path may need adjusting.  Put the result on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
 <p>On ARM, <code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/Toolchain.defs</span></code> provides both <code class="docutils literal notranslate"><span class="pre">MKNXFLAT</span></code>
 (with the <code class="docutils literal notranslate"><span class="pre">-a</span></code> option following <code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_THUMB</span></code>) and <code class="docutils literal notranslate"><span class="pre">LDNXFLAT</span></code>, so
 a board only has to assign them if it needs something different.</p>

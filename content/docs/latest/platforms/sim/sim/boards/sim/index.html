@@ -253,6 +253,34 @@ from Idle task and it will generate them from the host signal handler.
 Another option is to use <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_WALLTIME_SLEEP</span></code> which will enable the
 tick events to be delayed from the Idle task by using a host sleep call.</p>
 </div>
+</section>
+<section id="babblesim-discrete-time">
+<h2>BabbleSim Discrete Time<a class="headerlink" href="#babblesim-discrete-time" title="Permalink to this heading"></a></h2>
+<p>The Linux <code class="docutils literal notranslate"><span class="pre">sim</span></code> target can optionally use a BabbleSim PHY process as the
+monotonic time source.  This is useful for tests where a NuttX host-side stack
+and other BabbleSim devices need to advance in the same discrete-time domain.</p>
+<p>Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_BSIM_TIME</span></code> together with <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_WALLTIME_SLEEP</span></code>.
+This mode is available only on Linux hosts and is not supported with SMP or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_WALLTIME_SIGNAL</span></code>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_BSIM_TIME</span></code> is enabled, the build needs the BabbleSim
+component headers and libraries:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">BSIM_OUT_PATH</span><span class="o">=</span>/path/to/bsim
+<span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">BSIM_COMPONENTS_PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">BSIM_OUT_PATH</span><span class="si">}</span>/components
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BSIM_LIBS_DIR</span></code> may be used instead of <code class="docutils literal notranslate"><span class="pre">BSIM_OUT_PATH</span></code> when the BabbleSim
+shared libraries are installed in a non-default directory.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_BSIM_TIME</span></code> is enabled, the simulator connects to the
+BabbleSim PHY at startup:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx<span class="w"> </span>--sim-bsim-sid<span class="o">=</span>default<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--sim-bsim-pid<span class="o">=</span>2G4<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--sim-bsim-dev<span class="o">=</span><span class="m">0</span>
+</pre></div>
+</div>
+<p>The BabbleSim PHY process must be started separately by the test runner before
+launching the NuttX simulator.</p>
+<p>The runtime options override <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_BSIM_SIM_ID</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_BSIM_PHY_ID</span></code>, and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_BSIM_DEVICE_NBR</span></code>.</p>
 <section id="debugging">
 <h3>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h3>
 <p>One of the best reasons to use the simulation is that is supports great Linux-
@@ -762,14 +790,38 @@ the NULL Bluetooth device at <code class="docutils literal notranslate"><span cl
 <p>There is also support on a Linux Host for attaching the bluetooth hardware from
 the host to the NuttX bluetooth stack via the HCI Socket interface over the User
 Channel. This is enabled in the bthcisock configuration. In order to use this
-you must give the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> ELF additional capabilities:</p>
+with the configured default HCI device, you must give the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> ELF
+additional capabilities:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>setcap<span class="w"> </span><span class="s1">&#39;cap_net_raw,cap_net_admin=eip&#39;</span><span class="w"> </span>./nuttx
 </pre></div>
 </div>
-<p>You can then monitor the HCI traffic on the host with WireShark or <code class="docutils literal notranslate"><span class="pre">btmon</span></code>:</p>
+<p>The default HCI device is selected by <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_HCISOCKET_DEVID</span></code>. It may be
+overridden at runtime with <code class="docutils literal notranslate"><span class="pre">--bt-dev=hciN</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx<span class="w"> </span>--bt-dev<span class="o">=</span>hci1
+</pre></div>
+</div>
+<p>You can then monitor the BlueZ HCI traffic on the host with WireShark or
+<code class="docutils literal notranslate"><span class="pre">btmon</span></code>:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>btmon
 </pre></div>
 </div>
+<p>The sim target can also connect to an HCI H:4 stream exposed through a Unix
+domain socket by passing an absolute socket path:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./nuttx<span class="w"> </span>--bt-dev<span class="o">=</span>/tmp/hci0.sock
+</pre></div>
+</div>
+<p>This Unix socket mode does not require a BlueZ HCI device. Since <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> only
+connects to a normal Unix domain socket, the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> process does not need to
+run as root and does not need the <code class="docutils literal notranslate"><span class="pre">setcap</span></code> command above. This is useful when
+the controller is provided by another host process, or when a UART controller is
+bridged into a Unix socket with a tool such as <code class="docutils literal notranslate"><span class="pre">socat</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>socat<span class="w"> </span>UNIX-LISTEN:/tmp/hci0.sock,fork,reuseaddr<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>/dev/ttyACM0,b1000000,raw,echo<span class="o">=</span><span class="m">0</span>,crtscts<span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+<p>The process listening on the socket must be started before NuttX. If that
+process opens a real UART device, it still needs permission to access that UART
+device.</p>
 </section>
 <section id="configdata">
 <h2>configdata<a class="headerlink" href="#configdata" title="Permalink to this heading"></a></h2>
