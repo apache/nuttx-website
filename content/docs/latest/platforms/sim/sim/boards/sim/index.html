@@ -313,6 +313,44 @@ need to start the Cygwin-X server before running <code class="docutils literal n
 probably easier to use <code class="docutils literal notranslate"><span class="pre">lldb</span></code> instead of <code class="docutils literal notranslate"><span class="pre">gdb</span></code>.</p>
 </div>
 </section>
+<section id="s2opc">
+<h3>S2OPC<a class="headerlink" href="#s2opc" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">sim:s2opc</span></code> configuration provides the S2OPC OPC UA server example.
+Build it from the NuttX source directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l sim:s2opc
+$ make -j
+</pre></div>
+</div>
+<p>An out-of-tree CMake build is also supported:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B build -DBOARD_CONFIG=sim:s2opc -GNinja
+$ cmake --build build
+</pre></div>
+</div>
+<p>The simulator attaches its TAP device to a host bridge named <code class="docutils literal notranslate"><span class="pre">s2opc0</span></code>.
+Create the bridge and assign the host address:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ sudo ip link add s2opc0 type bridge
+$ sudo ip address add 10.0.0.1/24 dev s2opc0
+$ sudo ip link set s2opc0 up
+</pre></div>
+</div>
+<p>Start NuttX with permission to create the TAP device, then start the server:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./nuttx
+nsh&gt; ping 10.0.0.1
+nsh&gt; s2opc
+</pre></div>
+</div>
+<p>From another host terminal, read the standard server time node:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ uaread -u opc.tcp://10.0.0.2:4841 -n i=2258
+</pre></div>
+</div>
+<p>Press Ctrl-C at the NSH terminal to stop the server.  After testing, stop
+NuttX and remove the bridge:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ sudo ip link delete s2opc0
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../../../../../applications/examples/s2opc/index.html"><span class="doc">s2opc OPC UA server example</span></a> for command-line overrides and
+<a class="reference internal" href="../../../../../applications/netutils/s2opc/index.html"><span class="doc">s2opc OPC UA toolkit library</span></a> for toolkit configuration.</p>
+</section>
 <section id="issues">
 <h3>Issues<a class="headerlink" href="#issues" title="Permalink to this heading"></a></h3>
 </section>

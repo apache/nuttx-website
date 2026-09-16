@@ -282,6 +282,44 @@ hardware platform and provides support for these devices:</p>
 </pre></div>
 </div>
 </section>
+</section>
+<section id="s2opc">
+<h3>S2OPC<a class="headerlink" href="#s2opc" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">qemu-armv8a:s2opc</span></code> configuration provides the S2OPC OPC UA server
+example.  Build it from the NuttX source directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh -l qemu-armv8a:s2opc
+$ make -j
+</pre></div>
+</div>
+<p>Run QEMU with user networking and forward host TCP port 4841 to NuttX:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-aarch64 -cpu cortex-a53 -nographic \
+    -machine virt,virtualization=on,gic-version=3 \
+    -global virtio-mmio.force-legacy=false \
+    -chardev stdio,id=con,mux=on -serial chardev:con \
+    -mon chardev=con,mode=readline \
+    -netdev user,id=u1,hostfwd=tcp:127.0.0.1:4841-:4841 \
+    -device virtio-net-device,netdev=u1,bus=virtio-mmio-bus.0 \
+    -kernel ./nuttx
+</pre></div>
+</div>
+<p>The configured NuttX address and endpoint are <code class="docutils literal notranslate"><span class="pre">10.0.2.15</span></code> and
+<code class="docutils literal notranslate"><span class="pre">opc.tcp://10.0.2.15:4841</span></code>.  At the NSH prompt, start the server:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ping 10.0.2.2
+nsh&gt; s2opc &amp;
+s2opc [4:100]
+</pre></div>
+</div>
+<p>From another host terminal, read the standard server time node through the
+forwarded port:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ uaread -u opc.tcp://127.0.0.1:4841 -n i=2258
+</pre></div>
+</div>
+<p>Stop the server with the task ID printed by NSH:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; kill -2 4
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../../../../../applications/examples/s2opc/index.html"><span class="doc">s2opc OPC UA server example</span></a> for command-line overrides and
+<a class="reference internal" href="../../../../../applications/netutils/s2opc/index.html"><span class="doc">s2opc OPC UA toolkit library</span></a> for toolkit configuration.</p>
 <section id="single-core-with-virtio-network-block-rng-serial-driver-gicv3">
 <h4>Single Core with virtio network, block, rng, serial driver (GICv3)<a class="headerlink" href="#single-core-with-virtio-network-block-rng-serial-driver-gicv3" title="Permalink to this heading"></a></h4>
 <p>Configuring NuttX and compile:</p>
