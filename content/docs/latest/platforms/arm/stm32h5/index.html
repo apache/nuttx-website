@@ -206,6 +206,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#supported-mcus">Supported MCUs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#usb-fs-host">USB FS Host</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#otp">OTP</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
@@ -548,6 +549,10 @@ updates to support MCUs besides the STM32H563.</p>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
+<tr class="row-odd"><td><p>OTP</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <section id="usb-fs-host">
@@ -566,6 +571,30 @@ HSI48 cannot be reliably used in host mode due to drift. It can only be used in 
 <li><p>STM32H5_USBDRD_NCHANNELS - Number of host channels. Default 8</p></li>
 <li><p>STM32H5_USBDRD_DESCSIZE - Maximum size of a descriptor.  Default: 128</p></li>
 </ul>
+</section>
+<section id="otp">
+<h3>OTP<a class="headerlink" href="#otp" title="Permalink to this heading"></a></h3>
+<p>STM32H5 parts have a 2 KiB one-time programmable (OTP) area. It’s organized
+into 32 blocks of 32 16-bit words. Each word can be successfully programmed once.
+Each block may be permanently locked at any point. Written words may be read.</p>
+<p>Writing the same word more than once is unsupported. Doing so may cause corruption.
+Reading an unwritten word raises an exception.
+To simplify the programming model, the OTP API
+locks blocks after any part is written. The user may check which blocks are locked.
+Blocks are tagged as “written” using this lock status
+without the need for out-of-band metadata. Some of the words within a locked
+block may be left unwritten, so the exception may still be raised if an unwritten word
+within a locked block is read.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_otp_write</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">offset</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">stm32_otp_read</span><span class="p">(</span><span class="kt">uint16_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">offset</span><span class="p">);</span>
+<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">stm32_otp_getlockstatus</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The API allows cross-block reads/writes that don’t necessarily start/end at block boundaries.
+Any block affected by <code class="docutils literal notranslate"><span class="pre">stm32_otp_write</span></code> will be locked. The user should be aware
+of the block size and count when partitioning the OTP area for their needs.
+<code class="docutils literal notranslate"><span class="pre">len</span></code> is the number of bytes - not words. It has no alignment requirement. <code class="docutils literal notranslate"><span class="pre">offset</span></code> is
+the offset in bytes. It must be a multiple of 4.</p>
 </section>
 </section>
 <section id="references">
