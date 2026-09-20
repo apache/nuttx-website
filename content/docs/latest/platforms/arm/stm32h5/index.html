@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#usb-fs-host">USB FS Host</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#otp">OTP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#clocks">Clocks</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
@@ -595,6 +596,24 @@ Any block affected by <code class="docutils literal notranslate"><span class="pr
 of the block size and count when partitioning the OTP area for their needs.
 <code class="docutils literal notranslate"><span class="pre">len</span></code> is the number of bytes - not words. It has no alignment requirement. <code class="docutils literal notranslate"><span class="pre">offset</span></code> is
 the offset in bytes. It must be a multiple of 4.</p>
+</section>
+<section id="clocks">
+<h3>Clocks<a class="headerlink" href="#clocks" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">STM32_BOARD_HSIKERON_ENABLE</span></code> can be defined in board.h to keep HSI running in
+STOP mode. This can be used to keep a peripheral clocked by HSI running in
+STOP mode.</p>
+<p><code class="docutils literal notranslate"><span class="pre">STM32_RCC_CCIPR1_U[S]ARTxSEL</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">STM32_RCC_CCIPR1_USART3SEL</span></code>) can be defined as one of</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RCC_CCIPR1_U[S]ARTxSEL_RCCPCLK1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RCC_CCIPR1_U[S]ARTxSEL_PLL2QCK</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RCC_CCIPR1_U[S]ARTxSEL_PLL3QCK</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RCC_CCIPR1_U[S]ARTxSEL_HSIKERCK</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RCC_CCIPR1_U[S]ARTxSEL_CSIKERCK</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RCC_CCIPR1_U[S]ARTxSEL_LSECK</span></code></p></li>
+</ul>
+<p>E.g. <code class="docutils literal notranslate"><span class="pre">RCC_CCIPR1_USART3SEL_HSIKERCK</span></code> in board.h to select the clock source for that USART.
+The clock source is set in RCC initialization. Only stm32_serial.c is aware of this setting.
+TODO: Make stm32_lowputc.c aware of this clock source setting too.</p>
 </section>
 </section>
 <section id="references">

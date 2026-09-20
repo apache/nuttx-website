@@ -228,7 +228,8 @@
 <p>TensorFlow Lite for Microcontrollers (TFLM) is a C++ interpreter for
 running <code class="docutils literal notranslate"><span class="pre">.tflite</span></code> models on memory-constrained targets. NuttX integrates
 it from <code class="docutils literal notranslate"><span class="pre">apps/mlearning/tflite-micro</span></code>.</p>
-<p>The build downloads a pinned TFLM snapshot from
+<p>The build downloads a pinned TFLM snapshot
+(<code class="docutils literal notranslate"><span class="pre">cfa4c91d1b36c37c7c104b9c664615e59f1abfe3</span></code>, 24 February 2024) from
 <a class="reference external" href="https://github.com/tensorflow/tflite-micro">https://github.com/tensorflow/tflite-micro</a> and applies NuttX patches that
 add INT8-only operator registrations and an <code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code> entry point for
 the hello-world example.</p>
@@ -236,10 +237,14 @@ the hello-world example.</p>
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">CONFIG_TFLITEMICRO</span></code> depends on all of:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_FLATBUFFERS</span></code> — FlatBuffers headers (<code class="docutils literal notranslate"><span class="pre">apps/system/flatbuffers</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MATH_GEMMLOWP</span></code> — gemmlowp (<code class="docutils literal notranslate"><span class="pre">apps/math/gemmlowp</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MATH_KISSFFT</span></code> — KissFFT (<code class="docutils literal notranslate"><span class="pre">apps/math/kissfft</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MATH_RUY</span></code> — Ruy (<code class="docutils literal notranslate"><span class="pre">apps/math/ruy</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_FLATBUFFERS</span></code> — FlatBuffers headers
+(<a class="reference internal" href="../../system/flatbuffers/index.html"><span class="doc">flatbuffers FlatBuffers</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MATH_GEMMLOWP</span></code> — gemmlowp
+(<a class="reference internal" href="../../math/gemmlowp/index.html"><span class="doc">gemmlowp gemmlowp</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MATH_KISSFFT</span></code> — KissFFT
+(<a class="reference internal" href="../../math/kissfft/index.html"><span class="doc">kissfft KissFFT</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MATH_RUY</span></code> — Ruy
+(<a class="reference internal" href="../../math/ruy/index.html"><span class="doc">ruy Ruy</span></a>)</p></li>
 </ul>
 <p>TFLM is C++, so the configuration also needs C++ support (<code class="docutils literal notranslate"><span class="pre">CONFIG_HAVE_CXX</span></code>
 and a C++ standard library such as <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBCXX</span></code>).</p>
@@ -304,10 +309,12 @@ unpacked tree under <code class="docutils literal notranslate"><span class="pre"
 </section>
 <section id="using-the-tflm-tool">
 <h2>Using the <code class="docutils literal notranslate"><span class="pre">tflm</span></code> tool<a class="headerlink" href="#using-the-tflm-tool" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">tflm</span></code> loads a <code class="docutils literal notranslate"><span class="pre">.tflite</span></code> file from the filesystem, constructs a
-<code class="docutils literal notranslate"><span class="pre">tflite::MicroInterpreter</span></code>, calls <code class="docutils literal notranslate"><span class="pre">AllocateTensors()</span></code>, and can invoke
-the model once for profiling or emit compiled C++ (when TFLM was built
-with <code class="docutils literal notranslate"><span class="pre">TFLITE_MODEL_COMPILER</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">tflm</span></code> is a host-oriented NSH helper for <code class="docutils literal notranslate"><span class="pre">sim:tflm</span></code>. It loads a
+<code class="docutils literal notranslate"><span class="pre">.tflite</span></code> file from the filesystem with <code class="docutils literal notranslate"><span class="pre">ifstream</span></code>, allocates the
+tensor arena with <code class="docutils literal notranslate"><span class="pre">new</span></code>, constructs a <code class="docutils literal notranslate"><span class="pre">tflite::MicroInterpreter</span></code>,
+and calls <code class="docutils literal notranslate"><span class="pre">AllocateTensors()</span></code>. That heap-and-filesystem path is
+intentional on the simulator. On-target applications should embed the
+model as a C array; see <em>Embedding a model in an application</em> below.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; tflm -h</span>
 
 <span class="go">Utility to use tflite micro on nuttx.</span>
@@ -322,10 +329,15 @@ with <code class="docutils literal notranslate"><span class="pre">TFLITE_MODEL_C
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">-i</span></code> is required. <code class="docutils literal notranslate"><span class="pre">-o</span></code> is required only with <code class="docutils literal notranslate"><span class="pre">-C</span></code>. Defaults are
 prefix <code class="docutils literal notranslate"><span class="pre">NXAI</span></code> and arena size 8192 bytes.</p>
-<p>The built-in operator resolver registers eight generic (float and
+<p><code class="docutils literal notranslate"><span class="pre">-C</span></code> appears in the help text but is not functional in NuttX builds.
+Model compilation requires <code class="docutils literal notranslate"><span class="pre">TFLITE_MODEL_COMPILER</span></code>, which neither the
+Makefile nor the CMake integration defines. <code class="docutils literal notranslate"><span class="pre">tflm</span> <span class="pre">-C</span></code> prints
+<code class="docutils literal notranslate"><span class="pre">Not</span> <span class="pre">supported</span> <span class="pre">compiling</span></code>.</p>
+<p>The built-in operator resolver registers nine generic (float and
 quantized) ops:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONV_2D</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DEPTHWISE_CONV_2D</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MAX_POOL_2D</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">QUANTIZE</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DEQUANTIZE</span></code></p></li>
@@ -386,7 +398,7 @@ sim configuration includes hostfs):</p>
 </pre></div>
 </div>
 <p>The tool fails with <code class="docutils literal notranslate"><span class="pre">AllocateTensors</span> <span class="pre">failed</span></code> if the arena is too
-small or the model uses operators outside the eight registered ops.</p>
+small or the model uses operators outside the nine registered ops.</p>
 </li>
 </ol>
 <p>CMake is equivalent: <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-B</span> <span class="pre">build</span> <span class="pre">-DBOARD_CONFIG=sim:tflm</span> <span class="pre">-GNinja</span></code>
@@ -394,9 +406,11 @@ then <code class="docutils literal notranslate"><span class="pre">cmake</span> <
 </section>
 <section id="embedding-a-model-in-an-application">
 <h2>Embedding a model in an application<a class="headerlink" href="#embedding-a-model-in-an-application" title="Permalink to this heading"></a></h2>
-<p>TFLM is designed for targets without a filesystem and without dynamic
-allocation for the model itself. Typical NuttX applications compile the
-<code class="docutils literal notranslate"><span class="pre">.tflite</span></code> file into a C array and pass it to <code class="docutils literal notranslate"><span class="pre">tflite::GetModel()</span></code>.</p>
+<p>The TFLM library is designed for targets without a filesystem and
+without dynamic allocation for the model itself. The <code class="docutils literal notranslate"><span class="pre">tflm</span></code> NSH tool
+is an exception used on <code class="docutils literal notranslate"><span class="pre">sim:tflm</span></code>. Typical on-target applications
+compile the <code class="docutils literal notranslate"><span class="pre">.tflite</span></code> file into a C array and pass it to
+<code class="docutils literal notranslate"><span class="pre">tflite::GetModel()</span></code>.</p>
 <p>The CMake helper <code class="docutils literal notranslate"><span class="pre">tflite_generate_data()</span></code> in
 <code class="docutils literal notranslate"><span class="pre">apps/mlearning/tflite-micro/CMakeLists.txt</span></code> wraps <code class="docutils literal notranslate"><span class="pre">xxd</span> <span class="pre">-i</span></code> for that
 purpose. The same conversion can be done manually:</p>
