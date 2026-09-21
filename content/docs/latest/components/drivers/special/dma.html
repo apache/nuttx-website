@@ -152,7 +152,18 @@
 <li class="toctree-l4"><a class="reference internal" href="devfreq.html">Device Frequency Scaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="devicetree.html">Device Tree support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="devmem.html">DEVMEM Drivers</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">DMA Drivers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">DMA Drivers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#architecture">Architecture</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#controller-interface">Controller Interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#using-dma-from-a-driver">Using DMA from a Driver</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#channel-and-transfer-lifecycle">Channel and Transfer Lifecycle</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#dma-links">DMA Links</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#implementing-a-dma-controller">Implementing a DMA Controller</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#existing-implementations">Existing Implementations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="framebuffer.html">Frame Buffer Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="i2c.html">I2C Device Drivers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="i2c.html#i2c-bit-bang-driver">I2C Bit-Bang Driver</a></li>
@@ -259,6 +270,273 @@
              
   <section id="dma-drivers">
 <h1>DMA Drivers<a class="headerlink" href="#dma-drivers" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The common DMA framework is a header-only interface defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/dma/dma.h</span></code>. It was introduced in 2018 (<code class="docutils literal notranslate"><span class="pre">596f52c3ee</span></code>,
+“Nuttx/dma: add dma framework for nuttx”) with link transfers added in
+2019 (<code class="docutils literal notranslate"><span class="pre">51475e4273</span></code>), per-channel DRQ selection in 2023 (<code class="docutils literal notranslate"><span class="pre">06ee8d9673</span></code>),
+and source/destination address stepping in 2023 (<code class="docutils literal notranslate"><span class="pre">366628bf5a</span></code>).</p>
+<p>There is no upper-half implementation file: <code class="docutils literal notranslate"><span class="pre">drivers/dma/</span></code> contains
+only <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code> and <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code>. The header defines the controller
+and channel structures, the operation table, and thin macros through
+which peripheral drivers (DMA clients) drive SoC-specific DMA
+controller implementations. All hardware-specific functionality lives
+in the controller implementation.</p>
+<p>The framework is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_DMA</span></code> (<code class="docutils literal notranslate"><span class="pre">drivers/dma/Kconfig</span></code>),
+which selects <code class="docutils literal notranslate"><span class="pre">ARCH_DMA</span></code>. Scatter/gather-style link transfers
+additionally require <code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK</span></code>.</p>
+</section>
+<section id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Peripheral driver (DMA client)
+             |
+             v
+DMA common interface (macros in include/nuttx/dma/dma.h)
+             |
+             v
+DMA controller implementation (struct dma_dev_s,
+  per-channel struct dma_chan_s + struct dma_ops_s)
+             |
+             v
+DMA hardware
+</pre></div>
+</div>
+<p>Terminology as used by the header:</p>
+<ul class="simple">
+<li><p>DMA controller: represented by <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_dev_s</span></code>. It owns a set of
+channels and hands them out on request.</p></li>
+<li><p>DMA channel: represented by <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_chan_s</span></code>. The client-visible
+portion is only an <code class="docutils literal notranslate"><span class="pre">ops</span></code> pointer; the controller implementation
+extends this structure with its own device-specific fields after it.</p></li>
+<li><p>DMA client: a peripheral driver that acquires a channel and starts
+transfers through the macros below (in-tree: <code class="docutils literal notranslate"><span class="pre">drivers/audio/audio_dma.c</span></code>,
+<code class="docutils literal notranslate"><span class="pre">drivers/serial/uart_16550.c</span></code>).</p></li>
+<li><p>DMA transfer: a single <code class="docutils literal notranslate"><span class="pre">DMA_START*</span></code> invocation described by a
+callback, a destination/source address pair, and lengths. There is no
+transfer descriptor structure in the framework.</p></li>
+</ul>
+<p>Most DMA code under <code class="docutils literal notranslate"><span class="pre">arch/</span></code> (for example <code class="docutils literal notranslate"><span class="pre">stm32_dma.c</span></code>,
+<code class="docutils literal notranslate"><span class="pre">kinetis_edma.c</span></code>, <code class="docutils literal notranslate"><span class="pre">cxd56_dmac.c</span></code>, <code class="docutils literal notranslate"><span class="pre">rp2040_dmac.c</span></code>) does <strong>not</strong>
+implement this framework; those drivers expose their own SoC-specific
+APIs (for example <code class="docutils literal notranslate"><span class="pre">stm32_dmastart()</span></code>, <code class="docutils literal notranslate"><span class="pre">cxd56_dmastart()</span></code>). No
+in-tree controller implements <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_dev_s</span></code> yet, so a board
+using the common framework must supply its own controller.</p>
+</section>
+<section id="controller-interface">
+<h2>Controller Interface<a class="headerlink" href="#controller-interface" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_dev_s</span></code> (<code class="docutils literal notranslate"><span class="pre">include/nuttx/dma/dma.h</span></code>) is the controller
+vtable:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">get_chan(dev,</span> <span class="pre">ident)</span></code>: return the channel identified by <code class="docutils literal notranslate"><span class="pre">ident</span></code>
+with mutually exclusive access. Per the header, the call waits until
+the current holder releases the channel with <code class="docutils literal notranslate"><span class="pre">put_chan()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">put_chan(dev,</span> <span class="pre">chan)</span></code>: release a channel and wake any waiter. The
+released <code class="docutils literal notranslate"><span class="pre">chan</span></code> must not be used again until re-acquired.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_ops_s</span></code> is the per-channel operation table. Every entry is
+invoked through a <code class="docutils literal notranslate"><span class="pre">DMA_*</span></code> macro taking the channel as first argument:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">config(chan,</span> <span class="pre">cfg)</span></code>: configure the channel from
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_config_s</span></code> before use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start(chan,</span> <span class="pre">callback,</span> <span class="pre">arg,</span> <span class="pre">dst,</span> <span class="pre">src,</span> <span class="pre">len)</span></code>: one-shot transfer of
+<code class="docutils literal notranslate"><span class="pre">len</span></code> bytes from <code class="docutils literal notranslate"><span class="pre">src</span></code> to <code class="docutils literal notranslate"><span class="pre">dst</span></code>; <code class="docutils literal notranslate"><span class="pre">callback</span></code> runs on completion.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_cyclic(chan,</span> <span class="pre">callback,</span> <span class="pre">arg,</span> <span class="pre">dst,</span> <span class="pre">src,</span> <span class="pre">len,</span> <span class="pre">period_len)</span></code>:
+cyclic transfer over <code class="docutils literal notranslate"><span class="pre">len</span></code> bytes; <code class="docutils literal notranslate"><span class="pre">callback</span></code> runs per
+<code class="docutils literal notranslate"><span class="pre">period_len</span></code> chunk.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_link(chan,</span> <span class="pre">callback,</span> <span class="pre">arg,</span> <span class="pre">work_mode,</span> <span class="pre">cfg)</span></code>
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK</span></code> only): scatter/gather transfer described by
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_link_config_s</span></code>; <code class="docutils literal notranslate"><span class="pre">callback</span></code> runs when the link transfer
+finishes. <code class="docutils literal notranslate"><span class="pre">work_mode</span></code> is one of <code class="docutils literal notranslate"><span class="pre">DMA_BLOCK_MODE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DMA_SRC_LINK_MODE</span></code>, <code class="docutils literal notranslate"><span class="pre">DMA_DST_LINK_MODE</span></code>, <code class="docutils literal notranslate"><span class="pre">DMA_DUAL_LINK_MODE</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop(chan)</span></code>: stop the transfer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pause(chan)</span></code> / <code class="docutils literal notranslate"><span class="pre">resume(chan)</span></code>: pause a transfer; <code class="docutils literal notranslate"><span class="pre">resume()</span></code>
+must follow <code class="docutils literal notranslate"><span class="pre">pause()</span></code> to restart it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">residual(chan)</span></code>: bytes remaining to be transferred.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_config_s</span></code> fields: <code class="docutils literal notranslate"><span class="pre">direction</span></code> (<code class="docutils literal notranslate"><span class="pre">DMA_MEM_TO_MEM</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DMA_MEM_TO_DEV</span></code>, <code class="docutils literal notranslate"><span class="pre">DMA_DEV_TO_MEM</span></code>, <code class="docutils literal notranslate"><span class="pre">DMA_DEV_TO_DEV</span></code>),
+<code class="docutils literal notranslate"><span class="pre">priority</span></code>, <code class="docutils literal notranslate"><span class="pre">timeout</span></code>, <code class="docutils literal notranslate"><span class="pre">option</span></code>, <code class="docutils literal notranslate"><span class="pre">dst_width</span></code> / <code class="docutils literal notranslate"><span class="pre">src_width</span></code>
+(FIFO/register width in bytes: 1, 2, 4, 8), <code class="docutils literal notranslate"><span class="pre">dst_drq</span></code> / <code class="docutils literal notranslate"><span class="pre">src_drq</span></code>
+(physical DMA request IDs), <code class="docutils literal notranslate"><span class="pre">dst_step</span></code> / <code class="docutils literal notranslate"><span class="pre">src_step</span></code> (address shift
+after each transfer; negative counts down). Zero means “keep the
+current value”.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma_callback_t</span></code> (<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">(*)(struct</span> <span class="pre">dma_chan_s</span> <span class="pre">*chan,</span> <span class="pre">void</span> <span class="pre">*arg,</span>
+<span class="pre">ssize_t</span> <span class="pre">len)</span></code>): completion callback. <code class="docutils literal notranslate"><span class="pre">chan</span></code> is the finished channel,
+<code class="docutils literal notranslate"><span class="pre">arg</span></code> is the value passed to <code class="docutils literal notranslate"><span class="pre">start*</span></code>, and <code class="docutils literal notranslate"><span class="pre">len</span></code> is the transfer
+length on success or a negative error code on failure. The DMA module
+performs no cache maintenance; on RX completion the client must
+invalidate the DMA buffers.</p>
+</section>
+<section id="using-dma-from-a-driver">
+<h2>Using DMA from a Driver<a class="headerlink" href="#using-dma-from-a-driver" title="Permalink to this heading"></a></h2>
+<p>Client-facing macros (all in <code class="docutils literal notranslate"><span class="pre">include/nuttx/dma/dma.h</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_GET_CHAN(dev,</span> <span class="pre">ident)</span></code> / <code class="docutils literal notranslate"><span class="pre">DMA_PUT_CHAN(dev,</span> <span class="pre">chan)</span></code>: acquire /
+release a channel from a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_dev_s</span> <span class="pre">*</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_CONFIG(chan,</span> <span class="pre">cfg)</span></code>: apply a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_config_s</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_START(chan,</span> <span class="pre">callback,</span> <span class="pre">arg,</span> <span class="pre">dst,</span> <span class="pre">src,</span> <span class="pre">len)</span></code>: one-shot transfer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_START_CYCLIC(chan,</span> <span class="pre">callback,</span> <span class="pre">arg,</span> <span class="pre">dst,</span> <span class="pre">src,</span> <span class="pre">len,</span> <span class="pre">period_len)</span></code>:
+cyclic transfer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_START_LINK(chan,</span> <span class="pre">callback,</span> <span class="pre">arg,</span> <span class="pre">mode,</span> <span class="pre">link_cfg)</span></code>
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK</span></code> only): link transfer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_PAUSE(chan)</span></code> / <code class="docutils literal notranslate"><span class="pre">DMA_RESUME(chan)</span></code> / <code class="docutils literal notranslate"><span class="pre">DMA_STOP(chan)</span></code> /
+<code class="docutils literal notranslate"><span class="pre">DMA_RESIDUAL(chan)</span></code>: transfer control and status.</p></li>
+</ul>
+<p>Address and cache rules, established by the header comments and both
+in-tree clients:</p>
+<ul class="simple">
+<li><p>Addresses passed to <code class="docutils literal notranslate"><span class="pre">start*</span></code> are physical addresses. Both clients
+translate with <code class="docutils literal notranslate"><span class="pre">up_addrenv_va_to_pa()</span></code> (FIFO register addresses and
+DMA buffers alike).</p></li>
+<li><p>The DMA module performs no cache operations. The client cleans
+(<code class="docutils literal notranslate"><span class="pre">up_clean_dcache()</span></code>) TX buffers before <code class="docutils literal notranslate"><span class="pre">DMA_START</span></code> and
+invalidates (<code class="docutils literal notranslate"><span class="pre">up_invalidate_dcache()</span></code>) RX data after completion.
+See <code class="docutils literal notranslate"><span class="pre">u16550_dmasend()</span></code> / <code class="docutils literal notranslate"><span class="pre">u16550_dmareceive()</span></code> in
+<code class="docutils literal notranslate"><span class="pre">drivers/serial/uart_16550.c</span></code> and
+<code class="docutils literal notranslate"><span class="pre">audio_dma_enqueuebuffer()</span></code> / <code class="docutils literal notranslate"><span class="pre">audio_dma_callback()</span></code> in
+<code class="docutils literal notranslate"><span class="pre">drivers/audio/audio_dma.c</span></code>.</p></li>
+</ul>
+</section>
+<section id="channel-and-transfer-lifecycle">
+<h2>Channel and Transfer Lifecycle<a class="headerlink" href="#channel-and-transfer-lifecycle" title="Permalink to this heading"></a></h2>
+<p>The framework defines no registration helper; the controller instance
+reaches the client out of band (see the examples below). The observed
+lifecycle is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Acquire channel (DMA_GET_CHAN or equivalent)
+             |
+             v
+Configure channel (DMA_CONFIG)
+             |
+             v
+Start transfer (DMA_START / DMA_START_CYCLIC / DMA_START_LINK)
+             |
+             v
+Hardware execution, completion callback per transfer/period
+             |
+             v
+Pause/resume around flow control or underrun (optional)
+             |
+             v
+Stop (DMA_STOP) and/or release (DMA_PUT_CHAN)
+</pre></div>
+</div>
+<p>Two in-tree patterns exist:</p>
+<ul class="simple">
+<li><p>One-shot TX: <code class="docutils literal notranslate"><span class="pre">drivers/serial/uart_16550.c</span></code> <code class="docutils literal notranslate"><span class="pre">u16550_dmasend()</span></code>
+calls <code class="docutils literal notranslate"><span class="pre">DMA_START</span></code> once per UART TX buffer with completion callback
+<code class="docutils literal notranslate"><span class="pre">u16550_dmasend_done()</span></code>, which reports the byte count via
+<code class="docutils literal notranslate"><span class="pre">uart_xmitchars_done()</span></code> and chains the next buffer, or retries the
+transfer if <code class="docutils literal notranslate"><span class="pre">len</span></code> indicates failure.</p></li>
+<li><p>Never-ending cyclic RX: <code class="docutils literal notranslate"><span class="pre">u16550_dmarxfree()</span></code> configures
+<code class="docutils literal notranslate"><span class="pre">DMA_DEV_TO_MEM</span></code> with a timeout derived from baud rate and starts
+<code class="docutils literal notranslate"><span class="pre">DMA_START_CYCLIC</span></code> once over the RX ring buffer with period
+<code class="docutils literal notranslate"><span class="pre">dmarxsize</span> <span class="pre">/</span> <span class="pre">4</span></code>; <code class="docutils literal notranslate"><span class="pre">u16550_dmareceive_done()</span></code> advances
+<code class="docutils literal notranslate"><span class="pre">dmarxhead</span></code> from the callback <code class="docutils literal notranslate"><span class="pre">len</span></code> and drains via
+<code class="docutils literal notranslate"><span class="pre">uart_recvchars_dma()</span></code>. <code class="docutils literal notranslate"><span class="pre">DMA_PAUSE()</span></code> / <code class="docutils literal notranslate"><span class="pre">DMA_RESUME()</span></code>
+implement RX flow control. <code class="docutils literal notranslate"><span class="pre">drivers/audio/audio_dma.c</span></code> follows the
+same cyclic model: <code class="docutils literal notranslate"><span class="pre">audio_dma_configure()</span></code> sets direction and FIFO
+width, <code class="docutils literal notranslate"><span class="pre">audio_dma_start()</span></code> calls <code class="docutils literal notranslate"><span class="pre">DMA_START_CYCLIC</span></code> over all
+audio buffers, <code class="docutils literal notranslate"><span class="pre">audio_dma_callback()</span></code> dequeues one finished buffer
+per period, and underrun pauses the channel until more buffers are
+enqueued. <code class="docutils literal notranslate"><span class="pre">audio_dma_stop()</span></code> calls <code class="docutils literal notranslate"><span class="pre">DMA_STOP()</span></code> and flushes the
+pending queue.</p></li>
+</ul>
+<p>Gaps established from source (no in-tree use besides the header):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_PUT_CHAN()</span></code> is never called in-tree; neither client releases
+its channel after acquisition.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_RESIDUAL()</span></code> and <code class="docutils literal notranslate"><span class="pre">DMA_START_LINK()</span></code> have no in-tree callers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DMA_STOP()</span></code> is used only by <code class="docutils literal notranslate"><span class="pre">audio_dma</span></code>; the UART driver never
+stops its channels.</p></li>
+</ul>
+</section>
+<section id="dma-links">
+<h2>DMA Links<a class="headerlink" href="#dma-links" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK</span></code> is set, a transfer can walk arrays of
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_link_s</span></code> (<code class="docutils literal notranslate"><span class="pre">addr</span></code> plus <code class="docutils literal notranslate"><span class="pre">link_num</span></code> / <code class="docutils literal notranslate"><span class="pre">link_size</span></code>)
+bundled in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_link_config_s</span></code> (<code class="docutils literal notranslate"><span class="pre">dst_link_num</span></code>,
+<code class="docutils literal notranslate"><span class="pre">src_link_num</span></code>, <code class="docutils literal notranslate"><span class="pre">dst_link</span></code>, <code class="docutils literal notranslate"><span class="pre">src_link</span></code>) instead of a single
+contiguous buffer. The mode argument selects which side uses links:
+<code class="docutils literal notranslate"><span class="pre">DMA_BLOCK_MODE</span></code>, <code class="docutils literal notranslate"><span class="pre">DMA_SRC_LINK_MODE</span></code>, <code class="docutils literal notranslate"><span class="pre">DMA_DST_LINK_MODE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DMA_DUAL_LINK_MODE</span></code>.</p>
+<p>This mechanism is optional and currently has no in-tree controller
+implementation and no in-tree user; only <code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK=y</span></code> board
+defconfigs (for example <code class="docutils literal notranslate"><span class="pre">boards/xtensa/esp32/esp32-sparrow-kit</span></code>)
+select the option. Controller authors should treat the link array
+layout and ownership as defined solely by <code class="docutils literal notranslate"><span class="pre">include/nuttx/dma/dma.h</span></code>
+until an in-tree implementation exists.</p>
+</section>
+<section id="implementing-a-dma-controller">
+<h2>Implementing a DMA Controller<a class="headerlink" href="#implementing-a-dma-controller" title="Permalink to this heading"></a></h2>
+<p>A controller implementation must provide:</p>
+<ol class="arabic simple">
+<li><p>An instance of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_dev_s</span></code> with working <code class="docutils literal notranslate"><span class="pre">get_chan</span></code> /
+<code class="docutils literal notranslate"><span class="pre">put_chan</span></code> operations implementing the blocking-acquire,
+use-after-release forbidden semantics documented in the header.</p></li>
+<li><p>Channel structures whose first member is <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_chan_s</span></code>
+(so a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_chan_s</span> <span class="pre">*</span></code> converts to the implementation
+structure), each carrying a populated <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_ops_s</span></code> table.</p></li>
+<li><p>At minimum the <code class="docutils literal notranslate"><span class="pre">config</span></code> / <code class="docutils literal notranslate"><span class="pre">start</span></code> / <code class="docutils literal notranslate"><span class="pre">start_cyclic</span></code> /
+<code class="docutils literal notranslate"><span class="pre">stop</span></code> / <code class="docutils literal notranslate"><span class="pre">pause</span></code> / <code class="docutils literal notranslate"><span class="pre">resume</span></code> operations used by the intended
+clients; <code class="docutils literal notranslate"><span class="pre">residual</span></code> and <code class="docutils literal notranslate"><span class="pre">start_link</span></code> are required only if
+clients use <code class="docutils literal notranslate"><span class="pre">DMA_RESIDUAL()</span></code> / <code class="docutils literal notranslate"><span class="pre">DMA_START_LINK()</span></code> (none do
+in-tree).</p></li>
+</ol>
+<p>How the controller reaches the client depends on the client:</p>
+<ul class="simple">
+<li><p>Audio: <code class="docutils literal notranslate"><span class="pre">audio_dma_initialize()</span></code>
+(<code class="docutils literal notranslate"><span class="pre">drivers/audio/audio_dma.c</span></code>, <code class="docutils literal notranslate"><span class="pre">include/nuttx/audio/audio_dma.h</span></code>)
+takes a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_dev_s</span> <span class="pre">*</span></code> plus channel number directly and
+acquires the channel with <code class="docutils literal notranslate"><span class="pre">DMA_GET_CHAN()</span></code>.</p></li>
+<li><p>16550 UART: the UART obtains channels through the platform hook
+<code class="docutils literal notranslate"><span class="pre">dmachan(priv,</span> <span class="pre">ident)</span></code> in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">u16550_ops_s</span></code>
+(<code class="docutils literal notranslate"><span class="pre">include/nuttx/serial/uart_16550.h</span></code>), which is expected to return
+a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_chan_s</span> <span class="pre">*</span></code>. The default hook, <code class="docutils literal notranslate"><span class="pre">uart_dmachan()</span></code>, is
+declared but has no in-tree definition, so a platform using 16550
+DMA must either override <code class="docutils literal notranslate"><span class="pre">ops-&gt;dmachan</span></code> or provide its own
+<code class="docutils literal notranslate"><span class="pre">uart_dmachan()</span></code> (<code class="docutils literal notranslate"><span class="pre">drivers/serial/uart_pci_16550.c</span></code>
+shows the override pattern with a stub returning <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, meaning
+no DMA). Channel identities, RX buffer sizes, and RX timeouts come
+from <code class="docutils literal notranslate"><span class="pre">CONFIG_16550_UARTn_DMA*</span></code> options
+(<code class="docutils literal notranslate"><span class="pre">drivers/serial/Kconfig-16550</span></code>).</p></li>
+</ul>
+</section>
+<section id="existing-implementations">
+<h2>Existing Implementations<a class="headerlink" href="#existing-implementations" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/audio/audio_dma.c</span></code>: clearest end-to-end client. Shows
+acquire (<code class="docutils literal notranslate"><span class="pre">audio_dma_initialize()</span></code>), direction/width configuration,
+cyclic start over the buffer set, per-period dequeue in the callback,
+pause on underrun, resume on enqueue, and stop with queue flush.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/serial/uart_16550.c</span></code>: shows both one-shot TX chained from
+the completion callback and background cyclic RX with pause/resume
+flow control. Channel acquisition is delegated to the platform
+<code class="docutils literal notranslate"><span class="pre">dmachan</span></code> hook rather than <code class="docutils literal notranslate"><span class="pre">DMA_GET_CHAN()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arch/arm64/src/bcm2711/hardware/bcm2711_dma.h</span></code>: register
+definitions only, not a framework controller.</p></li>
+<li><p>Espressif <code class="docutils literal notranslate"><span class="pre">lldesc_t</span></code> / <code class="docutils literal notranslate"><span class="pre">gdma_*</span></code> code (for example
+<code class="docutils literal notranslate"><span class="pre">arch/risc-v/src/common/espressif/esp_i2s.c</span></code>) implements its own
+descriptor chaining outside this framework and must not be confused
+with <code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK</span></code> link transfers.</p></li>
+</ul>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DMA</span></code>: enable the common DMA interface (selects
+<code class="docutils literal notranslate"><span class="pre">ARCH_DMA</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK</span></code>: enable link-transfer structures and
+<code class="docutils literal notranslate"><span class="pre">DMA_START_LINK()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ARCH_DMA</span></code> / <code class="docutils literal notranslate"><span class="pre">ARCH_DMA_NO_FLASH_TRANSFER</span></code> (<code class="docutils literal notranslate"><span class="pre">arch/Kconfig</span></code>): SoC
+capability selects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_16550_UARTn_DMA</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_16550_UARTn_DMA_TX</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_16550_UARTn_DMA_RX</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_16550_UARTn_DMA_RXBUFSIZE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_16550_UARTn_DMA_RXTIMEOUT</span></code>: 16550 UART DMA binding.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_BUFFER_NUMBYTES</span></code> / <code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_NUM_BUFFERS</span></code>:
+default buffer geometry used by <code class="docutils literal notranslate"><span class="pre">audio_dma_initialize()</span></code>.</p></li>
+</ul>
+</section>
 </section>
 
 

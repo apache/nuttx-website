@@ -209,6 +209,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#can">CAN</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#spi">SPI</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#sdio">SDIO</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#ethernet">Ethernet</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#usb">USB</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#ltdc-hardware-acceleration">LTDC hardware acceleration</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#dma2d-hardware-acceleration">DMA2D hardware acceleration</a></li>
@@ -612,6 +613,75 @@ Cannot be used with CONFIG_STM32_SPI_INTERRUPT.</p></li>
 <li><p>CONFIG_STM32_SDIO_WIDTH_D1_ONLY - Select 1-bit transfer mode.  Default:
 4-bit transfer mode.</p></li>
 </ul>
+</section>
+<section id="ethernet">
+<h3>Ethernet<a class="headerlink" href="#ethernet" title="Permalink to this heading"></a></h3>
+<p>The Ethernet MAC of the STM32F4 has a time counter that can stamp every
+frame it sends or receives in hardware, at the moment the frame crosses the
+MAC. A protocol such as the Precision Time Protocol (IEEE 1588, PTP) uses
+these stamps to compare its clock with the clock of another node without the
+delay of the software (interrupts and task scheduling) getting into the
+measurement. The options below enable that part of the driver.</p>
+<section id="precision-time-protocol">
+<h4>Precision Time Protocol<a class="headerlink" href="#precision-time-protocol" title="Permalink to this heading"></a></h4>
+<p>The counter has a 32-bit seconds part and a 31-bit sub-second part and is
+clocked from <code class="docutils literal notranslate"><span class="pre">SYSCLK</span></code>. Its rate can be trimmed by up to +/- 50 %, and its
+phase can be stepped, which is what a PTP daemon needs to steer it towards a
+master clock.</p>
+<ul class="simple">
+<li><p>CONFIG_STM32_ETH_PTP - Enables the PTP timer of the MAC.</p></li>
+<li><p>CONFIG_STM32_ETH_ENHANCEDDESC - Uses the double-length DMA descriptors,
+which have room for the timestamp. Needed for timestamping received
+packets.</p></li>
+<li><p>CONFIG_STM32_ETH_TIMESTAMP_RX - Timestamps every received packet with the
+counter. Requires CONFIG_STM32_ETH_PTP, CONFIG_STM32_ETH_ENHANCEDDESC and
+CONFIG_NET_TIMESTAMP. The timestamp is delivered to the application with
+the packet through the socket options of the network stack, for example
+<code class="docutils literal notranslate"><span class="pre">SO_TIMESTAMPNS</span></code>. A packet for which the MAC did not store a timestamp
+gets a timestamp of zero.</p></li>
+<li><p>CONFIG_STM32_ETH_PTP_GPIO - Enables the pulse-per-second output of the MAC
+on the pin <code class="docutils literal notranslate"><span class="pre">GPIO_ETH_PPS_OUT</span></code>. The board has to define it in its
+<code class="docutils literal notranslate"><span class="pre">board.h</span></code> with one of the pins of the chip (on the STM32F40xxx and
+STM32F42xxx parts <code class="docutils literal notranslate"><span class="pre">GPIO_ETH_PPS_OUT_1</span></code> is PB5 and <code class="docutils literal notranslate"><span class="pre">GPIO_ETH_PPS_OUT_2</span></code>
+is PG8). The pulse is derived from the counter, so it shows how well the
+counter follows the master clock.</p></li>
+<li><p>CONFIG_STM32_ETH_PTP_RTC_HIRES - Uses the counter as the source of
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_HIRES</span></code>.</p></li>
+</ul>
+</section>
+<section id="clock-device">
+<h4>Clock device<a class="headerlink" href="#clock-device" title="Permalink to this heading"></a></h4>
+<p>With CONFIG_PTP_CLOCK the driver registers the counter as a PTP hardware
+clock, <code class="docutils literal notranslate"><span class="pre">/dev/ptp0</span></code> for the first Ethernet interface (the number of the
+device is the number of the interface). It follows the generic framework
+described in <a class="reference internal" href="../../../components/drivers/special/ptp.html"><span class="doc">PTP Clock Driver Framework</span></a> and offers reading and
+setting the time, the resolution, frequency adjustment (<code class="docutils literal notranslate"><span class="pre">ADJ_FREQUENCY</span></code>, up
+to +/- 50 %) and phase steps (<code class="docutils literal notranslate"><span class="pre">ADJ_OFFSET</span></code> and <code class="docutils literal notranslate"><span class="pre">ADJ_SETOFFSET</span></code>). It does
+not offer the cross timestamp of the system and the device clock.
+CONFIG_CLOCK_ADJTIME is needed for <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code>.</p>
+<p>The timestamps of the received packets are values of this same counter, not of
+<code class="docutils literal notranslate"><span class="pre">CLOCK_REALTIME</span></code>. A program that uses them has to compare them with
+<code class="docutils literal notranslate"><span class="pre">/dev/ptp0</span></code>. The <code class="docutils literal notranslate"><span class="pre">ptpd</span></code> daemon does that when it is started with hardware
+timestamping and the device as its clock:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ptpd -H -p /dev/ptp0 -i eth0 &amp;</span>
+</pre></div>
+</div>
+<p>A configuration with everything above, for a board with the Ethernet MAC,
+looks like this:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_STM32_ETHMAC=y
+CONFIG_STM32_ETH_PTP=y
+CONFIG_STM32_ETH_ENHANCEDDESC=y
+CONFIG_STM32_ETH_TIMESTAMP_RX=y
+CONFIG_STM32_ETH_PTP_GPIO=y
+CONFIG_NET_TIMESTAMP=y
+CONFIG_PTP_CLOCK=y
+CONFIG_CLOCK_ADJTIME=y
+CONFIG_NETUTILS_PTPD=y
+</pre></div>
+</div>
+<p>This driver stamps received packets only. The packets it sends are not
+stamped by the hardware yet.</p>
+</section>
 </section>
 <section id="usb">
 <h3>USB<a class="headerlink" href="#usb" title="Permalink to this heading"></a></h3>

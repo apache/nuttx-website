@@ -170,6 +170,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#break-terminate-a-loop"><code class="docutils literal notranslate"><span class="pre">break</span></code> Terminate a Loop</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cat-concatenate-files"><code class="docutils literal notranslate"><span class="pre">cat</span></code> Concatenate Files</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cd-change-current-working-directory"><code class="docutils literal notranslate"><span class="pre">cd</span></code> Change Current Working Directory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chroot-change-root-directory"><code class="docutils literal notranslate"><span class="pre">chroot</span></code> Change Root Directory</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#chmod-change-file-permissions"><code class="docutils literal notranslate"><span class="pre">chmod</span></code> Change File Permissions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#chown-change-file-owner-and-group"><code class="docutils literal notranslate"><span class="pre">chown</span></code> Change File Owner and Group</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cmp-compare-files"><code class="docutils literal notranslate"><span class="pre">cmp</span></code> Compare Files</a></li>
@@ -499,6 +500,45 @@ in the configuration file. The default home directory is /.</p></td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="chroot-change-root-directory">
+<span id="cmdchroot"></span><h2><code class="docutils literal notranslate"><span class="pre">chroot</span></code> Change Root Directory<a class="headerlink" href="#chroot-change-root-directory" title="Permalink to this heading"></a></h2>
+<p><strong>Command Syntax</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>chroot &lt;newroot&gt; [&lt;command&gt; [args...]]
+</pre></div>
+</div>
+<p><strong>Synopsis</strong>. Change the filesystem root of the current task group so
+absolute path lookups start at <code class="docutils literal notranslate"><span class="pre">&lt;newroot&gt;</span></code>. Requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_CHROOT</span></code>. This is a filesystem jail, not a container.</p>
+<p>The command performs <code class="docutils literal notranslate"><span class="pre">chdir(newroot)</span></code>, <code class="docutils literal notranslate"><span class="pre">chroot(&quot;.&quot;)</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">chdir(&quot;/&quot;)</span></code>. With no extra arguments the current NSH session stays
+jailed (<code class="docutils literal notranslate"><span class="pre">pwd</span></code> shows <code class="docutils literal notranslate"><span class="pre">/</span></code>). An optional command is executed with
+<code class="docutils literal notranslate"><span class="pre">execvp()</span></code> after the jail is in place.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code> is enabled, <code class="docutils literal notranslate"><span class="pre">chroot()</span></code> requires
+effective UID 0. Drop extra privilege after jailing so a later
+<code class="docutils literal notranslate"><span class="pre">chroot()</span></code> cannot be used to escape.</p>
+<p>File descriptors opened before <code class="docutils literal notranslate"><span class="pre">chroot()</span></code> are not retroactively
+contained. The <code class="docutils literal notranslate"><span class="pre">chroot</span> <span class="pre">&lt;newroot&gt;</span> <span class="pre">&lt;command&gt;</span></code> form closes non-stdio
+descriptors that are not already <code class="docutils literal notranslate"><span class="pre">O_CLOEXEC</span></code> before <code class="docutils literal notranslate"><span class="pre">execvp()</span></code>.
+The no-command form leaves the current session’s existing descriptors
+usable, including any that point outside the jail.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mkdir /tmp/jail
+nsh&gt; echo hello &gt; /tmp/jail/marker
+nsh&gt; chroot /tmp/jail
+nsh&gt; pwd
+/
+nsh&gt; ls /
+/:
+ marker
+nsh&gt; cat /marker
+hello
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">/</span></code> only lists <code class="docutils literal notranslate"><span class="pre">marker</span></code>: <code class="docutils literal notranslate"><span class="pre">/dev</span></code> and <code class="docutils literal notranslate"><span class="pre">/proc</span></code> are not
+visible inside the jail because they were never created under
+<code class="docutils literal notranslate"><span class="pre">/tmp/jail</span></code>. <code class="docutils literal notranslate"><span class="pre">chroot()</span></code> does not bind-mount or otherwise populate
+these pseudo-filesystems into the new root; see <a class="reference internal" href="../../implementation/chroot.html#chroot"><span class="std std-ref">chroot</span></a>.</p>
 </section>
 <section id="chmod-change-file-permissions">
 <span id="cmdchmod"></span><h2><code class="docutils literal notranslate"><span class="pre">chmod</span></code> Change File Permissions<a class="headerlink" href="#chmod-change-file-permissions" title="Permalink to this heading"></a></h2>

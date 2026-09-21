@@ -145,6 +145,7 @@
 <li class="toctree-l2"><a class="reference internal" href="bottomhalf_interrupt.html">Bottom-Half Interrupt Handlers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cancellation_points.html">Cancellation Points</a></li>
 <li class="toctree-l2"><a class="reference internal" href="chip_h.html">chip.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="chroot.html">chroot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="context_switches.html">Context Switches</a></li>
 <li class="toctree-l2"><a class="reference internal" href="crc.html">CRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="critical_sections.html">Critical Sections</a></li>
@@ -190,6 +191,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#setuid-on-exec">Setuid-on-exec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flat-build-trust-boundary">Flat Build Trust Boundary</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pseudo-filesystem-ownership">Pseudo-Filesystem Ownership</a></li>
 </ul>
 </li>
@@ -268,7 +270,10 @@ empty list; use <code class="docutils literal notranslate"><span class="pre">get
 with <code class="docutils literal notranslate"><span class="pre">setgroups()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NGROUPS_MAX</span></code> equals <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_NGROUPS</span></code>.</p></li>
 </ul>
-<p>Filesystem DAC (<code class="docutils literal notranslate"><span class="pre">fs_checkmode()</span></code>) grants the group-class mode bits when the
+<p>Filesystem DAC (Discretionary Access Control – ownership- and
+mode-bit-based permission checks, as opposed to a mandatory policy
+enforced independently of the file owner) is implemented by
+<code class="docutils literal notranslate"><span class="pre">fs_checkmode()</span></code>, which grants the group-class mode bits when the
 file’s group matches <code class="docutils literal notranslate"><span class="pre">tg_egid</span></code> <strong>or</strong> any entry in <code class="docutils literal notranslate"><span class="pre">tg_groups</span></code>.</p>
 </section>
 <section id="inheritance">
@@ -369,6 +374,21 @@ See <a class="reference internal" href="file_permission.html#file-permission"><s
 traverse rules, and testing notes.</p>
 </dd>
 </dl>
+</section>
+<section id="flat-build-trust-boundary">
+<h2>Flat Build Trust Boundary<a class="headerlink" href="#flat-build-trust-boundary" title="Permalink to this heading"></a></h2>
+<p>This credential model is a DAC (Discretionary Access Control) layer for
+cooperating tasks, not a process-isolation boundary.  DAC here means
+permission checks based on ownership and mode bits that the owner can
+change (<code class="docutils literal notranslate"><span class="pre">chmod()</span></code>/<code class="docutils literal notranslate"><span class="pre">chown()</span></code>), rather than a mandatory policy
+enforced independently of the object owner.  On <code class="docutils literal notranslate"><span class="pre">CONFIG_BUILD_FLAT</span></code>,
+kernel and
+application share one address space, so other code can write
+<code class="docutils literal notranslate"><span class="pre">tg_euid</span></code> / <code class="docutils literal notranslate"><span class="pre">tg_egid</span></code> (and other fields in <code class="docutils literal notranslate"><span class="pre">task_group_s</span></code>)
+directly and bypass the syscall checks.  Protected and kernel builds
+enforce the boundary via the syscall interface.</p>
+<p>The same caveat applies to <code class="docutils literal notranslate"><span class="pre">chroot()</span></code>’s <code class="docutils literal notranslate"><span class="pre">euid</span> <span class="pre">==</span> <span class="pre">0</span></code> gate and
+<code class="docutils literal notranslate"><span class="pre">tg_root</span></code>; see <a class="reference internal" href="chroot.html#chroot"><span class="std std-ref">chroot</span></a>.</p>
 </section>
 <section id="pseudo-filesystem-ownership">
 <h2>Pseudo-Filesystem Ownership<a class="headerlink" href="#pseudo-filesystem-ownership" title="Permalink to this heading"></a></h2>

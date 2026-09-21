@@ -188,7 +188,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#architecture">Architecture</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#device-interface">Device Interface</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#posix-clock-api-clockfd">POSIX Clock API (CLOCKFD)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#posix-clock-api-clock-fd">POSIX Clock API (CLOCK_FD)</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#dummy-ptp-clock-driver">Dummy PTP Clock Driver</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#example-usage">Example Usage</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#implementing-a-lower-half-driver">Implementing a Lower-Half Driver</a></li>
@@ -294,28 +294,56 @@ to other NuttX device drivers.</p>
 <li><p>Common ioctl command handling</p></li>
 <li><p>Frequency and time adjustment logic</p></li>
 <li><p>Cross-timestamp support</p></li>
-<li><p>Interface to POSIX clock APIs via CLOCKFD mechanism</p></li>
+<li><p>Interface to POSIX clock APIs through the <code class="docutils literal notranslate"><span class="pre">CLOCK_FD</span></code> clock type</p></li>
 </ul>
 </section>
 <section id="lower-half-driver">
 <h3>Lower-Half Driver<a class="headerlink" href="#lower-half-driver" title="Permalink to this heading"></a></h3>
-<p>Hardware-specific drivers implement the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_lowerhalf_s</span></code> interface
-with the following operations:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_clock_ops_s</span>
+<p>Hardware-specific drivers embed a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_lowerhalf_s</span></code> and point its
+<code class="docutils literal notranslate"><span class="pre">ops</span></code> field to a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_ops_s</span></code> with the following operations:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span>
 <span class="p">{</span>
-<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">adjfine</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">scaled_ppm</span><span class="p">);</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_ops_s</span><span class="w"> </span><span class="o">*</span><span class="n">ops</span><span class="p">;</span><span class="w">  </span><span class="cm">/* Lower half driver operations */</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">upper</span><span class="p">;</span><span class="w">                  </span><span class="cm">/* The upper handle */</span>
+<span class="p">};</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">ptp_ops_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">adjfine</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">ppb</span><span class="p">);</span>
+<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">adjphase</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">phase</span><span class="p">);</span>
 <span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">adjtime</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">int64_t</span><span class="w"> </span><span class="n">delta</span><span class="p">);</span>
 <span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">gettime</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
-<span class="w">                      </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">ts</span><span class="p">);</span>
+<span class="w">                      </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">ts</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_system_timestamp</span><span class="w"> </span><span class="o">*</span><span class="n">sts</span><span class="p">);</span>
+<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">getcrosststamp</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">system_device_crosststamp</span><span class="w"> </span><span class="o">*</span><span class="n">cts</span><span class="p">);</span>
 <span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">settime</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
 <span class="w">                      </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">ts</span><span class="p">);</span>
-<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">getcaps</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
-<span class="w">                      </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_clock_caps</span><span class="w"> </span><span class="o">*</span><span class="n">caps</span><span class="p">);</span>
-<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">getcrosststamp</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
-<span class="w">                            </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">system_device_crosststamp</span><span class="w"> </span><span class="o">*</span><span class="n">xts</span><span class="p">);</span>
+<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">getres</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">res</span><span class="p">);</span>
+<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">control</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">int</span><span class="w"> </span><span class="n">cmd</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">arg</span><span class="p">);</span>
 <span class="p">};</span>
 </pre></div>
 </div>
+<p>The units are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">adjfine</span></code>: the frequency offset from the nominal frequency, in parts per
+billion. The upper half converts the <code class="docutils literal notranslate"><span class="pre">freq</span></code> field of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timex</span></code>
+(parts per million with 16 fractional bits) and rejects values beyond the
+<code class="docutils literal notranslate"><span class="pre">max_adj</span></code> given at registration before calling it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">adjphase</span></code>: the change to apply to the phase, in nanoseconds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">adjtime</span></code>: the change to apply to the time, in nanoseconds.</p></li>
+</ul>
+<p>The upper half calls <code class="docutils literal notranslate"><span class="pre">adjtime</span></code> unconditionally, so every driver has to
+provide it. The other operations are optional: <code class="docutils literal notranslate"><span class="pre">gettime</span></code>, <code class="docutils literal notranslate"><span class="pre">settime</span></code> and
+<code class="docutils literal notranslate"><span class="pre">getres</span></code> make the matching ioctl return <code class="docutils literal notranslate"><span class="pre">-ENOTSUP</span></code> when they are missing,
+<code class="docutils literal notranslate"><span class="pre">adjfine</span></code> and <code class="docutils literal notranslate"><span class="pre">adjphase</span></code> make the corresponding <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code> mode
+fail the same way, and <code class="docutils literal notranslate"><span class="pre">getcrosststamp</span></code> is reported through the
+<code class="docutils literal notranslate"><span class="pre">cross_timestamping</span></code> capability. The capabilities are built by the upper
+half from which operations exist and from <code class="docutils literal notranslate"><span class="pre">max_adj</span></code>, so there is no
+operation to report them. Ioctl commands that the upper half does not know
+are passed to <code class="docutils literal notranslate"><span class="pre">control</span></code>.</p>
 </section>
 </section>
 <section id="configuration-options">
@@ -327,7 +355,7 @@ driver infrastructure and POSIX clock API integration.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_CLOCK_DUMMY</span></code></dt><dd><p>Enable a software-based dummy PTP clock driver for testing and development.
 This driver provides a PTP clock implementation without hardware support,
-using the system monotonic clock as the time base.</p>
+using <code class="docutils literal notranslate"><span class="pre">CLOCK_REALTIME</span></code> as the time base.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_CLOCK_ADJTIME</span></code></dt><dd><p>Enable the <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code> system call, required for frequency and
 phase adjustments of PTP clocks.</p>
@@ -347,16 +375,16 @@ using ioctl commands.</p>
 <p>The following ioctl commands are supported:</p>
 <dl>
 <dt><code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETTIME</span></code></dt><dd><p>Get the current time from the PTP clock.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_clock_time</span><span class="w"> </span><span class="n">time</span><span class="p">;</span>
-<span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">PTP_CLOCK_GETTIME</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">time</span><span class="p">);</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="n">ts</span><span class="p">;</span>
+<span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">PTP_CLOCK_GETTIME</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_SETTIME</span></code></dt><dd><p>Set the time of the PTP clock.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_clock_time</span><span class="w"> </span><span class="n">time</span><span class="p">;</span>
-<span class="n">time</span><span class="p">.</span><span class="n">sec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1234567890</span><span class="p">;</span>
-<span class="n">time</span><span class="p">.</span><span class="n">nsec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123456789</span><span class="p">;</span>
-<span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">PTP_CLOCK_SETTIME</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">time</span><span class="p">);</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="n">ts</span><span class="p">;</span>
+<span class="n">ts</span><span class="p">.</span><span class="n">tv_sec</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">1234567890</span><span class="p">;</span>
+<span class="n">ts</span><span class="p">.</span><span class="n">tv_nsec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123456789</span><span class="p">;</span>
+<span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">PTP_CLOCK_SETTIME</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd>
@@ -370,7 +398,7 @@ using ioctl commands.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">timex</span><span class="w"> </span><span class="n">tx</span><span class="p">;</span>
 <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tx</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">tx</span><span class="p">));</span>
 <span class="n">tx</span><span class="p">.</span><span class="n">modes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ADJ_FREQUENCY</span><span class="p">;</span>
-<span class="n">tx</span><span class="p">.</span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10000000</span><span class="p">;</span><span class="w">  </span><span class="cm">/* +10 PPM */</span>
+<span class="n">tx</span><span class="p">.</span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">655360</span><span class="p">;</span><span class="w">  </span><span class="cm">/* +10 ppm, in ppm scaled by 65536 */</span>
 <span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">PTP_CLOCK_ADJTIME</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tx</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -395,58 +423,81 @@ using ioctl commands.</p>
 </pre></div>
 </div>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET_EXTENDED</span></code></dt><dd><p>Like <code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET</span></code>, but returns for each sample the system time before
+and after reading the device time (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_sys_offset_extended</span></code>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETSTATS</span></code> and <code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_SETSTATS</span></code></dt><dd><p>Read or set the drift statistics kept by the upper half
+(<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_statistics_s</span></code>).</p>
+</dd>
 </dl>
+<p>The <code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETCAPS</span></code>, <code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET</span></code>, <code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET_PRECISE</span></code> and
+<code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET_EXTENDED</span></code> commands also exist with a <code class="docutils literal notranslate"><span class="pre">2</span></code> suffix
+(<code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETCAPS2</span></code>, <code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET2</span></code> and so on), which the upper half
+handles the same way. The time values of <code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETTIME</span></code>,
+<code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_SETTIME</span></code> and <code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETRES</span></code> are <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timespec</span></code>, while
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_clock_time</span></code> is used by the <code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET</span></code> family.</p>
 </section>
 </section>
-<section id="posix-clock-api-clockfd">
-<h2>POSIX Clock API (CLOCKFD)<a class="headerlink" href="#posix-clock-api-clockfd" title="Permalink to this heading"></a></h2>
-<p>NuttX implements the CLOCKFD mechanism, allowing PTP clocks to be accessed
-through standard POSIX clock APIs. This provides a more familiar interface
-for applications already using <code class="docutils literal notranslate"><span class="pre">clock_gettime()</span></code>, <code class="docutils literal notranslate"><span class="pre">clock_settime()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">clock_getres()</span></code>, and <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code>.</p>
-<p>The CLOCKFD mechanism works by encoding a file descriptor into a clockid_t
-value using the <code class="docutils literal notranslate"><span class="pre">CLOCKFD()</span></code> macro:</p>
+<section id="posix-clock-api-clock-fd">
+<h2>POSIX Clock API (CLOCK_FD)<a class="headerlink" href="#posix-clock-api-clock-fd" title="Permalink to this heading"></a></h2>
+<p>NuttX allows PTP clocks to be accessed through the standard POSIX clock APIs.
+This provides a more familiar interface for applications already using
+<code class="docutils literal notranslate"><span class="pre">clock_gettime()</span></code>, <code class="docutils literal notranslate"><span class="pre">clock_settime()</span></code>, <code class="docutils literal notranslate"><span class="pre">clock_getres()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code>.</p>
+<p>The clock identifier is built from the file descriptor of the opened device
+with the <code class="docutils literal notranslate"><span class="pre">CLOCK_SHIFT</span></code> and <code class="docutils literal notranslate"><span class="pre">CLOCK_FD</span></code> definitions of
+<code class="docutils literal notranslate"><span class="pre">&lt;nuttx/clock.h&gt;</span></code>:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/timex.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/clock.h&gt;</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ptp0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDONLY</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ptp0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDWR</span><span class="p">);</span>
+<span class="kt">clockid_t</span><span class="w"> </span><span class="n">clockid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">CLOCK_SHIFT</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">CLOCK_FD</span><span class="p">;</span>
 <span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="n">ts</span><span class="p">;</span>
 
 <span class="cm">/* Get PTP clock time using POSIX API */</span>
-<span class="n">clock_gettime</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">);</span>
+<span class="n">clock_gettime</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">);</span>
 
 <span class="cm">/* Set PTP clock time */</span>
-<span class="n">clock_settime</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">);</span>
+<span class="n">clock_settime</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">);</span>
 
 <span class="cm">/* Get PTP clock resolution */</span>
 <span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="n">res</span><span class="p">;</span>
-<span class="n">clock_getres</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+<span class="n">clock_getres</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
 
 <span class="cm">/* Adjust PTP clock frequency */</span>
 <span class="k">struct</span><span class="w"> </span><span class="nc">timex</span><span class="w"> </span><span class="n">tx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
 <span class="n">tx</span><span class="p">.</span><span class="n">modes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ADJ_FREQUENCY</span><span class="p">;</span>
-<span class="n">tx</span><span class="p">.</span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-5000000</span><span class="p">;</span><span class="w">  </span><span class="cm">/* -5 PPM */</span>
-<span class="n">clock_adjtime</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tx</span><span class="p">);</span>
+<span class="n">tx</span><span class="p">.</span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-327680</span><span class="p">;</span><span class="w">  </span><span class="cm">/* -5 ppm, in ppm scaled by 65536 */</span>
+<span class="n">clock_adjtime</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tx</span><span class="p">);</span>
 
 <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
 </pre></div>
 </div>
+<p>The clock identifier is only valid while the file descriptor is open.</p>
 <section id="supported-adjustment-modes">
 <h3>Supported Adjustment Modes<a class="headerlink" href="#supported-adjustment-modes" title="Permalink to this heading"></a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code> function supports the following adjustment modes
-via <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timex</span></code>:</p>
+<p>For a PTP clock, <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code> handles one of the following modes per
+call, checked in this order:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_OFFSET</span></code>: Apply time offset adjustment</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_FREQUENCY</span></code>: Adjust clock frequency in scaled PPM</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_MAXERROR</span></code>: Set maximum time error estimate</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_ESTERROR</span></code>: Set estimated time error</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_STATUS</span></code>: Modify clock status bits</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_TIMECONST</span></code>: Set PLL time constant</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_SETOFFSET</span></code>: Set absolute time offset (with <code class="docutils literal notranslate"><span class="pre">ADJ_NANO</span></code> flag)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_MICRO</span></code>: Interpret time values as microseconds</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_NANO</span></code>: Interpret time values as nanoseconds</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_SETOFFSET</span></code>: step the clock by the offset in <code class="docutils literal notranslate"><span class="pre">tx.time</span></code>. The
+<code class="docutils literal notranslate"><span class="pre">tv_usec</span></code> field holds microseconds, or nanoseconds if <code class="docutils literal notranslate"><span class="pre">ADJ_NANO</span></code> is also
+set. A value of one second or more in that field is rejected with
+<code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_FREQUENCY</span></code>: set the frequency offset from <code class="docutils literal notranslate"><span class="pre">tx.freq</span></code>, in parts per
+million with 16 fractional bits (ppm multiplied by 65536, so +10 ppm is
+655360). A value beyond the maximum adjustment of the clock returns
+<code class="docutils literal notranslate"><span class="pre">-ERANGE</span></code>. This needs the <code class="docutils literal notranslate"><span class="pre">adjfine</span></code> operation of the driver.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ADJ_OFFSET</span></code>: adjust the <strong>phase</strong> by <code class="docutils literal notranslate"><span class="pre">tx.offset</span></code>, in microseconds, or in
+nanoseconds if <code class="docutils literal notranslate"><span class="pre">ADJ_NANO</span></code> is also set. This needs the <code class="docutils literal notranslate"><span class="pre">adjphase</span></code>
+operation of the driver.</p></li>
+<li><p>No mode (<code class="docutils literal notranslate"><span class="pre">tx.modes</span></code> equal to zero): read back the last frequency set in
+<code class="docutils literal notranslate"><span class="pre">tx.freq</span></code>.</p></li>
 </ul>
+<p><code class="docutils literal notranslate"><span class="pre">ADJ_NANO</span></code> only selects the unit of the two time based modes above.
+<code class="docutils literal notranslate"><span class="pre">ADJ_MAXERROR</span></code>, <code class="docutils literal notranslate"><span class="pre">ADJ_ESTERROR</span></code>, <code class="docutils literal notranslate"><span class="pre">ADJ_STATUS</span></code> and <code class="docutils literal notranslate"><span class="pre">ADJ_TIMECONST</span></code> are not
+handled for a PTP clock and make the call return <code class="docutils literal notranslate"><span class="pre">-ENOTSUP</span></code>.</p>
 </section>
 </section>
 <section id="dummy-ptp-clock-driver">
@@ -482,6 +533,7 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">clockid_t</span><span class="w"> </span><span class="n">clockid</span><span class="p">;</span>
 <span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="n">ts</span><span class="p">;</span>
 <span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="n">res</span><span class="p">;</span>
 
@@ -493,14 +545,16 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 <span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">  </span><span class="n">clockid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">CLOCK_SHIFT</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">CLOCK_FD</span><span class="p">;</span>
+
 <span class="w">  </span><span class="cm">/* Get current PTP clock time */</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_gettime</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_gettime</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;PTP time: %ld.%09ld</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ts</span><span class="p">.</span><span class="n">tv_sec</span><span class="p">,</span><span class="w"> </span><span class="n">ts</span><span class="p">.</span><span class="n">tv_nsec</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">  </span><span class="cm">/* Get PTP clock resolution */</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_getres</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">res</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_getres</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">res</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;PTP resolution: %ld.%09ld</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">res</span><span class="p">.</span><span class="n">tv_sec</span><span class="p">,</span><span class="w"> </span><span class="n">res</span><span class="p">.</span><span class="n">tv_nsec</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
@@ -522,6 +576,7 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">clockid_t</span><span class="w"> </span><span class="n">clockid</span><span class="p">;</span>
 <span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">timex</span><span class="w"> </span><span class="n">tx</span><span class="p">;</span>
 
 <span class="w">  </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ptp0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDWR</span><span class="p">);</span>
@@ -531,12 +586,14 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 <span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">  </span><span class="cm">/* Adjust frequency by +10 PPM */</span>
+<span class="w">  </span><span class="n">clockid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">CLOCK_SHIFT</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">CLOCK_FD</span><span class="p">;</span>
+
+<span class="w">  </span><span class="cm">/* Adjust frequency by +10 ppm */</span>
 <span class="w">  </span><span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tx</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">tx</span><span class="p">));</span>
 <span class="w">  </span><span class="n">tx</span><span class="p">.</span><span class="n">modes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ADJ_FREQUENCY</span><span class="p">;</span>
-<span class="w">  </span><span class="n">tx</span><span class="p">.</span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10000000</span><span class="p">;</span><span class="w">  </span><span class="cm">/* 10 PPM in scaled PPM (65536 * PPM) */</span>
+<span class="w">  </span><span class="n">tx</span><span class="p">.</span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">655360</span><span class="p">;</span><span class="w">  </span><span class="cm">/* 10 ppm in scaled ppm (65536 * ppm) */</span>
 
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_adjtime</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tx</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_adjtime</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tx</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Frequency adjusted successfully</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
@@ -562,6 +619,7 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">clockid_t</span><span class="w"> </span><span class="n">clockid</span><span class="p">;</span>
 <span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">timex</span><span class="w"> </span><span class="n">tx</span><span class="p">;</span>
 
 <span class="w">  </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ptp0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDWR</span><span class="p">);</span>
@@ -571,13 +629,15 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 <span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">  </span><span class="n">clockid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">CLOCK_SHIFT</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">CLOCK_FD</span><span class="p">;</span>
+
 <span class="w">  </span><span class="cm">/* Apply time offset: +1 second */</span>
 <span class="w">  </span><span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tx</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">tx</span><span class="p">));</span>
 <span class="w">  </span><span class="n">tx</span><span class="p">.</span><span class="n">modes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ADJ_SETOFFSET</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ADJ_NANO</span><span class="p">;</span>
 <span class="w">  </span><span class="n">tx</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="n">tv_sec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">  </span><span class="n">tx</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="n">tv_usec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="cm">/* tv_usec holds nanoseconds when ADJ_NANO is set */</span>
 
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_adjtime</span><span class="p">(</span><span class="n">CLOCKFD</span><span class="p">(</span><span class="n">fd</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tx</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">clock_adjtime</span><span class="p">(</span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tx</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Time offset applied successfully</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
@@ -596,7 +656,8 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 <section id="implementing-a-lower-half-driver">
 <h2>Implementing a Lower-Half Driver<a class="headerlink" href="#implementing-a-lower-half-driver" title="Permalink to this heading"></a></h2>
 <p>To implement a hardware-specific PTP clock driver, create a lower-half driver
-that implements the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_lowerhalf_s</span></code> interface:</p>
+that embeds a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_lowerhalf_s</span></code> and provides the operations of
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_ops_s</span></code> described above:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/timers/ptp_clock.h&gt;</span>
 
 <span class="cm">/* Hardware-specific state */</span>
@@ -608,21 +669,21 @@ that implements the <code class="docutils literal notranslate"><span class="pre"
 <span class="w">  </span><span class="cm">/* ... */</span>
 <span class="p">};</span>
 
-<span class="cm">/* Implement required operations */</span>
-<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">my_ptp_adjfine</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
-<span class="w">                         </span><span class="kt">long</span><span class="w"> </span><span class="n">scaled_ppm</span><span class="p">)</span>
+<span class="cm">/* Implement the operations */</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">my_ptp_adjfine</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">ppb</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="w"> </span><span class="o">=</span>
 <span class="w">    </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">lower</span><span class="p">;</span>
 
-<span class="w">  </span><span class="cm">/* Adjust hardware clock frequency */</span>
+<span class="w">  </span><span class="cm">/* Adjust hardware clock frequency by ppb parts per billion */</span>
 <span class="w">  </span><span class="cm">/* ... hardware-specific code ... */</span>
 
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">my_ptp_gettime</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
-<span class="w">                         </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">ts</span><span class="p">)</span>
+<span class="w">                          </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">ts</span><span class="p">,</span>
+<span class="w">                          </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_system_timestamp</span><span class="w"> </span><span class="o">*</span><span class="n">sts</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="w"> </span><span class="o">=</span>
 <span class="w">    </span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">my_ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">lower</span><span class="p">;</span>
@@ -633,15 +694,16 @@ that implements the <code class="docutils literal notranslate"><span class="pre"
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="cm">/* Define operations structure */</span>
-<span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_clock_ops_s</span><span class="w"> </span><span class="n">g_my_ptp_ops</span><span class="w"> </span><span class="o">=</span>
+<span class="cm">/* Define operations structure. Operations that the hardware does not</span>
+<span class="cm"> * support are left out (NULL), except adjtime.</span>
+<span class="cm"> */</span>
+<span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_ops_s</span><span class="w"> </span><span class="n">g_my_ptp_ops</span><span class="w"> </span><span class="o">=</span>
 <span class="p">{</span>
-<span class="w">  </span><span class="p">.</span><span class="n">adjfine</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_adjfine</span><span class="p">,</span>
-<span class="w">  </span><span class="p">.</span><span class="n">adjtime</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_adjtime</span><span class="p">,</span>
-<span class="w">  </span><span class="p">.</span><span class="n">gettime</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_gettime</span><span class="p">,</span>
-<span class="w">  </span><span class="p">.</span><span class="n">settime</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_settime</span><span class="p">,</span>
-<span class="w">  </span><span class="p">.</span><span class="n">getcaps</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_getcaps</span><span class="p">,</span>
-<span class="w">  </span><span class="p">.</span><span class="n">getcrosststamp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_getcrosststamp</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">adjfine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_adjfine</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">adjtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_adjtime</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">gettime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_gettime</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">settime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_settime</span><span class="p">,</span>
+<span class="w">  </span><span class="p">.</span><span class="n">getres</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">my_ptp_getres</span><span class="p">,</span>
 <span class="p">};</span>
 
 <span class="cm">/* Registration function */</span>
@@ -660,22 +722,25 @@ that implements the <code class="docutils literal notranslate"><span class="pre"
 <span class="w">  </span><span class="cm">/* Initialize hardware */</span>
 <span class="w">  </span><span class="cm">/* ... */</span>
 
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">ptp_clock_register</span><span class="p">(</span><span class="o">&amp;</span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w">  </span><span class="cm">/* Register as /dev/ptp0 */</span>
+<span class="w">  </span><span class="cm">/* Register as /dev/ptp0, with a maximum adjustment of 500 ppm</span>
+<span class="cm">   * (500000 ppb).</span>
+<span class="cm">   */</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">ptp_clock_register</span><span class="p">(</span><span class="o">&amp;</span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mi">500000</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="integration-with-ptp-daemon">
 <h2>Integration with PTP Daemon<a class="headerlink" href="#integration-with-ptp-daemon" title="Permalink to this heading"></a></h2>
-<p>The PTP clock framework is designed to work with standard PTP synchronization
-daemons such as:</p>
-<ul class="simple">
-<li><p><strong>ptp4l</strong>: IEEE 1588 PTP daemon from the linuxptp project</p></li>
-<li><p><strong>timemaster</strong>: Synchronization manager combining PTP and NTP</p></li>
-<li><p><strong>ptpd</strong>: PTP daemon (IEEE 1588-2008 implementation)</p></li>
-</ul>
-<p>These daemons can use the PTP clock devices through the standard POSIX clock
-APIs via the CLOCKFD mechanism, making porting straightforward.</p>
+<p>The PTP clock framework mirrors the PTP hardware clock interface of Linux
+(<code class="docutils literal notranslate"><span class="pre">/dev/ptpN</span></code> and <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code>), so software written for that
+interface is easier to port.</p>
+<p>The PTP daemon of NuttX is <code class="docutils literal notranslate"><span class="pre">ptpd</span></code> (<code class="docutils literal notranslate"><span class="pre">apps/netutils/ptpd</span></code>, see
+<a class="reference internal" href="../../../applications/system/ptpd/index.html"><span class="doc">ptpd PTP daemon commands</span></a>). It uses a PTP clock through the
+clock identifier described above, when it is started with the device path, for
+example <code class="docutils literal notranslate"><span class="pre">ptpd</span> <span class="pre">-p</span> <span class="pre">/dev/ptp0</span></code>. The <code class="docutils literal notranslate"><span class="pre">ptp4l</span></code> and <code class="docutils literal notranslate"><span class="pre">timemaster</span></code> programs of
+the linuxptp project are Linux programs and are not part of NuttX.</p>
 </section>
 <section id="performance-considerations">
 <h2>Performance Considerations<a class="headerlink" href="#performance-considerations" title="Permalink to this heading"></a></h2>
@@ -707,19 +772,13 @@ hardware supports adjustments in the range of:</p>
 </section>
 <section id="debugging">
 <h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h2>
-<p>Debug output can be enabled using the <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTPCLK_*</span></code> configuration
-options:</p>
+<p>Debug output can be enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTP</span></code> and the following
+options, which send the messages to the SYSLOG:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTPCLK_ERROR</span></code>: Error messages</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTPCLK_WARN</span></code>: Warning messages</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTPCLK_INFO</span></code>: Informational messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTP_ERROR</span></code>: Error messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTP_WARN</span></code>: Warning messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_PTP_INFO</span></code>: Informational messages</p></li>
 </ul>
-<p>Example debug output:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ptpclk: PTP clock registered as /dev/ptp0
-ptpclk: adjfine: scaled_ppm=656360 (10 PPM)
-ptpclk: gettime: ts=1234567890.123456789
-</pre></div>
-</div>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
@@ -728,6 +787,7 @@ ptpclk: gettime: ts=1234567890.123456789
 for Networked Measurement and Control Systems</p></li>
 <li><p><a class="reference external" href="https://linuxptp.sourceforge.net/">Linux PTP Project</a></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/timers/ptp_clock.h</span></code> - PTP clock header file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/nuttx/clock.h</span></code> - <code class="docutils literal notranslate"><span class="pre">CLOCK_FD</span></code> and <code class="docutils literal notranslate"><span class="pre">CLOCK_SHIFT</span></code> definitions</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">drivers/timers/ptp_clock.c</span></code> - Upper-half driver implementation</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">drivers/timers/ptp_clock_dummy.c</span></code> - Dummy driver implementation</p></li>
 </ul>
