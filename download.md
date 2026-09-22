@@ -48,8 +48,8 @@ and another for the integrated Apps.
                 <td style="vertical-align: middle; line-height: 2.5em;" class="col-md-1"><a href="{{ release.url | prepend: site.baseurl }}">{{ release.title }}</a></td>
                 <td style="vertical-align: middle;" class="col-md-4">{{ release.summary }}</td>
                 <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.artifact-root}}/{{release.source-os-dist}}">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}">Apps</a></td>
-                <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.artifact-root}}/{{release.source-os-dist}}.sha512">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}.sha512">Apps</a></td>
-                <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.artifact-root}}/{{release.source-os-dist}}.asc">OS</a>/<a href="{{release.artifact-root}}/{{release.source-app-dist}}.asc">Apps</a></td>
+                <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.checksum-root}}/{{release.source-os-dist}}.sha512">OS</a>/<a href="{{release.checksum-root}}/{{release.source-app-dist}}.sha512">Apps</a></td>
+                <td style="vertical-align: middle;" class="col-md-2 text-right"><a href="{{release.checksum-root}}/{{release.source-os-dist}}.asc">OS</a>/<a href="{{release.checksum-root}}/{{release.source-app-dist}}.asc">Apps</a></td>
                 <td style="vertical-align: middle;" class="col-md-1 text-right">{{ release.date | date: "%Y-%m-%d" }}</td>
             </tr>
         {% endif %}
