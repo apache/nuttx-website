@@ -185,6 +185,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../rtl8720f/index.html">Realtek RTL8720F</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../rtl8721dx/index.html">Realtek RTL8721Dx</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../rtl8721f/index.html">Realtek RTL8721F</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rtl8730e/index.html">Realtek RTL8730E</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../s32k1xx/index.html">NXP S32K1XX</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../s32k3xx/index.html">NXP S32K3XX</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../sam34/index.html">Microchip SAM34</a></li>
@@ -210,6 +211,11 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#dual-core-support">Dual-core support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ethernet">Ethernet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#precision-time-protocol">Precision Time Protocol</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#clock-device">Clock device</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/devebox-stm32h743/index.html">devebox-stm32h743</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/linum-stm32h753bi/index.html">linum-stm32h753bi</a></li>
@@ -718,6 +724,61 @@ device based on the OpenAMP framework. <code class="docutils literal notranslate
 notification between cores.</p>
 <p>32kB of the SRAM3 is reserved for shared memory and this is the only available
 option at the moment.</p>
+</section>
+<section id="ethernet">
+<h2>Ethernet<a class="headerlink" href="#ethernet" title="Permalink to this heading"></a></h2>
+<p>The Ethernet MAC of the STM32H7 has a time counter that can stamp the frames
+it sends or receives in hardware, at the moment the frame crosses the MAC. A
+protocol such as the Precision Time Protocol (IEEE 1588, PTP) uses these
+stamps to compare its clock with the clock of another node without the delay
+of the software (interrupts and task scheduling) getting into the
+measurement. The options below enable that part of the driver.</p>
+<section id="precision-time-protocol">
+<h3>Precision Time Protocol<a class="headerlink" href="#precision-time-protocol" title="Permalink to this heading"></a></h3>
+<p>The counter has a 32-bit seconds part and a nanoseconds part that counts up to
+10^9 (digital rollover), and it is clocked from <code class="docutils literal notranslate"><span class="pre">HCLK</span></code>. Its rate can be
+trimmed by up to +/- 50 %, and its phase can be stepped, which is what a PTP
+daemon needs to steer it towards a master clock.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_ETH_PTP</span></code> - Enables the PTP timer of the MAC. It starts
+at zero when the interface goes up, whether or not the link is up, and it
+is cleared by every reset of the MAC, for example when the interface goes
+down.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_ETH_PTP_GPIO</span></code> - Enables the pulse-per-second output of the
+MAC on the pin <code class="docutils literal notranslate"><span class="pre">GPIO_ETH_PPS_OUT</span></code>. The board has to define it in its
+<code class="docutils literal notranslate"><span class="pre">board.h</span></code> with one of the pins of the chip (on the STM32H743
+<code class="docutils literal notranslate"><span class="pre">GPIO_ETH_PPS_OUT_1</span></code> is PB5 and <code class="docutils literal notranslate"><span class="pre">GPIO_ETH_PPS_OUT_2</span></code> is PG8). It is a
+pulse train with a period of one second and a width of half of it, that
+starts at a whole second of the counter. It does not depend on the link
+or on a PTP daemon. The train counts by itself and does not follow a step
+of the time, so the driver starts it again at the next whole second when
+the time is set or stepped.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="clock-device">
+<h3>Clock device<a class="headerlink" href="#clock-device" title="Permalink to this heading"></a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_CLOCK</span></code> the driver registers the counter as a PTP hardware
+clock, <code class="docutils literal notranslate"><span class="pre">/dev/ptp0</span></code> for the first Ethernet interface (the number of the
+device is the number of the interface). It follows the generic framework
+described in <a class="reference internal" href="../../../components/drivers/special/ptp.html"><span class="doc">PTP Clock Driver Framework</span></a> and offers reading and
+setting the time, the resolution (the increment of the counter, 10 ns with
+<code class="docutils literal notranslate"><span class="pre">HCLK</span></code> at 200 MHz), frequency adjustment (<code class="docutils literal notranslate"><span class="pre">ADJ_FREQUENCY</span></code>, up to +/- 50 %)
+and phase steps (<code class="docutils literal notranslate"><span class="pre">ADJ_OFFSET</span></code> and <code class="docutils literal notranslate"><span class="pre">ADJ_SETOFFSET</span></code>). It does not offer the
+cross timestamp of the system and the device clock. The seconds of the time
+that is set have to fit in 32 bits.
+<code class="docutils literal notranslate"><span class="pre">CONFIG_CLOCK_ADJTIME</span></code> is needed for <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code>.</p>
+<p>A configuration with the options above, for a board with the Ethernet MAC,
+looks like this:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_STM32_ETHMAC=y
+CONFIG_STM32_ETH_PTP=y
+CONFIG_STM32_ETH_PTP_GPIO=y
+CONFIG_PTP_CLOCK=y
+CONFIG_CLOCK_ADJTIME=y
+</pre></div>
+</div>
+</section>
 </section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>

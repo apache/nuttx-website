@@ -105,6 +105,10 @@ main-domain R5F core:
   and /dev/pwm1.
 - **eCAP:** eCAP1 and eCAP2 in APWM mode, registered as /dev/ecap1 and
   /dev/ecap2.
+- **IPC:** rptun over the NAVSS mailbox, giving OpenAMP rpmsg channels to
+  Linux running on the A53 cores.
+- **Networking:** vhost-net presents the R5F as a virtio-net device to the
+  Linux peer, giving an ethernet link over the same rptun transport.
 
 Installation
 ============
@@ -168,3 +172,11 @@ nsh
 
 Configures the NuttShell (nsh) located at examples/nsh.
 This configuration enables a serial console on UART-MAIN1.
+
+netnsh
+------
+
+As :code:`nsh`, plus networking over the virtio-net link to the Linux peer.
+Bring the interface up with :code:`ifconfig eth0 <addr>` followed by
+:code:`ifup eth0`; the Linux side needs its virtio_net driver bound to the
+second vdev.

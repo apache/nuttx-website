@@ -192,6 +192,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#dummy-ptp-clock-driver">Dummy PTP Clock Driver</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#example-usage">Example Usage</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#implementing-a-lower-half-driver">Implementing a Lower-Half Driver</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#existing-implementations">Existing Implementations</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#integration-with-ptp-daemon">Integration with PTP Daemon</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#performance-considerations">Performance Considerations</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#debugging">Debugging</a></li>
@@ -730,6 +731,23 @@ that embeds a <code class="docutils literal notranslate"><span class="pre">struc
 <span class="p">}</span>
 </pre></div>
 </div>
+</section>
+<section id="existing-implementations">
+<h2>Existing Implementations<a class="headerlink" href="#existing-implementations" title="Permalink to this heading"></a></h2>
+<p>The following lower-half drivers are available in the tree:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">drivers/timers/ptp_clock_dummy.c</span></code> - The dummy driver described above,
+enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_CLOCK_DUMMY</span></code>. It is registered as <code class="docutils literal notranslate"><span class="pre">/dev/ptp0</span></code>
+at start-up.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/stm32/stm32_eth_m3m4_v1.c</span></code> - The Ethernet MAC of the
+STM32 (the legacy driver), registered with <code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_CLOCK</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_ETH_PTP</span></code> as <code class="docutils literal notranslate"><span class="pre">/dev/ptpN</span></code>, where N is the number of the
+Ethernet interface. The clock is the PTP counter of the MAC. It is also the
+time base of the hardware timestamps of the received packets, so those are
+not values of <code class="docutils literal notranslate"><span class="pre">CLOCK_REALTIME</span></code>.</p></li>
+</ul>
+<p>Both use the device number 0 by default, so they cannot be registered at the
+same time.</p>
 </section>
 <section id="integration-with-ptp-daemon">
 <h2>Integration with PTP Daemon<a class="headerlink" href="#integration-with-ptp-daemon" title="Permalink to this heading"></a></h2>
