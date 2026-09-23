@@ -298,7 +298,12 @@
   <section id="rtl8730e-evb">
 <h1>RTL8730E_EVB<a class="headerlink" href="#rtl8730e-evb" title="Permalink to this heading"></a></h1>
 <p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-rtl8730e.html"><span class="doc">chip:rtl8730e</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-arm.html"><span class="doc">arch:arm</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/vendor-realtek.html"><span class="doc">vendor:realtek</span></a></p>
-<img alt="PKE8730EAH-VD3-F32 evaluation board" class="align-center" src="../../../../../_images/rtl8730e_evb.png" />
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="../../../../../_images/rtl8730e_evb.png"><img alt="Realtek RTL8730E EVB development board" src="../../../../../_images/rtl8730e_evb.png" style="width: 493.0px; height: 516.5px;" /></a>
+<figcaption>
+<p><span class="caption-text">The RTL8730E EVB development board.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <p>The RTL8730E_EVB is a Realtek RTL8730E evaluation board built around the
 RTL8730EH (DDR2 64 MB, 16 MB NOR flash).  NuttX runs on the dual-core Arm
 Cortex-A32 application processor at up to 1.2 GHz as BL33 in the ATF boot
@@ -320,6 +325,8 @@ flash</p></li>
 <li><p>NSH shell over the LOG-UART console</p></li>
 <li><p>SMP on both Cortex-A32 cores; tasks are dispatched across CPU0 and CPU1
 by the NuttX SMP scheduler</p></li>
+<li><p>GPIO pins exposed as <code class="docutils literal notranslate"><span class="pre">/dev/gpioN</span></code> character devices (input, output and
+interrupt), driven through the SDK fwlib ROM layer</p></li>
 <li><p>littlefs persistent storage mounted at <code class="docutils literal notranslate"><span class="pre">/data</span></code> (a dedicated SPI NOR flash
 partition), backing the Wi-Fi key-value store</p></li>
 <li><p>Wi-Fi station and SoftAP through the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
@@ -337,6 +344,23 @@ partition), backing the Wi-Fi key-value store</p></li>
 <h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
 <p>Networking-enabled NSH with SMP, littlefs at <code class="docutils literal notranslate"><span class="pre">/data</span></code>, and the <code class="docutils literal notranslate"><span class="pre">wapi</span></code>
 Wi-Fi tool.  The console is the LOG-UART at 1500000 8N1.</p>
+</section>
+<section id="gpio">
+<h3>gpio<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the GPIO driver and the <code class="docutils literal notranslate"><span class="pre">gpio</span></code> example enabled (no Wi-Fi).
+The board registers three pins from its pin table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8730e/rtl8730e_evb/src/rtl8730e_gpio.c</span></code>): an output at
+<code class="docutils literal notranslate"><span class="pre">/dev/gpio0</span></code>, an input at <code class="docutils literal notranslate"><span class="pre">/dev/gpio1</span></code> and an interrupt pin at
+<code class="docutils literal notranslate"><span class="pre">/dev/gpio2</span></code>.  Edit that table to match a board’s wiring.  Exercise them
+with the example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; gpio -o 1 /dev/gpio0     # drive the output high
+nsh&gt; gpio /dev/gpio1          # read the input
+nsh&gt; gpio -w 1 /dev/gpio2     # wait for a falling-edge interrupt
+</pre></div>
+</div>
+<p>Pins are encoded with the <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> / <code class="docutils literal notranslate"><span class="pre">AMEBA_PB()</span></code> helpers from
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/ameba/ameba_gpio.h</span></code> (port A/B, pin 0-31), matching the
+Ameba SDK <code class="docutils literal notranslate"><span class="pre">PinName</span></code> layout.</p>
 </section>
 </section>
 <section id="wi-fi">
