@@ -178,6 +178,8 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Nordic nRF54L</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#gpio">GPIO</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#grtc">GRTC</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#timer">TIMER</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#uarte">UARTE</a></li>
 </ul>
 </li>
@@ -294,7 +296,7 @@
 <h1>Nordic nRF54L<a class="headerlink" href="#nordic-nrf54l" title="Permalink to this heading"></a></h1>
 <p>The nRF54L series from Nordic Semiconductor is based on an ARM Cortex-M33
 application core. NuttX supports nRF54L15 and nRF54LM20A/B as standalone
-secure images, with a 128 MHz CPU clock and SysTick scheduling.</p>
+secure images, with a 128 MHz CPU clock and SysTick or GRTC scheduling.</p>
 <section id="peripheral-support">
 <h2>Peripheral Support<a class="headerlink" href="#peripheral-support" title="Permalink to this heading"></a></h2>
 <p>The following list indicates peripherals supported in NuttX:</p>
@@ -315,8 +317,8 @@ secure images, with a 128 MHz CPU clock and SysTick scheduling.</p>
 <td></td>
 </tr>
 <tr class="row-even"><td><p>GRTC</p></td>
-<td><p>No</p></td>
-<td></td>
+<td><p>Yes</p></td>
+<td><p>Counter and tickless scheduling</p></td>
 </tr>
 <tr class="row-odd"><td><p>PWM</p></td>
 <td><p>No</p></td>
@@ -343,7 +345,7 @@ secure images, with a 128 MHz CPU clock and SysTick scheduling.</p>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>TIMER</p></td>
-<td><p>No</p></td>
+<td><p>Yes</p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p>TWIM</p></td>
@@ -368,6 +370,20 @@ secure images, with a 128 MHz CPU clock and SysTick scheduling.</p>
 <h3>GPIO<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h3>
 <p>Pins can be configured and operated using <code class="docutils literal notranslate"><span class="pre">nrf54l_gpio_*</span></code> functions.</p>
 </section>
+<section id="grtc">
+<h3>GRTC<a class="headerlink" href="#grtc" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">nrf54l_grtc_init(0)</span></code> provides access to the 52-bit, 1 MHz system counter
+and twelve compare channels. <code class="docutils literal notranslate"><span class="pre">CONFIG_NRF54L_SYSTIMER_GRTC</span></code> reserves the
+instance and compare channel zero for tickless scheduling. The GRTC is timed
+by LFCLK, so the LFCLK source selected with <code class="docutils literal notranslate"><span class="pre">CONFIG_NRF54L_USE_LFCLK</span></code>
+determines the long-term accuracy of the system time.</p>
+</section>
+<section id="timer">
+<h3>TIMER<a class="headerlink" href="#timer" title="Permalink to this heading"></a></h3>
+<p>TIMER0 through TIMER6 correspond to TIMER20, TIMER21, TIMER22, TIMER23,
+TIMER24, TIMER00 and TIMER10. The timer lower-half driver uses a 1 MHz
+counter clock on each instance.</p>
+</section>
 <section id="uarte">
 <h3>UARTE<a class="headerlink" href="#uarte" title="Permalink to this heading"></a></h3>
 <p>UART0 through UART4 correspond to UARTE20, UARTE21, UARTE22, UARTE30 and
@@ -383,7 +399,8 @@ being transmitted or DMA error recovery is in progress.</p>
 </section>
 <section id="power-management">
 <h2>Power Management<a class="headerlink" href="#power-management" title="Permalink to this heading"></a></h2>
-<p>With SysTick selected, the CPU remains awake so its clock keeps running.
+<p>The idle loop uses <code class="docutils literal notranslate"><span class="pre">WFI</span></code> when GRTC provides tickless scheduling. With
+SysTick selected, the CPU remains awake so its clock keeps running.
 <code class="docutils literal notranslate"><span class="pre">CONFIG_PM</span></code> initializes the NuttX power management framework. System OFF
 is not supported.</p>
 </section>
