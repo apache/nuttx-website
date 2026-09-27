@@ -640,6 +640,56 @@ and I2S1), enabling both the TX and the RX for those peripherals.</p>
 </div>
 <p>The corresponding output should show related debug information.</p>
 </section>
+<section id="kernel-n8r2">
+<h3>kernel_n8r2<a class="headerlink" href="#kernel-n8r2" title="Permalink to this heading"></a></h3>
+<p>A KERNEL build for a module with 2 MB of PSRAM, such as the
+ESP32-S3-WROOM-1-N8R2.  The flash is quad and runs in DIO mode.</p>
+<p>The page pool is smaller than in <code class="docutils literal notranslate"><span class="pre">kernel_oct</span></code>, and each of the text, data
+and heap regions of a process is 2 pages of 64 KiB.  A process therefore takes
+384 KiB, and a <code class="docutils literal notranslate"><span class="pre">fork()</span></code> needs 768 KiB while the parent and the child both
+exist.</p>
+<p>This is tight on purpose.  <code class="docutils literal notranslate"><span class="pre">ostest</span></code> has 115 KiB of text against a 128 KiB
+text region.  A larger program needs a module with more PSRAM, not a larger
+page pool.</p>
+</section>
+<section id="kernel-oct">
+<h3>kernel_oct<a class="headerlink" href="#kernel-oct" title="Permalink to this heading"></a></h3>
+<p>A KERNEL build for a module with octal flash and 8 MB of PSRAM, such as the
+ESP32-S3-WROOM-2-N32R8V.</p>
+<p>A KERNEL build gives each process its own address environment.  This is the
+only build mode in which <code class="docutils literal notranslate"><span class="pre">fork()</span></code> is available on this chip:  the child
+receives its own copy of the memory of the parent, at the same virtual
+addresses.  <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> is available in every build mode.</p>
+<p>The page pool holds the pages of every process.  It is carved out of the
+PSRAM, and it is not kept mapped into the kernel address space.  The kernel
+reaches a page of the pool through a small scratch region, mapped for one
+operation and invalidated afterwards.</p>
+<p>Build the kernel first, then the applications, then the boot ROMFS, and then
+link the kernel again.  The ROMFS is linked into the kernel image, so a change
+to an application needs the whole chain:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make -j
+make export
+cd ../apps
+./tools/mkimport.sh -z -x ../nuttx/nuttx-export-*.tar.gz
+make import -j
+./tools/mkromfsimg.sh ../nuttx/arch/xtensa/src/board/board/romfs_boot.c
+cd ../nuttx
+make -j
+</pre></div>
+</div>
+<p>Confirm that the ROMFS is in the image.  <code class="docutils literal notranslate"><span class="pre">romfs_img</span></code> must be a strong symbol
+of a few hundred kilobytes:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>xtensa-esp32s3-elf-nm -S nuttx | grep &quot; romfs_img$&quot;
+</pre></div>
+</div>
+<p>A one byte symbol means that the linker took the stub.  Delete
+<code class="docutils literal notranslate"><span class="pre">boards/xtensa/esp32s3/esp32s3-devkit/src/romfs_stub.o</span></code> and <code class="docutils literal notranslate"><span class="pre">libboard.a</span></code>,
+then link again.</p>
+<p>The shell needs the full path of a program in this build mode:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; /system/bin/ostest
+</pre></div>
+</div>
+</section>
 <section id="knsh">
 <h3>knsh<a class="headerlink" href="#knsh" title="Permalink to this heading"></a></h3>
 <p>This is identical to the nsh configuration except that (1) NuttX
@@ -1096,7 +1146,7 @@ The RMT peripheral is better explained
 in the ESP-IDF documentation. The minimal data unit in the frame is called the
 RMT symbol, which is represented by <code class="docutils literal notranslate"><span class="pre">rmt_item32_t</span></code> in the driver:</p>
 <figure class="align-center">
-<img alt="../../../../../_images/rmt_symbol5.png" src="../../../../../_images/rmt_symbol5.png" />
+<img alt="../../../../../_images/rmt_symbol1.png" src="../../../../../_images/rmt_symbol1.png" />
 </figure>
 <p>The example <code class="docutils literal notranslate"><span class="pre">irtest</span></code> can be used to test the RMT peripheral. Connecting
 these pins externally to each other will make the transmitter send RMT items
