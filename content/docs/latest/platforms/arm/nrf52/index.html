@@ -522,6 +522,52 @@ control pin state via tasks/events.</p>
 <h3>ADC<a class="headerlink" href="#adc" title="Permalink to this heading"></a></h3>
 <p>The SAADC peripheral is exposed via standard ADC driver. The lower-half of this driver
 is initialized by calling <code class="xref c c-func docutils literal notranslate"><span class="pre">nrf52_adcinitialize()</span></code>.</p>
+<p>Three sampling trigger modes are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_TASK</span></code>: each <code class="docutils literal notranslate"><span class="pre">ANIOC_TRIGGER</span></code> starts one scan of
+all configured channels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_TIMER</span></code>: the internal SAADC timer supports one
+channel only. The sample rate is <code class="docutils literal notranslate"><span class="pre">16000000</span> <span class="pre">/</span> <span class="pre">CONFIG_NRF52_SAADC_TIMER_CC</span></code>
+Hz, with a compare value from 80 to 2047 (about 7.8 kHz to 200 kHz).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_TIMER_PPI</span></code>: a general-purpose TIMER compare event
+triggers a scan over PPI. This supports up to eight channels and lower
+scan rates through the TIMER prescaler.</p></li>
+</ul>
+<p>For TIMER/PPI sampling, enable the TIMER instance selected by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_PPI_TIMER</span></code> and reserve it for the ADC. Select an unused
+PPI channel with <code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_PPI_CHANNEL</span></code>. The scan rate is
+<code class="docutils literal notranslate"><span class="pre">16000000</span> <span class="pre">/</span> <span class="pre">(2^CONFIG_NRF52_SAADC_PPI_PRE</span> <span class="pre">*</span> <span class="pre">CONFIG_NRF52_SAADC_PPI_CC)</span></code> Hz.
+For example, these settings select TIMER2 and a 1 kHz scan rate:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">CONFIG_NRF52_SAADC</span><span class="o">=</span><span class="s">y</span>
+<span class="na">CONFIG_NRF52_TIMER2</span><span class="o">=</span><span class="s">y</span>
+<span class="na">CONFIG_NRF52_SAADC_TIMER_PPI</span><span class="o">=</span><span class="s">y</span>
+<span class="na">CONFIG_NRF52_SAADC_PPI_TIMER</span><span class="o">=</span><span class="s">2</span>
+<span class="na">CONFIG_NRF52_SAADC_PPI_CHANNEL</span><span class="o">=</span><span class="s">0</span>
+<span class="na">CONFIG_NRF52_SAADC_PPI_PRE</span><span class="o">=</span><span class="s">4</span>
+<span class="na">CONFIG_NRF52_SAADC_PPI_CC</span><span class="o">=</span><span class="s">1000</span>
+<span class="na">CONFIG_NRF52_SAADC_CHANNELS</span><span class="o">=</span><span class="s">2</span>
+</pre></div>
+</div>
+<p>The board must pass the channel configuration to <code class="docutils literal notranslate"><span class="pre">nrf52_adcinitialize</span></code>;
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_CHANNELS</span></code> sets the maximum number of channels.
+With either timer source, issue <code class="docutils literal notranslate"><span class="pre">ANIOC_TRIGGER</span></code> once to start sampling.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_CONTINUOUS</span></code> enables double-buffered EasyDMA with
+either timer source. A second PPI channel restarts the SAADC on each END
+event. For example, add:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">CONFIG_NRF52_SAADC_CONTINUOUS</span><span class="o">=</span><span class="s">y</span>
+<span class="na">CONFIG_NRF52_SAADC_CONTINUOUS_BUFLEN</span><span class="o">=</span><span class="s">32</span>
+<span class="na">CONFIG_NRF52_SAADC_CONTINUOUS_PPI_CH</span><span class="o">=</span><span class="s">1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SAADC_CONTINUOUS_BUFLEN</span></code> counts whole scans per buffer.
+With two configured channels and a buffer length of 32, each buffer holds
+64 samples in channel order: <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">...</span></code>. Completed buffers are
+delivered to the ADC upper half with a per-sample channel map. The number
+of channels multiplied by the buffer length must not exceed 32767.
+Single-channel buffer sizing is unchanged.</p>
+<p>The sampling and restart PPI channels must differ and must be unused by
+other drivers. Both channel selections are restricted to 0–15 when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SOFTDEVICE_CONTROLLER</span></code> is enabled, or 0–19 otherwise.</p>
 </section>
 <section id="i2c">
 <h3>I2C<a class="headerlink" href="#i2c" title="Permalink to this heading"></a></h3>
