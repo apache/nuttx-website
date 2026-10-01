@@ -166,6 +166,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#mcuboot-and-ota-update">MCUBoot and OTA Update</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#wi-fi">Wi-Fi</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#power-management">Power Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#memory-protection-and-build-modes">Memory Protection and Build Modes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#ulp-risc-v-coprocessor">ULP RISC-V Coprocessor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#id1">Managing esptool on virtual environment</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#supported-boards">Supported Boards</a><ul class="current">
@@ -685,8 +686,28 @@ of a few hundred kilobytes:</p>
 <p>A one byte symbol means that the linker took the stub.  Delete
 <code class="docutils literal notranslate"><span class="pre">boards/xtensa/esp32s3/esp32s3-devkit/src/romfs_stub.o</span></code> and <code class="docutils literal notranslate"><span class="pre">libboard.a</span></code>,
 then link again.</p>
-<p>The shell needs the full path of a program in this build mode:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; /system/bin/ostest
+<p>The programs are in <code class="docutils literal notranslate"><span class="pre">/system/bin</span></code>, which is in <code class="docutils literal notranslate"><span class="pre">PATH</span></code>, so the shell finds
+them by name.</p>
+<p>A process runs in the unprivileged world and cannot reach kernel memory, the
+peripherals or the pages of another process.  If it tries, only that process
+is terminated.  See
+<a class="reference internal" href="../../index.html#memory-protection-and-build-modes"><span class="std std-ref">Memory Protection and Build Modes</span></a>.</p>
+<p>Two programs in the ROMFS show this on the board.  <code class="docutils literal notranslate"><span class="pre">ostest</span></code> includes the
+<code class="docutils literal notranslate"><span class="pre">fork()</span></code> and <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> tests:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ostest
+...
+fork_test: Parent and child had independent memory
+...
+ostest_main: Exiting with status 0
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">sandbox</span></code> makes one allowed access and three forbidden ones: to kernel
+memory, to a peripheral register and to an address without a mapping.  Each
+offender must be terminated, the caller must survive, and the memory and the
+file descriptors of the offender must be given back:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; sandbox
+...
+sandbox: CONTAINED - 4 target(s), every check passed
 </pre></div>
 </div>
 </section>
@@ -708,6 +729,12 @@ Flash and PSRAM).</p>
 <p>The World Controller and Permission Control <strong>do not</strong> prevent
 the application from accessing CPU System Registers.</p>
 </div>
+</section>
+<section id="ksta-softap">
+<h3>ksta_softap<a class="headerlink" href="#ksta-softap" title="Permalink to this heading"></a></h3>
+<p>A PROTECTED build, like <code class="docutils literal notranslate"><span class="pre">knsh</span></code>, with Wi-Fi in station and SoftAP mode at
+the same time.  It includes <code class="docutils literal notranslate"><span class="pre">wapi</span></code>, a DHCP server and <code class="docutils literal notranslate"><span class="pre">iperf</span></code>.  The Wi-Fi
+commands are the same as in <a class="reference internal" href="#sta-softap"><span class="std std-ref">esp32s3-devkit:sta_softap</span></a>.</p>
 </section>
 <section id="mbedtls">
 <h3>mbedtls<a class="headerlink" href="#mbedtls" title="Permalink to this heading"></a></h3>
