@@ -319,35 +319,45 @@ model as a C array; see <em>Embedding a model in an application</em> below.</p>
 
 <span class="go">Utility to use tflite micro on nuttx.</span>
 <span class="go">[ -C       ] Compile tflite model into c++ codes.</span>
-<span class="go">[ -E       ] Do once evaluation (for profiling).</span>
+<span class="go">[ -E       ] Run inference and print the outputs.</span>
+<span class="go">[ -I       ] Print model information and arena usage.</span>
 <span class="go">[ -i &lt;str&gt; ] Readable model file path.</span>
 <span class="go">[ -o &lt;str&gt; ] Writable c++ file path (required with -C).</span>
 <span class="go">[ -p &lt;str&gt; ] Prefix of compiled code.</span>
 <span class="go">[ -a &lt;int&gt; ] Arena size (mempool).</span>
+<span class="go">[ -d &lt;str&gt; ] Comma separated input values, e.g. 0.5,1,2 (implies</span>
+<span class="go">             -E). One value fills the whole tensor. Quantized</span>
+<span class="go">             inputs are quantized automatically.</span>
+<span class="go">[ -x &lt;str&gt; ] Raw input tensor file (implies -E).</span>
+<span class="go">             -d/-x may be repeated for models with several inputs.</span>
+<span class="go">[ -n &lt;int&gt; ] Number of inferences to run for timing (implies -E).</span>
 <span class="go">[ -h       ] Print this message.</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">-i</span></code> is required. <code class="docutils literal notranslate"><span class="pre">-o</span></code> is required only with <code class="docutils literal notranslate"><span class="pre">-C</span></code>. Defaults are
 prefix <code class="docutils literal notranslate"><span class="pre">NXAI</span></code> and arena size 8192 bytes.</p>
+<p>The tool checks the file with the FlatBuffers verifier before using it.
+It then registers only the operators that the model uses. About 90
+built-in operators are supported, including convolution, pooling,
+fully connected, LSTM, activation, element-wise, and reshaping
+operators. An unsupported builtin or custom operator is reported by
+name, for example <code class="docutils literal notranslate"><span class="pre">Unsupported</span> <span class="pre">custom</span> <span class="pre">operator:</span> <span class="pre">SignalWindow</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-I</span></code> prints the operators, the name, type, shape, and quantization
+parameters of every input and output tensor, and the number of arena
+bytes used. Use that number to choose <code class="docutils literal notranslate"><span class="pre">-a</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-E</span></code> runs inference and prints every output tensor. Quantized outputs
+are dequantized with the tensor scale and zero point. Tensors with more
+than one element also print the index of the largest value (argmax).
+Inputs come from <code class="docutils literal notranslate"><span class="pre">-d</span></code> or <code class="docutils literal notranslate"><span class="pre">-x</span></code>. The first <code class="docutils literal notranslate"><span class="pre">-d</span></code> or <code class="docutils literal notranslate"><span class="pre">-x</span></code> feeds
+input 0, the next one feeds input 1, and so on. Inputs without data are
+set to zero. <code class="docutils literal notranslate"><span class="pre">-x</span></code> expects a file whose size equals the tensor size in
+bytes. <code class="docutils literal notranslate"><span class="pre">-n</span></code> repeats the inference and prints the total and average
+time spent in <code class="docutils literal notranslate"><span class="pre">Invoke()</span></code>. The profiler CSV is printed for the last
+run.</p>
 <p><code class="docutils literal notranslate"><span class="pre">-C</span></code> appears in the help text but is not functional in NuttX builds.
 Model compilation requires <code class="docutils literal notranslate"><span class="pre">TFLITE_MODEL_COMPILER</span></code>, which neither the
 Makefile nor the CMake integration defines. <code class="docutils literal notranslate"><span class="pre">tflm</span> <span class="pre">-C</span></code> prints
 <code class="docutils literal notranslate"><span class="pre">Not</span> <span class="pre">supported</span> <span class="pre">compiling</span></code>.</p>
-<p>The built-in operator resolver registers nine generic (float and
-quantized) ops:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONV_2D</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DEPTHWISE_CONV_2D</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MAX_POOL_2D</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">QUANTIZE</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DEQUANTIZE</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MEAN</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">RESHAPE</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">FULLY_CONNECTED</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SOFTMAX</span></code></p></li>
-</ul>
-<p>Models that need other operators must change the resolver in
-<code class="docutils literal notranslate"><span class="pre">apps/mlearning/tflite-micro/tflm_tool.cc</span></code>.</p>
 </section>
 <section id="hello-world-example">
 <h2>Hello-world example<a class="headerlink" href="#hello-world-example" title="Permalink to this heading"></a></h2>
@@ -392,13 +402,22 @@ nsh&gt; tflm_hello
 allocator and profiler information, then
 <code class="docutils literal notranslate"><span class="pre">~~~ALL</span> <span class="pre">TESTS</span> <span class="pre">PASSED~~~</span></code>.</p>
 </li>
-<li><p>Optional: invoke a <code class="docutils literal notranslate"><span class="pre">.tflite</span></code> file from the host filesystem (the
-sim configuration includes hostfs):</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; tflm -E -i /path/to/model.tflite -a 8192
+<li><p>Optional: run the hello-world sine models from the host filesystem
+(the sim configuration includes hostfs). NSH limits the command
+line length, so mount a short host path, for example a symlink
+<code class="docutils literal notranslate"><span class="pre">/tmp/m</span></code> to
+<code class="docutils literal notranslate"><span class="pre">apps/mlearning/tflite-micro/tflite-micro/tensorflow/lite/micro/examples/hello_world/models</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t hostfs -o fs=/tmp/m /models
+nsh&gt; tflm -I -i /models/hello_world_int8.tflite
+nsh&gt; tflm -i /models/hello_world_int8.tflite -d 1.5708
 </pre></div>
 </div>
-<p>The tool fails with <code class="docutils literal notranslate"><span class="pre">AllocateTensors</span> <span class="pre">failed</span></code> if the arena is too
-small or the model uses operators outside the nine registered ops.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-I</span></code> lists three <code class="docutils literal notranslate"><span class="pre">FULLY_CONNECTED</span></code> operators and one <code class="docutils literal notranslate"><span class="pre">INT8</span></code>
+input and output with their quantization parameters. Running with
+<code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">1.5708</span></code> (pi/2) prints an output close to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>, the sine of
+the input.</p>
+<p>If the arena is too small the tool prints
+<code class="docutils literal notranslate"><span class="pre">AllocateTensors</span> <span class="pre">failed</span></code> and suggests a larger <code class="docutils literal notranslate"><span class="pre">-a</span></code>.</p>
 </li>
 </ol>
 <p>CMake is equivalent: <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-B</span> <span class="pre">build</span> <span class="pre">-DBOARD_CONFIG=sim:tflm</span> <span class="pre">-GNinja</span></code>
