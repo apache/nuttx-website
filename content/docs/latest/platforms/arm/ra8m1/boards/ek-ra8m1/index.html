@@ -490,6 +490,93 @@ defined.  In that case, the usage is defined in <code class="docutils literal no
 bit 2 = LED3), or individually through the <code class="docutils literal notranslate"><span class="pre">ULEDIOC_SETLED</span></code> ioctl.</p>
 </section>
 </section>
+<section id="arduino-shield-gpio">
+<h2>Arduino Shield GPIO<a class="headerlink" href="#arduino-shield-gpio" title="Permalink to this heading"></a></h2>
+<p>The Arduino Uno shield header’s D2-D5 are wired as inputs and D6-D13 as
+outputs, through the generic GPIO expander driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_DEV_GPIO</span></code>):</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pin</p></th>
+<th class="head"><p>R7FA8M1AHECBD</p></th>
+<th class="head"><p>Direction</p></th>
+<th class="head"><p>Device</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>D2</p></td>
+<td><p>P906</p></td>
+<td><p>Input</p></td>
+<td><p>/dev/gpio0</p></td>
+</tr>
+<tr class="row-odd"><td><p>D3</p></td>
+<td><p>P907</p></td>
+<td><p>Input</p></td>
+<td><p>/dev/gpio1</p></td>
+</tr>
+<tr class="row-even"><td><p>D4</p></td>
+<td><p>P905</p></td>
+<td><p>Input</p></td>
+<td><p>/dev/gpio2</p></td>
+</tr>
+<tr class="row-odd"><td><p>D5</p></td>
+<td><p>P601</p></td>
+<td><p>Input</p></td>
+<td><p>/dev/gpio3</p></td>
+</tr>
+<tr class="row-even"><td><p>D6</p></td>
+<td><p>P602</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio4</p></td>
+</tr>
+<tr class="row-odd"><td><p>D7</p></td>
+<td><p>P908</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio5</p></td>
+</tr>
+<tr class="row-even"><td><p>D8</p></td>
+<td><p>P909</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio6</p></td>
+</tr>
+<tr class="row-odd"><td><p>D9</p></td>
+<td><p>P603</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio7</p></td>
+</tr>
+<tr class="row-even"><td><p>D10</p></td>
+<td><p>P413</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio8</p></td>
+</tr>
+<tr class="row-odd"><td><p>D11</p></td>
+<td><p>P411</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio9</p></td>
+</tr>
+<tr class="row-even"><td><p>D12</p></td>
+<td><p>P410</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio10</p></td>
+</tr>
+<tr class="row-odd"><td><p>D13</p></td>
+<td><p>P412</p></td>
+<td><p>Output</p></td>
+<td><p>/dev/gpio11</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>D0/D1 are not registered here: they are SCI9’s RXD9/TXD9 pins (see
+<a class="reference internal" href="#serial-console">Serial Console</a> below).  The inputs are plain floating inputs, with no
+pull-up or pull-down.</p>
+<p><code class="docutils literal notranslate"><span class="pre">src/ra8m1_gpio.c</span></code> registers these pins with <code class="docutils literal notranslate"><span class="pre">gpio_pin_register()</span></code>.
+<code class="docutils literal notranslate"><span class="pre">apps/examples/gpio</span></code> reads or writes any of them from <code class="docutils literal notranslate"><span class="pre">nsh</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; gpio /dev/gpio0</span>
+<span class="go">nsh&gt; gpio -o 1 /dev/gpio4</span>
+</pre></div>
+</div>
+</section>
 <section id="serial-console">
 <h2>Serial Console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
 <p>The EK-RA8M1’s on-board debugger (a J-Link) provides a virtual COM port on
@@ -512,6 +599,28 @@ SCI9:</p>
 </table>
 </div></blockquote>
 <p>SCI9 is the serial console in the default configurations, at 115200 8N1.</p>
+</section>
+<section id="timers">
+<h2>Timers<a class="headerlink" href="#timers" title="Permalink to this heading"></a></h2>
+<p>Any of the GPT channels can be registered as a timer.  The board registers
+GPT0 (32-bit) as <code class="docutils literal notranslate"><span class="pre">/dev/timer0</span></code> and GPT9 (16-bit) as <code class="docutils literal notranslate"><span class="pre">/dev/timer1</span></code> when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_GPT0_GPT</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_GPT9_GPT</span></code> are set (see the
+<code class="docutils literal notranslate"><span class="pre">GPT</span></code> section of the RA8M1 platform page).  No pins are used.  PCLKD, which
+clocks the timers, is 120 MHz in this port.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">timer-gpio</span></code> configuration builds on <code class="docutils literal notranslate"><span class="pre">nsh</span></code> with both channels
+enabled, the GPIO expander driver (see <a class="reference internal" href="#arduino-shield-gpio">Arduino Shield GPIO</a> above), and
+<code class="docutils literal notranslate"><span class="pre">apps/examples/timer_gpio</span></code> built in.  Unlike <code class="docutils literal notranslate"><span class="pre">apps/examples/timer</span></code>,
+which only logs samples to the console, <code class="docutils literal notranslate"><span class="pre">timer_gpio</span></code> toggles a GPIO pin
+once per timer period – so the timer’s actual accuracy can be checked
+directly with an oscilloscope or logic analyzer on the pin, rather than
+trusted from console output alone:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; timer_gpio -t /dev/timer0 -g /dev/gpio4</span>
+</pre></div>
+</div>
+<p>The period comes from <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_TIMER_GPIO_INTERVAL</span></code> (200 ms in
+this configuration).  Note that <code class="docutils literal notranslate"><span class="pre">/dev/timer1</span></code> (GPT9, 16-bit) tops out at
+about 559 ms at this port’s 120 MHz PCLKD: a period that fits
+<code class="docutils literal notranslate"><span class="pre">/dev/timer0</span></code> may return <code class="docutils literal notranslate"><span class="pre">-ERANGE</span></code> on <code class="docutils literal notranslate"><span class="pre">/dev/timer1</span></code>.</p>
 </section>
 <section id="loading-code">
 <h2>Loading Code<a class="headerlink" href="#loading-code" title="Permalink to this heading"></a></h2>
@@ -549,6 +658,14 @@ the <code class="docutils literal notranslate"><span class="pre">ostest</span></
 <p>Same as <code class="docutils literal notranslate"><span class="pre">nsh</span></code>, but without <code class="docutils literal notranslate"><span class="pre">ostest</span></code>, and enables the <code class="docutils literal notranslate"><span class="pre">userled</span></code>
 driver on <code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> is not set, so NuttX
 does not drive the LEDs itself; see <a class="reference internal" href="#leds">LEDs</a> above).</p>
+</section>
+<section id="timer-gpio">
+<h3>timer-gpio<a class="headerlink" href="#timer-gpio" title="Permalink to this heading"></a></h3>
+<p>Same as <code class="docutils literal notranslate"><span class="pre">nsh</span></code>, but registers GPT0 and GPT9 as <code class="docutils literal notranslate"><span class="pre">/dev/timer0</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/dev/timer1</span></code>, enables the GPIO expander driver on the Arduino shield
+header (see <a class="reference internal" href="#arduino-shield-gpio">Arduino Shield GPIO</a> above), and builds in
+<code class="docutils literal notranslate"><span class="pre">apps/examples/gpio</span></code> and <code class="docutils literal notranslate"><span class="pre">apps/examples/timer_gpio</span></code> (see <a class="reference internal" href="#timers">Timers</a>
+above).</p>
 </section>
 </section>
 </section>

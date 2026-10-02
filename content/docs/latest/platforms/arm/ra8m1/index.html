@@ -187,6 +187,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#clock">CLOCK</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#sci">SCI</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#gpio">GPIO</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#gpt">GPT</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#icu">ICU</a></li>
 </ul>
 </li>
@@ -401,8 +402,8 @@ EK-RA8M1) has been tested; the others are selectable but untested.</p>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>GPT</p></td>
-<td><p>No</p></td>
-<td></td>
+<td><p>Yes</p></td>
+<td><p>Timer only: /dev/timerN (GPT0-7 32-bit, GPT8-13 16-bit)</p></td>
 </tr>
 <tr class="row-even"><td><p>AGT</p></td>
 <td><p>No</p></td>
@@ -502,12 +503,32 @@ SCI_B5-8); each channel’s baud rate generator runs from SCICLK.</p>
 <h3>GPIO<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h3>
 <p>Pins can be configured/operated using <code class="docutils literal notranslate"><span class="pre">ra_gpio_*</span></code> functions.</p>
 </section>
+<section id="gpt">
+<h3>GPT<a class="headerlink" href="#gpt" title="Permalink to this heading"></a></h3>
+<p>The General PWM Timer (GPT) has 8 32-bit channels (GPT0-7) and 6 16-bit
+channels (GPT8-13).  NuttX uses a channel as a generic timer, registered as
+<code class="docutils literal notranslate"><span class="pre">/dev/timerN</span></code> through the upper-half timer driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_TIMER</span></code>): the
+channel counts up in saw-wave PWM mode, with the clock taken from PCLKD
+divided by the smallest of 1, 2, 4, 8, 16, 32, 64, 256 or 1024 that fits the
+requested timeout, and the overflow interrupt is the timer expiry.  The
+PWM, capture, dead time and ELC/hardware trigger functions are not
+supported.</p>
+<p>Each channel is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_GPTn_GPT</span></code> (under
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_GPT_TIMER</span></code>) and registered by the board with
+<code class="docutils literal notranslate"><span class="pre">ra_gpt_timer_initialize()</span></code>.  The timeout is set with
+<code class="docutils literal notranslate"><span class="pre">TCIOC_SETTIMEOUT</span></code> in microseconds and can be changed while the timer is
+running.  The longest timeout is about 4295 s on a 32-bit channel, and
+about 559 ms on a 16-bit channel at a PCLKD of 120 MHz.</p>
+</section>
 <section id="icu">
 <h3>ICU<a class="headerlink" href="#icu" title="Permalink to this heading"></a></h3>
 <p>The Interrupt Controller Unit routes peripheral events to NVIC vectors:
-any event can be routed to any of its IELSR slots.  NuttX assigns SCI_B
-events to fixed slots (four per channel) and calls <code class="docutils literal notranslate"><span class="pre">ra_attach_icu()</span></code> at
-start-up to route the enabled channels’ events into them.</p>
+any event can be routed to any of its IELSR slots.  NuttX gives each event
+that an enabled peripheral needs a slot, packed from the first slot in the
+order they are listed in <code class="docutils literal notranslate"><span class="pre">ra8m1_irq.h</span></code>, so only the events of the
+peripherals a build enables use a slot: four for each SCI_B UART, and one
+(the counter overflow) for each GPT channel.  <code class="docutils literal notranslate"><span class="pre">ra_attach_icu()</span></code> calls at
+start-up route those events into their slots.</p>
 </section>
 </section>
 <section id="supported-boards">
