@@ -179,6 +179,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#gpio">GPIO</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#grtc">GRTC</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#radio">RADIO</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#rramc">RRAMC</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#timer">TIMER</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#uarte">UARTE</a></li>
@@ -331,8 +332,8 @@ secure images, with a 128 MHz CPU clock and SysTick or GRTC scheduling.</p>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>RADIO</p></td>
-<td><p>No</p></td>
-<td></td>
+<td><p>Yes</p></td>
+<td><p>Bluetooth LE through SDC</p></td>
 </tr>
 <tr class="row-even"><td><p>RRAMC</p></td>
 <td><p>Yes</p></td>
@@ -378,7 +379,26 @@ secure images, with a 128 MHz CPU clock and SysTick or GRTC scheduling.</p>
 and twelve compare channels. <code class="docutils literal notranslate"><span class="pre">CONFIG_NRF54L_SYSTIMER_GRTC</span></code> reserves the
 instance and compare channel zero for tickless scheduling. The GRTC is timed
 by LFCLK, so the LFCLK source selected with <code class="docutils literal notranslate"><span class="pre">CONFIG_NRF54L_USE_LFCLK</span></code>
-determines the long-term accuracy of the system time.</p>
+determines the long-term accuracy of the system time.
+With SDC enabled, channels 7 through 11 are reserved for MPSL.</p>
+</section>
+<section id="radio">
+<h3>RADIO<a class="headerlink" href="#radio" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_NRF54L_SOFTDEVICE_CONTROLLER</span></code> enables Nordic’s SoftDevice Controller
+using nrfxlib 3.4.1. This SDK version no longer accepts raw HCI command
+packets, so <code class="docutils literal notranslate"><span class="pre">nrf54l_sdc_hci.c</span></code> translates each HCI command into the
+corresponding SDC command function and builds the Command Complete or
+Command Status event. Events and ACL data pass through unchanged. Supported
+commands cover legacy advertising, scanning, central and peripheral
+connections, Data Length Extension, and 1M, 2M and Coded PHYs. The driver
+provides the NuttX Bluetooth driver interface for the native host or HCI
+transport. The build downloads nrfxlib; <code class="docutils literal notranslate"><span class="pre">CONFIG_ALLOW_BSDNORDIC_COMPONENTS</span></code>
+must be enabled.</p>
+<p>MPSL and SDC reserve TIMER10, TIMER20, GRTC channels 7 through 11, RADIO,
+ECB00, AAR00, CCM00, CLOCK, TEMP and RRAMC, together with their DPPI/PPIB
+resources. TIMER0, TIMER6 and progmem are unavailable while SDC is enabled.
+The remaining GRTC channels can be used by the tickless scheduler. HFXO
+remains running; the LFCLK source is selected with <code class="docutils literal notranslate"><span class="pre">CONFIG_NRF54L_USE_LFCLK</span></code>.</p>
 </section>
 <section id="rramc">
 <h3>RRAMC<a class="headerlink" href="#rramc" title="Permalink to this heading"></a></h3>
