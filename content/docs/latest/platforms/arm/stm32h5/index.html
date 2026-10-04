@@ -581,6 +581,13 @@ HSI48 cannot be reliably used in host mode due to drift. It can only be used in 
 <p>STM32H5 parts have a 2 KiB one-time programmable (OTP) area. It’s organized
 into 32 blocks of 32 16-bit words. Each word can be successfully programmed once.
 Each block may be permanently locked at any point. Written words may be read.</p>
+<p>There are two APIs for it: a block-oriented API with locking, and a lower-level
+word API. An optional eFuse character device is built on top of the word API.</p>
+<section id="block-api">
+<h4>Block API<a class="headerlink" href="#block-api" title="Permalink to this heading"></a></h4>
+<p>This API is organized into 32 blocks of 32 16-bit words. Each word can be
+successfully programmed once. Each block may be permanently locked at any
+point. Written words may be read.</p>
 <p>Writing the same word more than once is unsupported. Doing so may cause corruption.
 Reading an unwritten word raises an exception.
 To simplify the programming model, the OTP API
@@ -599,6 +606,47 @@ Any block affected by <code class="docutils literal notranslate"><span class="pr
 of the block size and count when partitioning the OTP area for their needs.
 <code class="docutils literal notranslate"><span class="pre">len</span></code> is the number of bytes - not words. It has no alignment requirement. <code class="docutils literal notranslate"><span class="pre">offset</span></code> is
 the offset in bytes. It must be a multiple of 4.</p>
+</section>
+<section id="word-api">
+<h4>Word API<a class="headerlink" href="#word-api" title="Permalink to this heading"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_OTP_WORD</span></code> builds direct 16- or 32-bit word access to the
+OTP area, independent of the block API above – there is no locking, and
+no relation between a “word” index here and the block API’s byte
+<code class="docutils literal notranslate"><span class="pre">offset</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_otp_word_read16</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">stm32_otp_word_read32</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Unlike the block API, reading a blank (never programmed) word does not
+raise an exception: it legitimately reads back as
+<code class="docutils literal notranslate"><span class="pre">0xffff</span></code>/<code class="docutils literal notranslate"><span class="pre">0xffffffff</span></code>, which is returned through <code class="docutils literal notranslate"><span class="pre">*value</span></code> either
+way. Since whether a word has been written is known, that is reported
+through the return value: <code class="docutils literal notranslate"><span class="pre">-ENODATA</span></code> for a blank word, <code class="docutils literal notranslate"><span class="pre">OK</span></code> for one
+that holds real data. <code class="docutils literal notranslate"><span class="pre">-EIO</span></code> is returned only when a word’s ECC does
+not check out at all, i.e. it is neither blank nor the value its own
+program operation wrote.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_OTP_WRITE</span></code> also set:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">stm32_otp_word_write16</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">stm32_otp_word_write32</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Each word may be programmed once. Writing a word that already holds
+exactly the value requested is a harmless no-op that returns <code class="docutils literal notranslate"><span class="pre">OK</span></code>.
+Writing a word that already holds a different value returns <code class="docutils literal notranslate"><span class="pre">-EEXIST</span></code>.
+A hardware programming failure, or a post-write readback mismatch,
+returns <code class="docutils literal notranslate"><span class="pre">-EIO</span></code>.</p>
+</section>
+<section id="efuse-character-device">
+<h4>eFuse Character Device<a class="headerlink" href="#efuse-character-device" title="Permalink to this heading"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_EFUSE</span></code> (which selects <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_OTP_WORD</span></code>)
+registers the OTP area as a NuttX efuse character device, by default
+<code class="docutils literal notranslate"><span class="pre">/dev/efuse</span></code>, built on the word API above. See
+<a class="reference internal" href="../../../components/drivers/character/efuse.html"><span class="doc">EFUSE Drivers</span></a> for the <code class="docutils literal notranslate"><span class="pre">EFUSEIOC_READ_FIELD</span></code>/
+<code class="docutils literal notranslate"><span class="pre">EFUSEIOC_WRITE_FIELD</span></code> ioctl interface. Field bit offsets index into the
+flat bit space of the OTP area at 16 bits per word, the same as the word
+API’s <code class="docutils literal notranslate"><span class="pre">word</span></code> index. Writing a field requires <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32H5_OTP_WRITE</span></code>;
+without it, writes are refused with <code class="docutils literal notranslate"><span class="pre">-EPERM</span></code>.</p>
+</section>
 </section>
 <section id="clocks">
 <h3>Clocks<a class="headerlink" href="#clocks" title="Permalink to this heading"></a></h3>
