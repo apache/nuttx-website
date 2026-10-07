@@ -188,6 +188,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#clock">CLOCK</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#sci">SCI</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#dtc">DTC</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#gpio">GPIO</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#gpt">GPT</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#icu">ICU</a></li>
@@ -396,8 +397,8 @@ EK-RA8M1) has been tested; the others are selectable but untested.</p>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>DTC</p></td>
-<td><p>No</p></td>
-<td></td>
+<td><p>Yes</p></td>
+<td><p>Used by SCI (see SCI below); normal mode only</p></td>
 </tr>
 <tr class="row-even"><td><p>DMAC</p></td>
 <td><p>No</p></td>
@@ -425,7 +426,7 @@ EK-RA8M1) has been tested; the others are selectable but untested.</p>
 </tr>
 <tr class="row-even"><td><p>SCI</p></td>
 <td><p>Yes</p></td>
-<td><p>Just UART (SCI_B0-4, SCI_B9)</p></td>
+<td><p>UART only (SCI_B0-4, SCI_B9); FIFO, DTC, termios</p></td>
 </tr>
 <tr class="row-odd"><td><p>IIC</p></td>
 <td><p>No</p></td>
@@ -499,7 +500,35 @@ clock of the SCI baud rate generator.</p>
 support several serial communication modes: Asynchronous (UART), Clock
 synchronous, Simple SPI, Smart card interface, Simple IIC (master-only).
 NuttX driver support covers UART mode.  RA8M1 has SCI_B0-4 and SCI_B9 (no
-SCI_B5-8); each channel’s baud rate generator runs from SCICLK.</p>
+SCI_B5-8); each channel’s baud rate generator runs from SCICLK.  Each
+instance is enabled with its own <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_UART</span></code>.</p>
+<p>Each instance can independently use its 16-stage hardware FIFO or the
+DTC (see <a class="reference internal" href="#dtc">DTC</a> below) to move data, but not both: <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_FIFO</span></code>
+and <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_TXDTC</span></code>/<code class="docutils literal notranslate"><span class="pre">RXDTC</span></code> are mutually exclusive.  Measured on
+hardware, a low receive trigger level (<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_FIFO_RXTRG</span></code>) gives
+better overrun resistance at high baud rates than RX DTC does, since DTC
+only protects a byte while its single-activation transfer is actually
+armed, not continuously – see the Kconfig help for each option for the
+detail.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_TERMIOS</span></code> enables <code class="docutils literal notranslate"><span class="pre">TCGETS</span></code>/<code class="docutils literal notranslate"><span class="pre">TCSETS</span></code> (baud rate, parity,
+stop bits only – word length and the FIFO/DTC choice are fixed at build
+time).  <code class="docutils literal notranslate"><span class="pre">apps/system/stty</span></code> can change these live, e.g.
+<code class="docutils literal notranslate"><span class="pre">stty</span> <span class="pre">-F</span> <span class="pre">/dev/ttyS1</span> <span class="pre">speed</span> <span class="pre">3000000</span></code> (FIFO with TTRG=15/RTRG=0 tested
+clean up to 3 Mbps).</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_TIOCGICOUNT</span></code> exposes frame/overrun/parity counters
+through the standard <code class="docutils literal notranslate"><span class="pre">TIOCGICOUNT</span></code> ioctl; nothing pushes a
+notification, an application has to poll it.</p>
+</section>
+<section id="dtc">
+<h3>DTC<a class="headerlink" href="#dtc" title="Permalink to this heading"></a></h3>
+<p>The Data Transfer Controller offloads repetitive, register-triggered
+transfers (e.g. UART TX/RX) from the CPU: the ICU event that would
+otherwise interrupt the CPU instead activates the DTC for one transfer,
+and once its count is exhausted it still interrupts the CPU normally.
+Only normal mode (one activation, one transfer) is implemented; repeat
+and block modes are not.  Enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_DTC</span></code>; peripheral
+drivers that support it expose their own per-channel options (e.g.
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCI9_TXDTC</span></code>).</p>
 </section>
 <section id="gpio">
 <h3>GPIO<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h3>

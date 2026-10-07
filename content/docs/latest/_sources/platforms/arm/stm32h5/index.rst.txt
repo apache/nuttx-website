@@ -6,10 +6,8 @@ This is a port of the STM32H5 family.
 The STM32H5 is a chip based on the ARM Cortex-M33.
 Most code is adapted from legacy STM32 and STM32H7.
 
-Development primarily using the Nucleo-H563ZI as of Feb 5th, 2025.
-Therefore, at this time only the STM32H563 is truly supported. However,
-much of the current support should work for all MCUs. Kconfig will need
-updates to support MCUs besides the STM32H563.
+Board ports are available for STM32H503, STM32H533, STM32H563 and
+STM32H573 devices.  Peripheral support varies by board configuration.
 
 Supported MCUs
 ==============
@@ -22,7 +20,7 @@ STM32H523     No
 STM32H533     Yes
 STM32H562     No
 STM32H563     Yes
-STM32H573     No
+STM32H573     Yes
 ===========  ======= ================
 
 Peripheral Support
@@ -41,7 +39,7 @@ FDCAN       Yes
 GPDMA       Yes
 GPIO        Yes
 I2C         Yes
-ICACHE      Yes
+ICACHE      Yes      Uses the MPU to keep OTP, RO and EDATA flash uncached.
 RCC         Yes
 USART       Yes
 LPUART      Yes
@@ -86,6 +84,17 @@ WWDG        Yes
 OTP         Yes
 
 ==========  =======  =====
+
+ICACHE
+------
+
+With ``CONFIG_STM32_ICACHE`` the OTP, read-only (UID, flash size, package) and
+EDATA flash areas (0x08fff000-0x09017fff) are mapped non-cacheable with an MPU
+region, so they can be read like any other memory.
+
+The MPU is not applied in the HardFault and NMI handlers (``HFNMIENA=0``), so
+these areas must not be read from NMI or HardFault context: with the ICACHE
+enabled such a read raises a bus fault.
 
 USB FS Host
 -----------

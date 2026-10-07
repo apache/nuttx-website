@@ -301,7 +301,7 @@ the R7FA8M1AHECBD (BGA224) MCU: an Arm Cortex-M85 running at up to
 480 MHz, with 2016 KiB of code flash, 896 KiB of SRAM and 12 KiB of data
 flash.</p>
 <figure class="align-center">
-<a class="reference internal image-reference" href="../../../../../_images/ek-ra8m1-board_0.webp"><img alt="../../../../../_images/ek-ra8m1-board_0.webp" src="../../../../../_images/ek-ra8m1-board_0.webp" style="width: 627.5px; height: 812.0px;" /></a>
+<a class="reference internal image-reference" href="../../../../../_images/ek-ra8m1-board_0.webp"><img alt="../../../../../_images/ek-ra8m1-board_0.webp" src="../../../../../_images/ek-ra8m1-board_0.webp" style="width: 628.0px; height: 812.5px;" /></a>
 </figure>
 <p>See the <a class="reference external" href="https://www.renesas.com/en/design-resources/boards-kits/ek-ra8m1">Renesas website</a> for
 information about the EK-RA8M1.</p>
@@ -601,6 +601,26 @@ SCI9:</p>
 </table>
 </div></blockquote>
 <p>SCI9 is the serial console in the default configurations, at 115200 8N1.</p>
+<p>SCI0 is also wired out on this board, for use as a second UART
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCI0_UART</span></code>) independent of the console:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>R7FA8M1AHECBD</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>TXD0</p></td>
+<td><p>P609</p></td>
+</tr>
+<tr class="row-odd"><td><p>RXD0</p></td>
+<td><p>P610</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Tested with an external USB-serial adapter.</p>
 </section>
 <section id="timers">
 <h2>Timers<a class="headerlink" href="#timers" title="Permalink to this heading"></a></h2>
@@ -668,6 +688,28 @@ does not drive the LEDs itself; see <a class="reference internal" href="#leds">L
 header (see <a class="reference internal" href="#arduino-shield-gpio">Arduino Shield GPIO</a> above), and builds in
 <code class="docutils literal notranslate"><span class="pre">apps/examples/gpio</span></code> and <code class="docutils literal notranslate"><span class="pre">apps/examples/timer_gpio</span></code> (see <a class="reference internal" href="#timers">Timers</a>
 above).</p>
+</section>
+<section id="serial-test">
+<h3>serial-test<a class="headerlink" href="#serial-test" title="Permalink to this heading"></a></h3>
+<p>Same as <code class="docutils literal notranslate"><span class="pre">nsh</span></code>, but also enables SCI0 as <code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code> (see <a class="reference internal" href="#serial-console">Serial
+Console</a> above) with its FIFO (<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCI0_FIFO</span></code>, TTRG=15/
+RTRG=0 – the best overrun-resistant setting measured on hardware) and
+1024-byte RX/TX buffers, <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_TERMIOS</span></code> and
+<code class="docutils literal notranslate"><span class="pre">apps/system/stty</span></code>, and builds in <code class="docutils literal notranslate"><span class="pre">apps/examples/serialblaster</span></code>
+and <code class="docutils literal notranslate"><span class="pre">apps/examples/serialrx</span></code>, both pointed at <code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code>, for
+exercising SCI0 at a range of baud rates independent of the console.</p>
+<p>To test, with an external loopback wired across SCI0’s TX/RX pins
+(see <a class="reference internal" href="#serial-console">Serial Console</a> above for the pinout):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; stty -F /dev/ttyS1 speed 3000000</span>
+<span class="go">nsh&gt; serialrx /dev/ttyS1 1000 &amp;</span>
+<span class="go">nsh&gt; serialblaster /dev/ttyS1 1000</span>
+</pre></div>
+</div>
+<p>Keep the byte count at or below the 1024-byte RX buffer.
+<code class="docutils literal notranslate"><span class="pre">serialrx</span></code> prints every received byte to the (115200) console as it
+reads, far slower than a multi-Mbps port fills the buffer; a transfer
+longer than the buffer overflows it in software, in the generic
+NuttX serial core, well before SCI0’s own FIFO is the limiting factor.</p>
 </section>
 </section>
 </section>

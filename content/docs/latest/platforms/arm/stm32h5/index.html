@@ -210,6 +210,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">ST STM32H5</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#supported-mcus">Supported MCUs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#icache">ICACHE</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#usb-fs-host">USB FS Host</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#otp">OTP</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#clocks">Clocks</a></li>
@@ -221,6 +222,7 @@
 <li class="toctree-l5"><a class="reference internal" href="boards/nucleo-h503rb/index.html">ST Nucleo-H503RB</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/nucleo-h533re/index.html">ST Nucleo-H533RE</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/nucleo-h563zi/index.html">ST Nucleo-H563ZI</a></li>
+<li class="toctree-l5"><a class="reference internal" href="boards/stm32h573i-dk/index.html">ST STM32H573I-DK</a></li>
 </ul>
 </li>
 </ul>
@@ -307,10 +309,8 @@
 <p>This is a port of the STM32H5 family.
 The STM32H5 is a chip based on the ARM Cortex-M33.
 Most code is adapted from legacy STM32 and STM32H7.</p>
-<p>Development primarily using the Nucleo-H563ZI as of Feb 5th, 2025.
-Therefore, at this time only the STM32H563 is truly supported. However,
-much of the current support should work for all MCUs. Kconfig will need
-updates to support MCUs besides the STM32H563.</p>
+<p>Board ports are available for STM32H503, STM32H533, STM32H563 and
+STM32H573 devices.  Peripheral support varies by board configuration.</p>
 <section id="supported-mcus">
 <h2>Supported MCUs<a class="headerlink" href="#supported-mcus" title="Permalink to this heading"></a></h2>
 <table class="docutils align-default">
@@ -342,7 +342,7 @@ updates to support MCUs besides the STM32H563.</p>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>STM32H573</p></td>
-<td><p>No</p></td>
+<td><p>Yes</p></td>
 <td></td>
 </tr>
 </tbody>
@@ -393,7 +393,7 @@ updates to support MCUs besides the STM32H563.</p>
 </tr>
 <tr class="row-even"><td><p>ICACHE</p></td>
 <td><p>Yes</p></td>
-<td></td>
+<td><p>Uses the MPU to keep OTP, RO and EDATA flash uncached.</p></td>
 </tr>
 <tr class="row-odd"><td><p>RCC</p></td>
 <td><p>Yes</p></td>
@@ -561,6 +561,15 @@ updates to support MCUs besides the STM32H563.</p>
 </tr>
 </tbody>
 </table>
+<section id="icache">
+<h3>ICACHE<a class="headerlink" href="#icache" title="Permalink to this heading"></a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_ICACHE</span></code> the OTP, read-only (UID, flash size, package) and
+EDATA flash areas (0x08fff000-0x09017fff) are mapped non-cacheable with an MPU
+region, so they can be read like any other memory.</p>
+<p>The MPU is not applied in the HardFault and NMI handlers (<code class="docutils literal notranslate"><span class="pre">HFNMIENA=0</span></code>), so
+these areas must not be read from NMI or HardFault context: with the ICACHE
+enabled such a read raises a bus fault.</p>
+</section>
 <section id="usb-fs-host">
 <h3>USB FS Host<a class="headerlink" href="#usb-fs-host" title="Permalink to this heading"></a></h3>
 <p>STM32 USB FS Host Driver Support. The STM32H5 is equipped with a Dual Role USB device
@@ -683,6 +692,7 @@ TODO: Make stm32_lowputc.c aware of this clock source setting too.</p>
 <li class="toctree-l1"><a class="reference internal" href="boards/nucleo-h503rb/index.html">ST Nucleo-H503RB</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boards/nucleo-h533re/index.html">ST Nucleo-H533RE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boards/nucleo-h563zi/index.html">ST Nucleo-H563ZI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boards/stm32h573i-dk/index.html">ST STM32H573I-DK</a></li>
 </ul>
 </div>
 </section>
