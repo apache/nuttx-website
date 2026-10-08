@@ -1,15 +1,24 @@
 name: CI
 
-on:
+'on':
   repository_dispatch:
     types: docs
   workflow_dispatch:
+    inputs:
+      build_all:
+        description: 'Rebuild documentation for all historical releases'
+        required: false
+        default: false
+        type: boolean
   pull_request:
   push:
     branches:
       - master
   schedule:
-    - cron: '0 0 * * *'
+    # Full weekly rebuild on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+    # Daily incremental rebuild Monday through Saturday at 00:00 UTC
+    - cron: '0 0 * * 1-6'
 
 permissions:
   contents: write
@@ -54,19 +63,68 @@ jobs:
         sudo apt-get install -y plantuml
 
         echo "======================================================="
-        echo " Setup nuttx/Documentation"
+        echo " Setup docs directory"
+        echo "======================================================="
+        DOCDIR="$GITHUB_WORKSPACE/docs"
+        rm -rf "$DOCDIR"
+        mkdir -p "$DOCDIR"
+
+        # Determine whether to perform a full historical rebuild or an incremental build.
+        # - Full rebuild if workflow_dispatch input build_all is true.
+        # - Full rebuild on weekly scheduled run (Sunday: cron '0 0 * * 0').
+        # - Incremental build on PRs, pushes, repository_dispatch, and daily runs.
+        BUILD_ALL=false
+        if [ "${{ inputs.build_all }}" = "true" ]; then
+          echo " ==> Full rebuild requested via workflow input."
+          BUILD_ALL=true
+        elif [ "${{ github.event.schedule }}" = "0 0 * * 0" ]; then
+          echo " ==> Full weekly rebuild scheduled on Sunday."
+          BUILD_ALL=true
+        fi
+
+        # In incremental mode, restore existing compiled docs from the asf-site branch
+        if [ "$BUILD_ALL" != "true" ]; then
+          echo "======================================================="
+          echo " Restoring existing release docs from asf-site branch"
+          echo "======================================================="
+          git fetch origin asf-site --depth=1 || true
+          if git archive origin/asf-site content/docs 2>/dev/null | tar -x -C "$DOCDIR" --strip-components=2 2>/dev/null; then
+            echo " ==> Successfully restored existing release documentation."
+          else
+            echo "::warning::Could not restore docs from asf-site; falling back to full rebuild."
+            BUILD_ALL=true
+          fi
+        fi
+
+        echo "======================================================="
+        echo " Select Documentation versions to build"
         echo "======================================================="
         cd nuttx/Documentation
-        DOCDIR=../../docs
-        rm -rf $DOCDIR
 
         NUTTX_TAGS=$(git tag -l --sort=taggerdate 'nuttx-1?.*' | grep -Fv RC)
         export NUTTX_VERSIONS=$(echo -n "$NUTTX_TAGS" | sed -r 's|^nuttx-||g' | tr '\n' ',')
-        echo " ==> BUILD NUTTX DOCUMENTATION FOR: $NUTTX_VERSIONS (and master)."
 
-        for nuttx_version in $NUTTX_TAGS master; do
+        VERSIONS_TO_BUILD=""
+        if [ "$BUILD_ALL" = "true" ]; then
+          echo " ==> FULL REBUILD: building all historical releases and master."
+          VERSIONS_TO_BUILD="$NUTTX_TAGS master"
+        else
+          # Detect if any new release tags exist in NuttX that aren't yet in $DOCDIR
+          for tag in $NUTTX_TAGS; do
+            ver="${tag#nuttx-}"
+            if [ ! -d "$DOCDIR/$ver" ]; then
+              echo " ==> New release tag detected: $tag ($ver)"
+              VERSIONS_TO_BUILD="$VERSIONS_TO_BUILD $tag"
+            fi
+          done
+          # Always rebuild master (latest docs) to keep in sync with upstream
+          VERSIONS_TO_BUILD="$VERSIONS_TO_BUILD master"
+          echo " ==> INCREMENTAL BUILD: building $(echo $VERSIONS_TO_BUILD | xargs)."
+        fi
+
+        for nuttx_version in $VERSIONS_TO_BUILD; do
           echo " ===> BUILDING DOCUMENTATION FOR NuttX $nuttx_version."
-          git checkout -f $nuttx_version
+          git checkout -f "$nuttx_version"
 
           echo " ====> PIPENV INSTALL."
           pipenv install
@@ -77,6 +135,7 @@ jobs:
           else
             OUTDIR="$DOCDIR/${nuttx_version#nuttx-}"
           fi
+          rm -rf "$OUTDIR"
           echo " ====> OUTDIR IS: $OUTDIR."
 
           if pipenv run make html BUILDDIR="$OUTDIR"; then
