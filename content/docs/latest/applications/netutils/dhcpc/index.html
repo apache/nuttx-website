@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>dhcpc DHCP client &mdash; NuttX latest documentation</title>
+  <title>dhcpc DHCP Client &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -43,6 +43,7 @@
       <script src="../../../_static/clipboard.min.js"></script>
       <script src="../../../_static/copybutton.js"></script>
       <script src="../../../_static/design-tabs.js"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -166,13 +167,37 @@
 <li class="toctree-l3"><a class="reference internal" href="../codecs/index.html"><code class="docutils literal notranslate"><span class="pre">codecs</span></code> CODEC Library: Base64 coding, URL coding, MD5</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../cwebsocket/index.html"><code class="docutils literal notranslate"><span class="pre">cwebsocket</span></code> WebSocket Client Library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../dhcp6c/index.html"><code class="docutils literal notranslate"><span class="pre">dhcp6c</span></code> DHCPv6 client</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> DHCP client</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> DHCP Client</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#operational-roles">Operational Roles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#protocol-architecture-state-machine">Protocol Architecture &amp; State Machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#requirements-dependencies">Requirements &amp; Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nsh-usage">NSH Usage</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#configuring-an-interface-via-dhcp">Configuring an Interface via DHCP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#verifying-the-acquired-configuration">Verifying the Acquired Configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#testing-network-reachability">Testing Network Reachability</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#c-api-reference">C API Reference</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#data-structures">Data Structures</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#core-functions">Core Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#application-examples">Application Examples</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#example-1-synchronous-ip-acquisition-and-interface-configuration">Example 1: Synchronous IP Acquisition and Interface Configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#example-2-graceful-release-on-system-shutdown">Example 2: Graceful Release on System Shutdown</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#embedded-design-tuning-guidelines">Embedded Design &amp; Tuning Guidelines</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../dhcpd/index.html"><code class="docutils literal notranslate"><span class="pre">dhcpd</span></code> DHCP server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../discover/index.html"><code class="docutils literal notranslate"><span class="pre">discover</span></code> Network Discovery Utility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../dropbear/index.html"><code class="docutils literal notranslate"><span class="pre">dropbear</span></code> SSH Server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../esp8266/index.html"><code class="docutils literal notranslate"><span class="pre">esp8266</span></code> ESP8266</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ftpc/index.html"><code class="docutils literal notranslate"><span class="pre">ftpc</span></code> FTP client</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../ftpd/index.html"><code class="docutils literal notranslate"><span class="pre">ftpd</span></code> FTP server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ftpd/index.html"><code class="docutils literal notranslate"><span class="pre">ftpd</span></code> FTP Server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../iper/index.html"><code class="docutils literal notranslate"><span class="pre">iperf</span></code> iperf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../iptables/index.html"><code class="docutils literal notranslate"><span class="pre">iptables</span></code> iptables library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../libcurl4nx/index.html"><code class="docutils literal notranslate"><span class="pre">libcurl4nx</span></code> cURL4nx HTTP client library</a></li>
@@ -198,7 +223,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../vconfig/index.html"><code class="docutils literal notranslate"><span class="pre">vconfig</span></code> VLAN Config Tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../wakaama/index.html"><code class="docutils literal notranslate"><span class="pre">wakaama</span></code> Eclipse Wakaama (formerly liblwm2m) - LWM2M protocol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../wakeonlan/index.html"><code class="docutils literal notranslate"><span class="pre">wakeonlan</span></code> WakeOnLAN support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../webclient/index.html"><code class="docutils literal notranslate"><span class="pre">webclient</span></code> uIP web client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../webclient/index.html"><code class="docutils literal notranslate"><span class="pre">webclient</span></code> HTTP Web Client</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../webserver/index.html"><code class="docutils literal notranslate"><span class="pre">webserver</span></code> uIP web server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../xmlrpc/index.html"><code class="docutils literal notranslate"><span class="pre">xmlrpc</span></code> XML RPC library</a></li>
 </ul>
@@ -232,7 +257,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Network Utilities</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> DHCP client</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> DHCP Client</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/netutils/dhcpc/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -243,9 +268,442 @@
            <div itemprop="articleBody">
              
   <section id="dhcpc-dhcp-client">
-<h1><code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> DHCP client<a class="headerlink" href="#dhcpc-dhcp-client" title="Permalink to this heading"></a></h1>
-<p>Dynamic Host Configuration Protocol (DHCP) client. See
-<code class="docutils literal notranslate"><span class="pre">apps/include/netutils/dhcpc.h</span></code> for interface information.</p>
+<h1><code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> DHCP Client<a class="headerlink" href="#dhcpc-dhcp-client" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> utility is a lightweight Dynamic Host Configuration Protocol (DHCP)
+client for Apache NuttX, implementing the client protocol defined in <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2131.html"><strong>RFC 2131</strong></a>
+with BOOTP relay interoperability per <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1542.html"><strong>RFC 1542</strong></a>.</p>
+<p>It provides embedded systems with automated IPv4 address acquisition, subnet mask
+assignment, default gateway discovery, Domain Name System (DNS) resolver
+configuration, and Network Time Protocol (NTP) server discovery over local Ethernet
+or wireless (Wi-Fi) interfaces.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Security Consideration</strong>: Standard DHCPv4 (<span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2131.html"><strong>RFC 2131</strong></a>) transmits messages in
+plaintext without cryptographic authentication. In untrusted or shared network
+environments, malicious actors may deploy rogue DHCP servers to inject spoofed
+default gateways or malicious DNS resolvers (enabling Man-in-the-Middle attacks)
+or conduct DHCP starvation attacks. On managed networks, switch-level protections
+(such as DHCP Snooping and Port Security) should be enabled. When operating on
+untrusted links, secure transport protocols (e.g., TLS, IPsec, or WireGuard) and
+authenticated DNS (DNS-over-TLS / DNSSEC) should be employed to protect application
+data regardless of the assigned network parameters.</p>
+</div>
+<section id="operational-roles">
+<h2>Operational Roles<a class="headerlink" href="#operational-roles" title="Permalink to this heading"></a></h2>
+<p>The DHCP client library serves multiple key functions across the NuttX ecosystem:</p>
+<ol class="arabic simple">
+<li><p><strong>System Initialization (``netinit``)</strong>: Automatically acquires an IP address at
+system startup when <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DHCPC</span></code> is enabled.</p></li>
+<li><p><strong>Interactive NSH Command</strong>: Enables runtime dynamic configuration via the NuttShell
+<code class="docutils literal notranslate"><span class="pre">ifconfig</span> <span class="pre">&lt;interface&gt;</span> <span class="pre">dhcp</span></code> command.</p></li>
+<li><p><strong>High-Level Network Helper (``netlib``)</strong>: Powers <code class="docutils literal notranslate"><span class="pre">netlib_obtain_ipv4addr()</span></code> in
+<code class="docutils literal notranslate"><span class="pre">apps/netutils/netlib/</span></code> to configure network interfaces with minimal application
+boilerplate.</p></li>
+<li><p><strong>Programmatic C API</strong>: Offers both synchronous (blocking) and asynchronous
+(callback-driven) APIs for custom application-level interface management and lease
+lifecycles.</p></li>
+</ol>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>RFC 2131 &amp; RFC 1542 Compliance</strong>: Standard four-step message handshake
+(<code class="docutils literal notranslate"><span class="pre">DISCOVER</span></code>, <code class="docutils literal notranslate"><span class="pre">OFFER</span></code>, <code class="docutils literal notranslate"><span class="pre">REQUEST</span></code>, <code class="docutils literal notranslate"><span class="pre">ACK</span></code>) with optional <code class="docutils literal notranslate"><span class="pre">RELEASE</span></code> handling.</p></li>
+<li><p><strong>Interface Binding</strong>: Binds client sockets directly to the target network device
+using <code class="docutils literal notranslate"><span class="pre">SO_BINDTODEVICE</span></code>, ensuring reliable operation on multihomed devices.</p></li>
+<li><p><strong>Lease Timing &amp; Lifetime Tracking</strong>: Computes renewal timer <span class="math notranslate nohighlight">\(T_1\)</span> (typically
+50% of lease time), rebinding timer <span class="math notranslate nohighlight">\(T_2\)</span> (typically 87.5% of lease time), and
+expiration time for lease renewal scheduling.</p></li>
+<li><p><strong>DNS &amp; NTP Server Discovery</strong>: Parses option 6 (Domain Name Server) and option 42
+(Network Time Protocol Servers) into structured address arrays.</p></li>
+<li><p><strong>Graceful Address Release</strong>: Implements <code class="docutils literal notranslate"><span class="pre">dhcpc_release()</span></code> with configurable
+transmission delays and retry mechanisms to inform the DHCP server when an address
+is surrendered.</p></li>
+<li><p><strong>Dual Execution Modes</strong>: Supports both synchronous operation (<code class="docutils literal notranslate"><span class="pre">dhcpc_request()</span></code>
+blocking until negotiation completes or retries are exhausted) and asynchronous
+operation (<code class="docutils literal notranslate"><span class="pre">dhcpc_request_async()</span></code> running in a dedicated worker thread with
+user callback notification).</p></li>
+</ul>
+</section>
+<section id="protocol-architecture-state-machine">
+<h2>Protocol Architecture &amp; State Machine<a class="headerlink" href="#protocol-architecture-state-machine" title="Permalink to this heading"></a></h2>
+<p>The DHCP client follows the finite state machine defined by <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2131.html"><strong>RFC 2131</strong></a>:</p>
+<ol class="arabic simple">
+<li><p><strong>INIT</strong>: The client initializes on an unconfigured interface (IP <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code>) and
+broadcasts a <code class="docutils literal notranslate"><span class="pre">DHCPDISCOVER</span></code> message to <code class="docutils literal notranslate"><span class="pre">255.255.255.255</span></code> on UDP destination
+port 67.</p></li>
+<li><p><strong>SELECTING</strong>: The client listens for <code class="docutils literal notranslate"><span class="pre">DHCPOFFER</span></code> messages from one or more DHCP
+servers on UDP port 68. The first valid offer matching the transaction ID (<code class="docutils literal notranslate"><span class="pre">xid</span></code>)
+is selected.</p></li>
+<li><p><strong>REQUESTING</strong>: The client broadcasts a <code class="docutils literal notranslate"><span class="pre">DHCPREQUEST</span></code> message containing the
+server’s identifier and requested IP address, confirming selection to all listening
+servers.</p></li>
+<li><p><strong>BOUND</strong>: Upon receipt of a valid <code class="docutils literal notranslate"><span class="pre">DHCPACK</span></code> message, the client enters the
+<code class="docutils literal notranslate"><span class="pre">BOUND</span></code> state. The assigned IP, netmask, gateway, lease time, and DNS servers are
+recorded.</p></li>
+<li><p><strong>RENEWING / REBINDING</strong>: At time <span class="math notranslate nohighlight">\(T_1\)</span>, the client attempts unicast renewal
+with the original server. If unacknowledged by time <span class="math notranslate nohighlight">\(T_2\)</span>, the client broadcasts
+to any available DHCP server.</p></li>
+<li><p><strong>RELEASE</strong>: When the interface is brought down or the application shuts down,
+<code class="docutils literal notranslate"><span class="pre">dhcpc_release()</span></code> transmits a unicast <code class="docutils literal notranslate"><span class="pre">DHCPRELEASE</span></code> message to the server,
+allowing the server to reclaim the address immediately.</p></li>
+</ol>
+</section>
+<section id="requirements-dependencies">
+<h2>Requirements &amp; Dependencies<a class="headerlink" href="#requirements-dependencies" title="Permalink to this heading"></a></h2>
+<p>To use <code class="docutils literal notranslate"><span class="pre">dhcpc</span></code>, ensure the following core networking and socket options are enabled
+in your board configuration:</p>
+<ul class="simple">
+<li><p>Core Networking: <code class="docutils literal notranslate"><span class="pre">CONFIG_NET=y</span></code></p></li>
+<li><p>IPv4 Support: <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_IPv4=y</span></code></p></li>
+<li><p>UDP Sockets: <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_UDP=y</span></code></p></li>
+<li><p>UDP Broadcast Support: <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BROADCAST=y</span></code> (required for sending <code class="docutils literal notranslate"><span class="pre">DHCPDISCOVER</span></code> broadcast)</p></li>
+<li><p>Interface Socket Binding: <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BINDTODEVICE=y</span></code> (selected automatically by <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC</span></code>)</p></li>
+<li><p>Client Library: <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC=y</span></code></p></li>
+<li><p>DNS Client (Optional, for DNS resolution): <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT=y</span></code></p></li>
+</ul>
+</section>
+<section id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
+<p>The DHCP client behavior can be fine-tuned via Kconfig under
+<code class="docutils literal notranslate"><span class="pre">Application</span> <span class="pre">Configuration</span> <span class="pre">-&gt;</span> <span class="pre">Network</span> <span class="pre">Utilities</span> <span class="pre">-&gt;</span> <span class="pre">DHCP</span> <span class="pre">client</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 15.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Kconfig Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables compilation of the DHCP client library in <code class="docutils literal notranslate"><span class="pre">apps/netutils/dhcpc</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_HOST_NAME</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;nuttx&quot;</span></code></p></td>
+<td><p>Client hostname sent in DHCP option 12 to identify the device on the network.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RECV_TIMEOUT_MS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3000</span></code></p></td>
+<td><p>Socket receive timeout in milliseconds when awaiting server responses.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RETRIES</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Number of transmission attempts for <code class="docutils literal notranslate"><span class="pre">DISCOVER</span></code> and <code class="docutils literal notranslate"><span class="pre">REQUEST</span></code> before failing.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_BOOTP_FLAGS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0x0000</span></code></p></td>
+<td><p>BOOTP broadcast flags (<span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1542.html"><strong>RFC 1542</strong></a>). Set to <code class="docutils literal notranslate"><span class="pre">0x8000</span></code> (broadcast) when IP
+forwarding is active or the device cannot accept unicast traffic before being
+configured.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RELEASE_RETRIES</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Number of retry attempts when transmitting a <code class="docutils literal notranslate"><span class="pre">DHCPRELEASE</span></code> message.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RELEASE_TRANSMISSION_DELAY_MS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+<td><p>Delay in milliseconds between release retries and before socket closure,
+allowing the network stack to flush connectionless UDP packets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RELEASE_ENSURE_TRANSMISSION</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">y</span></code></p></td>
+<td><p>Inserts a transmission delay after sending <code class="docutils literal notranslate"><span class="pre">DHCPRELEASE</span></code> before closing the
+socket, ensuring the packet reaches the physical MAC driver.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RELEASE_CLEAR_IP</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Clears the interface IP address, subnet mask, and default router immediately
+upon successful release transmission.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_NTP_SERVERS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Maximum number of NTP server addresses to parse and record from DHCP option 42.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSSERVER_NAMESERVERS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Maximum number of DNS server addresses to parse and record from DHCP option 6.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="nsh-usage">
+<h2>NSH Usage<a class="headerlink" href="#nsh-usage" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_NETLOCAL</span></code> are enabled, the NuttShell
+provides native runtime commands to request dynamic network addresses.</p>
+<section id="configuring-an-interface-via-dhcp">
+<h3>Configuring an Interface via DHCP<a class="headerlink" href="#configuring-an-interface-via-dhcp" title="Permalink to this heading"></a></h3>
+<p>To dynamically request an IP address on a specific network interface (e.g., <code class="docutils literal notranslate"><span class="pre">eth0</span></code>
+or <code class="docutils literal notranslate"><span class="pre">wlan0</span></code>), issue the <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code> command with the <code class="docutils literal notranslate"><span class="pre">dhcp</span></code> keyword:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ifconfig eth0 dhcp</span>
+</pre></div>
+</div>
+<p>NSH will invoke <code class="docutils literal notranslate"><span class="pre">netlib_obtain_ipv4addr()</span></code>, which executes the DHCP exchange,
+assigns the acquired IP address and subnet mask to <code class="docutils literal notranslate"><span class="pre">eth0</span></code>, and updates the system
+default gateway and DNS resolver entries.</p>
+</section>
+<section id="verifying-the-acquired-configuration">
+<h3>Verifying the Acquired Configuration<a class="headerlink" href="#verifying-the-acquired-configuration" title="Permalink to this heading"></a></h3>
+<p>To display the active network parameters after DHCP completion:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ifconfig eth0</span>
+<span class="go">eth0    HWaddr 00:e0:de:ad:be:ef at UP</span>
+<span class="go">        inet addr:192.168.1.150 DRaddr:192.168.1.1 Mask:255.255.255.0</span>
+</pre></div>
+</div>
+</section>
+<section id="testing-network-reachability">
+<h3>Testing Network Reachability<a class="headerlink" href="#testing-network-reachability" title="Permalink to this heading"></a></h3>
+<p>Once the lease is acquired, verify reachability to local and external hosts:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ping 192.168.1.1</span>
+<span class="go">nsh&gt; ping 8.8.8.8</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="c-api-reference">
+<h2>C API Reference<a class="headerlink" href="#c-api-reference" title="Permalink to this heading"></a></h2>
+<p>The public C interface for <code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> is declared in <code class="docutils literal notranslate"><span class="pre">apps/include/netutils/dhcpc.h</span></code>.</p>
+<section id="data-structures">
+<h3>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">dhcpc_state</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">in_addr</span><span class="w"> </span><span class="n">serverid</span><span class="p">;</span><span class="w">                                   </span><span class="cm">/* DHCP Server IPv4 address */</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">in_addr</span><span class="w"> </span><span class="n">ipaddr</span><span class="p">;</span><span class="w">                                     </span><span class="cm">/* Client assigned IPv4 address */</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">in_addr</span><span class="w"> </span><span class="n">netmask</span><span class="p">;</span><span class="w">                                    </span><span class="cm">/* Assigned subnet mask */</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">in_addr</span><span class="w"> </span><span class="n">dnsaddr</span><span class="p">[</span><span class="n">CONFIG_NETDB_DNSSERVER_NAMESERVERS</span><span class="p">];</span><span class="w"> </span><span class="cm">/* Discovered DNS server(s) */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">        </span><span class="n">num_dnsaddr</span><span class="p">;</span><span class="w">                                </span><span class="cm">/* Count of valid DNS addresses */</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">in_addr</span><span class="w"> </span><span class="n">ntpaddr</span><span class="p">[</span><span class="n">CONFIG_NETUTILS_DHCPC_NTP_SERVERS</span><span class="p">];</span><span class="w">  </span><span class="cm">/* Discovered NTP server(s) */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">        </span><span class="n">num_ntpaddr</span><span class="p">;</span><span class="w">                                </span><span class="cm">/* Count of valid NTP addresses */</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">in_addr</span><span class="w"> </span><span class="n">default_router</span><span class="p">;</span><span class="w">                             </span><span class="cm">/* Default gateway router address */</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w">       </span><span class="n">lease_time</span><span class="p">;</span><span class="w">                                 </span><span class="cm">/* Total lease lifetime in seconds */</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w">       </span><span class="n">renewal_time</span><span class="p">;</span><span class="w">                               </span><span class="cm">/* T1: Seconds until RENEW state */</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w">       </span><span class="n">rebinding_time</span><span class="p">;</span><span class="w">                             </span><span class="cm">/* T2: Seconds until REBIND state */</span>
+<span class="p">};</span>
+
+<span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">dhcpc_callback_t</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">dhcpc_state</span><span class="w"> </span><span class="o">*</span><span class="n">presult</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="core-functions">
+<h3>Core Functions<a class="headerlink" href="#core-functions" title="Permalink to this heading"></a></h3>
+<section id="initialization-teardown">
+<h4>Initialization &amp; Teardown<a class="headerlink" href="#initialization-teardown" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">dhcpc_open</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">interface</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">mac_addr</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">mac_len</span><span class="p">);</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">dhcpc_close</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dhcpc_open()</span></code>: Allocates and initializes an internal DHCP client state context
+bound to the specified network interface name (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;eth0&quot;</span></code>).</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">interface</span></code>: Network device name (used with <code class="docutils literal notranslate"><span class="pre">SO_BINDTODEVICE</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mac_addr</span></code>: Pointer to the hardware (MAC) address buffer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mac_len</span></code>: Length of the hardware address (typically <code class="docutils literal notranslate"><span class="pre">IFHWADDRLEN</span></code>, 6 bytes).</p></li>
+<li><p><em>Returns</em>: An opaque context handle on success, or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if socket
+creation or memory allocation fails.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dhcpc_close()</span></code>: Frees all allocated memory and closes active client sockets
+associated with the handle.</p></li>
+</ul>
+</section>
+<section id="synchronous-lease-request">
+<h4>Synchronous Lease Request<a class="headerlink" href="#synchronous-lease-request" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">dhcpc_request</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">dhcpc_state</span><span class="w"> </span><span class="o">*</span><span class="n">presult</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Executes the blocking four-way DHCP handshake.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">handle</span></code>: Context handle returned by <code class="docutils literal notranslate"><span class="pre">dhcpc_open()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">presult</span></code>: Pointer to a caller-allocated <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dhcpc_state</span></code> structure that
+receives the negotiated network parameters.</p></li>
+<li><p><em>Returns</em>: <code class="docutils literal notranslate"><span class="pre">OK</span></code> (0) on success, or <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> (-1) on failure with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set
+appropriately to indicate the cause of the failure:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ETIMEDOUT</span></code>: Retries exhausted without receiving a valid <code class="docutils literal notranslate"><span class="pre">DHCPOFFER</span></code> or <code class="docutils literal notranslate"><span class="pre">DHCPACK</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ECONNREFUSED</span></code>: The DHCP server rejected the request with a <code class="docutils literal notranslate"><span class="pre">DHCPNAK</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EINTR</span></code>: The request was interrupted or canceled via <code class="docutils literal notranslate"><span class="pre">dhcpc_cancel()</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="asynchronous-lease-request-cancellation">
+<h4>Asynchronous Lease Request &amp; Cancellation<a class="headerlink" href="#asynchronous-lease-request-cancellation" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w">  </span><span class="nf">dhcpc_request_async</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="n">dhcpc_callback_t</span><span class="w"> </span><span class="n">callback</span><span class="p">);</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">dhcpc_cancel</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dhcpc_request_async()</span></code>: Spawns a dedicated background pthread that executes the
+DHCP exchange non-blockingly. When the lease is obtained, the specified <code class="docutils literal notranslate"><span class="pre">callback</span></code>
+is invoked with the populated <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dhcpc_state</span></code> pointer.</p></li>
+<li><p><em>Returns</em>: <code class="docutils literal notranslate"><span class="pre">OK</span></code> (0) on success, or <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> (-1) on failure with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set
+(e.g., <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code> if parameters are invalid, or <code class="docutils literal notranslate"><span class="pre">EALREADY</span></code> if a DHCP thread is
+already running).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dhcpc_cancel()</span></code>: Aborts a running asynchronous DHCP request thread.</p></li>
+</ul>
+</section>
+<section id="graceful-address-release">
+<h4>Graceful Address Release<a class="headerlink" href="#graceful-address-release" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">dhcpc_release</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">dhcpc_state</span><span class="w"> </span><span class="o">*</span><span class="n">presult</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Transmits a unicast <code class="docutils literal notranslate"><span class="pre">DHCPRELEASE</span></code> message to the server identified by
+<code class="docutils literal notranslate"><span class="pre">presult-&gt;serverid</span></code> for the assigned IP <code class="docutils literal notranslate"><span class="pre">presult-&gt;ipaddr</span></code>.</p></li>
+<li><p><em>Returns</em>: <code class="docutils literal notranslate"><span class="pre">OK</span></code> (0) on success, or <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> (-1) on failure with <code class="docutils literal notranslate"><span class="pre">errno</span></code> set.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="application-examples">
+<h2>Application Examples<a class="headerlink" href="#application-examples" title="Permalink to this heading"></a></h2>
+<section id="example-1-synchronous-ip-acquisition-and-interface-configuration">
+<h3>Example 1: Synchronous IP Acquisition and Interface Configuration<a class="headerlink" href="#example-1-synchronous-ip-acquisition-and-interface-configuration" title="Permalink to this heading"></a></h3>
+<p>Below is a complete, production-grade example illustrating how an embedded application
+queries the MAC address of an Ethernet adapter, executes a synchronous DHCP handshake,
+and applies the negotiated parameters to the NuttX network stack:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;errno.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;arpa/inet.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;net/if.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;netutils/netlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;netutils/dhcpc.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">configure_dhcp</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ifname</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">dhcpc_state</span><span class="w"> </span><span class="n">state</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">mac</span><span class="p">[</span><span class="n">IFHWADDRLEN</span><span class="p">];</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">handle</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+
+<span class="w">  </span><span class="cm">/* 1. Retrieve the hardware MAC address of the interface */</span>
+
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">netlib_getmacaddr</span><span class="p">(</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="n">mac</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">"Failed to get MAC address for %s: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="n">ret</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cm">/* 2. Open DHCP client session bound to the interface */</span>
+
+<span class="w">  </span><span class="n">handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dhcpc_open</span><span class="p">(</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="n">mac</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">mac</span><span class="p">));</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">handle</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">"Failed to initialize DHCP client handle</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cm">/* 3. Execute synchronous DHCP negotiation */</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Sending DHCP request on %s...</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ifname</span><span class="p">);</span>
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dhcpc_request</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">state</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">OK</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="kt">int</span><span class="w"> </span><span class="n">errcode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">errno</span><span class="p">;</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">"DHCP request failed (errno %d: %s)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">              </span><span class="n">errcode</span><span class="p">,</span><span class="w"> </span><span class="n">strerror</span><span class="p">(</span><span class="n">errcode</span><span class="p">));</span>
+<span class="w">      </span><span class="n">dhcpc_close</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">errcode</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cm">/* 4. Apply negotiated parameters to the network stack */</span>
+
+<span class="w">  </span><span class="n">netlib_set_ipv4addr</span><span class="p">(</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">state</span><span class="p">.</span><span class="n">ipaddr</span><span class="p">);</span>
+<span class="w">  </span><span class="n">netlib_set_ipv4netmask</span><span class="p">(</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">state</span><span class="p">.</span><span class="n">netmask</span><span class="p">);</span>
+<span class="w">  </span><span class="n">netlib_set_dripv4addr</span><span class="p">(</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">state</span><span class="p">.</span><span class="n">default_router</span><span class="p">);</span>
+
+<span class="cp">#if defined(CONFIG_NETDB_DNSCLIENT)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">num_dnsaddr</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">netlib_set_ipv4dnsaddr</span><span class="p">(</span><span class="o">&amp;</span><span class="n">state</span><span class="p">.</span><span class="n">dnsaddr</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="cp">#endif</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"DHCP lease acquired successfully:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"  IP Address:     %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">ipaddr</span><span class="p">));</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Subnet Mask:    %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">netmask</span><span class="p">));</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Default Router: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">default_router</span><span class="p">));</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Lease Lifetime: %lu seconds</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">state</span><span class="p">.</span><span class="n">lease_time</span><span class="p">);</span>
+
+<span class="w">  </span><span class="cm">/* 5. Clean up DHCP client session handle */</span>
+
+<span class="w">  </span><span class="n">dhcpc_close</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="example-2-graceful-release-on-system-shutdown">
+<h3>Example 2: Graceful Release on System Shutdown<a class="headerlink" href="#example-2-graceful-release-on-system-shutdown" title="Permalink to this heading"></a></h3>
+<p>Before putting an embedded device into deep sleep or tearing down an active network
+session, releasing the lease allows the DHCP server to reallocate the IP address
+immediately:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">release_dhcp</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">dhcpc_state</span><span class="w"> </span><span class="o">*</span><span class="n">lease</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">mac</span><span class="p">[</span><span class="n">IFHWADDRLEN</span><span class="p">];</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">handle</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">netlib_getmacaddr</span><span class="p">(</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="n">mac</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">EINVAL</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dhcpc_open</span><span class="p">(</span><span class="n">ifname</span><span class="p">,</span><span class="w"> </span><span class="n">mac</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">mac</span><span class="p">));</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">handle</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Releasing DHCP lease for %s...</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">lease</span><span class="o">-&gt;</span><span class="n">ipaddr</span><span class="p">));</span>
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dhcpc_release</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="n">lease</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">OK</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="kt">int</span><span class="w"> </span><span class="n">errcode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">errno</span><span class="p">;</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">"DHCP release failed (errno %d: %s)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">              </span><span class="n">errcode</span><span class="p">,</span><span class="w"> </span><span class="n">strerror</span><span class="p">(</span><span class="n">errcode</span><span class="p">));</span>
+<span class="w">      </span><span class="n">dhcpc_close</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">errcode</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">dhcpc_close</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="embedded-design-tuning-guidelines">
+<h2>Embedded Design &amp; Tuning Guidelines<a class="headerlink" href="#embedded-design-tuning-guidelines" title="Permalink to this heading"></a></h2>
+<p>When deploying <code class="docutils literal notranslate"><span class="pre">dhcpc</span></code> in real-world embedded and IoT systems, consider the following
+operational factors:</p>
+<ol class="arabic simple">
+<li><p><strong>Lease Renewal Strategy</strong>: The <code class="docutils literal notranslate"><span class="pre">dhcpc_request()</span></code> function performs initial
+lease acquisition but does not maintain a permanent daemon thread. For long-running
+systems where lease durations are finite (e.g., cloud or office DHCP pools with
+1-hour or 24-hour leases), the application should maintain a software timer set
+to <code class="docutils literal notranslate"><span class="pre">state.renewal_time</span></code> (T1) to initiate renewal before expiration.</p></li>
+<li><p><strong>Wireless Retransmission Tuning</strong>: On lossy or congested Wi-Fi channels,
+increasing <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RETRIES</span></code> (e.g., from 3 to 5) and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC_RECV_TIMEOUT_MS</span></code> (e.g., to 5000ms) improves connection
+reliability during initial radio association.</p></li>
+<li><p><strong>Multihomed Network Binding</strong>: Because <code class="docutils literal notranslate"><span class="pre">dhcpc_open()</span></code> sets
+<code class="docutils literal notranslate"><span class="pre">SO_BINDTODEVICE</span></code> on the underlying UDP socket, multiple interfaces (such as
+an Ethernet fallback and a primary Wi-Fi station) can execute independent DHCP
+sessions simultaneously without packet cross-talk.</p></li>
+</ol>
+</section>
 </section>
 
 

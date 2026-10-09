@@ -354,8 +354,8 @@ not connected) and MCP1727 3.3 V regulator</p></li>
 <td><p>Not tested; no I2C device on board</p></td>
 </tr>
 <tr class="row-odd"><td><p>Ethernet</p></td>
-<td><p>No</p></td>
-<td></td>
+<td><p>Yes</p></td>
+<td><p>LAN8720A, RMII, 10/100 Mbps</p></td>
 </tr>
 <tr class="row-even"><td><p>Wi-Fi</p></td>
 <td><p>No</p></td>
@@ -420,10 +420,40 @@ Rev 2):</p>
 <td><p>I2C1</p></td>
 <td><p>GPIO header footprint (not fitted)</p></td>
 </tr>
+<tr class="row-odd"><td><p>RC12</p></td>
+<td><p>ETH_CLK_OUT</p></td>
+<td><p>50 MHz RMII reference clock to MAC and PHY</p></td>
+</tr>
+<tr class="row-even"><td><p>RC13</p></td>
+<td><p>ETXEN</p></td>
+<td><p>Dedicated Ethernet pin</p></td>
+</tr>
+<tr class="row-odd"><td><p>RC15 / RC14</p></td>
+<td><p>ETXD0 / ETXD1</p></td>
+<td><p>Dedicated Ethernet pins</p></td>
+</tr>
+<tr class="row-even"><td><p>RC11 / RC10</p></td>
+<td><p>ERXD0 / ERXD1</p></td>
+<td><p>Dedicated Ethernet pins</p></td>
+</tr>
+<tr class="row-odd"><td><p>RK12</p></td>
+<td><p>ECRSDV</p></td>
+<td><p>Dedicated Ethernet pin</p></td>
+</tr>
+<tr class="row-even"><td><p>RC9</p></td>
+<td><p>ERXERR</p></td>
+<td><p>Dedicated Ethernet pin</p></td>
+</tr>
+<tr class="row-odd"><td><p>RK14 / RK13</p></td>
+<td><p>EMDC / EMDIO</p></td>
+<td><p>PHY management interface, PHY address 0</p></td>
+</tr>
+<tr class="row-even"><td><p>RA14</p></td>
+<td><p>PHY nRST</p></td>
+<td><p>GPIO, active low</p></td>
+</tr>
 </tbody>
 </table>
-<p>The Ethernet PHY uses RPC9-RPC15, RPK6, RPK12-RPK14 and RPA14, but there
-is no Ethernet driver yet.</p>
 </section>
 <section id="buttons-and-leds">
 <h2>Buttons and LEDs<a class="headerlink" href="#buttons-and-leds" title="Permalink to this heading"></a></h2>
@@ -501,7 +531,9 @@ using the factory trim values stored in the device.
 MLDO mode.</p></li>
 <li><p>Starts the 40 MHz primary oscillator inside the module.</p></li>
 <li><p>Programs the system PLL (40 MHz / 5 * 150 / 6 = 200 MHz) and the
-Ethernet/Wi-Fi PLL, and switches SYSCLK to the system PLL.</p></li>
+Ethernet/Wi-Fi PLL, and switches SYSCLK to the system PLL. When the
+Ethernet MAC is enabled, the Ethernet/Wi-Fi PLL also drives the 50 MHz
+RMII reference clock on ETH_CLK_OUT.</p></li>
 </ol>
 <p>The peripheral bus clocks are set in <code class="docutils literal notranslate"><span class="pre">include/board.h</span></code>:</p>
 <table class="docutils align-default">
@@ -659,6 +691,60 @@ USB-to-serial adapter to J203:</p>
 </pre></div>
 </div>
 </section>
+<section id="netnsh">
+<h3>netnsh<a class="headerlink" href="#netnsh" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration with networking: Ethernet, IPv4, TCP, UDP and
+ICMP, the <code class="docutils literal notranslate"><span class="pre">ping</span></code> command and a Telnet server on port 23. The interface is
+brought up at boot with the default static address of the network
+initialization (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPADDR</span></code>, 10.0.0.2/24 with 10.0.0.1 as
+the default router) and the MAC address 02:e0:de:ad:be:ef
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MACADDR_1/2</span></code>). Change these to match your network.
+The example below was taken with <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPADDR</span></code> set to
+192.168.100.2 and <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DRIPADDR</span></code> to 192.168.100.1:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; ifconfig</span>
+<span class="go">eth0    Link encap:Ethernet HWaddr 02:e0:de:ad:be:ef at RUNNING mtu 1500</span>
+<span class="go">        inet addr:192.168.100.2 DRaddr:192.168.100.1 Mask:255.255.255.0</span>
+<span class="go">nsh&gt; ping -c 3 192.168.100.1</span>
+<span class="go">PING 192.168.100.1 56 bytes of data</span>
+<span class="go">56 bytes from 192.168.100.1: icmp_seq=0 time=0.0 ms</span>
+<span class="go">56 bytes from 192.168.100.1: icmp_seq=1 time=0.0 ms</span>
+<span class="go">56 bytes from 192.168.100.1: icmp_seq=2 time=0.0 ms</span>
+<span class="go">3 packets transmitted, 3 received, 0% packet loss, time 3030 ms</span>
+<span class="go">rtt min/avg/max/mdev = 0.000/0.000/0.000/0.000 ms</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="ethernet">
+<h2>Ethernet<a class="headerlink" href="#ethernet" title="Permalink to this heading"></a></h2>
+<p>The LAN8720A PHY is connected to the MAC through RMII and is managed
+through MDIO at PHY address 0. The board code pulses the PHY reset (RA14)
+at boot, after the reference clock is running.</p>
+<p>The PHY interrupt output (nINT) reaches RK6 only through R309, which is not
+fitted. If you fit R309, select <code class="docutils literal notranslate"><span class="pre">CONFIG_EV49N51A_PHY_INTERRUPT</span></code> to use it
+as a link up/down interrupt. With <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MONITOR</span></code> the network
+initialization thread then takes the interface down when the cable is
+removed and brings it up again when it is reconnected, including when the
+board boots without a cable.</p>
+<p>The 50 MHz RMII reference clock comes from ETH_CLK_OUT (RC12) through R313.
+The board also has a footprint for a 50 MHz oscillator (X1, not fitted)
+that can clock the PHY through R314 (not fitted). If you fit X1 and R314,
+select <code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_ETH_EXTREFCLK</span></code> so that ETH_CLK_OUT is left
+disabled and the MAC uses the oscillator clock on the same pin.</p>
+<p>The PIC32MZ-W1 has no factory-programmed Ethernet MAC address. Assign one
+with <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NOMAC</span></code> or with the <code class="docutils literal notranslate"><span class="pre">SIOCSIFHWADDR</span></code> ioctl before the
+interface is brought up.</p>
+</section>
+<section id="l1-cache">
+<h2>L1 cache<a class="headerlink" href="#l1-cache" title="Permalink to this heading"></a></h2>
+<p>Both configurations enable the 16 KB instruction and 16 KB data caches
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_MIPS32_ICACHE</span></code>, which also selects <code class="docutils literal notranslate"><span class="pre">CONFIG_MIPS32_DCACHE</span></code>).
+The linker script places the data memory in KSEG0, so that it goes through
+the D-Cache; KSEG0 is uncached when the caches are disabled. The Ethernet
+driver performs the D-Cache maintenance around its DMA transfers.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_LOOPSPERMSEC</span></code> (22224) is calibrated with the caches
+enabled. If you disable them, set it to 7245, or the busy-wait delays will
+be about three times too long.</p>
 </section>
 <section id="boot-trace">
 <h2>Boot trace<a class="headerlink" href="#boot-trace" title="Permalink to this heading"></a></h2>
@@ -672,7 +758,7 @@ takes over once the clocks are up.</p>
 <section id="limitations">
 <h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading"></a></h2>
 <ul class="simple">
-<li><p>No Ethernet or Wi-Fi driver.</p></li>
+<li><p>No Wi-Fi driver.</p></li>
 <li><p>I2C1/I2C2 build but are not tested.</p></li>
 <li><p>SPI flash: only reads were tested (JEDEC ID and data), not writes or
 erases.</p></li>

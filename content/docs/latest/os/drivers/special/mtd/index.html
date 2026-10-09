@@ -504,6 +504,19 @@ sufficiently general for all NAND types.</p>
 </ul>
 </div>
 </section>
+<section id="ramtron-spi-fram-byte-writes">
+<h2>RAMTRON SPI FRAM byte writes<a class="headerlink" href="#ramtron-spi-fram-byte-writes" title="Permalink to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_RAMTRON</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_BYTE_WRITE</span></code> enabled, the
+RAMTRON driver implements <code class="docutils literal notranslate"><span class="pre">MTD_WRITE()</span></code> for arbitrary byte offsets and
+lengths. Writes need not align to the emulated block or erase geometry.
+The callback returns the number of bytes written; requests outside the
+physical device return <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code>. A zero-length request within the
+device, including its end offset, returns zero without SPI traffic.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_RAMTRON_CHUNKING</span></code> is enabled, writes to parts marked as
+chunk-limited are split at their write-buffer boundaries. Each transfer
+has its own write-enable and write-command sequence. Existing block-write
+operations are unchanged.</p>
+</section>
 </section>
 
 
