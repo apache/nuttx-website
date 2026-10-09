@@ -42,7 +42,11 @@ git add content
 git status
 echo "Publishing website master branch $COMMIT_HASH_WEB"
 echo "Publishing docs from NuttX master branch $COMMIT_HASH_WEB"
-git commit -a -m "Publishing web: $COMMIT_HASH_WEB docs: $COMMIT_HASH_NUTTX"
+if git diff --staged --quiet; then
+  echo "No changes to commit or publish."
+else
+  git commit -a -m "Publishing web: $COMMIT_HASH_WEB docs: $COMMIT_HASH_NUTTX"
+fi
 echo " "
 echo "==================================================================="
 echo "You are now on the asf-site branch with your new changes committed."

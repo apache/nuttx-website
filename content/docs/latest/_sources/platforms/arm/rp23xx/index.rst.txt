@@ -2,7 +2,7 @@
 Raspberry Pi rp2350
 ===================
 
-.. tags:: chip:rp2350
+.. tags:: arch:arm, chip:rp23xx, part:rp2350, vendor:raspberry-pi
 
 The rp2350 is a dual core chip produced by Raspberry Pi that
 is based on ARM Cortex-M33 or the Hazard3 RISC-V.
@@ -322,17 +322,28 @@ The region is described by ``RP23XX_FLASH_MTD_OFFSET`` (byte offset from
 ``0x10000000``) and ``RP23XX_FLASH_MTD_SIZE``, both of which must be multiples
 of the 4096 byte erase sector.  The driver refuses to initialize if the region
 would overlap the NuttX image (it checks ``__flash_binary_end``), so a bad
-offset fails at boot instead of corrupting the running firmware.
+offset fails at boot instead of corrupting the running firmware.  It also
+reads the flash size from the JEDEC ID and refuses a region that ends past the
+end of the flash, because such an address wraps around to the image.
 
 Erase and program go through the bootrom flash routines.  Because those
 operations stall instruction fetch from the same flash, the driver runs them
-from SRAM with interrupts disabled and, on SMP builds, the other core parked;
-expect interrupt latency to suffer for the duration of a write.  Afterwards the
-QSPI interface is put back into execute-in-place mode -- by default restoring
-the fast read mode the bootrom set up at boot, or, with
+from SRAM with interrupts disabled and, on SMP builds, the other core parked.
+It does so for one 64K block erase or one 256 byte page program at a time, and
+enables interrupts between them; expect interrupt latency to suffer for that
+long (a block erase can take hundreds of milliseconds).  Afterwards the
+QSPI interface is put back into execute-in-place mode -- by default with a
+copy of the XIP setup function that the bootrom leaves in boot RAM, which
+restores the read mode found at boot, or, with
 ``RP23XX_FLASH_MTD_SAFE_XIP``, always through the bootrom
 ``flash_enter_cmd_xip`` routine, which is slower to execute from but depends
-only on the documented bootrom entry point.
+only on the documented bootrom entry point.  The driver also saves and
+restores the QSPI pads and the PSRAM configuration on chip select 1.
+
+Flash and PSRAM cannot be read while an erase or program is in progress.  So
+the driver copies a page to SRAM before it programs it if the data is in flash
+or PSRAM, and a caller with its stack in PSRAM runs the operation on a small
+SRAM stack.
 
 The driver answers the ``BIOC_XIPBASE`` ioctl with the memory-mapped address of
 the region, so a filesystem that supports execute in place can hand out real

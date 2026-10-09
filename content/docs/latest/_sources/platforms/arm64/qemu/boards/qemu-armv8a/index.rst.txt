@@ -2,7 +2,7 @@
 QEMU ARMv8-A
 ============
 
-.. tags:: chip:virt, arch:arm64
+.. tags:: arch:arm64, chip:qemu, part:virt
 
 This board configuration will use QEMU to emulate generic ARM64 v8-A series
 hardware platform and provides support for these devices:
@@ -462,6 +462,16 @@ Running with QEMU:
      -machine virt,virtualization=on,gic-version=3 \
      -net none -chardev stdio,id=con,mux=on -serial chardev:con \
      -mon chardev=con,mode=readline -kernel ./nuttx
+
+``-semihosting`` is necessary.  A kernel build loads its applications over
+hostfs.  Without the flag the guest traps in ``smh_call`` and stops in
+``AppBringUp``, which looks like a kernel defect and is not one.
+
+A kernel build gives each process its own address environment.  This is the
+only build mode on this board that provides POSIX ``fork()``:  the child
+receives its own copy of the memory of the parent, at the same virtual
+addresses.  ``vfork()`` is available in every build mode.
+
 
 Inter-VM share memory Device (ivshmem)
 --------------------------------------

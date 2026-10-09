@@ -30,7 +30,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_collapse.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
 
   
@@ -55,19 +55,20 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-  
-    <a href="../index.html" class="icon icon-home"> NuttX
-  
 
-  
+  <a href="../index.html" class="nuttx-brand">
+    
+      <img src="../_static/NuttX.png" class="logo" alt="NuttX logo"/>
+    
+    
+      <span class="nuttx-brand-name">NuttX</span>
+    
   </a>
 
-  <!-- this version selector is quite ugly, should be probably replaced by something
-       more modern -->
-
   <div class="version-selector">
-    <select onchange="javascript:location.href = this.value;">
-    
+    <label class="nuttx-version-label" for="nuttx-version">Version</label>
+    <select id="nuttx-version"
+            onchange="javascript:location.href = this.value;">
     <option value="../../latest" selected="selected">latest</option>
     
     <option value="../../10.0.0" >10.0.0</option>
@@ -158,22 +159,13 @@
 <li class="toctree-l2"><a class="reference internal" href="organization.html">Directory Structure</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/inviolables.html">The Inviolable Principles of NuttX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../platforms/index.html">Supported Platforms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../components/index.html">OS Components</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../implementation/index.html">Implementation Details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../faq/index.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../debugging/index.html">Debugging</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../testing/index.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/index.html">Guides</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../standards/index.html">Standards</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../security.html">Security</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../logos/index.html">NuttX Logos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../_tags/tagsindex.html">Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../os/index.html">OS Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications/index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developing/index.html">Developing NuttX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about/index.html">About</a></li>
 </ul>
 
         </div>
@@ -305,25 +297,25 @@ opencd. By default, it assumes:</p>
 <p>If you need these options to be set differently, you will have to edit <code class="docutils literal notranslate"><span class="pre">./src/rtos/nuttx_header.h</span></code> from <code class="docutils literal notranslate"><span class="pre">openocd</span></code>,
 change the corresponding settings and then rebuild it.</p>
 <p>Finally, to enable NuttX integration, you need to supply an additional <code class="docutils literal notranslate"><span class="pre">openocd</span></code> argument:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>openocd<span class="w"> </span>-f<span class="w"> </span>interface/stlink-v2.cfg<span class="w"> </span>-f<span class="w"> </span>target/stm32f1x.cfg<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;$_TARGETNAME configure -rtos nuttx&#39;</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>openocd<span class="w"> </span>-f<span class="w"> </span>interface/stlink-v2.cfg<span class="w"> </span>-f<span class="w"> </span>target/stm32f1x.cfg<span class="w"> </span>-c<span class="w"> </span><span class="s1">'$_TARGETNAME configure -rtos nuttx'</span>
 </pre></div>
 </div>
 <p>Since <code class="docutils literal notranslate"><span class="pre">openocd</span></code> also needs to know the memory layout of certain datastructures, you need to have <code class="docutils literal notranslate"><span class="pre">gdb</span></code>
 run the following commands once the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> binary is loaded:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>eval &quot;monitor nuttx.pid_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;pid
-eval &quot;monitor nuttx.xcpreg_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;xcp.regs
-eval &quot;monitor nuttx.state_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;task_state
-eval &quot;monitor nuttx.name_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;name
-eval &quot;monitor nuttx.name_size %d&quot;, sizeof(((struct tcb_s *)(0))-&gt;name)
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>eval "monitor nuttx.pid_offset %d", &amp;((struct tcb_s *)(0))-&gt;pid
+eval "monitor nuttx.xcpreg_offset %d", &amp;((struct tcb_s *)(0))-&gt;xcp.regs
+eval "monitor nuttx.state_offset %d", &amp;((struct tcb_s *)(0))-&gt;task_state
+eval "monitor nuttx.name_offset %d", &amp;((struct tcb_s *)(0))-&gt;name
+eval "monitor nuttx.name_size %d", sizeof(((struct tcb_s *)(0))-&gt;name)
 </pre></div>
 </div>
 <p>One way to do this is to define a gdb <cite>hook</cite> function that will be called when running <code class="docutils literal notranslate"><span class="pre">file</span></code> command:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>define hookpost-file
-  eval &quot;monitor nuttx.pid_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;pid
-  eval &quot;monitor nuttx.xcpreg_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;xcp.regs
-  eval &quot;monitor nuttx.state_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;task_state
-  eval &quot;monitor nuttx.name_offset %d&quot;, &amp;((struct tcb_s *)(0))-&gt;name
-  eval &quot;monitor nuttx.name_size %d&quot;, sizeof(((struct tcb_s *)(0))-&gt;name)
+  eval "monitor nuttx.pid_offset %d", &amp;((struct tcb_s *)(0))-&gt;pid
+  eval "monitor nuttx.xcpreg_offset %d", &amp;((struct tcb_s *)(0))-&gt;xcp.regs
+  eval "monitor nuttx.state_offset %d", &amp;((struct tcb_s *)(0))-&gt;task_state
+  eval "monitor nuttx.name_offset %d", &amp;((struct tcb_s *)(0))-&gt;name
+  eval "monitor nuttx.name_size %d", sizeof(((struct tcb_s *)(0))-&gt;name)
 end
 </pre></div>
 </div>
@@ -332,7 +324,7 @@ end
 Licensed under GNU GPL v2
 For bug reports, read
         http://openocd.org/doc/doxygen/bugs.html
-Info : auto-selecting first available session transport &quot;swd&quot;. To override use &#39;transport select &lt;transport&gt;&#39;.
+Info : auto-selecting first available session transport "swd". To override use 'transport select &lt;transport&gt;'.
 Info : target type name = cortex_m
 Info : Listening on port 6666 for tcl connections
 Info : Listening on port 4444 for telnet connections
@@ -347,11 +339,11 @@ Info : SWD DPIDR 0x2ba01477
 Info : nrf52.cpu: hardware has 6 breakpoints, 4 watchpoints
 Info : starting gdb server for nrf52.cpu on 3333
 Info : Listening on port 3333 for gdb connections
-Info : accepting &#39;gdb&#39; connection on tcp/3333
+Info : accepting 'gdb' connection on tcp/3333
 Error: No symbols for NuttX
 Info : nRF52832-QFAA(build code: B0) 512kB Flash, 64kB RAM
 undefined debug reason 8 - target needs reset
-Warn : Prefer GDB command &quot;target extended-remote 3333&quot; instead of &quot;target remote 3333&quot;
+Warn : Prefer GDB command "target extended-remote 3333" instead of "target remote 3333"
 Info : pid_offset: 12
 Info : xcpreg_offset: 132
 Info : state_offset: 26
@@ -445,7 +437,7 @@ and the <cite>c</cite> command will restore the register before conitune.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, The Apache Software Foundation.</p>
+    <p>&#169; Copyright 2020-2026, The Apache Software Foundation.</p>
   </div>
 
    
