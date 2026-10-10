@@ -184,6 +184,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#usb">USB</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="#multicore-rt1170-cm4-over-rptun">Multicore: RT1170 CM4 over RPTUN</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#supported-boards">Supported Boards</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="boards/arcx-socket-grid/index.html">ARCX Socket Grid</a></li>
 <li class="toctree-l5"><a class="reference internal" href="boards/fmu-v6xrt/index.html">Holybro Pixhawk 6X-RT</a></li>
@@ -669,6 +670,56 @@ socket.</p>
 <p>Console communication over USB is supported via CDC-ACM. Only USB Device is currently supported
 for i.MX RT in NuttX</p>
 </section>
+</section>
+<section id="multicore-rt1170-cm4-over-rptun">
+<h2>Multicore: RT1170 CM4 over RPTUN<a class="headerlink" href="#multicore-rt1170-cm4-over-rptun" title="Permalink to this heading"></a></h2>
+<p>The i.MX RT1170 pairs the Cortex-M7 with a Cortex-M4. NuttX runs on the CM7 and can load, release
+and hold a firmware on the CM4 through the NuttX RPTUN device on top of the OpenAMP framework
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_RPTUN</span></code>, which selects <code class="docutils literal notranslate"><span class="pre">CONFIG_RPTUN_LOADER</span></code>). The CM4 firmware is the virtio
+device side and provides the resource table in its ELF image; it may be bare metal. The table must
+carry a carveout resource for the shared window after the table: NuttX 13 rptun places the vrings
+and the rpmsg buffers in it and refuses the device without it, NuttX 12.12 rptun parses it and lays
+out the window on its own.</p>
+<p>The board registers the remote with <code class="xref c c-func docutils literal notranslate"><span class="pre">imxrt_rptun_init()</span></code>, passing the remote name, the ELF
+path, the address environment (CM4 device addresses to CM7 physical addresses), the boot vector and
+whether to autostart. The option is offered only on parts with a CM4 (<code class="docutils literal notranslate"><span class="pre">IMXRT_HAVE_CM4</span></code>) and
+selects <code class="docutils literal notranslate"><span class="pre">DEV_SIMPLE_ADDRENV</span></code> for libmetal.
+The driver:</p>
+<ul class="simple">
+<li><p>Programs the boot vector into <code class="docutils literal notranslate"><span class="pre">IOMUXC_LPSR_GPR0/1</span></code> and reads it back.</p></li>
+<li><p>Releases the core with <code class="docutils literal notranslate"><span class="pre">SRC_SCR.BT_RELEASE_M4</span></code>. The slice stays under reset until its first
+release and cannot be held again afterwards: a software reset of the slice is a pulse after which
+the core restarts from the boot vector. To stop the core the driver writes a <code class="docutils literal notranslate"><span class="pre">wfi</span></code> loop over the
+start of the image and pulses the reset, so the core parks there until the next start reloads the
+image. A reset completion is awaited only when restarting a core that was already released.</p></li>
+<li><p>Keeps a CM4 lockup local by setting <code class="docutils literal notranslate"><span class="pre">SRC_SRMR</span></code> so it does not reset the whole chip.</p></li>
+<li><p>Exchanges virtqueue kicks with the CM4 on MU-A channel 0. Neither side reads the mailbox word; a
+kick into a full mailbox is coalesced with the pending one and the receiver rescans every
+virtqueue. The CM4 firmware must therefore read MU-B <code class="docutils literal notranslate"><span class="pre">RR0</span></code> before it scans, so that a kick
+coalesced during the scan is covered by it.</p></li>
+<li><p>Starts the remote from <a class="reference internal" href="../../../os/drivers/special/rptun/api_reference.html#c.rptun_initialize" title="rptun_initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">rptun_initialize()</span></code></a> when the board sets <code class="docutils literal notranslate"><span class="pre">autostart</span></code>; otherwise
+<code class="docutils literal notranslate"><span class="pre">RPTUNIOC_START</span></code> on <code class="docutils literal notranslate"><span class="pre">/dev/rptun/&lt;name&gt;</span></code> or <a class="reference internal" href="../../../os/drivers/special/rptun/api_reference.html#c.rptun_boot" title="rptun_boot"><code class="xref c c-func docutils literal notranslate"><span class="pre">rptun_boot()</span></code></a> starts it.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">fmu-v6xrt:rptun</span></code> configuration is the reference user: <code class="docutils literal notranslate"><span class="pre">imxrt_cm4_initialize()</span></code> in the board
+bring-up registers <code class="docutils literal notranslate"><span class="pre">/dev/rptun/cm4</span></code> with the memory map below, maps the shared window non-cacheable
+and leaves the core held. Copy an ELF built for the CM4 to the SD card as
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FMU_V6XRT_CM4_FIRMWARE</span></code> (<code class="docutils literal notranslate"><span class="pre">/mnt/sd/cm4.elf</span></code>), then from nsh:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mount -t vfat /dev/mmcsd0 /mnt/sd
+rptun start /dev/rptun/cm4
+rptun ping /dev/rptun/cm4 100 64 3 0
+</pre></div>
+</div>
+<p>Memory map rules the board must follow:</p>
+<ul class="simple">
+<li><p>The CM7 reaches the CM4 TCM through the LMEM backdoor window at <code class="docutils literal notranslate"><span class="pre">IMXRT_OCRAM_M4_BASE</span></code>. Only the
+first 128 KB of that window, the CM4 code TCM, is reachable; writes to the second half do not
+reach the system TCM. The resource table, vrings and rpmsg buffers must live in the code TCM.</p></li>
+<li><p>The CM4 boots from the backdoor alias of its code TCM (<code class="docutils literal notranslate"><span class="pre">0x20200000</span></code>), as NXP MCMGR does; the
+CM4-native <code class="docutils literal notranslate"><span class="pre">0x1FFE0000</span></code> does not boot.</p></li>
+<li><p>The board maps the memory the CM4 writes as non-cacheable (for example an MPU region over the
+shared window) before calling <code class="xref c c-func docutils literal notranslate"><span class="pre">imxrt_rptun_init()</span></code>. The driver cleans the D-cache over the
+loaded image before releasing the core.</p></li>
+</ul>
 </section>
 <section id="supported-boards">
 <h2>Supported Boards<a class="headerlink" href="#supported-boards" title="Permalink to this heading"></a></h2>

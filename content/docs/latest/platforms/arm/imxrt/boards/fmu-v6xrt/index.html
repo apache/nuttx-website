@@ -349,11 +349,13 @@ module in flight. Nothing in this port manages power.</p>
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>The toolchain is the same as for every i.MX RT board; see
 <a class="reference internal" href="../../index.html"><span class="doc">the platform page</span></a>.</p>
-<p>Flashing needs <code class="docutils literal notranslate"><span class="pre">px_uploader.py</span></code> from the PX4 source tree. The bootloader
-enumerates as a USB CDC/ACM device for roughly five seconds after reset, so
-start the uploader first and then reset the board:</p>
+<p>Flashing uses the uploader from the PX4 source tree, <code class="docutils literal notranslate"><span class="pre">Tools/px4_uploader.py</span></code>.
+PX4 releases before 1.18 ship it as <code class="docutils literal notranslate"><span class="pre">px_uploader.py</span></code>, without the <code class="docutils literal notranslate"><span class="pre">4</span></code>, with
+the same arguments. The bootloader enumerates as a USB CDC/ACM device for
+roughly five seconds after reset, so start the uploader first and then reset
+the board:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>Tools/px_mkfw.py<span class="w"> </span>--prototype<span class="w"> </span>firmware.prototype<span class="w"> </span>--image<span class="w"> </span>nuttx.bin<span class="w"> </span>&gt;<span class="w"> </span>nuttx.px4
-<span class="gp">$ </span>python<span class="w"> </span>Tools/px_uploader.py<span class="w"> </span>--port<span class="w"> </span><span class="s2">"/dev/serial/by-id/*PX4*"</span><span class="w"> </span>nuttx.px4
+<span class="gp">$ </span>python<span class="w"> </span>Tools/px4_uploader.py<span class="w"> </span>--port<span class="w"> </span><span class="s2">"/dev/serial/by-id/*PX4*"</span><span class="w"> </span>nuttx.px4
 </pre></div>
 </div>
 <p>The uploader expects a <code class="docutils literal notranslate"><span class="pre">.px4</span></code> container rather than a raw binary.</p>
@@ -366,6 +368,33 @@ start the uploader first and then reset the board:</p>
 appears on the same connector used for flashing, at <code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code> on the
 host. <code class="docutils literal notranslate"><span class="pre">/dev/random</span></code> and <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code> are backed by the CAAM hardware
 entropy source.</p>
+</section>
+<section id="rptun">
+<h3>rptun<a class="headerlink" href="#rptun" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">nsh</span></code> plus the SD card and the RPTUN backend for the CM4
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_RPTUN</span></code>). The board bring-up registers <code class="docutils literal notranslate"><span class="pre">/dev/rptun/cm4</span></code> and
+holds the core; <code class="docutils literal notranslate"><span class="pre">rptun</span> <span class="pre">start</span></code> loads the ELF named by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FMU_V6XRT_CM4_FIRMWARE</span></code> (<code class="docutils literal notranslate"><span class="pre">/mnt/sd/cm4.elf</span></code>) into the CM4 code TCM
+and releases it. The image must carry a <code class="docutils literal notranslate"><span class="pre">.resource_table</span></code> section and link
+to <code class="docutils literal notranslate"><span class="pre">0x1ffe0000</span></code> with its shared memory in the upper 64 KB of that TCM; see
+the RPTUN section of <a class="reference internal" href="../../index.html"><span class="doc">the platform page</span></a>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; mount -t vfat /dev/mmcsd0 /mnt/sd</span>
+<span class="go">nsh&gt; rptun start /dev/rptun/cm4</span>
+<span class="go">nsh&gt; sleep 2</span>
+<span class="go">nsh&gt; rpmsg ping /dev/rpmsg/cm4 100 64 3 0</span>
+<span class="go">nsh&gt; rpmsg dump all</span>
+<span class="go">nsh&gt; rptun stop /dev/rptun/cm4</span>
+</pre></div>
+</div>
+<p>Start is asynchronous; the rpmsg node <code class="docutils literal notranslate"><span class="pre">/dev/rpmsg/cm4</span></code> appears once the CM4
+has announced its endpoints. <code class="docutils literal notranslate"><span class="pre">rpmsg</span> <span class="pre">ping</span></code> and <code class="docutils literal notranslate"><span class="pre">rpmsg</span> <span class="pre">dump</span></code> report through
+syslog, which this configuration keeps in a RAM log: read it with <code class="docutils literal notranslate"><span class="pre">dmesg</span></code>.
+After <code class="docutils literal notranslate"><span class="pre">rptun</span> <span class="pre">stop</span></code> the CM4 is parked in a <code class="docutils literal notranslate"><span class="pre">wfi</span></code> loop at its boot address;
+the next start reloads the image.</p>
+<p>To run without an SD card, enable <code class="docutils literal notranslate"><span class="pre">CONFIG_FMU_V6XRT_CM4_ROMFS</span></code> and copy the CM4 image to
+<code class="docutils literal notranslate"><span class="pre">boards/arm/imxrt/fmu-v6xrt/src/etc/cm4.elf</span></code> before building. It is baked into the etc ROMFS
+that NuttX mounts at boot and the firmware path becomes <code class="docutils literal notranslate"><span class="pre">/etc/cm4.elf</span></code>, so the <code class="docutils literal notranslate"><span class="pre">mount</span></code> step
+goes away. The file is ignored by git.</p>
 </section>
 </section>
 </section>
