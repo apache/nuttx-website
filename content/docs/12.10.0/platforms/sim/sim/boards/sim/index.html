@@ -29,7 +29,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/custom.css" />
 
   
@@ -570,7 +570,7 @@ stm32f4discovery/nsh configuration:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_LIBC_EXECFUNCS=y      : exec*() functions are required
 CONFIG_LIBM=y                : Some floating point library is required
 CONFIG_LIBC_FLOATINGPOINT=y  : Floating point printing support is required
-CONFIG_LIBC_TMPDIR=&quot;/tmp&quot;    : Writeable temporary files needed for some commands
+CONFIG_LIBC_TMPDIR="/tmp"    : Writeable temporary files needed for some commands
 </pre></div>
 </div>
 <p>Enable the BASIC interpreter.  Other default options should be okay:</p>
@@ -582,7 +582,7 @@ CONFIG_INTERPRETER_BAS_VT100=y
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_FS_ROMFS=y           : ROMFS support is needed
 CONFIG_EXAMPLES_BASTEST=y   : Enables the BASIC test setup
 CONFIG_EXAMPLES_BASTEST_DEVMINOR=6
-CONFIG_EXAMPLES_BASTEST_DEVPATH=&quot;/dev/ram6&quot;
+CONFIG_EXAMPLES_BASTEST_DEVPATH="/dev/ram6"
 </pre></div>
 </div>
 </div></blockquote>
@@ -627,7 +627,7 @@ nsh&gt;
 bas 2.4
 Copyright 1999-2014 Michael Haardt.
 This is free software with ABSOLUTELY NO WARRANTY.
-&gt; load &quot;/mnt/romfs/test01.bas&quot;
+&gt; load "/mnt/romfs/test01.bas"
 &gt; run
  1
 hello
@@ -862,7 +862,7 @@ drivers/wireless/bluetooth/bt_null.c</p>
 from the host to the NuttX bluetooth stack via the HCI Socket interface
 over the User Channel.  This is enabled in the bthcisock configuration.
 In order to use this you must give the nuttx elf additional capabilities:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo setcap &#39;cap_net_raw,cap_net_admin=eip&#39; ./nuttx
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo setcap 'cap_net_raw,cap_net_admin=eip' ./nuttx
 </pre></div>
 </div>
 <p>You can then monitor the HCI traffic on the host with wireshark or btmon:</p>
@@ -936,8 +936,8 @@ the above via ‘make menuconfig’.</p>
 with any Windows configuration, however, because Windows does not use the
 ELF format.</p>
 <p>This is the key part of the configuration:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>+CONFIG_PATH_INITIAL=&quot;/system/bin&quot;
-+CONFIG_INIT_FILEPATH=&quot;/system/bin/nsh&quot;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>+CONFIG_PATH_INITIAL="/system/bin"
++CONFIG_INIT_FILEPATH="/system/bin/nsh"
 </pre></div>
 </div>
 <p>The shell is loaded from the elf, but you can also run any of the ELFs that are in /system/bin as they are on the “PATH”</p>
@@ -1008,7 +1008,7 @@ BLE stack to NuttX, but disables NuttX’s own BLE stack and uses nimBLE stack
 instead (built in userspace).</p>
 <p>This configuration can be tested by running nimBLE example application “nimble”
 as follows:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ sudo setcap &#39;cap_net_raw,cap_net_admin=eip&#39; nuttx
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ sudo setcap 'cap_net_raw,cap_net_admin=eip' nuttx
 $ ./nuttx
 NuttShell (NSH) NuttX-9.1.0
 nsh&gt; ifup bnep0
@@ -1228,9 +1228,9 @@ apps/nshlib/nsh_consolemain.c like:</p>
    /* Execute the startup script */
 
  #ifdef CONFIG_ETC_ROMFS
--  nsh_script(&amp;pstate-&gt;cn_vtbl, &quot;init&quot;, NSH_INITPATH);
+-  nsh_script(&amp;pstate-&gt;cn_vtbl, "init", NSH_INITPATH);
 +// REMOVE ME
-+//  nsh_script(&amp;pstate-&gt;cn_vtbl, &quot;init&quot;, NSH_INITPATH);
++//  nsh_script(&amp;pstate-&gt;cn_vtbl, "init", NSH_INITPATH);
  #endif
 
    /* Then enter the command line parsing loop */
@@ -1245,7 +1245,7 @@ apps/nshlib/nsh_consolemain.c like:</p>
                       INSTREAM(pstate), OUTSTREAM(pstate));
        if (ret &gt; 0)
 @@ -153,6 +155,7 @@
-                   &quot;readline&quot;, NSH_ERRNO_OF(-ret));
+                   "readline", NSH_ERRNO_OF(-ret));
            nsh_exit(&amp;pstate-&gt;cn_vtbl, 1);
          }
 +#endif // REMOVE ME
@@ -1546,7 +1546,7 @@ As a real-world application, one could write the received content to a FIFO and 
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>One can use <code class="docutils literal notranslate"><span class="pre">pulseaudio</span></code> to send RTP packets through the network:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pactl load-module module-null-sink sink_name=rtp format=s16le channels=2 rate=44100 sink_properties=&quot;device.description=&#39;RTP&#39;&quot;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pactl load-module module-null-sink sink_name=rtp format=s16le channels=2 rate=44100 sink_properties="device.description='RTP'"
 pactl load-module module-rtp-send source=rtp.monitor format=s16le destination_ip=10.0.1.2 port=46998
 </pre></div>
 </div>
@@ -1587,7 +1587,7 @@ FIOC_FILEPATH, it cannot currently be used in hostfs.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; cd tmp
 nsh&gt; sqlite3 test.db
 SQLite version 3.45.1 2024-01-30 16:01:20
-Enter &quot;.help&quot; for usage hints.
+Enter ".help" for usage hints.
 sqlite&gt;
 CREATE TABLE COMPANY(
   ID INT PRIMARY KEY     sqlite&gt; (x1...&gt; NOT NULL,
@@ -2037,7 +2037,7 @@ eth0    Link encap:Ethernet HWaddr 42:67:c6:69:73:51 at RUNNING mtu 1500
 wwan0   Link encap:UNSPEC at RUNNING mtu 1200
         inet addr:10.0.0.1 DRaddr:10.0.0.1 Mask:255.255.255.0
 
-$ echo -n &quot;hello from nuttx&quot; &gt; /dev/cdc-wdm2
+$ echo -n "hello from nuttx" &gt; /dev/cdc-wdm2
 $ cat /dev/cdc-wdm2
 hello from linux
 </pre></div>
@@ -2056,7 +2056,7 @@ wwx020000112233: flags=4226&lt;BROADCAST,NOARP,MULTICAST&gt;  mtu 1500
 
 $ sudo cat /dev/cdc-wdm1
 hello from nuttx
-$ sudo bash -c &quot;echo -n hello from linux &gt; /dev/cdc-wdm1&quot;
+$ sudo bash -c "echo -n hello from linux &gt; /dev/cdc-wdm1"
 </pre></div>
 </div>
 <p>Then you can test the network connection using the ping command or telnet.</p>
@@ -2258,8 +2258,8 @@ can0  002   [1]  12
 
     2. Move the password file to a write-able file system:
 
-       - CONFIG_FSUTILS_PASSWD_PATH=&quot;/etc/passwd&quot;
-       + CONFIG_FSUTILS_PASSWD_PATH=&quot;/tmp/passwd&quot;
+       - CONFIG_FSUTILS_PASSWD_PATH="/etc/passwd"
+       + CONFIG_FSUTILS_PASSWD_PATH="/tmp/passwd"
 
     3. make the password file modifiable
 
@@ -2267,13 +2267,13 @@ can0  002   [1]  12
        # CONFIG_FSUTILS_PASSWD_READONLY is not set
 
   Now rebuild the simulation.  No login should be required to enter the
-  shell and you should find the &#39;useradd&#39;, &#39;userdel&#39;, and &#39;passwd&#39; commands
+  shell and you should find the 'useradd', 'userdel', and 'passwd' commands
   available in the help summary, provided that they are enabled.  Make
-  certain that the &#39;useradd&#39; command is not disabled:
+  certain that the 'useradd' command is not disabled:
 
       # CONFIG_NSH_DISABLE_USERADD is not set
 
-  Use the NSH &#39;useradd&#39; command to add new uses with new user passwords like:
+  Use the NSH 'useradd' command to add new uses with new user passwords like:
 
     nsh&gt; useradd &lt;username&gt; &lt;password&gt;
 
@@ -2284,7 +2284,7 @@ can0  002   [1]  12
     nsh&gt; cat /tmp/passwd
 
   When you are finished, you can simply copy the /tmp/passwd content from the
-  &#39;cat&#39; command and paste it into an editor.  Make sure to remove any
+  'cat' command and paste it into an editor.  Make sure to remove any
   carriage returns that may have ended up on the file if you are using
   Windows.
 

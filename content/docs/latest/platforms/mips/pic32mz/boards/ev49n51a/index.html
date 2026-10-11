@@ -311,7 +311,7 @@ family) microcontroller.</p>
 <li><p>MIPS32 M-Class core at 200 MHz</p></li>
 <li><p>1 MB program flash, 256 KB data RAM</p></li>
 <li><p>40 MHz crystal inside the module</p></li>
-<li><p>2.4 GHz IEEE 802.11 b/g/n Wi-Fi (not supported by NuttX)</p></li>
+<li><p>2.4 GHz IEEE 802.11 b/g/n Wi-Fi</p></li>
 </ul>
 </li>
 <li><p>SST26VF032B 32 Mbit (4 MB) SPI serial flash (U202)</p></li>
@@ -358,8 +358,9 @@ not connected) and MCP1727 3.3 V regulator</p></li>
 <td><p>LAN8720A, RMII, 10/100 Mbps</p></td>
 </tr>
 <tr class="row-even"><td><p>Wi-Fi</p></td>
-<td><p>No</p></td>
-<td></td>
+<td><p>Yes</p></td>
+<td><p>Station or Soft-AP, WPA2/WPA3-Personal;
+XC32 only, see <a class="reference internal" href="#wi-fi">Wi-Fi</a></p></td>
 </tr>
 </tbody>
 </table>
@@ -599,7 +600,8 @@ also used by the NuttX CI for all MIPS boards. It can be downloaded from
 </div>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_MIPS32_TOOLCHAIN_MICROCHIPL_XC32</span></code>: Microchip MPLAB XC32 for
-Linux (tested with v6.00), selected by the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> defconfig.</p></li>
+Linux (tested with v6.00), selected by all defconfigs. The <code class="docutils literal notranslate"><span class="pre">wlan</span></code>
+configuration builds with XC32 only.</p></li>
 </ul>
 <p>XC32 v6 and later no longer include device support and need the
 <a class="reference external" href="https://packs.download.microchip.com/">PIC32MZ-W Device Family Pack</a> (DFP). Extract the
@@ -714,6 +716,23 @@ The example below was taken with <code class="docutils literal notranslate"><spa
 </pre></div>
 </div>
 </section>
+<section id="wlan">
+<h3>wlan<a class="headerlink" href="#wlan" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration with Wi-Fi instead of Ethernet: the <code class="docutils literal notranslate"><span class="pre">wlan0</span></code>
+network device, IPv4, TCP, UDP and ICMP, the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> and <code class="docutils literal notranslate"><span class="pre">ping</span></code>
+commands, a DHCP client (<code class="docutils literal notranslate"><span class="pre">renew</span></code>) and a Telnet server. It downloads
+Microchip’s WLAN library and the BA414E microcode at build time (see
+<a class="reference internal" href="#wi-fi">Wi-Fi</a>) and builds with XC32 only. Join a WPA2-Personal network and get
+an address by DHCP:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; wapi psk wlan0 &lt;passphrase&gt; 3 2</span>
+<span class="go">nsh&gt; wapi essid wlan0 &lt;ssid&gt; 1</span>
+<span class="go">nsh&gt; renew wlan0</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">3</span></code> selects CCMP and <code class="docutils literal notranslate"><span class="pre">2</span></code> WPA2; use <code class="docutils literal notranslate"><span class="pre">3</span></code> instead of <code class="docutils literal notranslate"><span class="pre">2</span></code> for a
+WPA3-Personal network. <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">scan</span> <span class="pre">wlan0</span></code> lists the access points in
+range.</p>
+</section>
 </section>
 <section id="ethernet">
 <h2>Ethernet<a class="headerlink" href="#ethernet" title="Permalink to this heading"></a></h2>
@@ -735,9 +754,68 @@ disabled and the MAC uses the oscillator clock on the same pin.</p>
 with <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NOMAC</span></code> or with the <code class="docutils literal notranslate"><span class="pre">SIOCSIFHWADDR</span></code> ioctl before the
 interface is brought up.</p>
 </section>
+<section id="wi-fi">
+<h2>Wi-Fi<a class="headerlink" href="#wi-fi" title="Permalink to this heading"></a></h2>
+<p>The Wi-Fi MAC and baseband of the PIC32MZ-W1 are driven by Microchip’s
+closed WLAN library <code class="docutils literal notranslate"><span class="pre">pic32mzw1.a</span></code>, which runs on the CPU. The NuttX
+driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_WLAN</span></code>) provides the services the library
+needs (memory, interrupts, a kernel thread, hash and HMAC) and registers
+the <code class="docutils literal notranslate"><span class="pre">wlan0</span></code> network device, configured with <code class="docutils literal notranslate"><span class="pre">wapi</span></code>.</p>
+<p>The library is not part of NuttX. The build downloads it from the MPLAB
+Harmony <a class="reference external" href="https://github.com/Microchip-MPLAB-Harmony/wireless_wifi">wireless_wifi</a>
+repository (v3.13.0, <code class="docutils literal notranslate"><span class="pre">driver/pic32mzw1/pic32mzw1.a</span></code>) into
+<code class="docutils literal notranslate"><span class="pre">arch/mips/src/pic32mz</span></code>, unless a copy is already there, and links a
+copy with three symbols renamed that clash with NuttX. The library is
+distributed under Microchip’s license (<code class="docutils literal notranslate"><span class="pre">Microchip_SLA001.md</span></code> in that
+repository), which only allows its use with Microchip devices.</p>
+<p>The library is built with XC32 (microMIPS, soft-float) and uses the DSP
+ASE, so the driver requires XC32 and enables the DSP ASE at boot. It keeps
+its reserved packet buffers in the 64 KB Data Buffer Memory at
+0x00040000. The MAC address and the RF calibration come from the module’s
+OTP memory.</p>
+<p>Station mode is the default. To start a Soft-AP instead, select master
+mode before the SSID:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; wapi mode wlan0 3</span>
+<span class="go">nsh&gt; wapi psk wlan0 &lt;passphrase&gt; 3 2</span>
+<span class="go">nsh&gt; wapi freq wlan0 6 1</span>
+<span class="go">nsh&gt; wapi essid wlan0 &lt;ssid&gt; 1</span>
+<span class="go">nsh&gt; ifconfig wlan0 10.0.0.1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">freq</span></code> sets the channel (1 if not set). Skip <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">psk</span></code> for an
+open network, or use <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">psk</span> <span class="pre">wlan0</span> <span class="pre">&lt;passphrase&gt;</span> <span class="pre">3</span> <span class="pre">3</span></code> for WPA3-Personal. <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">essid</span> <span class="pre">wlan0</span> <span class="pre">&quot;&quot;</span> <span class="pre">0</span></code> stops the AP. A DHCP server for
+the stations can be started on <code class="docutils literal notranslate"><span class="pre">wlan0</span></code> with the <code class="docutils literal notranslate"><span class="pre">dhcpd</span></code> application
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPD</span></code>).</p>
+<section id="wpa3-personal">
+<h3>WPA3-Personal<a class="headerlink" href="#wpa3-personal" title="Permalink to this heading"></a></h3>
+<p>WPA3-Personal (SAE) needs big number and elliptic curve (P-256)
+operations, which the driver runs on the PIC32MZ-W1’s BA414E public key
+engine (<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E</span></code>, enabled in the <code class="docutils literal notranslate"><span class="pre">wlan</span></code>
+configuration). Without it, only open and WPA/WPA2-Personal networks are
+supported.</p>
+<p>The BA414E runs a microcode program that is not part of NuttX either. By
+default (<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E_UCODE_BUILTIN</span></code>) the build downloads
+<code class="docutils literal notranslate"><span class="pre">drivers/ba414e/src/drv_ba414e.c</span></code> from the MPLAB Harmony
+<a class="reference external" href="https://github.com/Microchip-MPLAB-Harmony/crypto">crypto</a> repository
+(v3.9.0) into <code class="docutils literal notranslate"><span class="pre">arch/mips/src/pic32mz</span></code> and links the microcode it
+contains into the image. That file is distributed under Microchip’s
+license (<code class="docutils literal notranslate"><span class="pre">mplab_harmony_license.md</span></code> in that repository), which only
+allows its use with Microchip devices. <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">distclean</span></code> deletes the
+downloaded files.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E_UCODE_FILE</span></code> the microcode is instead read
+from a file (<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E_UCODE_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">/etc/ba414e.bin</span></code>
+by default) the first time the engine is used, that is on the first WPA3
+connection or Soft-AP start. The file holds the 810 32-bit values of the
+<code class="docutils literal notranslate"><span class="pre">init_ucode_array</span></code> initializer of <code class="docutils literal notranslate"><span class="pre">drv_ba414e.c</span></code>, in array order, each
+stored little endian, without a header (3240 bytes). It can be in any
+file system that is mounted by then.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E_SELFTEST</span></code> runs known-answer tests of the engine
+when the microcode is loaded and logs the results.</p>
+</section>
+</section>
 <section id="l1-cache">
 <h2>L1 cache<a class="headerlink" href="#l1-cache" title="Permalink to this heading"></a></h2>
-<p>Both configurations enable the 16 KB instruction and 16 KB data caches
+<p>All configurations enable the 16 KB instruction and 16 KB data caches
 (<code class="docutils literal notranslate"><span class="pre">CONFIG_MIPS32_ICACHE</span></code>, which also selects <code class="docutils literal notranslate"><span class="pre">CONFIG_MIPS32_DCACHE</span></code>).
 The linker script places the data memory in KSEG0, so that it goes through
 the D-Cache; KSEG0 is uncached when the caches are disabled. The Ethernet
@@ -758,7 +836,13 @@ takes over once the clocks are up.</p>
 <section id="limitations">
 <h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading"></a></h2>
 <ul class="simple">
-<li><p>No Wi-Fi driver.</p></li>
+<li><p>Wi-Fi: open, WPA2-Personal and WPA3-Personal networks (WPA/WPA2 mixed
+mode can be selected but is not tested); no WPA2/WPA3 transition mode
+and no enterprise security. Station or
+Soft-AP, not both at the same time; no scanning while the AP runs. With
+management frame protection (PMF) negotiated, unprotected Public Action
+frames from the AP (such as Fast Initial Link Setup discovery frames) are
+dropped by the library with a “decap action fail” message.</p></li>
 <li><p>I2C1/I2C2 build but are not tested.</p></li>
 <li><p>SPI flash: only reads were tested (JEDEC ID and data), not writes or
 erases.</p></li>

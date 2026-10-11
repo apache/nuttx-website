@@ -30,7 +30,7 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_collapse.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
 
   
@@ -278,7 +278,7 @@ int thermal_dummy_init(void)
   ...
 
   /* Cooling Device */
-  cdev = thermal_cooling_device_register(&quot;fan0&quot;, &amp;g_dummy_fan0_data,
+  cdev = thermal_cooling_device_register("fan0", &amp;g_dummy_fan0_data,
                                          &amp;g_dummy_fan0_ops);
   ...
 }
@@ -298,7 +298,7 @@ int thermal_dummy_init(void)
 </dl>
 <p>For example, drivers/thermal/thermal_dummy.c:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/* Zone Device */
-zdev = thermal_zone_device_register(&quot;cpu-thermal&quot;, &amp;g_dummy_zone,
+zdev = thermal_zone_device_register("cpu-thermal", &amp;g_dummy_zone,
                                     &amp;g_dummy_zone_ops, &amp;g_dummy_params);
 
 static const struct thermal_zone_device_ops_s g_dummy_zone_ops =
@@ -338,26 +338,26 @@ z:cpu-thermal t:77 t:2 h:2 l:0 c:cpufreq s:3|2
 <h2>Board Customization<a class="headerlink" href="#board-customization" title="Permalink to this heading"></a></h2>
 <p>The binding relationship between Trip, Cooling Device, Governor and Zone is shown in thermal_dummy.c. It is expected that the vendor adapter will provide the hardware related initial under <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_BOARD_CUSTOM_DIR</span></code> for product customization, as described in the following comments and structures:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/* thermal-zones {
- *   &quot;cpu-thermal&quot; {
+ *   "cpu-thermal" {
  *     polling-delay : CONFIG_THERMAL_DUMMY_POLLING_DELAY;
  *     passive-delay : CONFIG_THERMAL_DUMMY_PASSIVE_DELAY;
- *     governor      : &quot;step_wise&quot;;
+ *     governor      : "step_wise";
  *
  *     trips {
- *       &quot;cpu_crit&quot;   { 90, 10, THERMAL_CRITICAL };
- *       &quot;cpu_alert1&quot; { 70, 10, THERMAL_HOT };
- *       &quot;cpu_alert0&quot; { 60, 10, THERMAL_NORMAL };
+ *       "cpu_crit"   { 90, 10, THERMAL_CRITICAL };
+ *       "cpu_alert1" { 70, 10, THERMAL_HOT };
+ *       "cpu_alert0" { 60, 10, THERMAL_NORMAL };
  *     };
  *
  *     cooling-maps {
- *       &quot;cpu_alert0&quot; {
- *         { &quot;cpu0&quot;, THERMAL_NO_LIMIT, 3 };
+ *       "cpu_alert0" {
+ *         { "cpu0", THERMAL_NO_LIMIT, 3 };
  *       };
- *       &quot;cpu_alert1&quot; {
- *         { &quot;cpu0&quot;, THERMAL_NO_LIMIT, 3 };
- *         { &quot;fan0&quot;, THERMAL_NO_LIMIT, THERMAL_NO_LIMIT };
+ *       "cpu_alert1" {
+ *         { "cpu0", THERMAL_NO_LIMIT, 3 };
+ *         { "fan0", THERMAL_NO_LIMIT, THERMAL_NO_LIMIT };
  *       };
- *       &quot;cpu_crit&quot; {
+ *       "cpu_crit" {
  *         { NULL, THERMAL_NO_LIMIT, THERMAL_NO_LIMIT };
  *       };
  *     };
@@ -367,30 +367,30 @@ z:cpu-thermal t:77 t:2 h:2 l:0 c:cpufreq s:3|2
 
 static const struct thermal_zone_trip_s g_dummy_trips[] =
 {
-  {.name = &quot;cpu_crit&quot;,   .temp = 90, .hyst = 10, .type = THERMAL_CRITICAL},
-  {.name = &quot;cpu_alert1&quot;, .temp = 70, .hyst = 10, .type = THERMAL_NORMAL},
-  {.name = &quot;cpu_alert0&quot;, .temp = 60, .hyst = 10, .type = THERMAL_NORMAL},
+  {.name = "cpu_crit",   .temp = 90, .hyst = 10, .type = THERMAL_CRITICAL},
+  {.name = "cpu_alert1", .temp = 70, .hyst = 10, .type = THERMAL_NORMAL},
+  {.name = "cpu_alert0", .temp = 60, .hyst = 10, .type = THERMAL_NORMAL},
 };
 
 static const struct thermal_zone_map_s g_dummy_maps[] =
 {
   {
-    .trip_name = &quot;cpu_alert1&quot;,
-    .cdev_name = &quot;cpufreq&quot;,
+    .trip_name = "cpu_alert1",
+    .cdev_name = "cpufreq",
     .low    = 3,
     .high   = THERMAL_NO_LIMIT,
     .weight = 20
   },
   {
-    .trip_name = &quot;cpu_alert1&quot;,
-    .cdev_name = &quot;fan0&quot;,
+    .trip_name = "cpu_alert1",
+    .cdev_name = "fan0",
     .low    = THERMAL_NO_LIMIT,
     .high   = THERMAL_NO_LIMIT,
     .weight = 20
   },
   {
-    .trip_name = &quot;cpu_alert0&quot;,
-    .cdev_name = &quot;cpufreq&quot;,
+    .trip_name = "cpu_alert0",
+    .cdev_name = "cpufreq",
     .low    = THERMAL_NO_LIMIT,
     .high   = 2,
     .weight = 20
@@ -399,7 +399,7 @@ static const struct thermal_zone_map_s g_dummy_maps[] =
 
 static const struct thermal_zone_params_s g_dummy_params =
 {
-  .gov_name = &quot;step_wise&quot;,
+  .gov_name = "step_wise",
   .polling_delay = CONFIG_THERMAL_DUMMY_POLLING_DELAY,
   .trips = g_dummy_trips,
   .num_trips = nitems(g_dummy_trips),
