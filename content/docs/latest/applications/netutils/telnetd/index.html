@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>telnetd Telnet server daemon &mdash; NuttX latest documentation</title>
+  <title>telnetd Telnet Server Daemon &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -192,8 +192,35 @@
 <li class="toctree-l3"><a class="reference internal" href="../s2opc/index.html"><code class="docutils literal notranslate"><span class="pre">s2opc</span></code> OPC UA toolkit library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../smtp/index.html"><code class="docutils literal notranslate"><span class="pre">smtp</span></code> SMTP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../telnetc/index.html"><code class="docutils literal notranslate"><span class="pre">telnetc</span></code> Telnet client library</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet server daemon</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#tips-for-using-telnetd">Tips for Using Telnetd</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet Server Daemon</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#operational-architecture">Operational Architecture</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#lifecycle-sequence">Lifecycle Sequence</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#kernel-telnet-protocol-handling">Kernel Telnet Protocol Handling</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#core-telnet-daemon-configurations">Core Telnet Daemon Configurations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#nsh-telnet-console-configurations">NSH Telnet Console Configurations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#recommended-stdio-tuning">Recommended STDIO Tuning</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#application-programming-interface-api">Application Programming Interface (API)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#application-examples">Application Examples</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#custom-standalone-telnet-daemon">Custom Standalone Telnet Daemon</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#starting-the-nuttshell-nsh-telnet-console">Starting the NuttShell (NSH) Telnet Console</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#client-connection-walkthrough">Client Connection Walkthrough</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#connecting-from-linux-or-macos-terminal">Connecting from Linux or macOS Terminal</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#connecting-from-windows-powershell-command-prompt">Connecting from Windows (PowerShell / Command Prompt)</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#troubleshooting-and-best-practices">Troubleshooting and Best Practices</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../tftpc/index.html"><code class="docutils literal notranslate"><span class="pre">tftpc</span></code> TFTP Client</a></li>
@@ -235,7 +262,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Network Utilities</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet server daemon</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet Server Daemon</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/netutils/telnetd/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -246,31 +273,583 @@
            <div itemprop="articleBody">
              
   <section id="telnetd-telnet-server-daemon">
-<h1><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet server daemon<a class="headerlink" href="#telnetd-telnet-server-daemon" title="Permalink to this heading"></a></h1>
-<p>This is the Telnet logic adapted from uIP and generalized for use as the front
-end to any shell. The telnet daemon creates sessions that are “wrapped” as
-character devices and mapped to <code class="docutils literal notranslate"><span class="pre">stdin</span></code>, <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.
-Now the telnet session can be inherited by spawned tasks.</p>
-<section id="tips-for-using-telnetd">
-<h2>Tips for Using Telnetd<a class="headerlink" href="#tips-for-using-telnetd" title="Permalink to this heading"></a></h2>
-<p>Telnetd is set up to be the front end for a shell. The primary use of Telnetd in
-NuttX is to support the NuttShell (NSH) Telnet front end. See
-<code class="docutils literal notranslate"><span class="pre">apps/include/netutils/telnetd.h</span></code> for information about how to incorporate
-Telnetd into your custom applications.</p>
-<p>To enable and link the Telnetd daemon, you need to include the following in in
-your defconfig file:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_NETUTILS_NETLIB=y
-CONFIG_NETUTILS_TELNETD=y
+<h1><code class="docutils literal notranslate"><span class="pre">telnetd</span></code> Telnet Server Daemon<a class="headerlink" href="#telnetd-telnet-server-daemon" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">telnetd</span></code> utility provides a lightweight Telnet server daemon for Apache NuttX,
+implementing the core network terminal protocol defined in <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc854.html"><strong>RFC 854</strong></a> (Telnet Protocol
+Specification) and <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc855.html"><strong>RFC 855</strong></a> (Telnet Option Specifications), with optional support for
+terminal window size negotiation via <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1073.html"><strong>RFC 1073</strong></a> (Negotiate About Window Size - NAWS).</p>
+<p>In embedded systems, <code class="docutils literal notranslate"><span class="pre">telnetd</span></code> enables remote interactive access over local Ethernet
+or Wi-Fi networks by decoupling the network protocol logic from the shell application.
+The daemon dynamically wraps accepted TCP connections into standard character device
+drivers (<code class="docutils literal notranslate"><span class="pre">/dev/telnetN</span></code>) and duplicates them onto the standard input, output, and error
+file descriptors (<code class="docutils literal notranslate"><span class="pre">stdin</span></code>, <code class="docutils literal notranslate"><span class="pre">stdout</span></code>, <code class="docutils literal notranslate"><span class="pre">stderr</span></code>) of newly spawned child tasks. This
+architecture allows standard console applications—such as the NuttShell (NSH) or custom
+command interpreters—to run transparently over the network without requiring any
+network-specific awareness.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Security Consideration</strong>: Standard Telnet (<span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc854.html"><strong>RFC 854</strong></a>) transmits all terminal sessions,
+user input, and authentication credentials in unencrypted plaintext across the network.
+On untrusted or open networks, traffic can be monitored or modified by unauthorized
+eavesdroppers. When deploying <code class="docutils literal notranslate"><span class="pre">telnetd</span></code> in production systems:</p>
+<ul class="simple">
+<li><p>Confine Telnet traffic to isolated, trusted management networks, private maintenance
+VLANs, or point-to-point diagnostic interfaces.</p></li>
+<li><p>Where remote access is required across untrusted links, enforce cryptographic transport
+security using secure tunnels (such as IPsec or WireGuard) or deploy an encrypted shell
+service such as Dropbear SSH (<code class="docutils literal notranslate"><span class="pre">apps/netutils/dropbear</span></code>).</p></li>
+<li><p>If authentication is required, enable the NuttShell login feature
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNET_LOGIN</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_PASSWD</span></code>).</p></li>
+</ul>
+</div>
+<section id="operational-architecture">
+<h2>Operational Architecture<a class="headerlink" href="#operational-architecture" title="Permalink to this heading"></a></h2>
+<p>The NuttX Telnet subsystem is split across two modular layers: a user-space daemon
+(<code class="docutils literal notranslate"><span class="pre">apps/netutils/telnetd/</span></code>) and a kernel character driver factory (<code class="docutils literal notranslate"><span class="pre">drivers/net/telnet.c</span></code>).</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+-------------------------------------------------------------+
+|                        Remote Client                        |
+|           (e.g., telnet, PuTTY, netcat on TCP Port 23)      |
++-------------------------------------------------------------+
+                               |
+                               | TCP Network Stream (RFC 854)
+                               v
++-------------------------------------------------------------+
+|                    telnetd Daemon Loop                      |
+|              accept4() on TCP Listening Socket              |
++-------------------------------------------------------------+
+                               |
+                               | ioctl(SIOCTELNET) via /dev/telnet
+                               v
++-------------------------------------------------------------+
+|               Kernel Telnet Driver Factory                  |
+|                  (drivers/net/telnet.c)                     |
+|    - Allocates /dev/telnetN session character driver        |
+|    - Implements IAC protocol &amp; option negotiation (RFC 854) |
+|    - Formats RFC 854 transmit line endings (CRLF, CR NUL)   |
+|    - Manages circular RX/TX ring buffers                    |
++-------------------------------------------------------------+
+                               |
+                               | dup2(drvrfd, 0 / 1 / 2)
+                               v
++-------------------------------------------------------------+
+|                   Spawned Shell Process                     |
+|               (e.g., NSH task_create / spawn)               |
+|                                                             |
+|       stdin  -----&gt; [ Read from /dev/telnetN ]              |
+|       stdout -----&gt; [ Write to /dev/telnetN  ]              |
+|       stderr -----&gt; [ Write to /dev/telnetN  ]              |
++-------------------------------------------------------------+
 </pre></div>
 </div>
-<p>Also if the Telnet console is enabled, make sure that you have the following set
-in the NuttX configuration file or else the performance will be very bad
-(because there will be only one character per TCP transfer):</p>
+<section id="lifecycle-sequence">
+<h3>Lifecycle Sequence<a class="headerlink" href="#lifecycle-sequence" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>Daemon Initialization</strong>: The user invokes <code class="docutils literal notranslate"><span class="pre">telnetd_daemon()</span></code> with a populated
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">telnetd_config_s</span></code> configuration. The daemon creates a stream socket, binds to
+the specified port (default port 23) using either <code class="docutils literal notranslate"><span class="pre">AF_INET</span></code> or <code class="docutils literal notranslate"><span class="pre">AF_INET6</span></code>, and calls
+<code class="docutils literal notranslate"><span class="pre">listen()</span></code> with a connection backlog.</p></li>
+<li><p><strong>Connection Acceptance</strong>: When a remote Telnet client initiates a TCP connection,
+the daemon’s <code class="docutils literal notranslate"><span class="pre">accept4()</span></code> call unblocks and returns a connected socket descriptor
+(<code class="docutils literal notranslate"><span class="pre">acceptsd</span></code>) with <code class="docutils literal notranslate"><span class="pre">SOCK_CLOEXEC</span></code> set.</p></li>
+<li><p><strong>Session Driver Creation</strong>: The daemon opens the Telnet driver factory node at
+<code class="docutils literal notranslate"><span class="pre">/dev/telnet</span></code> and issues an <code class="docutils literal notranslate"><span class="pre">ioctl(drvrfd,</span> <span class="pre">SIOCTELNET,</span> <span class="pre">&amp;session)</span></code> request passing the
+accepted socket. The kernel driver registers a dedicated character device
+(e.g., <code class="docutils literal notranslate"><span class="pre">/dev/telnet0</span></code>) backed by internal ring buffers and the session’s TCP socket.</p></li>
+<li><p><strong>Standard I/O Redirection</strong>: The daemon closes its own default standard descriptors
+and uses <code class="docutils literal notranslate"><span class="pre">dup2()</span></code> to duplicate the newly opened <code class="docutils literal notranslate"><span class="pre">/dev/telnetN</span></code> file descriptor onto
+descriptors 0 (<code class="docutils literal notranslate"><span class="pre">stdin</span></code>), 1 (<code class="docutils literal notranslate"><span class="pre">stdout</span></code>), and 2 (<code class="docutils literal notranslate"><span class="pre">stderr</span></code>).</p></li>
+<li><p><strong>Task Spawning</strong>: The daemon spawns the target interactive task (such as <code class="docutils literal notranslate"><span class="pre">nsh_main()</span></code>)
+via <code class="docutils literal notranslate"><span class="pre">task_create()</span></code> in flat and protected builds, or via <code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> in builds
+with <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_EXECFUNCS</span></code>. The new task inherits the duplicated file descriptors.</p></li>
+<li><p><strong>Session Termination</strong>: When the remote client disconnects or the user types <code class="docutils literal notranslate"><span class="pre">exit</span></code>,
+the shell task terminates, the character device is closed and unregistered by the
+kernel, and socket resources are released.</p></li>
+</ol>
+</section>
+<section id="kernel-telnet-protocol-handling">
+<h3>Kernel Telnet Protocol Handling<a class="headerlink" href="#kernel-telnet-protocol-handling" title="Permalink to this heading"></a></h3>
+<p>The underlying character driver (<code class="docutils literal notranslate"><span class="pre">drivers/net/telnet.c</span></code>) handles all Telnet protocol
+control sequences transparently:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STDIO_BUFFER_SIZE</span></code> – Some value <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">64</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STDIO_LINEBUFFER=y</span></code> – Since Telnetd is line oriented, line buffering
-is optimal.</p></li>
+<li><p><strong>Interpret As Command (IAC)</strong>: Decodes Telnet escape sequences beginning with byte
+<code class="docutils literal notranslate"><span class="pre">0xFF</span></code> (<code class="docutils literal notranslate"><span class="pre">IAC</span></code>), including negotiation commands <code class="docutils literal notranslate"><span class="pre">WILL</span></code> (<code class="docutils literal notranslate"><span class="pre">0xFB</span></code>), <code class="docutils literal notranslate"><span class="pre">WONT</span></code> (<code class="docutils literal notranslate"><span class="pre">0xFC</span></code>),
+<code class="docutils literal notranslate"><span class="pre">DO</span></code> (<code class="docutils literal notranslate"><span class="pre">0xFD</span></code>), and <code class="docutils literal notranslate"><span class="pre">DONT</span></code> (<code class="docutils literal notranslate"><span class="pre">0xFE</span></code>).</p></li>
+<li><p><strong>Subnegotiation (SB / SE)</strong>: Handles option subnegotiation sequences bracketed by <code class="docutils literal notranslate"><span class="pre">IAC</span> <span class="pre">SB</span></code>
+and <code class="docutils literal notranslate"><span class="pre">IAC</span> <span class="pre">SE</span></code>.</p></li>
+<li><p><strong>Window Size Negotiation (NAWS)</strong>: When <code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_SUPPORT_NAWS</span></code> is enabled, the
+driver negotiates window dimensions (<span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1073.html"><strong>RFC 1073</strong></a>) and provides window size queries
+via terminal <code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> calls (such as <code class="docutils literal notranslate"><span class="pre">TIOCGWINSZ</span></code>).</p></li>
+<li><p><strong>Line Ending Handling</strong>: Adheres to <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc854.html"><strong>RFC 854</strong></a> end-of-line conventions. On the transmit
+path, outgoing newline characters (<code class="docutils literal notranslate"><span class="pre">\n</span></code>) are automatically formatted as standard network
+<code class="docutils literal notranslate"><span class="pre">CR</span> <span class="pre">LF</span></code> pairs. If an application outputs a carriage return alone, the driver defers
+the trailing <code class="docutils literal notranslate"><span class="pre">NUL</span></code> byte until the next non-newline character is processed (note that if a
+session terminates immediately following a standalone <code class="docutils literal notranslate"><span class="pre">CR</span></code> with no subsequent output,
+the driver closes without flushing a trailing <code class="docutils literal notranslate"><span class="pre">NUL</span></code>). On the receive path, ordinary data
+bytes are passed through transparently to the application buffer, leaving input line
+discipline (such as stripping carriage returns or handling <code class="docutils literal notranslate"><span class="pre">\r\n</span></code> / <code class="docutils literal notranslate"><span class="pre">\n</span></code>) to the
+interactive command interpreter (e.g., readline or NSH).</p></li>
 </ul>
+</section>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Modular Kernel/Userland Separation</strong>: Protocol parsing and STDIO virtualization are
+handled in the kernel driver, keeping the application daemon minimal and robust.</p></li>
+<li><p><strong>Universal Application Support</strong>: Any standard CLI or shell can be used as the Telnet
+backend; applications interact with standard POSIX <code class="docutils literal notranslate"><span class="pre">read()</span></code> and <code class="docutils literal notranslate"><span class="pre">write()</span></code> without
+network socket code.</p></li>
+<li><p><strong>Dual-Stack Networking</strong>: Full support for both IPv4 (<code class="docutils literal notranslate"><span class="pre">AF_INET</span></code>) and IPv6 (<code class="docutils literal notranslate"><span class="pre">AF_INET6</span></code>)
+address families.</p></li>
+<li><p><strong>Configurable Concurrency</strong>: Supports multiple simultaneous Telnet sessions up to
+<code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_MAXLCLIENTS</span></code>, each running in an isolated task context.</p></li>
+<li><p><strong>Low Footprint</strong>: Highly optimized memory usage tailored for constrained embedded
+targets with configurable RX and TX buffer sizes.</p></li>
+<li><p><strong>NuttShell (NSH) Native Integration</strong>: Turnkey remote console support via built-in NSH
+configuration flags.</p></li>
+</ul>
+</section>
+<section id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this heading"></a></h2>
+<section id="core-telnet-daemon-configurations">
+<h3>Core Telnet Daemon Configurations<a class="headerlink" href="#core-telnet-daemon-configurations" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 15.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Configuration Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_TELNETD</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables the Telnet daemon library in <code class="docutils literal notranslate"><span class="pre">apps/netutils/telnetd</span></code>. Automatically selects
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETDEV_TELNET</span></code>. Requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NET</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETDEV_TELNET</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables the kernel-level Telnet character driver factory in <code class="docutils literal notranslate"><span class="pre">drivers/net/telnet.c</span></code>,
+exposing the <code class="docutils literal notranslate"><span class="pre">/dev/telnet</span></code> device node.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_RXBUFFER_SIZE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">256</span></code></p></td>
+<td><p>Size (in bytes) of the internal receive ring buffer per active Telnet session.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_TXBUFFER_SIZE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">256</span></code></p></td>
+<td><p>Size (in bytes) of the internal transmit ring buffer per active Telnet session.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_MAXLCLIENTS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8</span></code></p></td>
+<td><p>Maximum number of concurrent Telnet client sessions allowed by the driver.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_SUPPORT_NAWS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables Telnet Negotiate About Window Size (<span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1073.html"><strong>RFC 1073</strong></a>) support to report terminal
+column and row dimensions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_DUMPBUFFER</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables raw hexadecimal buffer dumps for debugging network transmissions (depends on
+<code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_NET</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="nsh-telnet-console-configurations">
+<h3>NSH Telnet Console Configurations<a class="headerlink" href="#nsh-telnet-console-configurations" title="Permalink to this heading"></a></h3>
+<p>When using Telnet as a remote console for NuttShell (NSH), the following settings in
+<code class="docutils literal notranslate"><span class="pre">apps/nshlib/</span></code> govern behavior:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 15.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Configuration Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNET</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables the NSH Telnet remote console service.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNETD_PORT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">23</span></code></p></td>
+<td><p>TCP port on which the NSH Telnet daemon listens for incoming connections.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNETD_DAEMONPRIO</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p>Execution priority of the NSH Telnet listener daemon task.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNETD_DAEMONSTACKSIZE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2048</span></code></p></td>
+<td><p>Stack size (in bytes) allocated for the NSH Telnet listener daemon task.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNETD_CLIENTPRIO</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p>Execution priority of each spawned client shell session.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNETD_CLIENTSTACKSIZE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2048</span></code></p></td>
+<td><p>Stack size (in bytes) allocated for each spawned client shell session.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNET_LOGIN</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enforces username and password authentication before granting shell access over Telnet.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="recommended-stdio-tuning">
+<h3>Recommended STDIO Tuning<a class="headerlink" href="#recommended-stdio-tuning" title="Permalink to this heading"></a></h3>
+<p>To achieve smooth interactive performance over Telnet, ensure the following STDIO buffering
+options are configured in NuttX:</p>
+<ul class="simple">
+<li><p><strong>``CONFIG_STDIO_BUFFER_SIZE &gt;= 64``</strong>: Using buffered I/O avoids generating tiny TCP
+packets for each individual printed character.</p></li>
+<li><p><strong>``CONFIG_STDIO_LINEBUFFER=y``</strong>: Ensures line-oriented console output flushes immediately
+on newline boundaries (<code class="docutils literal notranslate"><span class="pre">\n</span></code>), offering responsive terminal feedback.</p></li>
+</ul>
+</section>
+</section>
+<section id="application-programming-interface-api">
+<h2>Application Programming Interface (API)<a class="headerlink" href="#application-programming-interface-api" title="Permalink to this heading"></a></h2>
+<section id="data-types">
+<h3>Data Types<a class="headerlink" href="#data-types" title="Permalink to this heading"></a></h3>
+<section id="struct-telnetd-config-s">
+<h4><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">telnetd_config_s</span></code><a class="headerlink" href="#struct-telnetd-config-s" title="Permalink to this heading"></a></h4>
+<p>This configuration structure is passed to <code class="docutils literal notranslate"><span class="pre">telnetd_daemon()</span></code> to define the daemon’s
+listening parameters and the characteristics of child tasks to be spawned upon connection:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;netutils/telnetd.h&gt;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">telnetd_config_s</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="cm">/* Network connection parameters */</span>
+
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w">          </span><span class="n">d_port</span><span class="p">;</span><span class="w">      </span><span class="cm">/* Port to listen on (in network byte order) */</span>
+<span class="w">  </span><span class="n">sa_family_t</span><span class="w">       </span><span class="n">d_family</span><span class="p">;</span><span class="w">    </span><span class="cm">/* Address family (AF_INET or AF_INET6) */</span>
+
+<span class="w">  </span><span class="cm">/* Spawned task characteristics */</span>
+
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w">           </span><span class="n">t_priority</span><span class="p">;</span><span class="w">  </span><span class="cm">/* Execution priority of the spawned task */</span>
+<span class="w">  </span><span class="kt">size_t</span><span class="w">            </span><span class="n">t_stacksize</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Stack size (in bytes) for the spawned task */</span>
+
+<span class="cp">#ifndef CONFIG_BUILD_KERNEL</span>
+<span class="w">  </span><span class="n">main_t</span><span class="w">            </span><span class="n">t_entry</span><span class="p">;</span><span class="w">     </span><span class="cm">/* Task entrypoint function (flat / protected mode) */</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#ifdef CONFIG_LIBC_EXECFUNCS</span>
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w">   </span><span class="o">*</span><span class="n">t_path</span><span class="p">;</span><span class="w">      </span><span class="cm">/* Binary path to execute (kernel / binfmt mode) */</span>
+<span class="cp">#endif</span>
+
+<span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">*</span><span class="n">t_argv</span><span class="p">;</span><span class="w">      </span><span class="cm">/* Argument vector passed to the spawned task */</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<section id="telnetd-daemon">
+<h4><code class="docutils literal notranslate"><span class="pre">telnetd_daemon()</span></code><a class="headerlink" href="#telnetd-daemon" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">telnetd_daemon</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">telnetd_config_s</span><span class="w"> </span><span class="o">*</span><span class="n">config</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description</strong>:
+Runs the Telnet daemon loop. The function sets up the listening socket, binds to the
+designated port, and continuously accepts incoming client connections. For each accepted
+connection, it instantiates a <code class="docutils literal notranslate"><span class="pre">/dev/telnetN</span></code> character driver, redirects standard I/O,
+and spawns a child task running the specified entrypoint or binary.</p>
+<p>Because this function runs an infinite loop accepting connections, it should normally be
+invoked inside a dedicated background task (e.g., started with <code class="docutils literal notranslate"><span class="pre">task_create()</span></code>).</p>
+<p><strong>Parameters</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code>: Pointer to a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">telnetd_config_s</span></code> instance defining the listener port,
+address family, child task priority, stack size, and entry point. The configuration
+structure may reside on the caller’s stack because it is copied internally during startup.</p></li>
+</ul>
+<p><strong>Return Value</strong>:
+Does not return under normal operation. If a fatal initialization error occurs (e.g., failure
+to create or bind the listening socket), a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> value is returned (such as
+<code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code>, <code class="docutils literal notranslate"><span class="pre">-EADDRINUSE</span></code>, or <code class="docutils literal notranslate"><span class="pre">-ENOMEM</span></code>).</p>
+</section>
+</section>
+</section>
+<section id="application-examples">
+<h2>Application Examples<a class="headerlink" href="#application-examples" title="Permalink to this heading"></a></h2>
+<section id="custom-standalone-telnet-daemon">
+<h3>Custom Standalone Telnet Daemon<a class="headerlink" href="#custom-standalone-telnet-daemon" title="Permalink to this heading"></a></h3>
+<p>The following complete, runnable example demonstrates how to configure and start a
+custom Telnet daemon in an application. The daemon listens on TCP port 2323 and spawns
+an interactive session whenever a client connects. It demonstrates both in-memory
+entrypoint configuration for flat and protected builds (<code class="docutils literal notranslate"><span class="pre">t_entry</span></code>) and binary executable
+path configuration for kernel builds (<code class="docutils literal notranslate"><span class="pre">t_path</span></code>):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sched.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;errno.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;arpa/inet.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;netutils/telnetd.h&gt;</span>
+
+<span class="cp">#define TELNET_PORT           2323</span>
+<span class="cp">#define TELNET_DAEMON_PRIO    100</span>
+<span class="cp">#define TELNET_DAEMON_STACK   2048</span>
+<span class="cp">#define TELNET_CLIENT_PRIO    100</span>
+<span class="cp">#define TELNET_CLIENT_STACK   2048</span>
+
+<span class="cm">/****************************************************************************</span>
+<span class="cm"> * Name: custom_shell_session</span>
+<span class="cm"> *</span>
+<span class="cm"> * Description:</span>
+<span class="cm"> *   Interactive session spawned per client. Standard I/O (stdin, stdout,</span>
+<span class="cm"> *   stderr) is already mapped to the Telnet network connection.</span>
+<span class="cm"> ****************************************************************************/</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">custom_shell_session</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">line</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">========================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">" Welcome to NuttX Custom Telnet Console </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">" Type 'help', 'ping', or 'exit' to quit </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"========================================</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(;</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">printf</span><span class="p">(</span><span class="s">"telnet&gt; "</span><span class="p">);</span>
+<span class="w">      </span><span class="n">fflush</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span>
+
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fgets</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">line</span><span class="p">),</span><span class="w"> </span><span class="n">stdin</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="k">break</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Client closed connection */</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">      </span><span class="cm">/* Trim trailing newline and carriage return characters */</span>
+
+<span class="w">      </span><span class="n">line</span><span class="p">[</span><span class="n">strcspn</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="s">"</span><span class="se">\r\n</span><span class="s">"</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="s">"exit"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="n">printf</span><span class="p">(</span><span class="s">"Disconnecting session...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">          </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="s">"ping"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="n">printf</span><span class="p">(</span><span class="s">"pong!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="s">"help"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="n">printf</span><span class="p">(</span><span class="s">"Available commands: help, ping, exit</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strlen</span><span class="p">(</span><span class="n">line</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="n">printf</span><span class="p">(</span><span class="s">"Unknown command: '%s'</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Session closed. Goodbye!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/****************************************************************************</span>
+<span class="cm"> * Name: telnet_listener_task</span>
+<span class="cm"> *</span>
+<span class="cm"> * Description:</span>
+<span class="cm"> *   Background listener task running the telnetd daemon loop.</span>
+<span class="cm"> ****************************************************************************/</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">telnet_listener_task</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">telnetd_config_s</span><span class="w"> </span><span class="n">config</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">config</span><span class="p">));</span>
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">d_port</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">HTONS</span><span class="p">(</span><span class="n">TELNET_PORT</span><span class="p">);</span>
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">d_family</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">AF_INET</span><span class="p">;</span>
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">t_priority</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">TELNET_CLIENT_PRIO</span><span class="p">;</span>
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">t_stacksize</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">TELNET_CLIENT_STACK</span><span class="p">;</span>
+
+<span class="cp">#ifndef CONFIG_BUILD_KERNEL</span>
+<span class="w">  </span><span class="cm">/* In flat and protected builds, provide the in-memory entrypoint function */</span>
+
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">t_entry</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">custom_shell_session</span><span class="p">;</span>
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">t_argv</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="cp">#else</span>
+<span class="w">  </span><span class="cm">/* In kernel builds (CONFIG_BUILD_KERNEL), specify the binary executable path</span>
+<span class="cm">   * to be spawned via posix_spawn() (e.g., located on ROMFS or binfs).</span>
+<span class="cm">   */</span>
+
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">t_path</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">"/system/bin/custom_shell"</span><span class="p">;</span>
+<span class="w">  </span><span class="n">config</span><span class="p">.</span><span class="n">t_argv</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="cp">#endif</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Starting Telnet daemon on port %d...</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">TELNET_PORT</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">telnetd_daemon</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">"telnetd_daemon failed: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ret</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/****************************************************************************</span>
+<span class="cm"> * Name: telnet_server_start</span>
+<span class="cm"> *</span>
+<span class="cm"> * Description:</span>
+<span class="cm"> *   Launches the Telnet listener in a non-blocking background task.</span>
+<span class="cm"> ****************************************************************************/</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">telnet_server_start</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">pid</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">pid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task_create</span><span class="p">(</span><span class="s">"custom_telnetd"</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">TELNET_DAEMON_PRIO</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">TELNET_DAEMON_STACK</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">telnet_listener_task</span><span class="p">,</span>
+<span class="w">                    </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">pid</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">"Failed to start listener task: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">errno</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">errno</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Telnet daemon task created with PID %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="starting-the-nuttshell-nsh-telnet-console">
+<h3>Starting the NuttShell (NSH) Telnet Console<a class="headerlink" href="#starting-the-nuttshell-nsh-telnet-console" title="Permalink to this heading"></a></h3>
+<p>To run the standard NuttShell command prompt over Telnet, configure NSH to launch its
+built-in Telnet service:</p>
+<p>In your board’s <code class="docutils literal notranslate"><span class="pre">defconfig</span></code>:</p>
+<div class="highlight-make notranslate"><div class="highlight"><pre><span></span><span class="nv">CONFIG_NETUTILS_NETLIB</span><span class="o">=</span>y
+<span class="nv">CONFIG_NETUTILS_TELNETD</span><span class="o">=</span>y
+<span class="nv">CONFIG_NSH_TELNET</span><span class="o">=</span>y
+<span class="nv">CONFIG_NSH_TELNETD_PORT</span><span class="o">=</span><span class="m">23</span>
+</pre></div>
+</div>
+<p>When the system boots and initializes the network interface (either statically or via
+DHCP), NSH starts the Telnet listener automatically, or you can invoke it from the serial
+console:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsh&gt;<span class="w"> </span>telnetd<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="client-connection-walkthrough">
+<h2>Client Connection Walkthrough<a class="headerlink" href="#client-connection-walkthrough" title="Permalink to this heading"></a></h2>
+<section id="connecting-from-linux-or-macos-terminal">
+<h3>Connecting from Linux or macOS Terminal<a class="headerlink" href="#connecting-from-linux-or-macos-terminal" title="Permalink to this heading"></a></h3>
+<p>From a development workstation on the same local subnet, connect using the standard
+<code class="docutils literal notranslate"><span class="pre">telnet</span></code> client.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>macOS Prerequisite</strong>: Starting with macOS High Sierra, the <code class="docutils literal notranslate"><span class="pre">telnet</span></code> client utility
+is no longer pre-installed. It can be installed via <a class="reference external" href="https://brew.sh">Homebrew</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>brew<span class="w"> </span>install<span class="w"> </span>telnet
+</pre></div>
+</div>
+<p>Alternatively, standard <code class="docutils literal notranslate"><span class="pre">nc</span></code> (netcat) can be used to establish raw TCP terminal connections:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>nc<span class="w"> </span><span class="m">192</span>.168.1.50<span class="w"> </span><span class="m">23</span>
+</pre></div>
+</div>
+</div>
+<p>Connect to the NuttX device:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>telnet<span class="w"> </span><span class="m">192</span>.168.1.50<span class="w"> </span><span class="m">23</span>
+Trying<span class="w"> </span><span class="m">192</span>.168.1.50...
+Connected<span class="w"> </span>to<span class="w"> </span><span class="m">192</span>.168.1.50.
+Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span><span class="s1">'^]'</span>.
+
+NuttShell<span class="w"> </span><span class="o">(</span>NSH<span class="o">)</span><span class="w"> </span>NuttX-13.1.0
+nsh&gt;<span class="w"> </span><span class="nb">help</span>
+<span class="nb">help</span><span class="w"> </span>usage:<span class="w">  </span><span class="nb">help</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;cmd&gt;<span class="o">]</span>
+
+<span class="w">  </span>.<span class="w">         </span>cat<span class="w">       </span>dd<span class="w">        </span>free<span class="w">      </span><span class="nb">kill</span><span class="w">      </span>mkdir<span class="w">     </span>ps<span class="w">        </span>rmdir<span class="w">     </span><span class="nb">time</span><span class="w">      </span>usleep
+<span class="w">  </span><span class="o">[</span><span class="w">         </span><span class="nb">cd</span><span class="w">        </span>df<span class="w">        </span>get<span class="w">       </span>ls<span class="w">        </span>mount<span class="w">     </span><span class="nb">pwd</span><span class="w">       </span>sleep<span class="w">     </span>umount<span class="w">    </span>xd
+<span class="w">  </span>?<span class="w">         </span>cp<span class="w">        </span><span class="nb">echo</span><span class="w">      </span><span class="nb">help</span><span class="w">      </span>mkrd<span class="w">      </span>mv<span class="w">        </span>rm<span class="w">        </span><span class="nb">test</span><span class="w">      </span>uname
+
+nsh&gt;<span class="w"> </span>ps
+<span class="w">  </span>PID<span class="w"> </span>GROUP<span class="w"> </span>PRI<span class="w"> </span>POLICY<span class="w">   </span>TYPE<span class="w">    </span>NPX<span class="w"> </span>STATE<span class="w">    </span>EVENT<span class="w">     </span>SIGMASK<span class="w">            </span>STACK<span class="w">   </span>USED<span class="w">  </span>FILLED<span class="w"> </span>COMMAND
+<span class="w">    </span><span class="m">0</span><span class="w">     </span><span class="m">0</span><span class="w">   </span><span class="m">0</span><span class="w"> </span>FIFO<span class="w">     </span>Kthread<span class="w">   </span>-<span class="w"> </span>Ready<span class="w">              </span><span class="m">0000000000000000</span><span class="w"> </span><span class="m">0002048</span><span class="w"> </span><span class="m">0000720</span><span class="w">  </span><span class="m">35</span>.1%<span class="w"> </span>Idle<span class="w"> </span>Task
+<span class="w">    </span><span class="m">1</span><span class="w">     </span><span class="m">1</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>RR<span class="w">       </span>Task<span class="w">      </span>-<span class="w"> </span>Waiting<span class="w">  </span>Semaphore<span class="w"> </span><span class="m">0000000000000000</span><span class="w"> </span><span class="m">0003072</span><span class="w"> </span><span class="m">0001248</span><span class="w">  </span><span class="m">40</span>.6%<span class="w"> </span>init_main
+<span class="w">    </span><span class="m">2</span><span class="w">     </span><span class="m">2</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>RR<span class="w">       </span>Task<span class="w">      </span>-<span class="w"> </span>Waiting<span class="w">  </span>Socket<span class="w">    </span><span class="m">0000000000000000</span><span class="w"> </span><span class="m">0002048</span><span class="w"> </span><span class="m">0000840</span><span class="w">  </span><span class="m">41</span>.0%<span class="w"> </span>telnetd
+<span class="w">    </span><span class="m">3</span><span class="w">     </span><span class="m">3</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>RR<span class="w">       </span>Task<span class="w">      </span>-<span class="w"> </span>Running<span class="w">            </span><span class="m">0000000000000000</span><span class="w"> </span><span class="m">0002048</span><span class="w"> </span><span class="m">0001128</span><span class="w">  </span><span class="m">55</span>.0%<span class="w"> </span>Telnet<span class="w"> </span>session
+nsh&gt;<span class="w"> </span><span class="nb">exit</span>
+Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w"> </span>foreign<span class="w"> </span>host.
+</pre></div>
+</div>
+</section>
+<section id="connecting-from-windows-powershell-command-prompt">
+<h3>Connecting from Windows (PowerShell / Command Prompt)<a class="headerlink" href="#connecting-from-windows-powershell-command-prompt" title="Permalink to this heading"></a></h3>
+<p>On Windows systems, enable the optional Telnet Client or use PuTTY:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># Using PuTTY:</span>
+<span class="n">putty</span><span class="p">.</span><span class="n">exe</span> <span class="n">-telnet</span> <span class="n">192</span><span class="p">.</span><span class="n">168</span><span class="p">.</span><span class="n">1</span><span class="p">.</span><span class="n">50</span> <span class="n">23</span>
+
+<span class="c"># Or using standard Windows Telnet (if enabled):</span>
+<span class="n">telnet</span> <span class="n">192</span><span class="p">.</span><span class="n">168</span><span class="p">.</span><span class="n">1</span><span class="p">.</span><span class="n">50</span> <span class="n">23</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting-and-best-practices">
+<h2>Troubleshooting and Best Practices<a class="headerlink" href="#troubleshooting-and-best-practices" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 35.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Issue / Symptom</p></th>
+<th class="head"><p>Probable Cause</p></th>
+<th class="head"><p>Recommended Solution</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Sluggish typing response or high latency per character</p></td>
+<td><p>Standard I/O buffering disabled or lack of TCP transmit bundling.</p></td>
+<td><p>Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_STDIO_LINEBUFFER=y</span></code> and set <code class="docutils literal notranslate"><span class="pre">CONFIG_STDIO_BUFFER_SIZE</span> <span class="pre">&gt;=</span> <span class="pre">64</span></code>
+in <code class="docutils literal notranslate"><span class="pre">defconfig</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Connection refused on port 23</p></td>
+<td><p>The daemon is not running or the interface has no IP address assigned.</p></td>
+<td><p>Verify network connectivity with <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code> and ensure <code class="docutils literal notranslate"><span class="pre">telnetd</span></code> was started.</p></td>
+</tr>
+<tr class="row-even"><td><p>Remote client disconnects immediately after connecting</p></td>
+<td><p>Out of memory or stack overflow during task spawning.</p></td>
+<td><p>Increase <code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_TELNETD_CLIENTSTACKSIZE</span></code> (or custom <code class="docutils literal notranslate"><span class="pre">t_stacksize</span></code>) to
+at least 2048 or 4096 bytes.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Maximum clients reached</p></td>
+<td><p>Concurrent connections exceed <code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_MAXLCLIENTS</span></code>.</p></td>
+<td><p>Increase <code class="docutils literal notranslate"><span class="pre">CONFIG_TELNET_MAXLCLIENTS</span></code> (default is 8) in your configuration.</p></td>
+</tr>
+<tr class="row-even"><td><p>Client cannot escape or disconnect</p></td>
+<td><p>Telnet escape command not recognized by client.</p></td>
+<td><p>Use standard escape sequence: press <code class="docutils literal notranslate"><span class="pre">Ctrl+]</span></code>, then type <code class="docutils literal notranslate"><span class="pre">quit</span></code> and press Enter.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 
