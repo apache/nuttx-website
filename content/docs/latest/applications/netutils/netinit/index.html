@@ -25,7 +25,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>netinit Network initialization &mdash; NuttX latest documentation</title>
+  <title>netinit Network Initialization &mdash; NuttX latest documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -178,7 +178,48 @@
 <li class="toctree-l3"><a class="reference internal" href="../libcurl4nx/index.html"><code class="docutils literal notranslate"><span class="pre">libcurl4nx</span></code> cURL4nx HTTP client library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../mqttc/index.html"><code class="docutils literal notranslate"><span class="pre">mqttc</span></code> MQTT-C library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../netcat/index.html"><code class="docutils literal notranslate"><span class="pre">netcat</span></code> NetCat tool</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network initialization</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network Initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#architecture-and-operational-modes">Architecture and Operational Modes</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#sequential-initialization-mode">Sequential Initialization Mode</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#threaded-asynchronous-mode">Threaded Asynchronous Mode</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#local-vs-network-bringup-split">Local vs. Network Bringup Split</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#link-state-monitor-daemon">Link State Monitor Daemon</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#device-selection-hierarchy">Device Selection Hierarchy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mac-address-assignment-strategies">MAC Address Assignment Strategies</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#board-unique-id-config-netinit-uidmac">Board Unique ID (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_UIDMAC</span></code>)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#device-info-file-config-netinit-macaddr">Device Info File (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MACADDR</span></code>)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#fixed-software-mac-config-netinit-swmac">Fixed Software MAC (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_SWMAC</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#ip-address-configuration">IP Address Configuration</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#ipv4-addressing">IPv4 Addressing</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#ipv6-addressing">IPv6 Addressing</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#dns-nameserver-configuration">DNS Nameserver Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#wi-fi-association-wapi-integration">Wi-Fi Association (WAPI Integration)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ntp-client-synchronization">NTP Client Synchronization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-reference">Configuration Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#application-programming-interface-c-api">Application Programming Interface (C API)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#header-file">Header File</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#usage-examples">Usage Examples</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#scenario-1-standard-ethernet-bring-up-with-dhcp">Scenario 1: Standard Ethernet Bring-Up with DHCP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#scenario-2-industrial-device-with-board-unique-id-mac-static-ip">Scenario 2: Industrial Device with Board Unique ID MAC &amp; Static IP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#scenario-3-wi-fi-iot-device-with-wpa2-psk-auto-association">Scenario 3: Wi-Fi IoT Device with WPA2-PSK Auto-Association</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#troubleshooting-and-diagnostics">Troubleshooting and Diagnostics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#enabling-dedicated-debugging">Enabling Dedicated Debugging</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#common-issues">Common Issues</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../netlib/index.html"><code class="docutils literal notranslate"><span class="pre">netlib</span></code> Network support library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../nng/index.html"><code class="docutils literal notranslate"><span class="pre">nng</span></code> Nanomsg NG</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../ntpclient/index.html"><code class="docutils literal notranslate"><span class="pre">ntpclient</span></code> NTP client</a></li>
@@ -232,7 +273,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Applications</a></li>
           <li class="breadcrumb-item"><a href="../index.html">Network Utilities</a></li>
-      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network initialization</li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network Initialization</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/apache/nuttx/blob/master/Documentation/applications/netutils/netinit/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -243,7 +284,682 @@
            <div itemprop="articleBody">
              
   <section id="netinit-network-initialization">
-<h1><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network initialization<a class="headerlink" href="#netinit-network-initialization" title="Permalink to this heading"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">netinit</span></code> Network Initialization<a class="headerlink" href="#netinit-network-initialization" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">netinit</span></code> utility is the standard network interface bring-up and configuration
+subsystem in Apache NuttX (<code class="docutils literal notranslate"><span class="pre">apps/netutils/netinit</span></code>). It serves as the primary bridge
+between lower-half network hardware drivers (Ethernet MAC/PHY, IEEE 802.11 Wi-Fi, 6LoWPAN,
+SLIP, TUN, Loopback, SocketCAN) and upper-half network application layers (NuttX socket
+layer, <code class="docutils literal notranslate"><span class="pre">netlib</span></code>, and NuttShell).</p>
+<p><code class="docutils literal notranslate"><span class="pre">netinit</span></code> coordinates the full boot-up sequence of network interfaces:</p>
+<ul class="simple">
+<li><p><strong>MAC Address Assignment</strong>: Configures fixed software MACs, board unique ID (UID)
+locally administered addresses (LAA), or device calibration file MACs.</p></li>
+<li><p><strong>Link Layer Configuration</strong>: Identifies and initializes the primary interface
+(e.g., <code class="docutils literal notranslate"><span class="pre">eth0</span></code>, <code class="docutils literal notranslate"><span class="pre">wlan0</span></code>, <code class="docutils literal notranslate"><span class="pre">wpan0</span></code>).</p></li>
+<li><p><strong>IP Addressing</strong>: Assigns static IPv4 addresses or coordinates dynamic configuration
+via the DHCP client (<span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2131.html"><strong>RFC 2131</strong></a>), static IPv6 addresses or ICMPv6 Stateless Address
+Autoconfiguration (SLAAC, <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4862.html"><strong>RFC 4862</strong></a>), or runtime configuration via <code class="docutils literal notranslate"><span class="pre">ipcfg</span></code> files.</p></li>
+<li><p><strong>Wi-Fi Association</strong>: Integrates with Wireless Application Programming Interface
+(WAPI) to automatically associate Wi-Fi interfaces with an Access Point (WPA/WPA2-PSK).</p></li>
+<li><p><strong>DNS Registration</strong>: Registers default nameserver addresses with the resolver.</p></li>
+<li><p><strong>Auxiliary Network Services</strong>: Optionally auto-launches background daemons such
+as the NTP client (<code class="docutils literal notranslate"><span class="pre">ntpclient</span></code>).</p></li>
+<li><p><strong>Autonomous Link Monitoring</strong>: Runs an optional background event-driven monitor that
+detects PHY carrier changes, manages graceful link up/down transitions, and retries
+bring-up after disconnection.</p></li>
+</ul>
+<section id="architecture-and-operational-modes">
+<h2>Architecture and Operational Modes<a class="headerlink" href="#architecture-and-operational-modes" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">netinit</span></code> supports three primary architectural execution models to accommodate different
+embedded memory, real-time, and hardware constraints.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+-------------------------------------------------------------------------+
+|                       System Boot (nsh_init / nxinit)                  |
++-------------------------------------------------------------------------+
+                                     |
+                                     v
+                         netinit_bringup()
+                                     |
+              +----------------------+----------------------+
+              |                                             |
+              v (CONFIG_NETINIT_THREAD=n)                   v (CONFIG_NETINIT_THREAD=y)
+     Sequential Foreground                         Spawn "netinit" Thread
+              |                                    (Priority 80 / Detached)
+              +----------------------+----------------------+
+                                     |
+                                     v
++-------------------------------------------------------------------------+
+|                    Phase 1: Local Device Initialization                 |
+|  - Select Primary Device (wlan0 / eth0 / wpan0 / bnep0 / sl0 / tun0)    |
+|  - Provision MAC Address (UIDMAC / Device Info / Fixed Software MAC)    |
+|  - Provision Local IP/Mask (Static Kconfig / fsutils ipcfg)             |
++-------------------------------------------------------------------------+
+                                     |
+                                     +-----&gt; (If CONFIG_NETINIT_NETLOCAL=y: Exit)
+                                     |
+                                     v
++-------------------------------------------------------------------------+
+|                    Phase 2: Network Interface Bring-Up                  |
+|  - Bring Interface UP (netlib_ifup)                                     |
+|  - Associate Wi-Fi AP via WAPI (wpa_driver_wext_associate)              |
+|  - Acquire Dynamic IP via DHCPC or ICMPv6 SLAAC                         |
+|  - Register Default DNS Nameserver                                      |
+|  - Start NTP Client Daemon (ntpc_start)                                 |
++-------------------------------------------------------------------------+
+                                     |
+              +----------------------+----------------------+
+              |                                             |
+              v (CONFIG_NETINIT_MONITOR=n)                  v (CONFIG_NETINIT_MONITOR=y)
+         Exit Thread /                               Persistent MII Monitor
+       Release Resources                              (SIOCMIINOTIFY Event Loop)
+</pre></div>
+</div>
+<section id="sequential-initialization-mode">
+<h3>Sequential Initialization Mode<a class="headerlink" href="#sequential-initialization-mode" title="Permalink to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD</span></code> is disabled (default), <code class="docutils literal notranslate"><span class="pre">netinit_bringup()</span></code> executes
+synchronously on the calling task’s thread (for example, during NSH startup in <code class="docutils literal notranslate"><span class="pre">nsh_init()</span></code>
+or system startup in <code class="docutils literal notranslate"><span class="pre">nxinit</span></code>).</p>
+<ul class="simple">
+<li><p><strong>Advantages</strong>: Consumes zero additional thread stacks or task management overhead;
+ideal for microcontrollers with very limited RAM (e.g., &lt;= 64 KB).</p></li>
+<li><p><strong>Caveats</strong>: If the physical Ethernet cable is unplugged, or if the PHY auto-negotiation
+or DHCP acquisition requires several seconds, system boot will block until timeouts
+expire.</p></li>
+</ul>
+</section>
+<section id="threaded-asynchronous-mode">
+<h3>Threaded Asynchronous Mode<a class="headerlink" href="#threaded-asynchronous-mode" title="Permalink to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD=y</span></code> is selected, <code class="docutils literal notranslate"><span class="pre">netinit_bringup()</span></code> spawns a dedicated
+background POSIX thread (named <code class="docutils literal notranslate"><span class="pre">&quot;netinit&quot;</span></code>) with configurable stack size
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD_STACKSIZE</span></code>) and priority (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD_PRIORITY</span></code>,
+typically set to low priority, such as 80 or 100).</p>
+<ul class="simple">
+<li><p><strong>Advantages</strong>: System boot proceeds immediately. Applications, the NuttShell console,
+and local real-time tasks start instantly without blocking on network auto-negotiation.</p></li>
+<li><p><strong>Lifecycle</strong>: The thread configures the network interface, performs DHCP or Wi-Fi
+association, and once the network is operational, terminates cleanly to reclaim its
+allocated resources (unless the Link State Monitor is enabled).</p></li>
+</ul>
+</section>
+<section id="local-vs-network-bringup-split">
+<h3>Local vs. Network Bringup Split<a class="headerlink" href="#local-vs-network-bringup-split" title="Permalink to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NETLOCAL=y</span></code> is enabled, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> performs only local interface
+provisioning:</p>
+<ol class="arabic simple">
+<li><p>Software MAC address assignment (if hardware requires it).</p></li>
+<li><p>Local IP address and subnet assignment on the network device.</p></li>
+</ol>
+<p>It explicitly suppresses:</p>
+<ul class="simple">
+<li><p>Bringing the interface state UP via <code class="docutils literal notranslate"><span class="pre">netlib_ifup()</span></code>.</p></li>
+<li><p>Wi-Fi Access Point association via WAPI.</p></li>
+<li><p>Dynamic IP negotiation via the DHCP client.</p></li>
+<li><p>Starting the background NTP client daemon.</p></li>
+</ul>
+<p>This split mode is particularly useful in multi-stage boot environments where wireless
+scanning, captive portal redirection, or user credential entry must occur before bringing
+the network interface online.</p>
+</section>
+<section id="link-state-monitor-daemon">
+<h3>Link State Monitor Daemon<a class="headerlink" href="#link-state-monitor-daemon" title="Permalink to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MONITOR=y</span></code> is selected (requiring <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD=y</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_PHY_INTERRUPT=y</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDEV_PHY_IOCTL=y</span></code>, and <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_UDP=y</span></code>),
+the <code class="docutils literal notranslate"><span class="pre">netinit</span></code> thread persists permanently as an event-driven daemon:</p>
+<ol class="arabic simple">
+<li><p><strong>Signal Attachment</strong>: Registers a signal handler for <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_SIGNO</span></code>
+(default real-time signal 32) using <code class="docutils literal notranslate"><span class="pre">sigaction()</span></code>.</p></li>
+<li><p><strong>PHY Event Registration</strong>: Issues an <code class="docutils literal notranslate"><span class="pre">ioctl(sd,</span> <span class="pre">SIOCMIINOTIFY,</span> <span class="pre">...)</span></code> command to the
+network driver, requesting asynchronous signal delivery upon MII PHY link status
+changes.</p></li>
+<li><p><strong>Carrier Detection</strong>: Reads PHY status registers (<code class="docutils literal notranslate"><span class="pre">SIOCGMIIPHY</span></code> and <code class="docutils literal notranslate"><span class="pre">SIOCGMIIREG</span></code>
+at register <code class="docutils literal notranslate"><span class="pre">MII_MSR</span></code>) to evaluate <code class="docutils literal notranslate"><span class="pre">MII_MSR_LINKSTATUS</span></code>.</p></li>
+<li><p><strong>Transition to Up</strong>: When the link transitions from down to up, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> marks
+the device operational (<code class="docutils literal notranslate"><span class="pre">IFF_UP</span></code>), re-executes ICMPv6 auto-configuration if enabled,
+and sleeps until the next interrupt.</p></li>
+<li><p><strong>Transition to Down</strong>: When cable disconnection is detected, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> clears
+the <code class="docutils literal notranslate"><span class="pre">IFF_UP</span></code> flag and periodically attempts reconnection every
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_RETRYMSEC</span></code> milliseconds (default 2000 ms).</p></li>
+</ol>
+</section>
+</section>
+<section id="device-selection-hierarchy">
+<h2>Device Selection Hierarchy<a class="headerlink" href="#device-selection-hierarchy" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">netinit</span></code> identifies the primary network interface name (<code class="docutils literal notranslate"><span class="pre">NET_DEVNAME</span></code>) at compile
+time based on enabled link-layer drivers, adhering to the following selection precedence:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 20.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Interface Name</p></th>
+<th class="head"><p>Configuration Guard</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wlan0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DRIVERS_IEEE80211</span></code></p></td>
+<td><p>IEEE 802.11 wireless network adapter (Wi-Fi).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eth0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_ETHERNET</span></code></p></td>
+<td><p>Standard 10/100/1000 Mbps Ethernet MAC/PHY.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wpan0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_6LOWPAN</span></code> or <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_IEEE802154</span></code></p></td>
+<td><p>Low-power wireless personal area network (6LoWPAN / Zigbee).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bnep0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BLUETOOTH</span></code></p></td>
+<td><p>Bluetooth Network Encapsulation Protocol interface.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sl0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_SLIP</span></code></p></td>
+<td><p>Serial Line Internet Protocol (SLIP) point-to-point interface.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tun0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TUN</span></code></p></td>
+<td><p>Virtual TUN/TAP network tunnel adapter.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lo</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_LOOPBACK</span></code></p></td>
+<td><p>Local loopback interface (<code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NET_CAN</span></code></p></td>
+<td><p>SocketCAN controller interface.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mac-address-assignment-strategies">
+<h2>MAC Address Assignment Strategies<a class="headerlink" href="#mac-address-assignment-strategies" title="Permalink to this heading"></a></h2>
+<p>Embedded network controllers often lack factory-programmed MAC addresses in non-volatile
+hardware registers. When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NOMAC=y</span></code> is set, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> provisions a
+valid MAC address before bringing the interface up using one of three strategies:</p>
+<section id="board-unique-id-config-netinit-uidmac">
+<h3>Board Unique ID (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_UIDMAC</span></code>)<a class="headerlink" href="#board-unique-id-config-netinit-uidmac" title="Permalink to this heading"></a></h3>
+<p>Queries the microcontroller’s factory-flashed unique silicon ID (e.g., STM32 96-bit UID,
+ESP32 eFuse MAC) by invoking:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">boardctl</span><span class="p">(</span><span class="n">BOARDIOC_UNIQUEID</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">uid</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The first byte is adjusted to set the IEEE Locally Administered Address (LAA) bit and
+clear the multicast bit:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xf0</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mh">0x02</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Locally Administered MAC */</span>
+<span class="n">netlib_setmacaddr</span><span class="p">(</span><span class="n">NET_DEVNAME</span><span class="p">,</span><span class="w"> </span><span class="n">uid</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This allows boards booted from the same firmware binary to dynamically generate
+a unique, UID-derived MAC address on the local network without hardcoding. Note that
+because 64-bit or 96-bit MCU hardware UIDs are truncated to 48 bits (6 bytes for Ethernet)
+or 64 bits (for 6LoWPAN), collision avoidance depends on the uniqueness of the lower UID
+bytes exposed by the hardware platform.</p>
+</section>
+<section id="device-info-file-config-netinit-macaddr">
+<h3>Device Info File (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MACADDR</span></code>)<a class="headerlink" href="#device-info-file-config-netinit-macaddr" title="Permalink to this heading"></a></h3>
+<p>Loads a calibrated, production-programmed MAC address from persistent non-volatile
+storage (e.g., <code class="docutils literal notranslate"><span class="pre">/etc/device.info</span></code> or EEPROM) via:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">boardctl</span><span class="p">(</span><span class="n">BOARDIOC_MACADDR</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">req</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="fixed-software-mac-config-netinit-swmac">
+<h3>Fixed Software MAC (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_SWMAC</span></code>)<a class="headerlink" href="#fixed-software-mac-config-netinit-swmac" title="Permalink to this heading"></a></h3>
+<p>Assigns a static MAC address defined directly in Kconfig:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MACADDR_1</span></code>: Lower 4 bytes (e.g., <code class="docutils literal notranslate"><span class="pre">0xdeadbeef</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MACADDR_2</span></code>: Upper 2 bytes (e.g., <code class="docutils literal notranslate"><span class="pre">0x00e0</span></code> for Ethernet).</p></li>
+</ul>
+</section>
+</section>
+<section id="ip-address-configuration">
+<h2>IP Address Configuration<a class="headerlink" href="#ip-address-configuration" title="Permalink to this heading"></a></h2>
+<section id="ipv4-addressing">
+<h3>IPv4 Addressing<a class="headerlink" href="#ipv4-addressing" title="Permalink to this heading"></a></h3>
+<section id="dynamic-dhcp-client-config-netinit-dhcpc">
+<h4>Dynamic DHCP Client (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DHCPC</span></code>)<a class="headerlink" href="#dynamic-dhcp-client-config-netinit-dhcpc" title="Permalink to this heading"></a></h4>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DHCPC=y</span></code> is selected (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPC=y</span></code>),
+<code class="docutils literal notranslate"><span class="pre">netinit</span></code> initializes the device address to <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code>, brings the link up, and
+calls:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">netlib_obtain_ipv4addr</span><span class="p">(</span><span class="n">NET_DEVNAME</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The DHCP client broadcasts a <code class="docutils literal notranslate"><span class="pre">DHCPDISCOVER</span></code> packet, negotiates lease terms with the local
+DHCP server, and automatically applies the assigned IP address, network mask, default
+gateway router, and DNS nameservers.</p>
+</section>
+<section id="static-ipv4-configuration">
+<h4>Static IPv4 Configuration<a class="headerlink" href="#static-ipv4-configuration" title="Permalink to this heading"></a></h4>
+<p>When DHCP is disabled, static addresses are supplied via Kconfig in 32-bit host byte order:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPADDR</span></code>: Target host IP (e.g., <code class="docutils literal notranslate"><span class="pre">0x0a000002</span></code> for <code class="docutils literal notranslate"><span class="pre">10.0.0.2</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DRIPADDR</span></code>: Default router IP (e.g., <code class="docutils literal notranslate"><span class="pre">0x0a000001</span></code> for <code class="docutils literal notranslate"><span class="pre">10.0.0.1</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NETMASK</span></code>: Subnet mask (e.g., <code class="docutils literal notranslate"><span class="pre">0xffffff00</span></code> for <code class="docutils literal notranslate"><span class="pre">255.255.255.0</span></code>).</p></li>
+</ul>
+</section>
+<section id="runtime-file-based-configuration-config-fsutils-ipcfg">
+<h4>Runtime File-Based Configuration (<code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_IPCFG</span></code>)<a class="headerlink" href="#runtime-file-based-configuration-config-fsutils-ipcfg" title="Permalink to this heading"></a></h4>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_FSUTILS_IPCFG=y</span></code> is enabled, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> attempts to read network settings
+at runtime from a persistent IP configuration file using <code class="docutils literal notranslate"><span class="pre">ipcfg_read()</span></code>.</p>
+<dl>
+<dt><strong>Storage Path (CONFIG_IPCFG_PATH)</strong></dt><dd><p>The location of the configuration file is defined by <code class="docutils literal notranslate"><span class="pre">CONFIG_IPCFG_PATH</span></code> (defaulting
+to <code class="docutils literal notranslate"><span class="pre">/etc/sysconfig/network-scripts</span></code>). In standard filesystem mode, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> resolves
+the per-interface configuration file as <code class="docutils literal notranslate"><span class="pre">&lt;CONFIG_IPCFG_PATH&gt;/ipcfg-&lt;netdev&gt;</span></code>
+(for example, <code class="docutils literal notranslate"><span class="pre">/etc/sysconfig/network-scripts/ipcfg-eth0</span></code>).</p>
+<p>Alternatively, on deeply embedded single-interface targets lacking a mounted file system,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IPCFG_CHARDEV=y</span></code> allows <code class="docutils literal notranslate"><span class="pre">CONFIG_IPCFG_PATH</span></code> to specify the direct path to a
+character driver (such as an EEPROM or FLASH memory node, e.g., <code class="docutils literal notranslate"><span class="pre">/dev/eeprom</span></code>).</p>
+</dd>
+<dt><strong>File Formats (ASCII vs. Binary)</strong></dt><dd><p>The configuration format is determined by <code class="docutils literal notranslate"><span class="pre">CONFIG_IPCFG_BINARY</span></code>:</p>
+<ul class="simple">
+<li><p><strong>ASCII Format (Default, ``CONFIG_IPCFG_BINARY=n``)</strong>:
+Stored as a human-readable text file composed of standard <code class="docutils literal notranslate"><span class="pre">&lt;variable&gt;=&lt;value&gt;</span></code> pairs
+(e.g., <code class="docutils literal notranslate"><span class="pre">DEVICE=eth0</span></code>, <code class="docutils literal notranslate"><span class="pre">BOOTPROTO=static</span></code>, <code class="docutils literal notranslate"><span class="pre">IPADDR=192.168.1.50</span></code>,
+<code class="docutils literal notranslate"><span class="pre">NETMASK=255.255.255.0</span></code>, <code class="docutils literal notranslate"><span class="pre">ROUTER=192.168.1.1</span></code>, <code class="docutils literal notranslate"><span class="pre">DNS=8.8.8.8</span></code>).</p></li>
+<li><p><strong>Binary Format (``CONFIG_IPCFG_BINARY=y``)</strong>:
+Stored as a compact, fixed-size binary structure (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ipcfg_s</span></code>). This eliminates
+string parsing overhead and is specifically tailored for constrained non-volatile media
+such as EEPROM or raw flash blocks.</p></li>
+</ul>
+</dd>
+<dt><strong>Operational Precedence</strong></dt><dd><p>If the configuration file specifies <code class="docutils literal notranslate"><span class="pre">IPv4PROTO_DHCP</span></code> (or <code class="docutils literal notranslate"><span class="pre">BOOTPROTO=dhcp</span></code>), dynamic
+DHCP client negotiation is performed. If static parameters are defined, the file’s
+static IP, gateway, and netmask override the compile-time Kconfig defaults. If the backing
+filesystem mounts asynchronously after task boot, <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_RETRY_MOUNTPATH</span></code>
+specifies the number of retry iterations <code class="docutils literal notranslate"><span class="pre">netinit</span></code> performs before falling back.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="ipv6-addressing">
+<h3>IPv6 Addressing<a class="headerlink" href="#ipv6-addressing" title="Permalink to this heading"></a></h3>
+<section id="stateless-address-autoconfiguration-slaac">
+<h4>Stateless Address Autoconfiguration (SLAAC)<a class="headerlink" href="#stateless-address-autoconfiguration-slaac" title="Permalink to this heading"></a></h4>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_ICMPv6_AUTOCONF=y</span></code> is set, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> invokes:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">netlib_icmpv6_autoconfiguration</span><span class="p">(</span><span class="n">NET_DEVNAME</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The interface transmits an ICMPv6 Router Solicitation and processes Router Advertisement
+prefixes to construct its global IPv6 address per <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4862.html"><strong>RFC 4862</strong></a>.</p>
+</section>
+<section id="static-ipv6-configuration">
+<h4>Static IPv6 Configuration<a class="headerlink" href="#static-ipv6-configuration" title="Permalink to this heading"></a></h4>
+<p>If SLAAC is not used, static IPv6 addresses are defined as eight 16-bit hex values in host
+order:</p>
+<ul class="simple">
+<li><p>Host IP: <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPv6ADDR_1</span></code> through <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPv6ADDR_8</span></code> (defaults
+to <code class="docutils literal notranslate"><span class="pre">fc00::2</span></code>).</p></li>
+<li><p>Gateway: <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DRIPv6ADDR_1</span></code> through <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DRIPv6ADDR_8</span></code>
+(defaults to <code class="docutils literal notranslate"><span class="pre">fc00::1</span></code>).</p></li>
+<li><p>Netmask: <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPv6NETMASK_1</span></code> through <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPv6NETMASK_8</span></code>.
+In <code class="docutils literal notranslate"><span class="pre">Kconfig</span></code>, words 1 through 7 default to <code class="docutils literal notranslate"><span class="pre">0xffff</span></code> while word 8 defaults to
+<code class="docutils literal notranslate"><span class="pre">0x0000</span></code>, producing an effective default netmask of
+<code class="docutils literal notranslate"><span class="pre">ffff:ffff:ffff:ffff:ffff:ffff:ffff:0</span></code> (<code class="docutils literal notranslate"><span class="pre">/112</span></code>). If a standard prefix such as
+<code class="docutils literal notranslate"><span class="pre">/64</span></code> (<code class="docutils literal notranslate"><span class="pre">ffff:ffff:ffff:ffff::</span></code>) is required, the individual netmask words should
+be set explicitly in your board configuration.</p></li>
+</ul>
+</section>
+</section>
+<section id="dns-nameserver-configuration">
+<h3>DNS Nameserver Configuration<a class="headerlink" href="#dns-nameserver-configuration" title="Permalink to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DNS=y</span></code> is enabled (depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT=y</span></code>),
+<code class="docutils literal notranslate"><span class="pre">netinit</span></code> configures the default nameserver:</p>
+<ul class="simple">
+<li><p>Defaults to the default gateway address (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DRIPADDR</span></code>) or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DNSIPADDR</span></code>.</p></li>
+<li><p>The address is committed using <code class="docutils literal notranslate"><span class="pre">netlib_set_ipv4dnsaddr()</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="wi-fi-association-wapi-integration">
+<h2>Wi-Fi Association (WAPI Integration)<a class="headerlink" href="#wi-fi-association-wapi-integration" title="Permalink to this heading"></a></h2>
+<p>For IEEE 802.11 Wi-Fi adapters (<code class="docutils literal notranslate"><span class="pre">CONFIG_DRIVERS_IEEE80211=y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_WIRELESS_WAPI=y</span></code>),
+<code class="docutils literal notranslate"><span class="pre">netinit</span></code> automatically coordinates wireless association with an Access Point via
+<code class="docutils literal notranslate"><span class="pre">netinit_associate(&quot;wlan0&quot;)</span></code>.</p>
+<p>Parameters configured via Kconfig or runtime WAPI files:</p>
+<ul class="simple">
+<li><p><strong>Station Mode</strong>: Infrastructure (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_STAMODE_INFRA</span></code>), Ad-hoc,
+Repeater, Monitor, or Mesh.</p></li>
+<li><p><strong>Authentication</strong>: WPA2-Personal (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_AUTHWPA_WPA2</span></code>), WPA-Personal,
+or Disabled/Open.</p></li>
+<li><p><strong>Cipher</strong>: CCMP/AES (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_CIPHERMODE_CCMP</span></code>), TKIP, or WEP.</p></li>
+<li><p><strong>Algorithm</strong>: <code class="docutils literal notranslate"><span class="pre">WPA_ALG_CCMP</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_ALG_CCMP</span></code>).</p></li>
+<li><p><strong>Credentials</strong>: <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_SSID</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_PASSPHRASE</span></code>.</p></li>
+</ul>
+</section>
+<section id="ntp-client-synchronization">
+<h2>NTP Client Synchronization<a class="headerlink" href="#ntp-client-synchronization" title="Permalink to this heading"></a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_NTPCLIENT=y</span></code> is selected, <code class="docutils literal notranslate"><span class="pre">netinit</span></code> automatically starts the
+Network Time Protocol daemon as soon as interface bring-up succeeds:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ntpc_start</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>This ensures that system clocks on embedded targets without hardware battery-backed Real-Time
+Clocks (RTC) synchronize immediately upon network establishment.</p>
+</section>
+<section id="configuration-reference">
+<h2>Configuration Reference<a class="headerlink" href="#configuration-reference" title="Permalink to this heading"></a></h2>
+<p>The following table summarizes key configuration options in <code class="docutils literal notranslate"><span class="pre">apps/netutils/netinit/Kconfig</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_NETINIT</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Master enable switch for the network initialization subsystem.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NETLOCAL</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Restricts initialization to local MAC and IP setup; does not bring link UP.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Executes network bring-up asynchronously in a dedicated background pthread.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD_PRIORITY</span></code></p></td>
+<td><p>integer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">80</span></code></p></td>
+<td><p>Priority of the asynchronous initialization thread.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD_STACKSIZE</span></code></p></td>
+<td><p>integer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DEFAULT_TASK_STACKSIZE</span></code></p></td>
+<td><p>Stack size in bytes for the <code class="docutils literal notranslate"><span class="pre">netinit</span></code> thread.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MONITOR</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables autonomous MII PHY carrier link status monitoring daemon.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_SIGNO</span></code></p></td>
+<td><p>integer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">32</span></code></p></td>
+<td><p>Real-time signal number used for asynchronous PHY event notifications.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_RETRYMSEC</span></code></p></td>
+<td><p>integer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2000</span></code></p></td>
+<td><p>Retry period in milliseconds when attempting to reconnect a dropped link.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_RETRY_MOUNTPATH</span></code></p></td>
+<td><p>integer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Number of retries waiting for filesystem mount before reading <code class="docutils literal notranslate"><span class="pre">ipcfg</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_IPCFG_PATH</span></code></p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;/etc/sysconfig/network-scripts&quot;</span></code></p></td>
+<td><p>Directory path or character device node for IP configuration storage (via <code class="docutils literal notranslate"><span class="pre">fsutils/ipcfg</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_IPCFG_BINARY</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Selects compact binary format over human-readable ASCII text for <code class="docutils literal notranslate"><span class="pre">ipcfg</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DEBUG</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables verbose unit-level debug traces without enabling global <code class="docutils literal notranslate"><span class="pre">DEBUG_NET</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DHCPC</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Uses DHCP client (<code class="docutils literal notranslate"><span class="pre">netutils/dhcpc</span></code>) to dynamically acquire an IPv4 address.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_IPADDR</span></code></p></td>
+<td><p>hex</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0x0a000002</span></code></p></td>
+<td><p>Static host IPv4 address in host order (e.g., <code class="docutils literal notranslate"><span class="pre">10.0.0.2</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DRIPADDR</span></code></p></td>
+<td><p>hex</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0x0a000001</span></code></p></td>
+<td><p>Static default router (gateway) IPv4 address (e.g., <code class="docutils literal notranslate"><span class="pre">10.0.0.1</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NETMASK</span></code></p></td>
+<td><p>hex</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0xffffff00</span></code></p></td>
+<td><p>Static IPv4 subnet mask (e.g., <code class="docutils literal notranslate"><span class="pre">255.255.255.0</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DNS</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables default DNS nameserver address registration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_DNSIPADDR</span></code></p></td>
+<td><p>hex</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0xa0000001</span></code></p></td>
+<td><p>DNS nameserver IPv4 address in host order.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_NOMAC</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Enables software MAC assignment for hardware lacking factory MAC storage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_UIDMAC</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Generates an IEEE LAA MAC address derived from the board’s unique silicon ID.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_SWMAC</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Assigns a fixed software MAC address configured in Kconfig.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_MACADDR</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>Queries MAC address from device calibration file via <code class="docutils literal notranslate"><span class="pre">BOARDIOC_MACADDR</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_SSID</span></code></p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Wi-Fi Access Point Service Set Identifier (SSID) for auto-association.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_PASSPHRASE</span></code></p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Wi-Fi WPA/WPA2 pre-shared key (passphrase).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="application-programming-interface-c-api">
+<h2>Application Programming Interface (C API)<a class="headerlink" href="#application-programming-interface-c-api" title="Permalink to this heading"></a></h2>
+<section id="header-file">
+<h3>Header File<a class="headerlink" href="#header-file" title="Permalink to this heading"></a></h3>
+<p>Applications and board initialization files access <code class="docutils literal notranslate"><span class="pre">netinit</span></code> routines by including:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">"netutils/netinit.h"</span>
+</pre></div>
+</div>
+</section>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.netinit_bringup">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">netinit_bringup</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.netinit_bringup" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes and configures the primary network interface according to the selected
+NuttX configuration.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD</span></code> is disabled, execution is synchronous: MAC addresses are
+assigned, IP addresses configured, the interface brought up, and any dynamic services
+(DHCP, WAPI, NTP) started before the function returns.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD=y</span></code> is enabled, this function initializes thread attributes,
+creates the detached background pthread named <code class="docutils literal notranslate"><span class="pre">&quot;netinit&quot;</span></code>, and returns <code class="docutils literal notranslate"><span class="pre">OK</span></code>
+immediately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">OK</span></code> (0) on success; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> value on failure (e.g., if thread
+creation fails).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.netinit_associate">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">netinit_associate</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ifname</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.netinit_associate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Associates an IEEE 802.11 wireless network interface with a Wi-Fi Access Point using
+WAPI and WEXT driver ioctls.</p>
+<p>Loads configuration via <code class="docutils literal notranslate"><span class="pre">wapi_load_config()</span></code> if available, or falls back to
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_WAPI_*</span></code> compile-time parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ifname</strong> – Name of the wireless interface (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;wlan0&quot;</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">OK</span></code> (0) on successful association; a negated <code class="docutils literal notranslate"><span class="pre">errno</span></code> on failure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Permalink to this heading"></a></h2>
+<section id="scenario-1-standard-ethernet-bring-up-with-dhcp">
+<h3>Scenario 1: Standard Ethernet Bring-Up with DHCP<a class="headerlink" href="#scenario-1-standard-ethernet-bring-up-with-dhcp" title="Permalink to this heading"></a></h3>
+<p>To configure a standard board (such as an STM32, SAMv7, or ESP32 Ethernet design) to
+acquire an IP address via DHCP in the background without blocking console startup, enable
+the following in your board’s <code class="docutils literal notranslate"><span class="pre">defconfig</span></code>:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_NET=y
+CONFIG_NET_ETHERNET=y
+CONFIG_NETUTILS_NETLIB=y
+CONFIG_NETUTILS_NETINIT=y
+CONFIG_NETUTILS_DHCPC=y
+CONFIG_NETINIT_DHCPC=y
+CONFIG_NETINIT_THREAD=y
+CONFIG_NETINIT_THREAD_PRIORITY=80
+CONFIG_NETINIT_THREAD_STACKSIZE=2048
+</pre></div>
+</div>
+<p>In your board initialization or custom application:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/config.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"netutils/netinit.h"</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Bringing up network interface...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">netinit_bringup</span><span class="p">();</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">"ERROR: netinit_bringup failed: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ret</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Network bringup initiated in background thread.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="scenario-2-industrial-device-with-board-unique-id-mac-static-ip">
+<h3>Scenario 2: Industrial Device with Board Unique ID MAC &amp; Static IP<a class="headerlink" href="#scenario-2-industrial-device-with-board-unique-id-mac-static-ip" title="Permalink to this heading"></a></h3>
+<p>For an industrial microcontroller lacking an onboard EEPROM MAC, derive the MAC address
+from silicon UID and assign static IP parameters:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_NET=y
+CONFIG_NET_ETHERNET=y
+CONFIG_BOARDCTL_UNIQUEID=y
+CONFIG_BOARDCTL_UNIQUEID_SIZE=12
+CONFIG_NETUTILS_NETINIT=y
+CONFIG_NETINIT_NOMAC=y
+CONFIG_NETINIT_UIDMAC=y
+CONFIG_NETINIT_IPADDR=0xc0a80132<span class="w">      </span><span class="c1"># 192.168.1.50</span>
+CONFIG_NETINIT_DRIPADDR=0xc0a80101<span class="w">    </span><span class="c1"># 192.168.1.1</span>
+CONFIG_NETINIT_NETMASK=0xffffff00<span class="w">     </span><span class="c1"># 255.255.255.0</span>
+CONFIG_NETINIT_DNS=y
+CONFIG_NETINIT_DNSIPADDR=0x08080808<span class="w">   </span><span class="c1"># 8.8.8.8</span>
+</pre></div>
+</div>
+</section>
+<section id="scenario-3-wi-fi-iot-device-with-wpa2-psk-auto-association">
+<h3>Scenario 3: Wi-Fi IoT Device with WPA2-PSK Auto-Association<a class="headerlink" href="#scenario-3-wi-fi-iot-device-with-wpa2-psk-auto-association" title="Permalink to this heading"></a></h3>
+<p>For an embedded Wi-Fi station connecting automatically to a local router on boot:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_NET=y
+CONFIG_DRIVERS_IEEE80211=y
+CONFIG_WIRELESS_WAPI=y
+CONFIG_NETUTILS_NETINIT=y
+CONFIG_NETINIT_THREAD=y
+CONFIG_NETINIT_DHCPC=y
+CONFIG_NETINIT_WAPI_STAMODE_INFRA=y
+CONFIG_NETINIT_WAPI_AUTHWPA_WPA2=y
+CONFIG_NETINIT_WAPI_CIPHERMODE_CCMP=y
+CONFIG_NETINIT_WAPI_ALG_CCMP=y
+CONFIG_NETINIT_WAPI_SSID="MyHomeNetwork"
+CONFIG_NETINIT_WAPI_PASSPHRASE="SecretPassword123"
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting-and-diagnostics">
+<h2>Troubleshooting and Diagnostics<a class="headerlink" href="#troubleshooting-and-diagnostics" title="Permalink to this heading"></a></h2>
+<section id="enabling-dedicated-debugging">
+<h3>Enabling Dedicated Debugging<a class="headerlink" href="#enabling-dedicated-debugging" title="Permalink to this heading"></a></h3>
+<p>Global network debugging (<code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_NET</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_DEBUG_INFO</span></code>) generates high
+volumes of packet-level log output that can flood serial consoles and distort timing.</p>
+<p>To isolate debug output specifically to <code class="docutils literal notranslate"><span class="pre">netinit</span></code> without global log spam, enable:</p>
+<div class="highlight-kconfig notranslate"><div class="highlight"><pre><span></span>CONFIG_DEBUG_FEATURES=y
+CONFIG_NETINIT_DEBUG=y
+</pre></div>
+</div>
+<p>This forces verbose <code class="docutils literal notranslate"><span class="pre">ninfo()</span></code> and <code class="docutils literal notranslate"><span class="pre">nerr()</span></code> diagnostics strictly within <code class="docutils literal notranslate"><span class="pre">netinit.c</span></code>.</p>
+</section>
+<section id="common-issues">
+<h3>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>System Freezes During Boot</strong>:</p>
+<ul class="simple">
+<li><p><em>Cause</em>: <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD</span></code> is disabled, and Ethernet cable is unplugged or
+DHCP server is unreachable.</p></li>
+<li><p><em>Solution</em>: Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_THREAD=y</span></code> so network negotiation occurs
+concurrently without blocking system startup.</p></li>
+</ul>
+</li>
+<li><p><strong>Duplicate MAC Address Conflicts</strong>:</p>
+<ul class="simple">
+<li><p><em>Cause</em>: Multiple devices deployed with default fixed software MAC (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_SWMAC</span></code>).</p></li>
+<li><p><em>Solution</em>: Switch to <code class="docutils literal notranslate"><span class="pre">CONFIG_NETINIT_UIDMAC=y</span></code> so each device generates a UID-derived
+IEEE LAA address from MCU silicon unique ID registers rather than sharing a static MAC.</p></li>
+</ul>
+</li>
+<li><p><strong>Link State Monitor Never Detects Reconnection</strong>:</p>
+<ul class="simple">
+<li><p><em>Cause</em>: <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_PHY_INTERRUPT</span></code> is missing, or board Ethernet driver does not
+implement MII ioctls (<code class="docutils literal notranslate"><span class="pre">SIOCMIINOTIFY</span></code>, <code class="docutils literal notranslate"><span class="pre">SIOCGMIIPHY</span></code>, <code class="docutils literal notranslate"><span class="pre">SIOCGMIIREG</span></code>).</p></li>
+<li><p><em>Solution</em>: Verify board PHY interrupt wiring and verify driver support in the board’s
+Ethernet architecture layer.</p></li>
+</ul>
+</li>
+<li><p><strong>Wi-Fi Fails to Associate</strong>:</p>
+<ul class="simple">
+<li><p><em>Cause</em>: Mismatched cipher/algorithm settings (e.g., Access Point requires WPA3 or
+TKIP while client is configured strictly for WPA2-CCMP), or incorrect SSID/passphrase.</p></li>
+<li><p><em>Solution</em>: Verify AP security policy and confirm SSID and passphrase via NSH <code class="docutils literal notranslate"><span class="pre">wapi</span></code>
+command line utilities.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+</section>
 </section>
 
 

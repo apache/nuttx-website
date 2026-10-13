@@ -248,102 +248,431 @@
   <section id="at32f437-mini">
 <h1>at32f437-mini<a class="headerlink" href="#at32f437-mini" title="Permalink to this heading"></a></h1>
 <p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-arm.html"><span class="doc">arch:arm</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-at32.html"><span class="doc">chip:at32</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/vendor-artery.html"><span class="doc">vendor:artery</span></a></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-======
-
-This README discusses issues unique to NuttX configurations for the
-AT32F437-MINI development board featuring the AT32F437VMT7
-MCU. The AT32F437VMT7 is a 288MHz Cortex-M4 operation with 4Mbyte Flash
-memory and 384kbytes. 
-
-
-LEDs
-====
-  LED1 = PE2
-  LED2 = PE3
-
-USART/UART
-====
-  USART1
-    RX = PA10
-    TX = PA9
-  The usart1 is used for console.
-  ./tools/configure.sh at32f437-mini/nsh
-  make -j16 and flash nuttx.hex,then run it will show:
-    NuttShell (NSH) NuttX-12.2.1
-    nsh&gt; 
-    nsh&gt; 
-    nsh&gt; ps
-      PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK           STACK COMMAND
-        0     0   0 FIFO     Kthread N-- Ready              0000000000000000 001016 Idle_Task
-        2     2 100 RR       Task    --- Running            0000000000000000 002016 nsh_main
-    nsh&gt; 
-
-  USART2/RS485
-    RX =  PD6
-    TX =  PD5  
-    DIR = PD4
-
-CAN
-====
-  CAN1
-    TX = PD1
-    RX = PD0
-  CAN_CHARDRIVER: ./tools/configure.sh at32f437-mini/can_char
-  CAN_SOCKET: ./tools/configure.sh at32f437-mini/can_socket
-
-USB
-====
-  OTGFS1
-    D+ = PA12
-    D- = PA11
-
-SDIO
-====
-  SDIO1
-    CMD = PD2
-    CLK = PC12
-    D0 =  PC8
-    D1 =  PC9
-    D2 =  PC10
-    D3 =  PC11    
-
-ETH
-  RMII_REF_CLK =  PA1
-  ETH_MDIO =      PA2
-  RMII_CRS_DV =   PA7
-  ETH_MDC =       PC1
-  RMII_RXD0 =     PC4
-  RMII_RXD1 =     PC5
-  RMII_TX_EN =    PB11
-  RMII_TXD0 =     PB12
-  RMII_TXD1 =     PB13
-  ETH_RST =       PA3
-  The eth used lan8720a as phy
-
-
-W25QXX
-  CLK =  PB3
-  MISO = PB4
-  MOSI = PB5
-  CS =   PD7  
-
-RTC
-The board used rtc device on chip
-
-PWM
-The pwm test with tim20 chanel1 in PE2
-
-ADC
-  ADC1 chanel8(PB0)
-
-
-
-
-
-
+<p>The <strong>AT32F437-MINI</strong> is an evaluation and development board manufactured
+by Artery Technology, designed around the high-performance <strong>AT32F437VMT7</strong>
+microcontroller.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<section id="microcontroller">
+<h3>Microcontroller<a class="headerlink" href="#microcontroller" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Core</strong>: ARM Cortex-M4 with FPU and DSP instructions</p></li>
+<li><p><strong>Clock</strong>: Up to 288 MHz operating frequency (8 MHz HSE crystal on-board)</p></li>
+<li><p><strong>Internal Flash</strong>: 4 MB with zero-wait execution</p></li>
+<li><p><strong>Internal SRAM</strong>: 384 KB (configurable up to 512 KB)</p></li>
+<li><p><strong>Package</strong>: LQFP100</p></li>
+</ul>
+</section>
+<section id="board-peripherals">
+<h3>Board Peripherals<a class="headerlink" href="#board-peripherals" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>User LEDs</strong>: 2 user-controllable LEDs (PE2, PE3)</p></li>
+<li><p><strong>Serial Interfaces</strong>:
+* USART1 on PA9/PA10 (used as default serial console)
+* USART2 with RS-485 transceiver support (PD4, PD5, PD6)</p></li>
+<li><p><strong>Networking</strong>: 10/100 Mbps Ethernet RMII interface with onboard LAN8720A PHY</p></li>
+<li><p><strong>CAN</strong>: CAN1 interface with transceiver support (PD0, PD1)</p></li>
+<li><p><strong>Storage</strong>:
+* MicroSD card slot connected via 4-bit SDIO
+* Onboard SPI/QSPI NOR Flash (W25Qxx)</p></li>
+<li><p><strong>USB</strong>: Full-Speed USB 2.0 OTG (OTGFS1) via micro-USB connector</p></li>
+<li><p><strong>Analog &amp; Timers</strong>:
+* ADC1 channel 8 (PB0)
+* Advanced timer TIM20 with PWM output on PE2
+* On-chip RTC (Real-Time Clock)</p></li>
+</ul>
+</section>
+</section>
+<section id="pin-mapping-and-peripherals">
+<h2>Pin Mapping and Peripherals<a class="headerlink" href="#pin-mapping-and-peripherals" title="Permalink to this heading"></a></h2>
+<section id="user-leds">
+<h3>User LEDs<a class="headerlink" href="#user-leds" title="Permalink to this heading"></a></h3>
+<p>The AT32F437-MINI provides two user LEDs driven directly by GPIO port E:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>LED</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>LED1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PE2</span></code></p></td>
+<td><p>User LED 1 (Active High)</p></td>
+</tr>
+<tr class="row-odd"><td><p>LED2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PE3</span></code></p></td>
+<td><p>User LED 2 (Active High)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="serial-ports-usart-uart">
+<h3>Serial Ports (USART / UART)<a class="headerlink" href="#serial-ports-usart-uart" title="Permalink to this heading"></a></h3>
+<p>USART1 is configured as the default system console:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>USART</p></th>
+<th class="head"><p>Pin (RX)</p></th>
+<th class="head"><p>Pin (TX)</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>USART1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA10</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA9</span></code></p></td>
+<td><p>Default serial console (115200 8N1)</p></td>
+</tr>
+<tr class="row-odd"><td><p>USART2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PD6</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PD5</span></code></p></td>
+<td><p>RS-485 transceiver (Direction control: <code class="docutils literal notranslate"><span class="pre">PD4</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="controller-area-network-can">
+<h3>Controller Area Network (CAN)<a class="headerlink" href="#controller-area-network-can" title="Permalink to this heading"></a></h3>
+<p>CAN1 is routed to Port D:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>CAN</p></th>
+<th class="head"><p>Pin (RX)</p></th>
+<th class="head"><p>Pin (TX)</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CAN1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PD0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PD1</span></code></p></td>
+<td><p>Compatible with character and socket drivers</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ethernet-10-100-mbps-rmii">
+<h3>Ethernet (10/100 Mbps RMII)<a class="headerlink" href="#ethernet-10-100-mbps-rmii" title="Permalink to this heading"></a></h3>
+<p>The board integrates a Microchip/SMSC LAN8720A PHY operating in RMII mode:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>RMII_REF_CLK</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA1</span></code></p></td>
+<td><p>Reference Clock (50 MHz)</p></td>
+</tr>
+<tr class="row-odd"><td><p>ETH_MDIO</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA2</span></code></p></td>
+<td><p>Management Data I/O</p></td>
+</tr>
+<tr class="row-even"><td><p>RMII_CRS_DV</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA7</span></code></p></td>
+<td><p>Carrier Sense / Receive Data Valid</p></td>
+</tr>
+<tr class="row-odd"><td><p>ETH_MDC</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC1</span></code></p></td>
+<td><p>Management Data Clock</p></td>
+</tr>
+<tr class="row-even"><td><p>RMII_RXD0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC4</span></code></p></td>
+<td><p>Receive Data bit 0</p></td>
+</tr>
+<tr class="row-odd"><td><p>RMII_RXD1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC5</span></code></p></td>
+<td><p>Receive Data bit 1</p></td>
+</tr>
+<tr class="row-even"><td><p>RMII_TX_EN</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PB11</span></code></p></td>
+<td><p>Transmit Enable</p></td>
+</tr>
+<tr class="row-odd"><td><p>RMII_TXD0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PB12</span></code></p></td>
+<td><p>Transmit Data bit 0</p></td>
+</tr>
+<tr class="row-even"><td><p>RMII_TXD1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PB13</span></code></p></td>
+<td><p>Transmit Data bit 1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ETH_RST</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA3</span></code></p></td>
+<td><p>Active-low PHY Hardware Reset</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="microsd-card-sdio">
+<h3>MicroSD Card (SDIO)<a class="headerlink" href="#microsd-card-sdio" title="Permalink to this heading"></a></h3>
+<p>The onboard MicroSD card socket utilizes the 4-bit SDIO1 peripheral:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SDIO_CMD</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PD2</span></code></p></td>
+<td><p>Command / Response line</p></td>
+</tr>
+<tr class="row-odd"><td><p>SDIO_CLK</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC12</span></code></p></td>
+<td><p>Clock line</p></td>
+</tr>
+<tr class="row-even"><td><p>SDIO_D0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC8</span></code></p></td>
+<td><p>Data bit 0</p></td>
+</tr>
+<tr class="row-odd"><td><p>SDIO_D1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC9</span></code></p></td>
+<td><p>Data bit 1</p></td>
+</tr>
+<tr class="row-even"><td><p>SDIO_D2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC10</span></code></p></td>
+<td><p>Data bit 2</p></td>
+</tr>
+<tr class="row-odd"><td><p>SDIO_D3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PC11</span></code></p></td>
+<td><p>Data bit 3</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="usb-otg-full-speed-otgfs1">
+<h3>USB OTG Full-Speed (OTGFS1)<a class="headerlink" href="#usb-otg-full-speed-otgfs1" title="Permalink to this heading"></a></h3>
+<p>The USB OTG Full-Speed peripheral is routed to the onboard micro-USB port:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>OTG_D-</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA11</span></code></p></td>
+<td><p>USB Differential Data Minus</p></td>
+</tr>
+<tr class="row-odd"><td><p>OTG_D+</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA12</span></code></p></td>
+<td><p>USB Differential Data Plus</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="external-spi-flash-w25qxx">
+<h3>External SPI Flash (W25Qxx)<a class="headerlink" href="#external-spi-flash-w25qxx" title="Permalink to this heading"></a></h3>
+<p>An external SPI NOR Flash chip is connected to SPI1:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Signal</p></th>
+<th class="head"><p>Pin</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CLK</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PB3</span></code></p></td>
+<td><p>SPI Serial Clock</p></td>
+</tr>
+<tr class="row-odd"><td><p>MISO</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PB4</span></code></p></td>
+<td><p>Master In / Slave Out</p></td>
+</tr>
+<tr class="row-even"><td><p>MOSI</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PB5</span></code></p></td>
+<td><p>Master Out / Slave In</p></td>
+</tr>
+<tr class="row-odd"><td><p>CS</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PD7</span></code></p></td>
+<td><p>Active-low Chip Select</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="analog-inputs-pwm">
+<h3>Analog Inputs &amp; PWM<a class="headerlink" href="#analog-inputs-pwm" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>ADC</strong>: ADC1 Channel 8 is available on pin <code class="docutils literal notranslate"><span class="pre">PB0</span></code>.</p></li>
+<li><p><strong>PWM</strong>: Advanced Timer 20 (TIM20) Channel 1 is mapped to pin <code class="docutils literal notranslate"><span class="pre">PE2</span></code>.</p></li>
+<li><p><strong>RTC</strong>: Driven by the on-chip Real-Time Clock peripheral.</p></li>
+</ul>
+</section>
+</section>
+<section id="configurations">
+<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
+<p>All configurations are located in <code class="docutils literal notranslate"><span class="pre">boards/arm/at32/at32f437-mini/configs/</span></code>:</p>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>Basic NuttShell (NSH) interactive command line environment running over the
+primary serial console (USART1 at 115200 baud, 8N1).</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:nsh
+<span class="gp">$ </span>make<span class="w"> </span>-j
 </pre></div>
 </div>
+<p>After flashing, connect a serial terminal (115200 8N1) to PA9/PA10:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>NuttShell (NSH) NuttX-12.2.1
+nsh&gt; ps
+  PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK           STACK COMMAND
+    0     0   0 FIFO     Kthread N-- Ready              0000000000000000 001016 Idle_Task
+    2     2 100 RR       Task    --- Running            0000000000000000 002016 nsh_main
+nsh&gt;
+</pre></div>
+</div>
+</section>
+<section id="adc">
+<h3>adc<a class="headerlink" href="#adc" title="Permalink to this heading"></a></h3>
+<p>Enables the ADC character driver and sample application (<code class="docutils literal notranslate"><span class="pre">examples/adc</span></code>)
+measuring voltage on ADC1 Channel 8 (pin <code class="docutils literal notranslate"><span class="pre">PB0</span></code>).</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:adc
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="can-char">
+<h3>can_char<a class="headerlink" href="#can-char" title="Permalink to this heading"></a></h3>
+<p>Configures CAN1 using the traditional NuttX CAN character device driver
+(<code class="docutils literal notranslate"><span class="pre">/dev/can0</span></code>). Used in conjunction with <code class="docutils literal notranslate"><span class="pre">examples/can</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:can_char
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="can-socket">
+<h3>can_socket<a class="headerlink" href="#can-socket" title="Permalink to this heading"></a></h3>
+<p>Configures CAN1 as a native SocketCAN network interface (<code class="docutils literal notranslate"><span class="pre">can0</span></code>). Allows
+standard POSIX socket programming (<code class="docutils literal notranslate"><span class="pre">AF_CAN</span></code>) and network utilities.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:can_socket
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="eth">
+<h3>eth<a class="headerlink" href="#eth" title="Permalink to this heading"></a></h3>
+<p>Enables the onboard LAN8720A RMII Ethernet transceiver with the NuttX TCP/IP
+network stack, DHCP client, and network utilities (<code class="docutils literal notranslate"><span class="pre">ping</span></code>, <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code>,
+<code class="docutils literal notranslate"><span class="pre">netinit</span></code>).</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:eth
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="msc">
+<h3>msc<a class="headerlink" href="#msc" title="Permalink to this heading"></a></h3>
+<p>Configures the USB OTG port as a USB Mass Storage Class (MSC) device,
+exposing a block driver (RAM disk or SD card) to a host PC.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:msc
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="pwm">
+<h3>pwm<a class="headerlink" href="#pwm" title="Permalink to this heading"></a></h3>
+<p>Enables the PWM character driver on TIM20 Channel 1 (pin <code class="docutils literal notranslate"><span class="pre">PE2</span></code>). Can be
+tested with <code class="docutils literal notranslate"><span class="pre">examples/pwm</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:pwm
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="rtc">
+<h3>rtc<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h3>
+<p>Enables the hardware Real-Time Clock (RTC) driver. Provides persistent timekeeping
+and alarm functions accessible via standard POSIX time APIs.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:rtc
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="sdcard">
+<h3>sdcard<a class="headerlink" href="#sdcard" title="Permalink to this heading"></a></h3>
+<p>Enables 4-bit SDIO driver support with FAT filesystem automounting for the
+onboard MicroSD card slot. The card is accessible at <code class="docutils literal notranslate"><span class="pre">/mnt/sdcard</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:sdcard
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="systemview">
+<h3>systemview<a class="headerlink" href="#systemview" title="Permalink to this heading"></a></h3>
+<p>Enables SEGGER SystemView instrumentation for real-time task scheduling and
+interrupt tracing.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:systemview
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="usbnsh">
+<h3>usbnsh<a class="headerlink" href="#usbnsh" title="Permalink to this heading"></a></h3>
+<p>Configures the NuttShell console to communicate over the USB OTG port
+utilizing the USB CDC/ACM serial device profile (<code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code> on Linux).</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:usbnsh
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+<section id="usbserial">
+<h3>usbserial<a class="headerlink" href="#usbserial" title="Permalink to this heading"></a></h3>
+<p>Configures the USB OTG port as a generic USB CDC/ACM serial communications port.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:usbserial
+<span class="gp">$ </span>make<span class="w"> </span>-j
+</pre></div>
+</div>
+</section>
+</section>
+<section id="building-and-flashing">
+<h2>Building and Flashing<a class="headerlink" href="#building-and-flashing" title="Permalink to this heading"></a></h2>
+<section id="building">
+<h3>Building<a class="headerlink" href="#building" title="Permalink to this heading"></a></h3>
+<ol class="arabic">
+<li><p>Configure the board for the desired target (for example, <code class="docutils literal notranslate"><span class="pre">nsh</span></code>):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/configure.sh<span class="w"> </span>at32f437-mini:nsh
+</pre></div>
+</div>
+</li>
+<li><p>Compile the NuttX ELF and binary images:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="flashing">
+<h3>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h3>
+<p>The board can be flashed using OpenOCD, J-Link, or pyOCD through the onboard
+SWD debug header:</p>
+<p>Using OpenOCD:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The target configuration script <code class="docutils literal notranslate"><span class="pre">target/at32f437xx.cfg</span></code> is provided as
+part of Artery’s official OpenOCD release (available in the Artery AT32 BSP
+and AT-Link utility packages). Upstream OpenOCD requires adding Artery’s
+target script to the OpenOCD scripts path or using the PyOCD / J-Link alternatives below.</p>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>openocd<span class="w"> </span>-f<span class="w"> </span>interface/cmsis-dap.cfg<span class="w"> </span>-f<span class="w"> </span>target/at32f437xx.cfg<span class="w"> </span>-c<span class="w"> </span><span class="s2">"program nuttx.bin 0x08000000 verify reset exit"</span>
+</pre></div>
+</div>
+<p>Using J-Link:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>JLinkExe<span class="w"> </span>-device<span class="w"> </span>AT32F437VMT7<span class="w"> </span>-if<span class="w"> </span>SWD<span class="w"> </span>-speed<span class="w"> </span><span class="m">4000</span><span class="w"> </span>-autoconnect<span class="w"> </span><span class="m">1</span>
+<span class="go">J-Link&gt; loadfile nuttx.hex</span>
+<span class="go">J-Link&gt; r</span>
+<span class="go">J-Link&gt; g</span>
+<span class="go">J-Link&gt; q</span>
+</pre></div>
+</div>
+<p>Using pyOCD:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pyocd<span class="w"> </span>pack<span class="w"> </span>install<span class="w"> </span>at32f437vmt7
+<span class="gp">$ </span>pyocd<span class="w"> </span>flash<span class="w"> </span>-t<span class="w"> </span>at32f437vmt7<span class="w"> </span>nuttx.bin
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
