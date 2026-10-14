@@ -272,24 +272,59 @@ The machine timer uses <code class="docutils literal notranslate"><span class="p
 emulator’s timer rate. The Erbium documentation specifies a 10 MHz
 <code class="docutils literal notranslate"><span class="pre">mtime</span></code> (one tick every 100 ns) on silicon, so set this option to match
 the target.</p>
+<p>ET-Minion also has exception codes of its own: 25 and 26 (instruction bus
+and ECC error), 27 and 28 (load and store split-page fault) and 30
+(M-code emulation, see Toolchain). NuttX reports codes 25 to 28 as fatal
+exceptions with their names.</p>
 </section>
 <section id="toolchain">
 <h2>Toolchain<a class="headerlink" href="#toolchain" title="Permalink to this heading"></a></h2>
 <p>Use a GNU RISC-V bare-metal toolchain with RV64 single-precision ABI
 support, such as <code class="docutils literal notranslate"><span class="pre">riscv64-unknown-elf-gcc</span></code>. The normal RISC-V toolchain
 logic derives <code class="docutils literal notranslate"><span class="pre">rv64imfc_zicsr_zifencei</span></code> and <code class="docutils literal notranslate"><span class="pre">lp64f</span></code> from Kconfig.</p>
-<p>Erbium handles floating-point divide and square root through microcode.
-This standalone image does not supply that microcode, so the port uses
-<code class="docutils literal notranslate"><span class="pre">-mno-fdiv</span></code> to generate software helper calls for those operations.
-Other single-precision instructions and FPU context switching remain
-enabled, including the FPU portion of <code class="docutils literal notranslate"><span class="pre">ostest</span></code>. Double-precision
+<p>ET-Minion has no hardware for some instructions. Executing one raises
+exception 30, “M-code emulation”: <code class="docutils literal notranslate"><span class="pre">FDIV.S</span></code>, <code class="docutils literal notranslate"><span class="pre">FSQRT.S</span></code>, <code class="docutils literal notranslate"><span class="pre">FCVT.L.S</span></code>,
+<code class="docutils literal notranslate"><span class="pre">FCVT.LU.S</span></code>, <code class="docutils literal notranslate"><span class="pre">FCVT.S.L</span></code>, <code class="docutils literal notranslate"><span class="pre">FCVT.S.LU</span></code>, <code class="docutils literal notranslate"><span class="pre">FENCE.I</span></code>, <code class="docutils literal notranslate"><span class="pre">SFENCE.VMA</span></code> and
+some ET packed instructions that GCC does not emit.</p>
+<p>The port compiles with <code class="docutils literal notranslate"><span class="pre">-mno-fdiv</span></code>, so floating-point divide and square
+root in NuttX and applications use software helpers. Prebuilt code, such
+as a toolchain’s libm, still contains <code class="docutils literal notranslate"><span class="pre">FDIV.S</span></code> and <code class="docutils literal notranslate"><span class="pre">FSQRT.S</span></code>. GCC has
+no option like <code class="docutils literal notranslate"><span class="pre">-mno-fdiv</span></code> for the four 64-bit conversions: with the FPU
+enabled, every conversion between <code class="docutils literal notranslate"><span class="pre">float</span></code> and a 64-bit integer type such
+as <code class="docutils literal notranslate"><span class="pre">long</span></code>, <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>, <code class="docutils literal notranslate"><span class="pre">size_t</span></code> or <code class="docutils literal notranslate"><span class="pre">time_t</span></code> uses one. In NuttX’s
+libm, <code class="docutils literal notranslate"><span class="pre">rintf()</span></code>, <code class="docutils literal notranslate"><span class="pre">lroundf()</span></code>, <code class="docutils literal notranslate"><span class="pre">llroundf()</span></code> and <code class="docutils literal notranslate"><span class="pre">expf()</span></code> use them,
+and so does every function built on <code class="docutils literal notranslate"><span class="pre">expf()</span></code>, such as <code class="docutils literal notranslate"><span class="pre">logf()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">powf()</span></code> and the hyperbolic functions.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_ERBIUM_MCODE_EMULATION</span></code>, which is enabled by default when
+the FPU is, the trap handler performs the four conversions, <code class="docutils literal notranslate"><span class="pre">FDIV.S</span></code> and
+<code class="docutils literal notranslate"><span class="pre">FSQRT.S</span></code> in software and resumes after the instruction. In
+<code class="docutils literal notranslate"><span class="pre">erbium_emu</span></code> the trap costs about 260 instructions for a conversion, 310
+for a division and 500 for a square root. The results follow the RISC-V
+rules for rounding, saturation, NaNs and floating-point flags, and the
+subnormal rules of ET-Minion’s other F instructions: a subnormal input
+reads as zero and sets bit 31 of <code class="docutils literal notranslate"><span class="pre">fflags</span></code>, and a result that is tiny
+after rounding is flushed to zero. <code class="docutils literal notranslate"><span class="pre">FENCE.I</span></code>, <code class="docutils literal notranslate"><span class="pre">SFENCE.VMA</span></code>, the packed
+instructions, or any of these instructions when the emulation is
+disabled, are reported as an exception, with the instruction in
+<code class="docutils literal notranslate"><span class="pre">MTVAL</span></code>, and stop the system.</p>
+<p>Other single-precision instructions run in hardware, and FPU context
+switching works, including the FPU portion of <code class="docutils literal notranslate"><span class="pre">ostest</span></code>. Double-precision
 arithmetic uses software. The atomic instruction extension is not enabled.
 NuttX provides atomic operations through interrupt masking on hart 0.
-Startup also avoids the microcode-dependent <code class="docutils literal notranslate"><span class="pre">FENCE.I</span></code> instruction; this
-port expects the emulator’s ELF loader to install the executable image.
+Startup also avoids <code class="docutils literal notranslate"><span class="pre">FENCE.I</span></code>; this port expects the emulator’s ELF
+loader to install the executable image.
 NuttX’s dynamic ELF module loader is disabled in both configurations because
 its instruction-cache synchronization also uses <code class="docutils literal notranslate"><span class="pre">FENCE.I</span></code>. This does not
 affect the <code class="docutils literal notranslate"><span class="pre">nuttx</span></code> ELF output file loaded by the emulator.</p>
+<p>To find these instructions in an image, search its disassembly:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>riscv64-unknown-elf-objdump -d nuttx | \
+  grep -E 'fdiv\.s|fsqrt\.s|fcvt\.(l|lu)\.s|fcvt\.s\.lu?\s|fence\.i|sfence\.vma'
+</pre></div>
+</div>
+<p>In the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> and <code class="docutils literal notranslate"><span class="pre">ostest</span></code> images, the only match is <code class="docutils literal notranslate"><span class="pre">FENCE.I</span></code> in the
+common <code class="docutils literal notranslate"><span class="pre">riscv_fpuconfig</span></code> routine, which Erbium does not call. Any other
+match stops the system when it executes, except the four conversions,
+<code class="docutils literal notranslate"><span class="pre">FDIV.S</span></code> and <code class="docutils literal notranslate"><span class="pre">FSQRT.S</span></code> while the emulation is enabled.</p>
 </section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>

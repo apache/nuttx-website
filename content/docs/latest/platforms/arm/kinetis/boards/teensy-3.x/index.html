@@ -304,313 +304,379 @@
   <section id="teensy-3-x">
 <h1>teensy-3.x<a class="headerlink" href="#teensy-3-x" title="Permalink to this heading"></a></h1>
 <p class="tags"><span>Tags: </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/arch-arm.html"><span class="doc">arch:arm</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary reference internal" href="../../../../../_tags/chip-kinetis.html"><span class="doc">chip:kinetis</span></a><span> </span><a class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary reference internal" href="../../../../../_tags/vendor-nxp.html"><span class="doc">vendor:nxp</span></a></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>README
-======
-
-  This is a README file for the port of NuttX to the Teensy-3.1 from PJRC
-  (https://www.pjrc.com/).  The Teensy-3.1 features the Freescale
-  MK20DX256VLH7 chip (now NXP).  The MK20DX256VLH7 is a 64-pin Cortex-M4
-  running at 72MHz.  It has 256KiB of program FLASH memory and 64KiB of
-  SRAM.  For more information about the Teensy 3.1, see
-
-    https://www.pjrc.com/teensy/teensy31.html
-    https://www.pjrc.com/store/teensy31.html
-
-  This board configuration can also be used with the older Teensy-3.0.  The
-  Teensy-3.0 has the same schematic (although some pins are not used on the
-  Teensy-3.0).  The primary difference is that the Teensy 3.0 has a
-  MK20DX128VLH5 with slightly less capability.  There are many difference
-  between the MK20DX256VLH7 and the MK20DX128VLH5 but the basic differences
-  that effect how you configure NuttX are:
-
-    --------------- -------------- -------------- ---------------------------
-    Feature         Teensy 3.0     Teensy 3.1     Teensy 3.0 CONFIGURATION
-    --------------- -------------- -------------- ---------------------------
-    Processor
-      Core          MK20DX128VLH5  MK20DX256VLH7  CONFIG_ARCH_CHIP_MK20DX128VLH5=y
-      Rated Speed    48 MHz         72 MHz        See Note 1
-      Overclockable  96 MHz         96 MHz        CONFIG_TEENSY_3X_OVERCLOCK=y
-    Flash Memory    128 KB         256 KB         See Note 1
-    SRAM             16 KB          64 KB         CONFIG_RAM_SIZE=16384 and
-                                                  see Note 2
-    --------------- -------------- -------------- ---------------------------
-
-  NOTES:
-  1. Settings in boards/arm/kinetis/teensy-3.x/include/board.h will automatically
-     select the correct clocking based on CONFIG_ARCH_CHIP_MK20DX128VLH5=y.
-  2. The linker script at boards/arm/kinetis/teensy-3.x/scripts/mk30dx128vlh5.ld will
-     automatically be selected when CONFIG_ARCH_CHIP_MK20DX128VLH5=y.  It
-     will use the correct FLASH and SRAM sizes.
-
-  The initial Teensy-3.1 port is largely the effort of Jakob Odersky.
-  https://github.com/jodersky/nuttx/tree/teensy31-7.6 and
-  https://github.com/jodersky/px4-nuttx
-
-Contents
-========
-
-  o STATUS
-  o Pin Configuration
-  o Serial Console
-  o LEDs
-  o Using the Halfkey Loader
-  o Debugging
-  o Teensy-3.1 Configuration settings
-  o Configurations
-
-STATUS
-======
-
-  2015-06-11:
-    After some extended tinkering with the PLL setup, the Teensy-3.1 is
-    fully functional using the basic NSH configuration.
-  2015-06-12:
-    Fix LED (need high drive strength).  Calibrate delay loop.
-
-Pin Configuration
-=================
-
-  Nearly all pins are available to the user.  The few port pins used on
-  board are listed below:
-
-    ----- --------------------------------------
-    P0RT  BOARD USAGE
-    ----- --------------------------------------
-    PTA0  MINI54TAN / Bootloader
-    PTA1  MINI54TAN / Bootloader
-    PTA2  MINI54TAN / Bootloader
-    PTA3  MINI54TAN / Bootloader
-    PTA18 16MHz XTAL  (XTAL32 is not populated).
-    PTA19 16MHz XTAL
-    PTB1  MINI54TAN / Bootloader
-    PTB2  MINI54TAN / Bootloader
-    PTC5  LED
-    ----- --------------------------------------
-
-Serial Console
-==============
-
-  The K20 has three UARTs with pin availability as follows:
-
-    --------- ------ ----------- -------------------------
-    UART      PORT   BOARD       PJRC PINOUT DESCRIPTION
-    FUNCTION         LABEL
-    --------- ------ ----------- -------------------------
-    UART0_RX  PTA1   (See above) MINI54TAN / Bootloader
-              PTB16  Pin 0       RX1 / Touch
-              PTD6   Pin 21 / A7 RX1 / CS / PWM
-    UART0_TX  PTA2   (See above) MINI54TAN / Bootloader
-              PTB17  Pin 1       TX1 / Touch
-              PTD7   Pin 5       TX1 / PWM
-    --------- ------ ----------- -------------------------
-    UART1_RX  PTC3   Pin 9       RX2 / CS / PWM
-              PTE1   Pad 26      (Pad on back of board)
-    UART1_TX  PTC4   Pin 10      TX2 / CS / PWM
-              PTE0   Pad 31      (Pad on back of board)
-    --------- ------ ----------- -------------------------
-    UART2_RX  PTD2   Pin 7       RX3 / DOUT
-    UART2_TX  PTD3   Pin 8       TX3 / DIN
-    --------- ------ ----------- -------------------------
-
-  The default serial console is UART0 on pins 0 (RX) and 1 (TX).
-
-LEDs
-====
-
-  A single LED is available driven by PTC5.  The LED is grounded
-  so bringing PTC5 high will illuminate the LED.
-
-  When CONFIG_ARCH_LEDS is defined in the NuttX configuration, NuttX will
-  control the LED as follows:
-
-    SYMBOL              Meaning                 LED
-    ------------------- ----------------------- ------
-    LED_STARTED         NuttX has been started  OFF
-    LED_HEAPALLOCATE    Heap has been allocated OFF
-    LED_IRQSENABLED     Interrupts enabled      OFF
-    LED_STACKCREATED    Idle stack created      ON
-    LED_INIRQ           In an interrupt         N/C
-    LED_SIGNAL          In a signal handler     N/C
-    LED_ASSERTION       An assertion failed     N/C
-    LED_PANIC           The system has crashed  FLASH
-
-  Thus is LED is statically on, NuttX has successfully  booted and is,
-  apparently, running normally.  If LED is flashing at approximately
-  2Hz, then a fatal error has been detected and the system has halted.
-
-Using the Halfkey Loader
-========================
-
-  See https://www.pjrc.com/teensy/first_use.html
-      https://www.pjrc.com/teensy/loader_cli.html
-
-Debugging
-=========
-
-  And, at this point, I don't know how to debug the board.  There is no
-  way to connect a JTAG SWD debugger, at least not without cutting leads
-  to the MINI54TAN device:
-
-    See: http://mcuoneclipse.com/2014/08/09/hacking-the-teensy-v3-1-for-swd-debugging/
-
-Teensy-3.1 Configuration settings
-=================================
-
-    CONFIG_ARCH - Identifies the arch/ subdirectory.  This should
-       be set to:
-
-       CONFIG_ARCH=arm
-
-    CONFIG_ARCH_family - For use in C code:
-
-       CONFIG_ARCH_ARM=y
-
-    CONFIG_ARCH_architecture - For use in C code:
-
-       CONFIG_ARCH_CORTEXM4=y
-
-    CONFIG_ARCH_CHIP - Identifies the arch/*/chip subdirectory
-
-       CONFIG_ARCH_CHIP="kinetis"
-
-    CONFIG_ARCH_CHIP_name - For use in C code to identify the exact
-       chip:
-
-       CONFIG_ARCH_CHIP_MK20DX256VLH7=y
-
-    CONFIG_ARCH_BOARD - Identifies the boards/ subdirectory and
-       hence, the board that supports the particular chip or SoC.
-
-       CONFIG_ARCH_BOARD="teensy-3.x"
-
-    CONFIG_ARCH_BOARD_name - For use in C code
-
-       CONFIG_ARCH_BOARD_TEENSY_3X=y
-
-    CONFIG_ARCH_LOOPSPERMSEC - Must be calibrated for correct operation
-       of delay loops
-
-    CONFIG_ENDIAN_BIG - define if big endian (default is little
-       endian)
-
-    CONFIG_RAM_SIZE - Describes the installed DRAM (SRAM in this case):
-
-       CONFIG_RAM_SIZE=0x00008000 (32Kb)
-
-    CONFIG_RAM_START - The start address of installed DRAM
-
-       CONFIG_RAM_START=0x20000000
-
-    CONFIG_ARCH_LEDS - Use LEDs to show state. Unique to boards that
-       have LEDs
-
-    CONFIG_ARCH_INTERRUPTSTACK - This architecture supports an interrupt
-       stack. If defined, this symbol is the size of the interrupt
-        stack in bytes.  If not defined, the user task stacks will be
-      used during interrupt handling.
-
-    CONFIG_ARCH_STACKDUMP - Do stack dumps after assertions
-
-  Individual subsystems can be enabled:
-
-    To be provided
-
-Configurations
-==============
-
-  Common Configuration Information
-  --------------------------------
-  Each Teensy-3.x configurations are maintained in sub-directories and
-  can be selected as follow:
-
-    tools/configure.sh teensy-3.x:&lt;subdir&gt;
-    make oldconfig
-
-  Before building, make sure that your PATH environment variable includes
-  the correct path to the directory than holds your toolchain binaries.
-
-  If this is a Windows native build, then configure.bat should be used
-  instead of configure.sh:
-
-    configure.bat teensy-3.x\&lt;subdir&gt;
-
-  And then build NuttX by simply typing the following.  At the conclusion of
-  the make, the nuttx binary will reside in an ELF file called, simply,
-  nuttx.
-
-    make oldconfig
-    make
-
-  The &lt;subdir&gt; that is provided above as an argument to the
-  tools/configure.sh must be is one of the directories listed below.
-
-NOTES:
-
-  1. These configurations use the mconf-based configuration tool.  To
-     change any of these configurations using that tool, you should:
-
-    a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-       see additional README.txt files in the NuttX tools repository.
-
-    b. Execute 'make menuconfig' in nuttx/ in order to start the
-       reconfiguration process.
-
-  2. Unless stated otherwise, all configurations generate console
-     output on [To be provided].
-
-  3. All of these configurations are set up to build under Windows using the
-     "GNU Tools for ARM Embedded Processors" that is maintained by ARM
-     (unless stated otherwise in the description of the configuration).
-
-       https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
-
-     That toolchain selection can easily be reconfigured using
-     'make menuconfig'.  Here are the relevant current settings:
-
-     Build Setup:
-       CONFIG_HOST_WINDOWS=y               : Window environment
-       CONFIG_WINDOWS_CYGWIN=y             : Cywin under Windows
-
-     System Type -&gt; Toolchain:
-       CONFIG_ARM_TOOLCHAIN_GNU_EABI=y  : GNU ARM EABI toolchain
-
-     NOTE: As of this writing, there are issues with using this tool at
-     the -Os level of optimization.  This has not been proven to be a
-     compiler issue (as least not one that might not be fixed with a
-     well placed volatile qualifier).  However, in any event, it is
-     recommend that you use not more that -O2 optimization.
-
-  Configuration sub-directories
-  -----------------------------
-
-  nsh:
-
-    Configures the NuttShell (nsh) located at apps/examples/nsh.
-
-    NOTES:
-
-    1. This configuration uses the mconf-based configuration tool.  To
-       change this configuration using that tool, you should:
-
-       a. Build and install the kconfig-mconf tool.  See nuttx/README.txt
-          see additional README.txt files in the NuttX tools repository.
-
-       b. Execute 'make menuconfig' in nuttx/ in order to start the
-          reconfiguration process.
-
-    2. By default, this configuration uses the ARM EABI toolchain
-       for Windows and builds under Cygwin (or probably MSYS).  That
-       can easily be reconfigured, of course.
-
-       CONFIG_HOST_WINDOWS=y                   : Builds under Windows
-       CONFIG_WINDOWS_CYGWIN=y                 : Using Cygwin
-       CONFIG_ARM_TOOLCHAIN_GNU_EABI=y      : GNU EABI toolchain for Windows
-
- Support
-    for  builtin applications is enabled, but in the base configuration
-    no builtin applications are selected (see NOTES below).
+<p>The Teensy 3.1 and 3.2 are compact, breadboard-friendly development boards
+designed by PJRC (Paul Stoffregen), powered by the NXP (formerly Freescale)
+Kinetis MK20DX256VLH7 ARM Cortex-M4 microcontroller.</p>
+<p>This board configuration also supports the earlier Teensy 3.0 board (which
+features the Kinetis MK20DX128VLH5 microcontroller).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The initial port of NuttX to the Teensy 3.1 was contributed by Jakob
+Odersky (<a class="reference external" href="https://github.com/jodersky">jodersky</a>).</p>
+</div>
+<section id="hardware-overview">
+<h2>Hardware Overview<a class="headerlink" href="#hardware-overview" title="Permalink to this heading"></a></h2>
+<section id="comparison-teensy-3-0-vs-teensy-3-1-3-2">
+<h3>Comparison: Teensy 3.0 vs. Teensy 3.1 / 3.2<a class="headerlink" href="#comparison-teensy-3-0-vs-teensy-3-1-3-2" title="Permalink to this heading"></a></h3>
+<p>The Teensy 3.1 and 3.2 share identical pinouts and schematics with the Teensy
+3.0, but feature a significantly enhanced MCU:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Teensy 3.0</p></th>
+<th class="head"><p>Teensy 3.1 / 3.2</p></th>
+<th class="head"><p>Teensy 3.0 Configuration</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Processor</p></td>
+<td><p>NXP MK20DX128VLH5</p></td>
+<td><p>NXP MK20DX256VLH7</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_CHIP_MK20DX128VLH5=y</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Core</p></td>
+<td><p>ARM Cortex-M4</p></td>
+<td><p>ARM Cortex-M4</p></td>
+<td><p>ARM Cortex-M4</p></td>
+</tr>
+<tr class="row-even"><td><p>Rated Clock</p></td>
+<td><p>48 MHz</p></td>
+<td><p>72 MHz</p></td>
+<td><p>Selected via board clock header</p></td>
+</tr>
+<tr class="row-odd"><td><p>Overclockable</p></td>
+<td><p>Up to 96 MHz</p></td>
+<td><p>Up to 96 MHz</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_TEENSY_3X_OVERCLOCK=y</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Flash Memory</p></td>
+<td><p>128 KB</p></td>
+<td><p>256 KB</p></td>
+<td><p>Selected via linker script</p></td>
+</tr>
+<tr class="row-odd"><td><p>SRAM</p></td>
+<td><p>16 KB</p></td>
+<td><p>64 KB</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RAM_SIZE=16384</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>5V Tolerance</p></td>
+<td><p>No (3.3V only)</p></td>
+<td><p>Yes (Digital pins)</p></td>
+<td><p>No (3.3V only)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Linker Script</p></td>
+<td><p>mk20dx128vlh5.ld</p></td>
+<td><p>mk20dx256vlh7.ld</p></td>
+<td><p>Automatic based on chip selection</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>While digital I/O pins on the Teensy 3.1/3.2 are 5V tolerant, the analog
+inputs (A10, A11, AREF, and the internal ADC reference) are strictly <strong>3.3V
+maximum</strong>. On the Teensy 3.0, <strong>all</strong> pins are 3.3V only. Exceeding 3.3V on
+non-tolerant pins will permanently damage the microcontroller.</p>
+</div>
+</section>
+<section id="key-features-teensy-3-1-3-2">
+<h3>Key Features (Teensy 3.1 / 3.2)<a class="headerlink" href="#key-features-teensy-3-1-3-2" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Microcontroller</strong>: NXP Kinetis MK20DX256VLH7 (64-pin LQFP)
+- 32-bit ARM Cortex-M4 running at 72 MHz (overclockable up to 96 MHz)
+- 256 KB Flash memory, 64 KB SRAM
+- Hardware CRC and Random Number Generator</p></li>
+<li><p><strong>Clocking</strong>:
+- 16 MHz external crystal (XTAL on PTA18/PTA19)
+- On-chip PLL generating 72 MHz system clock (or 96 MHz when overclocked)</p></li>
+<li><p><strong>USB Interface</strong>:
+- Full-Speed (12 Mbps) USB 2.0 Device/Host/OTG port with Micro-B connector
+- Dedicated USB regulator providing 3.3V (up to 100 mA) to external circuits</p></li>
+<li><p><strong>Serial Communication</strong>:
+- 3 UARTs with FIFO and hardware CTS/RTS support
+- 2 SPI modules with FIFO
+- 2 I2C modules with SMBus support</p></li>
+<li><p><strong>Analog &amp; Timers</strong>:
+- 2 16-bit ADCs with differential mode support
+- 1 12-bit DAC
+- 3 FlexTimer modules (FTM) supporting up to 12 PWM channels
+- Carrier Modulator Transmitter (CMT)
+- Real-Time Clock (RTC) with external 32.768 kHz crystal footprint</p></li>
+<li><p><strong>Form Factor &amp; Bootloader</strong>:
+- 24-pin DIP footprint (0.1” pitch, breadboard friendly)
+- Onboard Nuvoton Mini54TAN processor running PJRC HalfKay USB bootloader
+- Pushbutton for entering bootloader mode</p></li>
+</ul>
+</section>
+</section>
+<section id="pin-configuration">
+<h2>Pin Configuration<a class="headerlink" href="#pin-configuration" title="Permalink to this heading"></a></h2>
+<p>Nearly all MCU port pins are routed to the outer header pins or underside pads.
+The dedicated onboard hardware connections are:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Port Pin</p></th>
+<th class="head"><p>Board Usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PTA0</p></td>
+<td><p>Mini54TAN / Bootloader communication</p></td>
+</tr>
+<tr class="row-odd"><td><p>PTA1</p></td>
+<td><p>Mini54TAN / Bootloader communication</p></td>
+</tr>
+<tr class="row-even"><td><p>PTA2</p></td>
+<td><p>Mini54TAN / Bootloader communication</p></td>
+</tr>
+<tr class="row-odd"><td><p>PTA3</p></td>
+<td><p>Mini54TAN / Bootloader communication</p></td>
+</tr>
+<tr class="row-even"><td><p>PTA18</p></td>
+<td><p>16 MHz Crystal (XTAL)</p></td>
+</tr>
+<tr class="row-odd"><td><p>PTA19</p></td>
+<td><p>16 MHz Crystal (XTAL)</p></td>
+</tr>
+<tr class="row-even"><td><p>PTB1</p></td>
+<td><p>Mini54TAN / Bootloader communication</p></td>
+</tr>
+<tr class="row-odd"><td><p>PTB2</p></td>
+<td><p>Mini54TAN / Bootloader communication</p></td>
+</tr>
+<tr class="row-even"><td><p>PTC5</p></td>
+<td><p>User LED (Orange)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="serial-console">
+<h2>Serial Console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
+<p>The Kinetis K20 provides three UART modules with pins exposed on the board
+headers:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>UART Module</p></th>
+<th class="head"><p>Port Pin</p></th>
+<th class="head"><p>Board Label</p></th>
+<th class="head"><p>PJRC Pinout Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>UART0_RX</strong></p></td>
+<td><p>PTB16</p></td>
+<td><p>Pin 0</p></td>
+<td><p>RX1 / Touch</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>PTD6</p></td>
+<td><p>Pin 21 / A7</p></td>
+<td><p>RX1 / CS / PWM</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>PTA1</p></td>
+<td><p>(Internal)</p></td>
+<td><p>Mini54TAN / Bootloader</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>UART0_TX</strong></p></td>
+<td><p>PTB17</p></td>
+<td><p>Pin 1</p></td>
+<td><p>TX1 / Touch</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>PTD7</p></td>
+<td><p>Pin 5</p></td>
+<td><p>TX1 / PWM</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>PTA2</p></td>
+<td><p>(Internal)</p></td>
+<td><p>Mini54TAN / Bootloader</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>UART1_RX</strong></p></td>
+<td><p>PTC3</p></td>
+<td><p>Pin 9</p></td>
+<td><p>RX2 / CS / PWM</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>PTE1</p></td>
+<td><p>Pad 26</p></td>
+<td><p>Pad on underside of board</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>UART1_TX</strong></p></td>
+<td><p>PTC4</p></td>
+<td><p>Pin 10</p></td>
+<td><p>TX2 / CS / PWM</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>PTE0</p></td>
+<td><p>Pad 31</p></td>
+<td><p>Pad on underside of board</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>UART2_RX</strong></p></td>
+<td><p>PTD2</p></td>
+<td><p>Pin 7</p></td>
+<td><p>RX3 / DOUT</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>UART2_TX</strong></p></td>
+<td><p>PTD3</p></td>
+<td><p>Pin 8</p></td>
+<td><p>TX3 / DIN</p></td>
+</tr>
+</tbody>
+</table>
+<p>The default serial console in the <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration is <strong>UART0</strong> on:</p>
+<ul class="simple">
+<li><p><strong>RX</strong>: Pin 0 (PTB16)</p></li>
+<li><p><strong>TX</strong>: Pin 1 (PTB17)</p></li>
+<li><p><strong>Baud rate</strong>: 115200 8N1</p></li>
+</ul>
+<p>Connect a 3.3V USB-to-UART serial adapter (TX to Pin 0, RX to Pin 1, GND to GND)
+to access the NuttShell prompt.</p>
+</section>
+<section id="leds">
+<h2>LEDs<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h2>
+<p>A single orange LED is connected to port pin <strong>PTC5</strong>. The cathode is connected
+to ground, so driving PTC5 high illuminates the LED.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> is enabled, NuttX indicates system status as
+follows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>LED</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_STARTED</span></code></p></td>
+<td><p>NuttX has started</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_HEAPALLOCATE</span></code></p></td>
+<td><p>Heap has been allocated</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_IRQSENABLED</span></code></p></td>
+<td><p>Interrupts enabled</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_STACKCREATED</span></code></p></td>
+<td><p>Idle stack created</p></td>
+<td><p>ON</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_INIRQ</span></code></p></td>
+<td><p>Handling an interrupt</p></td>
+<td><p>No Change</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_SIGNAL</span></code></p></td>
+<td><p>Inside signal handler</p></td>
+<td><p>No Change</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LED_ASSERTION</span></code></p></td>
+<td><p>Assertion failed</p></td>
+<td><p>No Change</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LED_PANIC</span></code></p></td>
+<td><p>System has crashed</p></td>
+<td><p>Flashing (2 Hz)</p></td>
+</tr>
+</tbody>
+</table>
+<p>When NuttX boots successfully and enters normal idle operation, the LED
+remains solidly <strong>ON</strong>. If a kernel panic occurs, the LED flashes at
+approximately 2 Hz.</p>
+</section>
+<section id="flashing-and-debugging">
+<h2>Flashing and Debugging<a class="headerlink" href="#flashing-and-debugging" title="Permalink to this heading"></a></h2>
+<section id="using-the-teensy-loader">
+<h3>Using the Teensy Loader<a class="headerlink" href="#using-the-teensy-loader" title="Permalink to this heading"></a></h3>
+<p>The Teensy 3.x comes pre-programmed with PJRC’s proprietary HalfKay
+bootloader managed by the onboard Mini54TAN chip. The bootloader communicates
+over USB via the <a class="reference external" href="https://www.pjrc.com/teensy/loader.html">Teensy Loader</a>
+application or the command-line tool <a class="reference external" href="https://www.pjrc.com/teensy/loader_cli.html">teensy_loader_cli</a>.</p>
+<p>NuttX configurations for the Teensy 3.x enable Intel HEX binary generation
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_INTELHEX_BINARY=y</span></code>), which produces <code class="docutils literal notranslate"><span class="pre">nuttx.hex</span></code> in the root
+directory after compilation.</p>
+<p>Flashing with <code class="docutils literal notranslate"><span class="pre">teensy_loader_cli</span></code>:</p>
+<ol class="arabic">
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">teensy_loader_cli</span></code> on your host system:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ubuntu / Debian</span>
+sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>libusb-dev
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/PaulStoffregen/teensy_loader_cli.git
+<span class="nb">cd</span><span class="w"> </span>teensy_loader_cli<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>make<span class="w"> </span>install
 </pre></div>
 </div>
+</li>
+<li><p>Build NuttX and upload the generated <code class="docutils literal notranslate"><span class="pre">nuttx.hex</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># For Teensy 3.1 / 3.2 (MK20DX256):</span>
+teensy_loader_cli<span class="w"> </span>--mcu<span class="o">=</span>mk20dx256<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>nuttx.hex
+
+<span class="c1"># For Teensy 3.0 (MK20DX128):</span>
+teensy_loader_cli<span class="w"> </span>--mcu<span class="o">=</span>mk20dx128<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>nuttx.hex
+</pre></div>
+</div>
+</li>
+<li><p>Press the pushbutton on the Teensy 3.x board to initiate the programming
+cycle. Once flashing completes, the board reboots into NuttX automatically.</p></li>
+</ol>
+</section>
+<section id="hardware-debugging-swd-jtag">
+<h3>Hardware Debugging (SWD / JTAG)<a class="headerlink" href="#hardware-debugging-swd-jtag" title="Permalink to this heading"></a></h3>
+<p>Standard hardware debugging via SWD is not directly available out of the box
+because the onboard Mini54TAN bootloader chip controls the Reset and SWD
+lines of the K20 microcontroller.</p>
+<p>To use an external SWD debugger (such as J-Link, ST-Link, or CMSIS-DAP), the
+hardware traces between the Mini54TAN and the MK20 chip must be severed or
+the Mini54TAN held in permanent reset. For detailed instructions on this
+modification, refer to the <a class="reference external" href="https://mcuoneclipse.com/2014/08/09/hacking-the-teensy-v3-1-for-swd-debugging/">Hacking the Teensy 3.1 for SWD Debugging</a>
+guide on MCU on Eclipse.</p>
+</section>
+</section>
+<section id="supported-configurations">
+<h2>Supported Configurations<a class="headerlink" href="#supported-configurations" title="Permalink to this heading"></a></h2>
+<p>The board configurations for the Teensy 3.x are located under
+<code class="docutils literal notranslate"><span class="pre">boards/arm/kinetis/teensy-3.x/configs/</span></code>.</p>
+<section id="nsh">
+<h3>nsh<a class="headerlink" href="#nsh" title="Permalink to this heading"></a></h3>
+<p>The default NuttShell (NSH) configuration provides an interactive command-line
+interface over the primary serial port.</p>
+<ul class="simple">
+<li><p><strong>Console</strong>: UART0 (Pin 0 RX, Pin 1 TX) at 115200 8N1</p></li>
+<li><p><strong>Binary formats</strong>: Raw binary (<code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code>) and Intel HEX (<code class="docutils literal notranslate"><span class="pre">nuttx.hex</span></code>)</p></li>
+<li><p><strong>Builtin applications</strong>: Enabled</p></li>
+</ul>
+<p>Building:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./tools/configure.sh<span class="w"> </span>teensy-3.x:nsh
+make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+teensy_loader_cli<span class="w"> </span>--mcu<span class="o">=</span>mk20dx256<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>nuttx.hex<span class="w">  </span><span class="c1"># Use --mcu=mk20dx128 for Teensy 3.0</span>
+</pre></div>
+</div>
+</section>
+<section id="usbnsh">
+<h3>usbnsh<a class="headerlink" href="#usbnsh" title="Permalink to this heading"></a></h3>
+<p>Configures the NuttShell console to run over the native USB port using the
+USB CDC/ACM class driver (virtual COM port).</p>
+<ul class="simple">
+<li><p><strong>Console</strong>: USB CDC/ACM (<code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code> on Linux, <code class="docutils literal notranslate"><span class="pre">COMx</span></code> on Windows)</p></li>
+<li><p><strong>Driver</strong>: Kinetis Full-Speed USB Device controller (<code class="docutils literal notranslate"><span class="pre">CONFIG_KINETIS_USBOTG=y</span></code>)</p></li>
+<li><p><strong>Hardware requirement</strong>: Standard Micro-USB cable connected directly to the host PC</p></li>
+</ul>
+<p>Building:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./tools/configure.sh<span class="w"> </span>teensy-3.x:usbnsh
+make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+teensy_loader_cli<span class="w"> </span>--mcu<span class="o">=</span>mk20dx256<span class="w"> </span>-w<span class="w"> </span>-v<span class="w"> </span>nuttx.hex<span class="w">  </span><span class="c1"># Use --mcu=mk20dx128 for Teensy 3.0</span>
+</pre></div>
+</div>
+<p>After flashing and rebooting, connect to the USB serial device:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Linux</span>
+minicom<span class="w"> </span>-D<span class="w"> </span>/dev/ttyACM0
+
+<span class="c1"># Or using picocom</span>
+picocom<span class="w"> </span>-b<span class="w"> </span><span class="m">115200</span><span class="w"> </span>/dev/ttyACM0
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 

@@ -209,6 +209,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#per-family-directory-split">Per-family directory split</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#timer-tim-ip-cores">Timer (TIM) IP cores</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#family-peripheral-inventory">Family peripheral inventory</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#stm32c0">STM32C0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stm32c5">STM32C5</a></li>
@@ -604,6 +605,65 @@ boards/arm/stm32          -&gt;  boards/arm/stm32{f1,f2,f3,f4,g4,l1}
 </div>
 </section>
 </section>
+<section id="timer-tim-ip-cores">
+<h2>Timer (TIM) IP cores<a class="headerlink" href="#timer-tim-ip-cores" title="Permalink to this heading"></a></h2>
+<p>All STM32 general-purpose and advanced-control timers share essentially one
+register-compatible IP design.  The <code class="docutils literal notranslate"><span class="pre">STM32_HAVE_IP_TIMERS_*</span></code> selectors only
+distinguish minor register-map revisions, and they are largely upward
+compatible - a more advanced version adds a few register bits and features but
+keeps the same programming model:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>IP core</p></th>
+<th class="head"><p>Selector</p></th>
+<th class="head"><p>Families</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>M0_V1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">STM32_HAVE_IP_TIMERS_M0_V1</span></code></p></td>
+<td><p>Cortex-M0 (C0, F0, G0, L0, U0)</p></td>
+</tr>
+<tr class="row-odd"><td><p>V1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">STM32_HAVE_IP_TIMERS_V1</span></code></p></td>
+<td><p>F1, F2, F4, L1, F37x</p></td>
+</tr>
+<tr class="row-even"><td><p>V2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">STM32_HAVE_IP_TIMERS_V2</span></code></p></td>
+<td><p>F30x, F33x, F7, H7, L4, L5, WB, WL5</p></td>
+</tr>
+<tr class="row-odd"><td><p>V3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">STM32_HAVE_IP_TIMERS_V3</span></code></p></td>
+<td><p>C5, G4, H5, H7RS, N6, U3, U5</p></td>
+</tr>
+</tbody>
+</table>
+<p>The one functional difference that matters to a generic timer user is the
+<strong>counter width</strong>.  Every timer is 16-bit except TIM2 and TIM5, which are
+32-bit on most families.  Because counter width does not follow the IP-core
+version (e.g. TIM2 is 16-bit on F1 but 32-bit on F4, both <code class="docutils literal notranslate"><span class="pre">V1</span></code>), it is
+carried by its own capability flags rather than by the IP selector or a chip
+<code class="docutils literal notranslate"><span class="pre">#ifdef</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Capability flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STM32_HAVE_TIM2_32BITS</span></code></p></td>
+<td><p>TIM2 is a 32-bit counter on this family.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">STM32_HAVE_TIM5_32BITS</span></code></p></td>
+<td><p>TIM5 is a 32-bit counter on this family.</p></td>
+</tr>
+</tbody>
+</table>
+<p>These are prompt-less <code class="docutils literal notranslate"><span class="pre">bool</span></code> flags in <code class="docutils literal notranslate"><span class="pre">Kconfig.have</span></code> (the default is 16-bit)
+that the chip Kconfig <code class="docutils literal notranslate"><span class="pre">select</span></code>-s next to its timer IP-core selector.  The
+16-bit cases - TIM2 on STM32F10xx/STM32L15xx/STM32L0 and TIM5 on
+STM32F10xx/STM32F30xx - simply leave them unset.</p>
+</section>
 <section id="family-peripheral-inventory">
 <h2>Family peripheral inventory<a class="headerlink" href="#family-peripheral-inventory" title="Permalink to this heading"></a></h2>
 <p>Each family table records every peripheral group currently tracked by this
@@ -695,7 +755,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m0_v1.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v4</p></td>
@@ -835,8 +895,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>not supported</p></td>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
-<td><p>to be done</p></td>
-<td><p>not supported</p></td>
+<td><p>v3</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/UART</p></td>
 <td><p>M33 v3</p></td>
@@ -929,7 +989,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m0_v1.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -1030,7 +1090,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m3m4_v1v2v3.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v1</p></td>
@@ -1131,7 +1191,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m3m4_v1v2v3.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v2</p></td>
@@ -1232,7 +1292,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
 <td><p>v1 or v2</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m3m4_v1v2v3.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -1345,7 +1405,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m3m4_v1v2v3.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v2</p></td>
@@ -1450,7 +1510,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
 <td><p>v3</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m3m4_v1v2v3.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v4</p></td>
@@ -1558,8 +1618,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/stm32l4/stm32l4_spi.c</p></td>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32l4/stm32l4_tim.c</p></td>
+<td><p>v2</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -1579,7 +1639,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>QENCODER</p></td>
 <td><p>n/a</p></td>
-<td><p>arch/arm/src/stm32l4/stm32l4_qencoder.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_qencoder.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USB host</p></td>
 <td><p>n/a</p></td>
@@ -1679,8 +1739,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/stm32f7/stm32_i2s.c</p></td>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32f7/stm32_tim.c</p></td>
+<td><p>v2</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -1716,7 +1776,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>QENCODER</p></td>
 <td><p>n/a</p></td>
-<td><p>arch/arm/src/stm32f7/stm32_qencoder.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_qencoder.c</p></td>
 </tr>
 <tr class="row-even"><td><p>SAI</p></td>
 <td><p>n/a</p></td>
@@ -1809,7 +1869,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m0_v1.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v4</p></td>
@@ -1905,8 +1965,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/stm32h5/stm32_spi.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32h5/stm32_tim.c</p></td>
+<td><p>v3</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -2046,8 +2106,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/stm32h7/stm32_spi.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32h7/stm32_tim.c</p></td>
+<td><p>v2, H7RS v3</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v4</p></td>
@@ -2087,7 +2147,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>QENCODER</p></td>
 <td><p>n/a</p></td>
-<td><p>arch/arm/src/stm32h7/stm32_qencoder.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_qencoder.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USB host</p></td>
 <td><p>n/a</p></td>
@@ -2164,7 +2224,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m0_v1.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -2261,7 +2321,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m3m4_v1v2v3.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v2</p></td>
@@ -2353,8 +2413,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/stm32l5/stm32l5_spi.c</p></td>
 </tr>
 <tr class="row-even"><td><p>TIM/LPTIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32l5/stm32l5_tim.c</p></td>
+<td><p>v2</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -2422,8 +2482,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>not supported</p></td>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
-<td><p>to be done</p></td>
-<td><p>not supported</p></td>
+<td><p>v3</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v4</p></td>
@@ -2528,7 +2588,7 @@ exact IP core version has not been documented yet.</p>
 </tr>
 <tr class="row-odd"><td><p>TIM</p></td>
 <td><p>v1</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_tim_m0_v1.c</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>TSC</p></td>
 <td><p>to be done</p></td>
@@ -2712,8 +2772,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>not supported</p></td>
 </tr>
 <tr class="row-even"><td><p>TIM</p></td>
-<td><p>to be done</p></td>
-<td><p>not supported</p></td>
+<td><p>v3</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>TSC</p></td>
 <td><p>to be done</p></td>
@@ -2825,8 +2885,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>not supported</p></td>
 </tr>
 <tr class="row-odd"><td><p>TIM/LPTIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32u5/stm32_tim.c</p></td>
+<td><p>v3</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -2910,8 +2970,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/stm32wb/stm32wb_spi.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>TIM/LPTIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32wb/stm32wb_tim.c</p></td>
+<td><p>v2</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v4</p></td>
@@ -2995,8 +3055,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/stm32wl5/stm32wl5_spi.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>TIM/LPTIM</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32wl5/stm32wl5_tim.c</p></td>
+<td><p>v2</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_tim.c</p></td>
 </tr>
 <tr class="row-even"><td><p>USART/LPUART</p></td>
 <td><p>v3</p></td>
@@ -3124,23 +3184,24 @@ of a peripheral on a given core is <code class="docutils literal notranslate"><s
 <ul class="simple">
 <li><p>Follow the same convention as headers: <code class="docutils literal notranslate"><span class="pre">stm32_gpio_m3m4_v1v2.c</span></code>,
 <code class="docutils literal notranslate"><span class="pre">stm32_adc_m0_v1.c</span></code>, <code class="docutils literal notranslate"><span class="pre">stm32_gpio_m33_v1.c</span></code>,
-<code class="docutils literal notranslate"><span class="pre">stm32_serial_m33_v3.c</span></code>, <code class="docutils literal notranslate"><span class="pre">stm32_tim_m0_v1.c</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">stm32_serial_m33_v3.c</span></code>, <code class="docutils literal notranslate"><span class="pre">stm32_spi_m0_v1.c</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">stm32_pwm_m3m4_v1v2v3.c</span></code></p></li>
 </ul>
 <p><strong>Kconfig symbol naming</strong> (<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_&lt;PERIPH&gt;_&lt;CORE&gt;_&lt;VERSION&gt;</span></code>):</p>
 <ul class="simple">
 <li><p>M0: <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_GPIO_M0_V1</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_ADC_M0_V1</span></code></p></li>
 <li><p>M3/M4: <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_GPIO_M3M4_V1</span></code>,
-<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_ADC_M3M4_V1</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_ADC_M3M4_V2</span></code>,
-<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_TIMERS_M3M4_V1</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_TIMERS_M3M4_V2</span></code>,
-<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_TIMERS_M3M4_V3</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_ADC_M3M4_V1</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_ADC_M3M4_V2</span></code></p></li>
 <li><p>M33: <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_GPIO_M33_V1</span></code>,
 <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_EXTI_M33_V1</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_USART_M33_V3</span></code></p></li>
+<li><p>No core prefix (used by several core classes):
+<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_TIMERS_V1</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_TIMERS_V2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_HAVE_IP_TIMERS_V3</span></code></p></li>
 </ul>
-<p>Note that in the future the core prefix may be dropped and a single
-version number space used across all cores.  For now the core prefix is
-kept to make migration of families into common code simpler.</p>
+<p>The core prefix is dropped once an IP is used by more than one core
+class.  Until then it is kept to make migration of families into common
+code simpler.</p>
 <p>Common STM32 files should follow these rules:</p>
 <ul class="simple">
 <li><p>Files shared by more than one family are placed under
