@@ -201,7 +201,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-silabs.html">vendor:silabs (3)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-sony.html">vendor:sony (1)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-sophgo.html">vendor:sophgo (1)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-st.html">vendor:st (113)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-st.html">vendor:st (114)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-starfive.html">vendor:starfive (1)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-thead.html">vendor:thead (1)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-ti.html">vendor:ti (9)</a></li>
@@ -285,6 +285,10 @@ through the SDK fwlib ROM layer (the LOG-UART owns the console and
 <code class="docutils literal notranslate"><span class="pre">/dev/ttyS0</span></code>)</p></li>
 <li><p>I2C master buses exposed as <code class="docutils literal notranslate"><span class="pre">/dev/i2cN</span></code> character devices, driven in
 polling mode through the SDK fwlib register layer</p></li>
+<li><p>SPI master buses exposed as <code class="docutils literal notranslate"><span class="pre">/dev/spiN</span></code> character devices, driven in
+polling mode through the SDK fwlib register layer</p></li>
+<li><p>PWM output exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> character device, driven directly on
+the SDK fwlib timer layer</p></li>
 <li><p>littlefs persistent storage mounted at <code class="docutils literal notranslate"><span class="pre">/data</span></code> (a dedicated SPI NOR flash
 partition), backing the Wi-Fi key-value store</p></li>
 <li><p>Wi-Fi station and SoftAP through the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
@@ -353,6 +357,43 @@ pad reaches exactly one I2C controller, and pads the audio codec drives
 cannot be used. The I2C bus is open-drain, so fit external pull-ups on
 SCL/SDA. Probe a bus with the tool:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev -b 0 0x03 0x77     # scan /dev/i2c0 for devices
+</pre></div>
+</div>
+</section>
+<section id="spi">
+<h3>spi<a class="headerlink" href="#spi" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the SPI master driver and the <code class="docutils literal notranslate"><span class="pre">spi</span></code> tool (<code class="docutils literal notranslate"><span class="pre">system/spi</span></code>)
+enabled (no Wi-Fi). The board registers two buses from its table (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8730e/rtl8730e_evb/src/rtl8730e_spi.c</span></code>): SPI0 at
+<code class="docutils literal notranslate"><span class="pre">/dev/spi0</span></code> with CLK/MOSI/MISO/CS on PB18/PB19/PB20/PB21 and SPI1 at
+<code class="docutils literal notranslate"><span class="pre">/dev/spi1</span></code> on PA11/PA9/PA10/PA12. The pads use the same <code class="docutils literal notranslate"><span class="pre">AMEBA_PA()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">AMEBA_PB()</span></code> encoding as the GPIO table and are muxed to the SPI function
+through the SDK ROM, while the chip-select is driven as a plain GPIO. As with
+I2C – and unlike the GPIO and UART crossbars – a pad reaches exactly one
+controller, so edit that table within each controller’s own set: PB18-PB21
+for SPI0, PB25-PB28 or PA9-PA12 for SPI1. Pads the audio codec drives cannot
+be used. Exercise a bus with the tool:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; spi exch -b 0 -x 4 deadbeef     # full-duplex transfer on /dev/spi0
+</pre></div>
+</div>
+</section>
+<section id="pwm">
+<h3>pwm<a class="headerlink" href="#pwm" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the PWM driver and the <code class="docutils literal notranslate"><span class="pre">pwm</span></code> example (<code class="docutils literal notranslate"><span class="pre">examples/pwm</span></code>)
+enabled (no Wi-Fi). The board registers one timer at <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8730e/rtl8730e_evb/src/rtl8730e_pwm.c</span></code>): TIM8 drives six
+compare channels off one shared time base, so every channel shares one
+frequency and each carries its own duty cycle. The table routes the channels
+to PA7/PA9/PA10/PA4/PA5/PA6. Despite the chip having a single
+<code class="docutils literal notranslate"><span class="pre">PINMUX_FUNCTION_PWM</span></code> code, each pad is tied to one channel – the pin-mux
+table names a pad’s PWM function <code class="docutils literal notranslate"><span class="pre">HS_PWM&lt;n&gt;</span></code>, which is channel n + 1 – so
+an entry may only be cleared to <code class="docutils literal notranslate"><span class="pre">AMEBA_PWM_PIN_NC</span></code> or swapped for another
+pad carrying the same <code class="docutils literal notranslate"><span class="pre">HS_PWM&lt;n&gt;</span></code>; PB14-PB16 are the alternative for
+channels 1-3. Avoid PA14/PA13, which are SWD_CLK/SWD_DATA and stay muxed to
+the debug port unless the board calls <code class="docutils literal notranslate"><span class="pre">Pinmux_Swdoff()</span></code>. Set
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_NCHANNELS</span></code> to the number of channels used. Exercise it with the
+example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; pwm -d 25 -f 1000     # 1 kHz, 25% duty on /dev/pwm0
 </pre></div>
 </div>
 </section>
