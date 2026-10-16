@@ -186,6 +186,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#clock">CLOCK</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#sci">SCI</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#iic">IIC</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#dtc">DTC</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#gpio">GPIO</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#gpt">GPT</a></li>
@@ -198,6 +199,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../rm57/index.html">TI/Hercules RM57</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../rp2040/index.html">Raspberry Pi rp2040</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../rp23xx/index.html">Raspberry Pi rp2350</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../rtl8720f/index.html">Realtek RTL8720F</a></li>
@@ -390,7 +392,7 @@ EK-RA8M1) has been tested; the others are selectable but untested.</p>
 </tr>
 <tr class="row-odd"><td><p>DTC</p></td>
 <td><p>Yes</p></td>
-<td><p>Used by SCI (see SCI below); normal mode only</p></td>
+<td><p>Used by SCI and IIC (see each below); normal mode only</p></td>
 </tr>
 <tr class="row-even"><td><p>DMAC</p></td>
 <td><p>No</p></td>
@@ -418,11 +420,11 @@ EK-RA8M1) has been tested; the others are selectable but untested.</p>
 </tr>
 <tr class="row-even"><td><p>SCI</p></td>
 <td><p>Yes</p></td>
-<td><p>UART only (SCI_B0-4, SCI_B9); FIFO, DTC, termios</p></td>
+<td><p>UART (SCI_B0-4, SCI_B9) or Simple IIC master (see IIC)</p></td>
 </tr>
 <tr class="row-odd"><td><p>IIC</p></td>
-<td><p>No</p></td>
-<td></td>
+<td><p>Yes</p></td>
+<td><p>Master only (IIC0-1, or any SCI_B in Simple IIC mode)</p></td>
 </tr>
 <tr class="row-even"><td><p>SPI</p></td>
 <td><p>No</p></td>
@@ -491,9 +493,11 @@ clock of the SCI baud rate generator.</p>
 <p>The Serial Communications Interface, Type B (SCI_B) is configurable to
 support several serial communication modes: Asynchronous (UART), Clock
 synchronous, Simple SPI, Smart card interface, Simple IIC (master-only).
-NuttX driver support covers UART mode.  RA8M1 has SCI_B0-4 and SCI_B9 (no
+NuttX driver support covers UART mode and Simple IIC mode (see <a class="reference internal" href="#iic">IIC</a>
+below); the rest are not implemented.  RA8M1 has SCI_B0-4 and SCI_B9 (no
 SCI_B5-8); each channel’s baud rate generator runs from SCICLK.  Each
-instance is enabled with its own <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_UART</span></code>.</p>
+instance’s mode is chosen with its own <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_UART</span></code>/
+<code class="docutils literal notranslate"><span class="pre">RA_SCIn_I2C</span></code> Kconfig choice.</p>
 <p>Each instance can independently use its 16-stage hardware FIFO or the
 DTC (see <a class="reference internal" href="#dtc">DTC</a> below) to move data, but not both: <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_FIFO</span></code>
 and <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_TXDTC</span></code>/<code class="docutils literal notranslate"><span class="pre">RXDTC</span></code> are mutually exclusive.  Measured on
@@ -511,6 +515,29 @@ clean up to 3 Mbps).</p>
 through the standard <code class="docutils literal notranslate"><span class="pre">TIOCGICOUNT</span></code> ioctl; nothing pushes a
 notification, an application has to poll it.</p>
 </section>
+<section id="iic">
+<h3>IIC<a class="headerlink" href="#iic" title="Permalink to this heading"></a></h3>
+<p>I2C is reachable through two different peripherals, both master-only (no
+slave mode, no 10-bit addressing) and both exposed through the same
+generic <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_master_s</span></code> interface as <code class="docutils literal notranslate"><span class="pre">/dev/i2cN</span></code>:</p>
+<ul class="simple">
+<li><p>The dedicated I2C Bus Interface, IIC0 and IIC1 – <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_IIC0</span></code>/
+<code class="docutils literal notranslate"><span class="pre">RA_IIC1</span></code>, independent of SCI.</p></li>
+<li><p>Any SCI_B channel’s Simple IIC mode (RA8M1 User’s Manual section 31.8)
+instead of its UART mode – <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_I2C</span></code>, mutually exclusive
+with <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCIn_UART</span></code> on the same channel</p></li>
+</ul>
+<p>There is no fixed, chip-level map of bus numbers to channels: each
+board’s own bring-up code calls whichever channels its build enables, in
+source order, and assigns <code class="docutils literal notranslate"><span class="pre">/dev/i2cN</span></code> compactly starting from 0 –
+a build with only one I2C channel enabled gets <code class="docutils literal notranslate"><span class="pre">/dev/i2c0</span></code> for it,
+regardless of which channel that is. See the board’s own documentation
+for its specific assignment order.</p>
+<p>Both backends support optional DTC offload (<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_IICn_DTC</span></code>/
+<code class="docutils literal notranslate"><span class="pre">RA_SCIn_DTC</span></code>, needs <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_DTC</span></code>): once a message’s address byte
+is acknowledged, its data bytes move through the DTC instead of one byte
+per interrupt.</p>
+</section>
 <section id="dtc">
 <h3>DTC<a class="headerlink" href="#dtc" title="Permalink to this heading"></a></h3>
 <p>The Data Transfer Controller offloads repetitive, register-triggered
@@ -520,7 +547,7 @@ and once its count is exhausted it still interrupts the CPU normally.
 Only normal mode (one activation, one transfer) is implemented; repeat
 and block modes are not.  Enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_DTC</span></code>; peripheral
 drivers that support it expose their own per-channel options (e.g.
-<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCI9_TXDTC</span></code>).</p>
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RA_SCI9_TXDTC</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_RA_IIC1_DTC</span></code>).</p>
 </section>
 <section id="gpio">
 <h3>GPIO<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h3>
