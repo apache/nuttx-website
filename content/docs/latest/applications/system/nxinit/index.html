@@ -428,11 +428,11 @@ is updated (e.g., property:a=b is checked when a’s value changes).</p></li>
 </section>
 <section id="built-in-properties">
 <h2>Built-in Properties<a class="headerlink" href="#built-in-properties" title="Permalink to this heading"></a></h2>
-<p>NXInit sets one built-in property on its own, before the <code class="docutils literal notranslate"><span class="pre">boot</span></code> event
-fires:</p>
+<p>NXInit sets the following built-in properties on its own:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">sys.boot.reason</span></code>: the cause of the last board reset. It is queried
-once at startup via <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_RESET_CAUSE,</span> <span class="pre">...)</span></code>; applications
+<li><p><code class="docutils literal notranslate"><span class="pre">sys.boot.reason</span></code>: the cause of the last board reset, set before the
+<code class="docutils literal notranslate"><span class="pre">boot</span></code> event fires. It is queried once at startup via
+<code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_RESET_CAUSE,</span> <span class="pre">...)</span></code>; applications
 do not need to set it themselves. This requires
 <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_RESET_CAUSE</span></code> and a board-provided
 <code class="docutils literal notranslate"><span class="pre">board_reset_cause()</span></code> implementation.</p>
@@ -465,6 +465,35 @@ a set of soft-reset reasons:</p>
 on init &amp;&amp; property:sys.boot.reason=bootloader|recovery|thermal
     ...
 </pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">init.trigger[.&lt;core&gt;]</span></code>: the key that <code class="docutils literal notranslate"><span class="pre">trigger</span> <span class="pre">&lt;event&gt;</span></code> writes, with
+<code class="docutils literal notranslate"><span class="pre">&lt;event&gt;</span></code> as the value; <code class="docutils literal notranslate"><span class="pre">on</span> <span class="pre">&lt;event&gt;</span></code> matches it. Each init instance
+uses its own key, so instances that share a property backend do not run
+each other’s actions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">init.trigger.core&lt;N&gt;</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_BMP</span></code>, where <code class="docutils literal notranslate"><span class="pre">&lt;N&gt;</span></code> is the CPU
+the instance runs on;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">init.trigger.&lt;cpuname&gt;</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_RPMSG_LOCAL_CPUNAME</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">init.trigger</span></code> otherwise.</p></li>
+</ul>
+<p>With a shared backend, an instance can wait for another instance’s event
+through that instance’s key, or trigger an event on it by setting the key.
+For example, audio waits for ap’s <code class="docutils literal notranslate"><span class="pre">appinit</span></code>:</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">init.audio.rc</span><a class="headerlink" href="#id1" title="Permalink to this code"></a></div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>on property:init.trigger.ap=appinit
+    ...
+</pre></div>
+</div>
+</div>
+<p>and ap triggers audio’s <code class="docutils literal notranslate"><span class="pre">appinit</span></code>:</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">init.ap.rc</span><a class="headerlink" href="#id2" title="Permalink to this code"></a></div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>on boot
+    setprop init.trigger.audio appinit
+</pre></div>
+</div>
 </div>
 </li>
 </ul>
