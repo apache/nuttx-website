@@ -148,6 +148,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../index.html#file-systems-and-networking">File systems and networking</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html#running-programs">Running programs</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Binary Loader</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts">Scripts</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#binary-loader-interface">Binary Loader Interface</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#header-files">Header Files</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#data-structures">Data Structures</a></li>
@@ -235,6 +236,8 @@ object and failed.</p>
 <li><p><strong>NXFLAT</strong>. NuttX NXFLAT formatted files. More information about the
 NXFLAT binary format can be found in the <a class="reference internal" href="nxflat.html#nxflat"><span class="std std-ref">NXFLAT
 documentation</span></a>.</p></li>
+<li><p><strong>Scripts</strong>. A file that starts with <code class="docutils literal notranslate"><span class="pre">#!</span></code> is run by the interpreter
+that its first line names. See <a class="reference internal" href="#scripts">Scripts</a> below.</p></li>
 </ul>
 </div></blockquote>
 <p><strong>Executables and Libraries</strong> The generic binary loader logic does not
@@ -251,6 +254,28 @@ variables used by the binary loader.</p>
 However, the NuttX binary loader is an independent development and
 shares nothing with the Linux binary loader other the same name and the
 same basic functionality.</p>
+<section id="scripts">
+<h2>Scripts<a class="headerlink" href="#scripts" title="Permalink to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_SCRIPT</span></code> (default <code class="docutils literal notranslate"><span class="pre">n</span></code>), <code class="docutils literal notranslate"><span class="pre">exec()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> can run a file whose first line has this form:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#!&lt;interpreter&gt; [&lt;argument&gt;]
+</pre></div>
+</div>
+<p>The loader starts the interpreter with the argument list that Linux uses:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;interpreter&gt; [&lt;argument&gt;] &lt;script&gt; &lt;argv[1]&gt; ...
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> is the path of the script that was loaded, also when it was
+found through <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. The interpreter ends at the first white space. The
+rest of the line, without the white space around it, is one optional
+argument. The loader reads at most 127 bytes of the first line.</p>
+<p>The interpreter must be a file that another binary format can load, for
+example an ELF program or a builtin application. The interpreter can be a
+script too, up to four levels. A deeper chain fails with <code class="docutils literal notranslate"><span class="pre">ELOOP</span></code>. A
+missing interpreter fails with <code class="docutils literal notranslate"><span class="pre">ENOENT</span></code>. The script format is tried after
+all other formats, so a file that no format accepts fails with
+<code class="docutils literal notranslate"><span class="pre">ENOEXEC</span></code>.</p>
+</section>
 <section id="binary-loader-interface">
 <h2>Binary Loader Interface<a class="headerlink" href="#binary-loader-interface" title="Permalink to this heading"></a></h2>
 <section id="header-files">
@@ -390,11 +415,12 @@ and prep the module for execution.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bin</strong> – The <code class="docutils literal notranslate"><span class="pre">filename</span></code> field will be used
 in order to locate the module to be loaded from the file system.
-The filename must be the full, absolute path to the file to be executed
-unless <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> is defined. In that case, filename may be
-a relative path; a set of candidate absolute paths will be generated using
-the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable and <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> will attempt to load each
-file that is found at those absolute paths.</p></li>
+With <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, a filename that contains no <code class="docutils literal notranslate"><span class="pre">/</span></code> is
+searched for in the directories of the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable,
+and <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> tries to load each file that it finds there. Any
+other filename is a path and is used as it is: an absolute path, or a
+path relative to the current working directory. Without
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, each filename is used as a path.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -605,6 +631,8 @@ value is found; <code class="docutils literal notranslate"><span class="pre">NUL
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_DISABLE</span></code>: By default, support for loadable binary formats is built.
 This logic may be suppressed be defining this setting.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_CONSTRUCTORS</span></code>: Build in support for C++ constructors in loaded modules.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_SCRIPT</span></code>: Run files that start with <code class="docutils literal notranslate"><span class="pre">#!</span></code> through the
+interpreter that they name. Default: <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYMTAB_ORDEREDBYNAME</span></code>: Symbol tables are order by name (rather than value).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYMTAB_DECORATED</span></code>: Symbols will have a leading underscore in object files.</p></li>
 </ul>

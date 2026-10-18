@@ -248,8 +248,10 @@ paging in of file blocks cannot be supported. Since the while mapped
 portion of the file must be present in memory, there are limitations
 in the size of files that may be memory mapped (especially on MCUs
 with no significant RAM resources).</p></li>
-<li><p>All mapped files are read-only.  You can write to the in-memory image,
-but the file contents will not change.</p></li>
+<li><p>Writes to a private mapping (MAP_PRIVATE) change only the in-memory
+image, never the file.  Writes to a shared, writable mapping
+(MAP_SHARED with PROT_WRITE) reach the file when msync() is called
+and when munmap() removes the mapping.</p></li>
 <li><p>There are no access privileges.</p></li>
 <li><p>Since there are no processes in NuttX, all mmap() and munmap()
 operations have immediate, global effects.  Under Linux, for example,

@@ -648,10 +648,13 @@ exits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – The path to the program to be executed. If
-<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> is defined in the configuration, then this may
-be a relative path from the current working directory. Otherwise,
-<code class="docutils literal notranslate"><span class="pre">path</span></code> must be the absolute path to the program.</p></li>
+<li><p><strong>filename</strong> – The program to be executed. With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, a name that contains no <code class="docutils literal notranslate"><span class="pre">/</span></code> is searched for
+in the directories of the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable. Any other name
+is a path and is used as it is: an absolute path, or a path relative to
+the current working directory, such as <code class="docutils literal notranslate"><span class="pre">./hello</span></code> or <code class="docutils literal notranslate"><span class="pre">bin/hello</span></code>.
+Without <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, no <code class="docutils literal notranslate"><span class="pre">PATH</span></code> search is done, and each
+name is used as a path.</p></li>
 <li><p><strong>argv</strong> – A pointer to an array of string arguments. The end of the
 array is indicated with a NULL entry.</p></li>
 <li><p><strong>exports</strong> – The address of the start of the caller-provided symbol
@@ -728,10 +731,12 @@ task.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> – The path to the program to be executed. If
-<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> is defined in the configuration, then this may
-be a relative path from the current working directory. Otherwise,</p></li>
-<li><p><strong>path</strong> – must be the absolute path to the program.</p></li>
+<li><p><strong>path</strong> – The program to be executed. With <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, a
+name that contains no <code class="docutils literal notranslate"><span class="pre">/</span></code> is searched for in the directories of the
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable. Any other name is a path and is used as
+it is: an absolute path, or a path relative to the current working
+directory. Without <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, no <code class="docutils literal notranslate"><span class="pre">PATH</span></code> search is done,
+and each name is used as a path.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -755,10 +760,12 @@ information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> – The path to the program to be executed. If
-<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> is defined in the configuration, then this may
-be a relative path from the current working directory. Otherwise,</p></li>
-<li><p><strong>path</strong> – must be the absolute path to the program.</p></li>
+<li><p><strong>path</strong> – The program to be executed. With <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, a
+name that contains no <code class="docutils literal notranslate"><span class="pre">/</span></code> is searched for in the directories of the
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable. Any other name is a path and is used as
+it is: an absolute path, or a path relative to the current working
+directory. Without <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, no <code class="docutils literal notranslate"><span class="pre">PATH</span></code> search is done,
+and each name is used as a path.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -791,13 +798,12 @@ file.</p>
 parent task, in the variable pointed to by a non-NULL <code class="docutils literal notranslate"><span class="pre">pid</span></code>
 argument. If the <code class="docutils literal notranslate"><span class="pre">pid</span></code> argument is a null pointer, the process ID
 of the child is not returned to the caller.</p></li>
-<li><p><strong>path</strong> – <p>The <code class="docutils literal notranslate"><span class="pre">path</span></code> argument to <code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> is
-the absolute path that identifies the file to execute. The <code class="docutils literal notranslate"><span class="pre">file</span></code>
-argument to <code class="docutils literal notranslate"><span class="pre">posix_spawnp()</span></code> may also be a relative path and will
-be used to construct a pathname that identifies the file to execute.
-In the case of a relative path, the path prefix for the file will be
-obtained by a search of the directories passed as the environment
-variable PATH.</p>
+<li><p><strong>path</strong> – <p>The <code class="docutils literal notranslate"><span class="pre">path</span></code> argument to <code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> and the <code class="docutils literal notranslate"><span class="pre">file</span></code>
+argument to <code class="docutils literal notranslate"><span class="pre">posix_spawnp()</span></code> identify the file to execute. With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code>, a name that contains no <code class="docutils literal notranslate"><span class="pre">/</span></code> is searched for
+in the directories of the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable. Any other name
+is a path and is used as it is: an absolute path, or a path relative to
+the current working directory, such as <code class="docutils literal notranslate"><span class="pre">./hello</span></code> or <code class="docutils literal notranslate"><span class="pre">bin/hello</span></code>.</p>
 <p>NOTE: NuttX provides only one implementation: If
 <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> is defined, then only <code class="docutils literal notranslate"><span class="pre">posix_spawnp()</span></code>
 behavior is supported; otherwise, only <code class="docutils literal notranslate"><span class="pre">posix_spawn</span></code> behavior is
@@ -830,16 +836,20 @@ user IDs.</p></li>
 supported. NuttX does not support default signal actions.</p></li>
 </ul>
 </p></li>
-<li><p><strong>argv</strong> – <code class="docutils literal notranslate"><span class="pre">argv[]</span></code> is the argument list for the new task.
+<li><p><strong>argv</strong> – <p><code class="docutils literal notranslate"><span class="pre">argv[]</span></code> is the argument list for the new task.
 <code class="docutils literal notranslate"><span class="pre">argv[]</span></code> is an array of pointers to null-terminated strings. The
-list is terminated with a null pointer.</p></li>
-<li><p><strong>envp</strong> – The <code class="docutils literal notranslate"><span class="pre">envp[]</span></code> argument is not used by NuttX and may be
-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>. In standard implementations, <code class="docutils literal notranslate"><span class="pre">envp[]</span></code> is an array of
-character pointers to null-terminated strings that provide the
-environment for the new process image. The environment array is
-terminated by a null pointer. In NuttX, the <code class="docutils literal notranslate"><span class="pre">envp[]</span></code> argument is
-ignored and the new task will inherit the environment of the parent
-task unconditionally.</p></li>
+list is terminated with a null pointer.</p>
+<p>A new task can get at most <code class="docutils literal notranslate"><span class="pre">CONFIG_TASK_MAX_ARGS</span></code> arguments (default
+256). A longer list fails with <code class="docutils literal notranslate"><span class="pre">E2BIG</span></code>. <code class="docutils literal notranslate"><span class="pre">CONFIG_TASK_ARG_MAX</span></code> sets
+<code class="docutils literal notranslate"><span class="pre">ARG_MAX</span></code> and <code class="docutils literal notranslate"><span class="pre">sysconf(_SC_ARG_MAX)</span></code> (default 4096 bytes): the size
+of the arguments and the environment that a program may pass. NuttX
+does not check this size. The arguments are copied to the stack of the
+new task, so its stack must be large enough for them.</p>
+</p></li>
+<li><p><strong>envp</strong> – <code class="docutils literal notranslate"><span class="pre">envp[]</span></code> is an array of pointers to null-terminated
+<code class="docutils literal notranslate"><span class="pre">name=value</span></code> strings that is the environment of the new task. The
+array is terminated by a null pointer. If <code class="docutils literal notranslate"><span class="pre">envp</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the new
+task gets a copy of the environment of the caller (<code class="docutils literal notranslate"><span class="pre">environ</span></code>).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -861,8 +871,6 @@ depending upon the setting of <code class="docutils literal notranslate"><span c
 <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> is defined, then only <code class="docutils literal notranslate"><span class="pre">posix_spawnp()</span></code>
 behavior is supported; otherwise, only <code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> behavior is
 supported.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">envp</span></code> argument is not used and the <code class="docutils literal notranslate"><span class="pre">environ</span></code> variable is not
-altered (NuttX does not support the <code class="docutils literal notranslate"><span class="pre">environ</span></code> variable).</p></li>
 <li><p>Process groups are not supported (See <code class="docutils literal notranslate"><span class="pre">POSIX_SPAWN_SETPGROUP</span></code>
 above).</p></li>
 <li><p>Effective user IDs are not supported (See <code class="docutils literal notranslate"><span class="pre">POSIX_SPAWN_RESETIDS</span></code>
@@ -1261,9 +1269,11 @@ supported. NuttX does not support default signal actions.</p></li>
 </p></li>
 <li><p><strong>argv</strong> – <code class="docutils literal notranslate"><span class="pre">argv[]</span></code> is the argument list for the new task.
 <code class="docutils literal notranslate"><span class="pre">argv[]</span></code> is an array of pointers to null-terminated strings. The
-list is terminated with a null pointer.</p></li>
-<li><p><strong>envp</strong> – The <code class="docutils literal notranslate"><span class="pre">envp[]</span></code> argument is not used by NuttX and may be
-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p></li>
+list is terminated with a null pointer. The limits of
+<a class="reference internal" href="#c.posix_spawn" title="posix_spawn"><code class="xref c c-func docutils literal notranslate"><span class="pre">posix_spawn()</span></code></a> apply.</p></li>
+<li><p><strong>envp</strong> – The environment of the new task, as for
+<a class="reference internal" href="#c.posix_spawn" title="posix_spawn"><code class="xref c c-func docutils literal notranslate"><span class="pre">posix_spawn()</span></code></a>. If <code class="docutils literal notranslate"><span class="pre">envp</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the new task gets a
+copy of the environment of the caller.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

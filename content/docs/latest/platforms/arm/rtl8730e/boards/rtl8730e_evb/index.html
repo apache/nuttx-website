@@ -289,6 +289,9 @@ polling mode through the SDK fwlib register layer</p></li>
 polling mode through the SDK fwlib register layer</p></li>
 <li><p>PWM output exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code> character device, driven directly on
 the SDK fwlib timer layer</p></li>
+<li><p>General-purpose timers exposed as <code class="docutils literal notranslate"><span class="pre">/dev/timerN</span></code> character devices, with
+microsecond timeouts and a periodic expiration callback</p></li>
+<li><p>On-chip watchdog exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/watchdog0</span></code> character device</p></li>
 <li><p>littlefs persistent storage mounted at <code class="docutils literal notranslate"><span class="pre">/data</span></code> (a dedicated SPI NOR flash
 partition), backing the Wi-Fi key-value store</p></li>
 <li><p>Wi-Fi station and SoftAP through the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
@@ -394,6 +397,35 @@ the debug port unless the board calls <code class="docutils literal notranslate"
 <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_NCHANNELS</span></code> to the number of channels used. Exercise it with the
 example:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; pwm -d 25 -f 1000     # 1 kHz, 25% duty on /dev/pwm0
+</pre></div>
+</div>
+</section>
+<section id="timer">
+<h3>timer<a class="headerlink" href="#timer" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the timer driver and the <code class="docutils literal notranslate"><span class="pre">timer</span></code> example
+(<code class="docutils literal notranslate"><span class="pre">examples/timer</span></code>) enabled (no Wi-Fi). The board registers two timers (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8730e/rtl8730e_evb/src/rtl8730e_timer.c</span></code>): <code class="docutils literal notranslate"><span class="pre">/dev/timer0</span></code>
+is TIM2 and <code class="docutils literal notranslate"><span class="pre">/dev/timer1</span></code> is TIM3, both 32-bit LP basic timers clocked at
+32.768 kHz, so a tick is ~30.5 us and a single timeout reaches ~36 hours.
+Neither has any board wiring. TIM0 and TIM1 are not exposed: the ROM claims
+TIM0 as the system timer behind <code class="docutils literal notranslate"><span class="pre">DelayUs()</span></code>/<code class="docutils literal notranslate"><span class="pre">SYSTIMER_*</span></code>, and the vendor
+HAL claims TIM1 as its application and UART-timeout timer. Exercise a timer
+with the example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; timer                 # 20 samples 0.1 s apart, 1 s timeout, on /dev/timer0
+</pre></div>
+</div>
+</section>
+<section id="wdg">
+<h3>wdg<a class="headerlink" href="#wdg" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the watchdog driver and the <code class="docutils literal notranslate"><span class="pre">wdog</span></code> example (no Wi-Fi).
+The board registers the on-chip watchdog at <code class="docutils literal notranslate"><span class="pre">/dev/watchdog0</span></code> (see
+<code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8730e/rtl8730e_evb/src/rtl8730e_wdg.c</span></code>): WDG4, the CA32
+non-secure system watchdog. It has no board wiring (it is an internal
+timer) and, once enabled, cannot be stopped by software – the stop()
+operation instead arms the early-interrupt and refreshes the counter from
+its handler to inhibit the reset. Exercise it with the example, which
+opens the device, sets a timeout, and pings it:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; wdog                  # run the watchdog example on /dev/watchdog0
 </pre></div>
 </div>
 </section>

@@ -155,6 +155,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Environment Variables</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#programming-interfaces">Programming Interfaces</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#disabling-environment-variable-support">Disabling Environment Variable Support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-environ-variable">The <code class="docutils literal notranslate"><span class="pre">environ</span></code> Variable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#functions">Functions</a></li>
 </ul>
 </li>
@@ -241,6 +242,34 @@ in the following paragraphs.</p>
 <p>All support for environment
 variables can be disabled by setting <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_ENVIRON</span></code> in the
 board configuration file.</p>
+</section>
+<section id="the-environ-variable">
+<h2>The <code class="docutils literal notranslate"><span class="pre">environ</span></code> Variable<a class="headerlink" href="#the-environ-variable" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">environ</span></code> points to the environment of the calling task group: an array
+of <code class="docutils literal notranslate"><span class="pre">name=value</span></code> strings that ends with a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> pointer. Each task
+group has its own environment, so <code class="docutils literal notranslate"><span class="pre">&lt;stdlib.h&gt;</span></code> defines <code class="docutils literal notranslate"><span class="pre">environ</span></code> as a
+macro, <code class="docutils literal notranslate"><span class="pre">(*get_environ_ptr())</span></code>. NuttX has no <code class="docutils literal notranslate"><span class="pre">environ</span></code> symbol: include
+<code class="docutils literal notranslate"><span class="pre">&lt;stdlib.h&gt;</span></code> to use <code class="docutils literal notranslate"><span class="pre">environ</span></code>. A program can read the array, change an
+entry in place, or assign its own array to <code class="docutils literal notranslate"><span class="pre">environ</span></code>. The functions
+below then work on that array. With <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_ENVIRON</span></code>,
+<code class="docutils literal notranslate"><span class="pre">environ</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>An ELF program can also get the environment as the third argument of
+<code class="docutils literal notranslate"><span class="pre">main()</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[],</span><span class="w"> </span><span class="n">FAR</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">envp</span><span class="p">[]);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">crt0</span></code> of NuttX passes <code class="docutils literal notranslate"><span class="pre">environ</span></code> there on arm, arm64, risc-v,
+x86_64 and xtensa (<code class="docutils literal notranslate"><span class="pre">NULL</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_ENVIRON</span></code>). A program
+that is not started through <code class="docutils literal notranslate"><span class="pre">crt0</span></code>, for example a builtin application,
+gets only <code class="docutils literal notranslate"><span class="pre">argc</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code>.</p>
+<p>The environment functions are in the C library, not system calls. Each
+environment is in the heap that holds the task information of its task
+group: the user heap for a user task, the kernel heap for a kernel thread.</p>
+<p>The C library frees no environment string that it allocated until the
+task group exits. So a pointer that <a class="reference internal" href="#c.getenv" title="getenv"><code class="xref c c-func docutils literal notranslate"><span class="pre">getenv()</span></code></a> returned stays valid
+after <a class="reference internal" href="#c.setenv" title="setenv"><code class="xref c c-func docutils literal notranslate"><span class="pre">setenv()</span></code></a>, <a class="reference internal" href="#c.putenv" title="putenv"><code class="xref c c-func docutils literal notranslate"><span class="pre">putenv()</span></code></a>, <a class="reference internal" href="#c.unsetenv" title="unsetenv"><code class="xref c c-func docutils literal notranslate"><span class="pre">unsetenv()</span></code></a> or
+<a class="reference internal" href="#c.clearenv" title="clearenv"><code class="xref c c-func docutils literal notranslate"><span class="pre">clearenv()</span></code></a> changes the environment. A program that sets one
+variable many times keeps the old values until it exits.</p>
 </section>
 <section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h2>

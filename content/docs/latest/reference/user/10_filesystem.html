@@ -741,6 +741,9 @@ This FIFO implementation will block all attempts to open a FIFO read-only
 until at least one thread has opened the FIFO for writing.</p>
 <p>If all threads that write to the FIFO have closed, subsequent calls to
 read() on the FIFO will return 0 (end-of-file).</p>
+<p>A FIFO can exist only in the pseudo file system. If <code class="docutils literal notranslate"><span class="pre">pathname</span></code> is inside
+a mounted file system and no file exists at that path, mkfifo() fails with
+<code class="docutils literal notranslate"><span class="pre">EPERM</span></code>. If a file exists at that path, it fails with <code class="docutils literal notranslate"><span class="pre">EEXIST</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -811,8 +814,10 @@ on-demanding paging in of file blocks cannot be supported. Since
 the while mapped portion of the file must be present in memory,
 there are limitations in the size of files that may be memory
 mapped (especially on MCUs with no significant RAM resources).</p></li>
-<li><p>All mapped files are read-only. You can write to the in-memory
-image, but the file contents will not change.</p></li>
+<li><p>Writes to a private mapping (<code class="docutils literal notranslate"><span class="pre">MAP_PRIVATE</span></code>) change only the
+in-memory image, never the file. Writes to a shared, writable
+mapping (<code class="docutils literal notranslate"><span class="pre">MAP_SHARED</span></code> with <code class="docutils literal notranslate"><span class="pre">PROT_WRITE</span></code>) reach the file when
+<code class="docutils literal notranslate"><span class="pre">msync()</span></code> is called and when <code class="docutils literal notranslate"><span class="pre">munmap()</span></code> removes the mapping.</p></li>
 <li><p>There are no access privileges.</p></li>
 <li><p>Since there are no processes in NuttX, all <code class="docutils literal notranslate"><span class="pre">mmap()</span></code> and
 <code class="docutils literal notranslate"><span class="pre">munmap()</span></code> operations have immediate, global effects. Under

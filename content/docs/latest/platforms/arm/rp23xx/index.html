@@ -351,9 +351,13 @@ If picotool is available a nuttx.uf2 file will be created</p></td>
 </tr>
 <tr class="row-odd"><td><p>RTC</p></td>
 <td><p>Working</p></td>
-<td><p>POWMAN always-on timer, backs the system clock</p></td>
+<td><p>POWMAN always-on timer, system clock and /dev/rtc0 with alarm</p></td>
 </tr>
-<tr class="row-even"><td><p>OTP</p></td>
+<tr class="row-even"><td><p>PM</p></td>
+<td><p>Working</p></td>
+<td><p>Standby, dormant and suspend to RAM, see Power Management</p></td>
+</tr>
+<tr class="row-odd"><td><p>OTP</p></td>
 <td><p>Working</p></td>
 <td><p>Reads via /dev/efuse; programming is opt-in</p></td>
 </tr>
@@ -554,6 +558,58 @@ library (<cite>powman_timer_start_lposc()</cite>, <cite>powman_timer_set_ms()</c
 <cite>powman_timer_get_ms()</cite>), which the pico-sdk in turn exposes through its
 <a class="reference external" href="https://github.com/raspberrypi/pico-sdk/tree/master/src/rp2_common/pico_aon_timer">pico_aon_timer</a>
 wrapper.</p>
+<p>The always-on timer also has one alarm comparator. With <code class="docutils literal notranslate"><span class="pre">RTC_DRIVER</span></code>, the
+common board bring-up registers the timer as <code class="docutils literal notranslate"><span class="pre">/dev/rtc0</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">RTC_ALARM</span></code> too, <code class="docutils literal notranslate"><span class="pre">/dev/rtc0</span></code> supports <code class="docutils literal notranslate"><span class="pre">RTC_SET_ALARM</span></code>,
+<code class="docutils literal notranslate"><span class="pre">RTC_SET_RELATIVE</span></code>, <code class="docutils literal notranslate"><span class="pre">RTC_RD_ALARM</span></code> and <code class="docutils literal notranslate"><span class="pre">RTC_CANCEL_ALARM</span></code>, for example
+through <code class="docutils literal notranslate"><span class="pre">apps/examples/alarm</span></code>. The comparator stays asserted while the
+time is past the alarm time, so the interrupt handler disables the alarm
+first. An alarm fires once.</p>
+</section>
+<section id="power-management">
+<h2>Power Management<a class="headerlink" href="#power-management" title="Permalink to this heading"></a></h2>
+<p>Enable <code class="docutils literal notranslate"><span class="pre">PM</span></code> and <code class="docutils literal notranslate"><span class="pre">RP23XX_PM</span></code>. The driver maps the NuttX PM states onto
+the RP2350 low-power modes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PM_STANDBY</span></code> is the RP2350 SLEEP state: a WFI with the clocks of the
+blocks that have no driver gated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PM_SLEEP</span></code> is the DORMANT state: the PLLs and the crystal oscillator
+stop. Only a GPIO can end it. Set the wake pin with
+<code class="docutils literal notranslate"><span class="pre">RP23XX_PM_WAKEUP_GPIO</span></code> (-1, the default, means never dormant: then
+<code class="docutils literal notranslate"><span class="pre">PM_SLEEP</span></code> gives standby), and its polarity and edge with
+<code class="docutils literal notranslate"><span class="pre">RP23XX_PM_WAKEUP_GPIO_HIGH</span></code> and <code class="docutils literal notranslate"><span class="pre">RP23XX_PM_WAKEUP_GPIO_EDGE</span></code>. The
+console receive pin can be the wake pin.</p></li>
+<li><p>Suspend to RAM (POWMAN P1.0, <code class="docutils literal notranslate"><span class="pre">RP23XX_PM_SUSPEND</span></code>): the switched core is
+powered off, and SRAM and the XIP cache keep their contents. Every
+peripheral loses its registers, and the chip comes back through the boot
+path. The idle governor never selects this state. An application asks
+for it with the <code class="docutils literal notranslate"><span class="pre">BOARDIOC_RP23XX_SUSPEND</span></code> boardctl() command
+(<code class="docutils literal notranslate"><span class="pre">arch/chip/pm.h</span></code>, needs <code class="docutils literal notranslate"><span class="pre">BOARDCTL_IOCTL</span></code>). The wake is the wake GPIO,
+an RTC alarm that the application set, or the <code class="docutils literal notranslate"><span class="pre">wake_ms</span></code> timer of the
+command, whichever comes first. <code class="docutils literal notranslate"><span class="pre">wake_source</span></code> returns the POWMAN
+<code class="docutils literal notranslate"><span class="pre">LAST_SWCORE_PWRUP</span></code> register, which tells the cause.</p></li>
+</ul>
+<p>After a dormant wake, and after each character that a UART receives, the
+driver holds a <code class="docutils literal notranslate"><span class="pre">PM_STANDBY</span></code> wakelock for <code class="docutils literal notranslate"><span class="pre">RP23XX_PM_WAKE_HOLD_MS</span></code>
+(default 3000). <code class="docutils literal notranslate"><span class="pre">RP23XX_PM_QUIESCE_PADS</span></code> (default <code class="docutils literal notranslate"><span class="pre">y</span></code>) isolates the
+unused pads and holds the blocks with no driver in reset, against the
+input leakage of erratum RP2350-E9.</p>
+<p>Limits:</p>
+<ul class="simple">
+<li><p>In the dormant state the system tick stops. Timers, <code class="docutils literal notranslate"><span class="pre">sleep()</span></code> and RTC
+alarms wait for the next GPIO wake. An application that needs them holds
+a PM state with <code class="docutils literal notranslate"><span class="pre">boardctl(BOARDIOC_PM_CONTROL)</span></code>.</p></li>
+<li><p>A dormant chip does not answer SWD. The <code class="docutils literal notranslate"><span class="pre">pm</span></code> configurations set
+<code class="docutils literal notranslate"><span class="pre">PM_GOVERNOR_EXPLICIT_RELAX</span></code> to stay out of the dormant state for 30 s
+after boot.</p></li>
+<li><p>With the console receive pin as the wake pin, the input of the first 4 to
+10 ms after a dormant wake is lost, while the crystal oscillator and the
+PLLs start.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">pm</span></code> configurations of <a class="reference internal" href="boards/raspberrypi-pico-2/index.html"><span class="doc">Raspberry Pi Pico 2</span></a> and
+<a class="reference internal" href="boards/pimoroni-pico-2-plus/index.html"><span class="doc">Pimoroni Pico Plus 2</span></a> use these options.
+<a class="reference internal" href="../../../applications/examples/pmstress/index.html"><span class="doc">pmstress Power Management Current Staircase</span></a> walks the states in a timed
+sequence for current measurement.</p>
 </section>
 <section id="programming">
 <h2>Programming<a class="headerlink" href="#programming" title="Permalink to this heading"></a></h2>

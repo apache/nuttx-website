@@ -148,6 +148,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../index.html#file-systems-and-networking">File systems and networking</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html#running-programs">Running programs</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="index.html">Binary Loader</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#scripts">Scripts</a></li>
 <li class="toctree-l4"><a class="reference internal" href="index.html#binary-loader-interface">Binary Loader Interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="index.html#symbol-tables">Symbol Tables</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="index.html#configuration-variables">Configuration Variables</a><ul class="current">
@@ -336,26 +337,21 @@ such, NXFLAT is currently in an early alpha phase.</p>
 <p>Building an NXFLAT module takes two tools beyond an ordinary GCC toolchain:
 <code class="docutils literal notranslate"><span class="pre">mknxflat</span></code>, which generates the module’s <em>thunk</em> file, and <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code>,
 which links the module into the NXFLAT binary format.</p>
-<p><code class="docutils literal notranslate"><span class="pre">mknxflat</span></code> is part of NuttX, in <code class="docutils literal notranslate"><span class="pre">tools/nxflat</span></code>.  The build produces it as
-<code class="docutils literal notranslate"><span class="pre">tools/mknxflat</span></code> whenever <code class="docutils literal notranslate"><span class="pre">CONFIG_NXFLAT</span></code> is selected, so there is
-nothing to install.</p>
-<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> is not part of NuttX and cannot be: it is GPL and derives from
-elf2flt.  It lives in the NuttX buildroot toolchain, at
-<a class="reference external" href="https://github.com/patacongo/buildroot">patacongo/buildroot</a>, under
-<code class="docutils literal notranslate"><span class="pre">toolchain/nxflat</span></code>.</p>
-<p>Only that one tool is needed.  The rest of the buildroot toolchain is not:
-an ordinary <code class="docutils literal notranslate"><span class="pre">arm-none-eabi</span></code> GCC compiles and links NXFLAT modules, so a
-board does not have to select <code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_BUILDROOT</span></code> to use
-them.</p>
-<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> reads its input through libbfd, so it is built against a
-binutils source tree and a binutils build of the same version.
-<code class="docutils literal notranslate"><span class="pre">toolchain/nxflat/Makefile</span></code> takes those as <code class="docutils literal notranslate"><span class="pre">BINUTILS_DIR</span></code> and
-<code class="docutils literal notranslate"><span class="pre">BINUTILS_DIR1</span></code>, and expects an <code class="docutils literal notranslate"><span class="pre">arch</span></code> symbolic link naming the target,
-<code class="docutils literal notranslate"><span class="pre">thumb2</span></code> or <code class="docutils literal notranslate"><span class="pre">arm</span></code>.  Where the binutils build leaves <code class="docutils literal notranslate"><span class="pre">libbfd.a</span></code> varies,
-so the library path may need adjusting.  Put the result on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<p>Both tools are part of NuttX, in <code class="docutils literal notranslate"><span class="pre">tools/nxflat</span></code>, and both are under the
+Apache 2.0 license.  When <code class="docutils literal notranslate"><span class="pre">CONFIG_NXFLAT</span></code> is selected, the make build
+makes them as <code class="docutils literal notranslate"><span class="pre">tools/mknxflat</span></code> and <code class="docutils literal notranslate"><span class="pre">tools/ldnxflat</span></code>, so there is
+nothing to install.  An ordinary <code class="docutils literal notranslate"><span class="pre">arm-none-eabi</span></code> GCC compiles and links
+the module objects, so a board does not have to select
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_TOOLCHAIN_BUILDROOT</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tools/nxflat/testsuite.sh</span></code> builds and converts every module of
+<code class="docutils literal notranslate"><span class="pre">apps/examples/nxflat/tests</span></code> and reports the relocations of each one.  It
+needs no board.</p>
 <p>On ARM, <code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/Toolchain.defs</span></code> provides both <code class="docutils literal notranslate"><span class="pre">MKNXFLAT</span></code>
 (with the <code class="docutils literal notranslate"><span class="pre">-a</span></code> option following <code class="docutils literal notranslate"><span class="pre">CONFIG_ARM_THUMB</span></code>) and <code class="docutils literal notranslate"><span class="pre">LDNXFLAT</span></code>, so
-a board only has to assign them if it needs something different.</p>
+a board only has to assign them if it needs something different.  With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NXFLAT</span></code>, the same file adds <code class="docutils literal notranslate"><span class="pre">-mno-pic-data-is-text-relative</span></code> to
+<code class="docutils literal notranslate"><span class="pre">ARCHPICFLAGS</span></code> (GCC only; Clang has no such option), so a module reaches
+its read-only data through the GOT and can hold string constants.</p>
 </section>
 <section id="mknxflat">
 <h3>mknxflat<a class="headerlink" href="#mknxflat" title="Permalink to this heading"></a></h3>
@@ -386,26 +382,29 @@ was compiled for.</p>
 </section>
 <section id="ldnxflat">
 <h3>ldnxflat<a class="headerlink" href="#ldnxflat" title="Permalink to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> is use to link your object files along with the <em>thunk</em>
-file generated by <code class="docutils literal notranslate"><span class="pre">mknxflat</span></code> to produce the NXFLAT
+<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> converts the relocatable object that contains your object
+files and the <em>thunk</em> file generated by <code class="docutils literal notranslate"><span class="pre">mknxflat</span></code> into the NXFLAT
 binary module. See below for usage:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: ldnxflat [options] &lt;bfd-filename&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: ldnxflat -e &lt;entry&gt; -o &lt;output&gt; [-s &lt;stack&gt;] [-v] &lt;elf-file&gt;
 
-Where options are one or more of the following.  Note
-that a space is always required between the option and
-any following arguments.
+Convert one ELF object into an NXFLAT module.  The
+object is what these produce, in this order:
 
-  -d Use dynamic symbol table [Default: symtab]
-  -e &lt;entry-point&gt;
-     Entry point to module [Default: _start]
-  -o &lt;out-filename&gt;
-     Output to &lt;out-filename&gt; [Default: &lt;bfd-filename&gt;.nxf]
-  -s &lt;stack-size&gt;
-     Set stack size to &lt;stack-size&gt; [Default: 4096]
-  -v Verbose output. If -v is applied twice, additional
-     debug output is enabled [Default: no verbose output].
+  ld -r -d -warn-common
+  mknxflat, assembled and linked in
+  ld -r -d -warn-common -T gnu-nxflat-gotoff.ld -no-check-sections
+
+  -e &lt;entry&gt;  The symbol the loader enters.  Needed:
+              a module has no crt0, so no name for it
+              is conventional.
+  -o &lt;output&gt; Where to write it.  Needed.
+  -s &lt;stack&gt;  Stack the module is given, in bytes [4096].
+  -v          Say what was placed; twice, every relocation.
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">-e</span></code> and <code class="docutils literal notranslate"><span class="pre">-o</span></code> are required.  The in-tree <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> has no <code class="docutils literal notranslate"><span class="pre">-d</span></code>
+option, which the older, out-of-tree tool had.  It converts ARM objects
+only, and refuses an object for another machine.</p>
 </section>
 <section id="mksymtab">
 <h3>mksymtab<a class="headerlink" href="#mksymtab" title="Permalink to this heading"></a></h3>
@@ -522,10 +521,10 @@ incorporate itself into the system.</p>
 <section id="module-abi-marker">
 <h3>Module ABI marker<a class="headerlink" href="#module-abi-marker" title="Permalink to this heading"></a></h3>
 <p>The NXFLAT header carries no version field – <code class="docutils literal notranslate"><span class="pre">h_magic</span></code> is written by
-<code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code>, which lives outside this repository and cannot be changed in
-step with the loader – so the module ABI is declared through the import
-table instead.  Every module built by <code class="docutils literal notranslate"><span class="pre">mknxflat</span></code> imports the symbol
-<code class="docutils literal notranslate"><span class="pre">__nxflat_abi_v2</span></code>, libc defines it, and the loader refuses a module whose
+<code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code>, and modules built by an older <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> are still in use
+– so the module ABI is declared through the import table instead.  Every
+module built by <code class="docutils literal notranslate"><span class="pre">mknxflat</span></code> imports the symbol <code class="docutils literal notranslate"><span class="pre">__nxflat_abi_v2</span></code>, libc
+defines it, and the loader refuses a module whose
 import table does not name it.  Being in libc, the marker is in every image
 that can pass <code class="docutils literal notranslate"><span class="pre">exec()</span></code> a symbol table: the user image of a protected or
 kernel build as well as the base firmware.  The generation is bumped

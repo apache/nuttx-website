@@ -311,8 +311,9 @@ offers.</p>
 environment no longer builds.</strong>  <code class="docutils literal notranslate"><span class="pre">fork()</span></code> is not declared in <code class="docutils literal notranslate"><span class="pre">unistd.h</span></code>
 there, so you get a compile error naming the function.  That is the intended
 outcome:  a build error is strictly better than the silent wrongness it
-replaces.  Today that is every in-tree architecture, so every caller of
-<code class="docutils literal notranslate"><span class="pre">fork()</span></code> has to be looked at.</p>
+replaces.  Today that is every target except a kernel build on arm64,
+x86_64 or Xtensa (ESP32-S3), so every caller of <code class="docutils literal notranslate"><span class="pre">fork()</span></code> has to be
+looked at.</p>
 <p><strong>Code calling</strong> <code class="docutils literal notranslate"><span class="pre">fork()</span></code> <strong>on a target that does have real</strong> <code class="docutils literal notranslate"><span class="pre">fork()</span></code>
 <strong>changes behaviour</strong> – from sharing to copying.  Code that (perhaps
 unknowingly) relied on the sharing will now see the parent and child diverge.</p>
@@ -395,7 +396,7 @@ kernel address on a kernel stack.  The architecture must record the caller’s
 exception frame when it traps – <code class="docutils literal notranslate"><span class="pre">xcp.sregs</span></code> is the field that exists for
 this – and build the child from that instead, while a kernel thread that calls
 the entry point directly still takes the ordinary path.</p>
-<p>Four architectures do it, and they are worth copying:</p>
+<p>Five architectures do it, and they are worth copying:</p>
 <ul class="simple">
 <li><p>RISC-V: <code class="docutils literal notranslate"><span class="pre">riscv_swint.c</span></code> stores the frame in <code class="docutils literal notranslate"><span class="pre">xcp.sregs</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">riscv_fork.c</span></code> rebuilds the child from it.</p></li>
@@ -434,6 +435,19 @@ with the user code and data selectors at RPL 3.  For the same reason the
 saved frame is not copied wholesale:  only the extended state and the
 general registers are inherited, and the segment registers and thread
 pointer come from the frame <code class="docutils literal notranslate"><span class="pre">up_initial_state()</span></code> built for the child.</p></li>
+<li><p>Xtensa (ESP32-S3): <code class="docutils literal notranslate"><span class="pre">xtensa_swint.c</span></code> stores the frame in <code class="docutils literal notranslate"><span class="pre">xcp.sregs</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">xtensa_fork.c</span></code> builds the child from it.  <code class="docutils literal notranslate"><span class="pre">up_fork()</span></code> selects
+<code class="docutils literal notranslate"><span class="pre">xtensa_fork_syscall()</span></code> or <code class="docutils literal notranslate"><span class="pre">xtensa_fork_direct()</span></code> at build time, with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIB_SYSCALL</span></code>.  Each exception entry spills all register windows
+to the stack, so the frame and the stack together hold the complete
+context of the caller.  The windowed ABI keeps absolute stack pointers in
+the register-window save areas on the stack.  A <code class="docutils literal notranslate"><span class="pre">fork()</span></code> child runs at
+the parent’s stack addresses in its own address environment, so these
+pointers stay correct.  A <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> child runs on a copy of the stack at
+a different address, so <code class="docutils literal notranslate"><span class="pre">xtensa_fork_rebase()</span></code> adds the offset to each
+saved stack pointer of the frame chain in the copy.  Without this, the
+child reloads a pointer into the <em>parent’s</em> stack at its first window
+underflow.  Another architecture with a windowed ABI must do the same.</p></li>
 </ul>
 <p>Nothing else is required:  the <code class="docutils literal notranslate"><span class="pre">up_fork()</span></code> entry point and the libc wrapper
 are already there and become live automatically.</p>
@@ -452,14 +466,8 @@ parent’s memory, works there as everywhere else.</p>
 complete – <code class="docutils literal notranslate"><span class="pre">addrenv_fork()</span></code>, the <code class="docutils literal notranslate"><span class="pre">up_addrenv_fork()</span></code> hook, the syscall, the
 libc wrapper and the <code class="docutils literal notranslate"><span class="pre">ostest</span></code> case – so an architecture provides <code class="docutils literal notranslate"><span class="pre">fork()</span></code>
 by implementing <code class="docutils literal notranslate"><span class="pre">up_addrenv_fork()</span></code> and selecting <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HAVE_FORK</span></code>,
-with no further generic work.  x86_64 and arm64 select it today.</p>
-<p><strong>A windowed ABI needs its stack rebased, not just copied.</strong>  On Xtensa,
-giving a child a relocated copy of the parent’s stack takes more than the copy:
-the register-window save areas embedded in the stack hold absolute stack
-pointers, so each one has to be rebased along with the copy, or the child
-reloads a pointer into the <em>parent’s</em> stack on its very first window underflow.
-That rebasing is architecture-specific and belongs with the Xtensa entry points
-rather than here.</p>
+with no further generic work.  x86_64, arm64 and Xtensa (the ESP32-S3
+kernel build) select it today.</p>
 </section>
 <section id="note-also-on-waitpid-after-vfork">
 <h2>Note also on <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> after <code class="docutils literal notranslate"><span class="pre">vfork()</span></code><a class="headerlink" href="#note-also-on-waitpid-after-vfork" title="Permalink to this heading"></a></h2>

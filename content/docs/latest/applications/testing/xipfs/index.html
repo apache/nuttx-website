@@ -299,6 +299,22 @@ holder does.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">teardown</span></code></dt><dd><p>That a task killed without calling <code class="docutils literal notranslate"><span class="pre">munmap</span></code> still has its pin released.
 This is the one that matters for a module that faults.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">fdpic</span></code></dt><dd><p>Loads <a class="reference internal" href="../../../os/binfmt/fdpic.html"><span class="doc">FDPIC</span></a> modules from the volume and checks
+the loader: function descriptors that the loader makes, a module bound
+entirely through <code class="docutils literal notranslate"><span class="pre">DT_JMPREL</span></code>, callbacks from the firmware into a module
+(<code class="docutils literal notranslate"><span class="pre">qsort()</span></code>, <code class="docutils literal notranslate"><span class="pre">scandir()</span></code>, <code class="docutils literal notranslate"><span class="pre">pthread_create()</span></code>, <code class="docutils literal notranslate"><span class="pre">pthread_once()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">signal()</span></code>, <code class="docutils literal notranslate"><span class="pre">sigaction()</span></code>, <code class="docutils literal notranslate"><span class="pre">task_create()</span></code>, <code class="docutils literal notranslate"><span class="pre">task_spawn()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mq_notify()</span></code> and <code class="docutils literal notranslate"><span class="pre">timer_create()</span></code> with <code class="docutils literal notranslate"><span class="pre">SIGEV_THREAD</span></code>), a module
+without the FDPIC marker, a <code class="docutils literal notranslate"><span class="pre">DT_NEEDED</span></code> library and its pins, and C++
+constructors and destructors in a library and a module. Only with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FDPIC</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reject</span></code></dt><dd><p>Checks that the FDPIC loader refuses a malformed module: an ELF class that
+is not 32-bit, an object that is not <code class="docutils literal notranslate"><span class="pre">ET_DYN</span></code>, a module for another
+machine, RELA PLT relocations, a <code class="docutils literal notranslate"><span class="pre">DT_NEEDED</span></code> library that is absent, an
+import that the firmware does not export, and more <code class="docutils literal notranslate"><span class="pre">DT_NEEDED</span></code> entries
+than <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ELF_MAXDEPEND</span></code>. Only with <code class="docutils literal notranslate"><span class="pre">CONFIG_FDPIC</span></code>.</p>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">dirs</span></code></dt><dd><p>That directories behave like a real tree: an empty one exists and survives
 a remount, <code class="docutils literal notranslate"><span class="pre">readdir</span></code> reports each level, <code class="docutils literal notranslate"><span class="pre">rmdir</span></code> refuses a directory
 that still holds something and succeeds once emptied, and a path through a
@@ -308,9 +324,9 @@ missing directory or through a file fails rather than being created.</p>
 remount, distinguishes an open file from a pinned one, and never relocates
 a pinned extent.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">powerloss</span></code>, <code class="docutils literal notranslate"><span class="pre">powertorn</span></code>, <code class="docutils literal notranslate"><span class="pre">unlink</span></code>, <code class="docutils literal notranslate"><span class="pre">defraglos</span></code></dt><dd><p>Fail the Nth flash operation, remount, and check the volume is consistent
+<dt><code class="docutils literal notranslate"><span class="pre">powerloss</span></code>, <code class="docutils literal notranslate"><span class="pre">powertorn</span></code>, <code class="docutils literal notranslate"><span class="pre">unlink</span></code>, <code class="docutils literal notranslate"><span class="pre">dirloss</span></code>, <code class="docutils literal notranslate"><span class="pre">defraglos</span></code></dt><dd><p>Fail the Nth flash operation, remount, and check the volume is consistent
 and every committed file byte-for-byte intact – sweeping N across create,
-unlink and compaction. The <code class="docutils literal notranslate"><span class="pre">torn</span></code> variant leaves the failing write
+unlink, <code class="docutils literal notranslate"><span class="pre">mkdir</span></code> and <code class="docutils literal notranslate"><span class="pre">rmdir</span></code>, and compaction. The <code class="docutils literal notranslate"><span class="pre">torn</span></code> variant leaves the failing write
 partially programmed rather than cleanly refused, which is what a real
 power loss mid-program leaves behind. These need
 <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_XIPFS_FAULT_INJECT</span></code>.</p>
@@ -328,6 +344,9 @@ it.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_FS_XIPFS_MTD</span></code></dt><dd><p>The MTD device backing that volume, needed for the remounts.</p>
 </dd>
 </dl>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_FDPIC</span></code>, the application build makes the test modules from
+<code class="docutils literal notranslate"><span class="pre">apps/examples/fdpicxip/modules</span></code> and links them into <code class="docutils literal notranslate"><span class="pre">xipfs_test</span></code>. This
+needs the <code class="docutils literal notranslate"><span class="pre">arm-uclinuxfdpiceabi</span></code> linker; see <a class="reference internal" href="../../../os/binfmt/fdpic.html"><span class="doc">FDPIC Modules</span></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The suite writes and erases the volume continuously, the power-loss

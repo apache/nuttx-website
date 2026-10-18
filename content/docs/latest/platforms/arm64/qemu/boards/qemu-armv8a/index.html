@@ -254,6 +254,7 @@ hardware platform and provides support for these devices:</p>
 <li><p>GICv2 and GICv3 interrupt controllers</p></li>
 <li><p>ARM Generic Timer</p></li>
 <li><p>PL011 UART controller</p></li>
+<li><p>PL031 RTC (optional)</p></li>
 </ul>
 <section id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
@@ -903,10 +904,29 @@ needs to be do.</p></li>
 <td><p>on-chip</p></td>
 <td><p>system clock</p></td>
 </tr>
+<tr class="row-odd"><td><p>PL031 RTC</p></td>
+<td><p>on-chip</p></td>
+<td><p>RTC (optional)</p></td>
+</tr>
 </tbody>
 </table>
 <p>The kernel currently does not support other hardware features on this
 QEMU platform.</p>
+</section>
+<section id="rtc">
+<h2>RTC<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h2>
+<p>The QEMU <code class="docutils literal notranslate"><span class="pre">virt</span></code> machine has a PL031 RTC at <code class="docutils literal notranslate"><span class="pre">0x09010000</span></code> (SPI 2), which
+QEMU sets from the host clock. Without it, the system time starts at
+<code class="docutils literal notranslate"><span class="pre">CONFIG_START_YEAR</span></code>, and the files on a host share (v9fs, hostfs) seem to
+be from the future. Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_DATETIME</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_DRIVER</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_ARCH</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_RTC_PL031</span></code>. Then
+<code class="docutils literal notranslate"><span class="pre">up_rtc_initialize()</span></code> registers the PL031 as the RTC of the system and as
+<code class="docutils literal notranslate"><span class="pre">/dev/rtc0</span></code>, and the system time starts at the host time.
+<code class="docutils literal notranslate"><span class="pre">CONFIG_QEMU_RTC_PL031_BASE</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_QEMU_RTC_PL031_IRQ</span></code> give the
+address and the interrupt.</p>
+<p>The PL031 counts whole seconds, so the system time can start up to one
+second behind the host. With <code class="docutils literal notranslate"><span class="pre">CONFIG_QEMU_RTC_PL031_SYNC</span></code>, the boot waits
+(up to one second) for the RTC second to change.</p>
 </section>
 <section id="debugging-with-qemu">
 <h2>Debugging with QEMU<a class="headerlink" href="#debugging-with-qemu" title="Permalink to this heading"></a></h2>
