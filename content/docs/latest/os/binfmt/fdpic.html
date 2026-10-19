@@ -292,11 +292,13 @@ the library would not be in the address space of the program.</p>
 used as given, and a bare name is searched for along <code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code>,
 which needs <code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_ENVPATH</span></code> and is seeded from
 <code class="docutils literal notranslate"><span class="pre">CONFIG_LDPATH_INITIAL</span></code>.</p>
-<p>A library lands in the module registry, which holds one instance per
-name, so its data is shared by everything that opens it.  A module
-started with <code class="docutils literal notranslate"><span class="pre">exec()</span></code> is different: that path loads a fresh copy each
-time, so two running instances of one module have separate data while
-sharing one copy of the text in flash.</p>
+<p>A library lands in the registry of the task group that loads it, which
+holds one instance per name, so its data is shared by everything in that
+task group that opens it.  Another task group gets an instance of its
+own, with its own data.  A module started with <code class="docutils literal notranslate"><span class="pre">exec()</span></code> loads a fresh
+copy each time, so two running instances of one module have separate
+data.  Executed in place, all instances share one copy of the text in
+flash.</p>
 </section>
 </section>
 <section id="comparison-with-nxflat-and-pic-elf">
@@ -624,8 +626,10 @@ loads it, as for any shared library.  It is entered through
 storage.</p>
 <p>A library named in <code class="docutils literal notranslate"><span class="pre">DT_NEEDED</span></code> is constructed before the module that
 needs it, because the module’s own relocation is what opens it, and
-destroyed after, at the last <code class="docutils literal notranslate"><span class="pre">dlclose()</span></code>.  Since the library is one
-instance, its constructors run once however many modules name it.</p>
+destroyed after, at its last <code class="docutils literal notranslate"><span class="pre">dlclose()</span></code> in the task group or when the
+task group exits.  The library is one instance per task group, so its
+constructors run once in each task group, however many of its modules
+name it.</p>
 <p>Destructors are walked from <code class="docutils literal notranslate"><span class="pre">DT_FINI_ARRAY</span></code> at unload, in
 <code class="docutils literal notranslate"><span class="pre">libelf_uninit()</span></code>, and not from <code class="docutils literal notranslate"><span class="pre">crt0</span></code>, so they run once whichever way
 the object was loaded.</p>

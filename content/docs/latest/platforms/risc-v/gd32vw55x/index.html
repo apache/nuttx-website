@@ -363,7 +363,7 @@ under <code class="docutils literal notranslate"><span class="pre">CONFIG_GD32VW
 <td><p>4 MiB</p></td>
 <td><p>In-package NOR, XIP.  Holds
 the firmware and, at the very
-top, the Wi-Fi NVDS</p></td>
+top, the vendor stack NVDS</p></td>
 </tr>
 <tr class="row-odd"><td><p>Mask ROM</p></td>
 <td><p>0x0bf40000 – 0x0bf80000</p></td>
@@ -375,7 +375,8 @@ API used to program the flash</p></td>
 <td><p>0x0ffc0000 – 0x0ffc0100</p></td>
 <td><p>256 B</p></td>
 <td><p>Chip data; the radio reads
-the MAC address from here</p></td>
+the MAC address and the RF
+calibration from here</p></td>
 </tr>
 <tr class="row-odd"><td><p>SRAM</p></td>
 <td><p>0x20000000 – 0x20050000</p></td>
@@ -412,7 +413,7 @@ accelerators on AHB2</p></td>
 <h3>Flash<a class="headerlink" href="#flash" title="Permalink to this heading"></a></h3>
 <p>The NuttX image is linked at the start of the flash: the vendor MBL bootloader
 is bypassed, so none of its partitions (system status, image slots) apply.</p>
-<p>Only one region of the flash is fixed by the silicon and its radio firmware:</p>
+<p>Only one region of the flash is fixed, by the vendor Wi-Fi/BLE stack:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Range</p></th>
@@ -430,15 +431,18 @@ slot…)</p></td>
 </tr>
 <tr class="row-odd"><td><p>0x083fb000 – 0x08400000</p></td>
 <td><p>20 KiB</p></td>
-<td><p><strong>Wi-Fi NVDS</strong>: RF calibration data and the
-MAC address.  Erasing it breaks the radio</p></td>
+<td><p><strong>NVDS</strong> of the vendor stack: the BLE
+bonding data.  Erasing it only loses the
+bonds</p></td>
 </tr>
 </tbody>
 </table>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Never erase past 0x083fb000.  <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">scan</span> <span class="pre">wlan0</span></code> is the quickest way to
-confirm the radio is still healthy after touching the flash.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The RF calibration and the MAC address are not in the flash: the radio
+reads them from the EFUSE, so erasing the whole flash does not break it.
+Keep the firmware and progmem below 0x083fb000 anyway, or the BLE stack
+and the application will overwrite each other.</p>
 </div>
 <p>How the 4076 KiB below the NVDS are split is a <strong>board decision</strong>, made in the
 board’s linker script and in <code class="docutils literal notranslate"><span class="pre">CONFIG_GD32VW55X_PROGMEM_START_ADDR</span></code> /

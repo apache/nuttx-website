@@ -376,12 +376,22 @@ NuttX and a MoBY application:</p>
 <p>The following types is used to pass parameters to/from signal handlers:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">siginfo</span>
 <span class="p">{</span>
-<span class="w"> </span><span class="kt">int</span><span class="w">          </span><span class="n">si_signo</span><span class="p">;</span>
-<span class="w"> </span><span class="kt">int</span><span class="w">          </span><span class="n">si_code</span><span class="p">;</span>
+<span class="w"> </span><span class="kt">uint8_t</span><span class="w">      </span><span class="n">si_signo</span><span class="p">;</span>
+<span class="w"> </span><span class="kt">uint8_t</span><span class="w">      </span><span class="n">si_code</span><span class="p">;</span>
+<span class="w"> </span><span class="kt">uint8_t</span><span class="w">      </span><span class="n">si_errno</span><span class="p">;</span>
 <span class="w"> </span><span class="k">union</span><span class="w"> </span><span class="nc">sigval</span><span class="w"> </span><span class="n">si_value</span><span class="p">;</span>
+<span class="cp">#ifdef CONFIG_SCHED_HAVE_PARENT</span>
+<span class="w"> </span><span class="kt">pid_t</span><span class="w">        </span><span class="n">si_pid</span><span class="p">;</span>
+<span class="w"> </span><span class="kt">uid_t</span><span class="w">        </span><span class="n">si_uid</span><span class="p">;</span>
+<span class="w"> </span><span class="kt">int</span><span class="w">          </span><span class="n">si_status</span><span class="p">;</span>
+<span class="cp">#endif</span>
+<span class="w"> </span><span class="kt">void</span><span class="w">        </span><span class="o">*</span><span class="n">si_user</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="kt">siginfo_t</span><span class="p">;</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">si_pid</span></code> and <code class="docutils literal notranslate"><span class="pre">si_uid</span></code> are the process ID and the real user ID of the
+sender. For <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> and <code class="docutils literal notranslate"><span class="pre">waitid()</span></code>, they are those of the child.
+Without <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>, <code class="docutils literal notranslate"><span class="pre">si_uid</span></code> is always 0.</p>
 <dl class="c union">
 <dt class="sig sig-object c" id="c.sigval">
 <span class="k"><span class="pre">union</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sigval</span></span></span><a class="headerlink" href="#c.sigval" title="Permalink to this definition"></a><br /></dt>

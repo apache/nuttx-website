@@ -271,41 +271,48 @@ which also provides the USB serial console.</p>
 <li><p>On-board GD-Link probe: SWD/JTAG plus a USB CDC virtual COM port, both
 over the single USB Type-C connector</p></li>
 <li><p>Two test pin headers (J1, J2) breaking out the GPIOs</p></li>
-<li><p>BOOT0/BOOT1 jumpers, a power jumper and a reset button (NRST)</p></li>
-<li><p>Three user LEDs on GPIOC</p></li>
+<li><p>BOOT0/BOOT1 jumpers, a power jumper, the J5 jumpers that route the console
+UART to the GD-Link virtual COM port, and a reset button (NRST); there is no
+user button</p></li>
+<li><p>Three user LEDs (red, green, blue)</p></li>
 </ul>
 </section>
 <section id="serial-console">
 <h2>Serial Console<a class="headerlink" href="#serial-console" title="Permalink to this heading"></a></h2>
 <p>The console is UART2 (PA6 TX / PA7 RX), wired to the GD-Link virtual COM port.
-It shows up on the host as <code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code> at 115200 8N1.</p>
+It shows up on the host as <code class="docutils literal notranslate"><span class="pre">/dev/ttyACM0</span></code> at 115200 8N1.  The J5 jumpers must
+be in place for the UART to reach the probe.</p>
 </section>
 <section id="leds">
 <h2>LEDs<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h2>
-<p>Three LEDs sit on GPIOC and are driven push-pull, active HIGH.  In the vendor
-SDK they are named LED_RUN, LED_SLEEP and LED_RX.</p>
+<p>The three LEDs are driven push-pull, active HIGH:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>LED</p></th>
 <th class="head"><p>Pin</p></th>
-<th class="head"><p>Meaning in the vendor SDK</p></th>
+<th class="head"><p>Color</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>LED1</p></td>
-<td><p>PC0</p></td>
-<td><p>CPU running</p></td>
+<td><p>PB0</p></td>
+<td><p>red</p></td>
 </tr>
 <tr class="row-odd"><td><p>LED2</p></td>
-<td><p>PC1</p></td>
-<td><p>CPU sleeping</p></td>
+<td><p>PA12</p></td>
+<td><p>green</p></td>
 </tr>
 <tr class="row-even"><td><p>LED3</p></td>
-<td><p>PC2</p></td>
-<td><p>Reception</p></td>
+<td><p>PB4</p></td>
+<td><p>blue</p></td>
 </tr>
 </tbody>
 </table>
+<p>The three pins are also broken out on the J1 and J2 headers.  PB4 comes out of
+reset as JNTRST with its pull-up enabled, so the blue LED is lit until the pin
+is configured as an output.  PB0 is also ADC_IN8: the ADC channel is only
+routed there when the LEDs are not in use, and the red LED still loads an
+analog signal applied to it.</p>
 <p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_USERLED</span></code> they belong to the application and are exposed as
 <code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code>.  With <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> the OS takes them over instead
 and uses them to show its state: LED1 comes on once NuttX has started, LED2
@@ -352,7 +359,7 @@ is a plain GPIO.  The silkscreen abbreviates the port letter (<code class="docut
 <td><p>UART2_RX (console)</p></td>
 </tr>
 <tr class="row-even"><td><p>PB0</p></td>
-<td><p>GPIO</p></td>
+<td><p>LED1 / ADC_IN8</p></td>
 <td><p>NC</p></td>
 <td><p>–</p></td>
 </tr>
@@ -364,7 +371,7 @@ is a plain GPIO.  The silkscreen abbreviates the port letter (<code class="docut
 <tr class="row-even"><td><p>NC</p></td>
 <td><p>–</p></td>
 <td><p>PB15</p></td>
-<td><p>GPIO</p></td>
+<td><p>I2C0_SCL (SPI on)</p></td>
 </tr>
 <tr class="row-odd"><td><p>GND</p></td>
 <td><p>ground</p></td>
@@ -399,12 +406,12 @@ is a plain GPIO.  The silkscreen abbreviates the port letter (<code class="docut
 <td><p>JTMS</p></td>
 </tr>
 <tr class="row-odd"><td><p>PB4</p></td>
-<td><p>JNTRST</p></td>
+<td><p>JNTRST / LED3</p></td>
 <td><p>PB3</p></td>
 <td><p>JTDO</p></td>
 </tr>
 <tr class="row-even"><td><p>PA12</p></td>
-<td><p>GPIO</p></td>
+<td><p>LED2</p></td>
 <td><p>NC</p></td>
 <td><p>–</p></td>
 </tr>
@@ -414,7 +421,7 @@ is a plain GPIO.  The silkscreen abbreviates the port letter (<code class="docut
 <td><p>–</p></td>
 </tr>
 <tr class="row-even"><td><p>PA8</p></td>
-<td><p>GPIO</p></td>
+<td><p>I2C0_SDA (SPI on)</p></td>
 <td><p>GND</p></td>
 <td><p>ground</p></td>
 </tr>
@@ -427,18 +434,29 @@ is a plain GPIO.  The silkscreen abbreviates the port letter (<code class="docut
 </table>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>PA13/PA14/PA15/PB3/PB4 on J2 are the chip’s JTAG pins, wired to the on-board
-GD-Link through the J4 shorting caps.  Use them as plain GPIO only after
-removing those caps, or the debug probe and the application will fight over
-the lines.</p>
+<p>PA13/PA14/PA15/PB3 on J2 are the chip’s JTAG pins (JTMS, JTCK, JTDI, JTDO),
+wired to the on-board GD-Link through the J4 shorting caps.  Keep the J4
+caps closed to flash and debug through the GD-Link.  To use an external
+probe such as a SEGGER J-Link, or to use those pins as plain GPIO, remove
+the caps first, or the GD-Link and the other user will fight over the
+lines.  PB4 (JNTRST) drives LED3.</p>
 </div>
 </section>
 <section id="flashing">
 <h2>Flashing<a class="headerlink" href="#flashing" title="Permalink to this heading"></a></h2>
-<p>The board is programmed with OpenOCD through the GD-Link probe.  The GigaDevice
-OpenOCD fork (shipped with the vendor SDK) is required:</p>
+<p>The board is programmed with OpenOCD through the on-board GD-Link probe, with
+the J4 caps closed.  The GigaDevice OpenOCD fork (shipped with the vendor SDK)
+is required:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ openocd -f openocd_gdlink.cfg \
           -c "program nuttx.bin 0x08000000 verify reset exit"
+</pre></div>
+</div>
+<p>To use an external programmer instead, a SEGGER J-Link works: remove the J4
+caps and wire it to J2 (VTref to +3V3, TMS to PA13, TCK to PA14, TDI to PA15,
+TDO to PB3, and GND).  With a command file holding
+<code class="docutils literal notranslate"><span class="pre">loadbin</span> <span class="pre">nuttx.bin,</span> <span class="pre">0x08000000</span></code>, <code class="docutils literal notranslate"><span class="pre">r</span></code> and <code class="docutils literal notranslate"><span class="pre">g</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ JLinkExe -nogui 1 -device GD32VW553KMQ7 -if JTAG -JTAGConf -1,-1 \
+           -speed 4000 -autoconnect 1 -CommandFile flash.jlink
 </pre></div>
 </div>
 <p>NuttX is linked at 0x08000000, bypassing the vendor MBL bootloader.</p>
@@ -472,7 +490,7 @@ overflowing it is a link error</p></td>
 </tr>
 <tr class="row-even"><td><p>0x083fb000 – 0x08400000</p></td>
 <td><p>20 KiB</p></td>
-<td><p><strong>Wi-Fi NVDS</strong> – do not erase</p></td>
+<td><p>NVDS (BLE bonding data)</p></td>
 </tr>
 </tbody>
 </table>
@@ -480,11 +498,12 @@ overflowing it is a link error</p></td>
 135 KiB (3%), <code class="docutils literal notranslate"><span class="pre">periph</span></code> 154 KiB (4%), <code class="docutils literal notranslate"><span class="pre">littlefs</span></code> 195 KiB (5%), <code class="docutils literal notranslate"><span class="pre">wapi</span></code>
 610 KiB (15%) and <code class="docutils literal notranslate"><span class="pre">sta_softap</span></code> 613 KiB (16%).  The <code class="docutils literal notranslate"><span class="pre">ble</span></code> config (BLE on top
 of <code class="docutils literal notranslate"><span class="pre">wapi</span></code>) brings the image to about 971 KiB (25%).</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The <strong>last</strong> pages of the flash are not free: the Wi-Fi NVDS holds the RF
-calibration data and the MAC address, and erasing it breaks the radio.  The
-progmem region ends exactly where the NVDS begins.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The last 20 KiB of the flash hold the NVDS of the vendor stack, where the
+BLE stack keeps its bonding data.  The progmem region ends where the NVDS
+begins.  Erasing the NVDS only loses the BLE bonds: the RF calibration and
+the MAC address come from the chip EFUSE.</p>
 </div>
 <p>The region handed to progmem is set with
 <code class="docutils literal notranslate"><span class="pre">CONFIG_GD32VW55X_PROGMEM_START_ADDR</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_GD32VW55X_PROGMEM_SIZE</span></code>;
@@ -548,8 +567,9 @@ capture, both watchdogs, progmem, TRNG and CRC), registered as <code class="docu
 driver – a small example to validate the I2C master port against a real
 device. Because SPI is <em>off</em> here, I2C0 is routed to the J1 header on
 <strong>PA2 (SCL)</strong> and <strong>PA3 (SDA)</strong> (adjacent pins on the second row of J1, both
-AF4); with SPI on (the <code class="docutils literal notranslate"><span class="pre">periph</span></code> case) it falls back to PB0/PB1, whose SDA
-pin is not broken out. See the pin-header tables above.</p>
+AF4); with SPI on (the <code class="docutils literal notranslate"><span class="pre">periph</span></code> case) it falls back to PB15 (SCL, J1) and
+PA8 (SDA, J2). I2C1, when enabled, uses the same PB15/PA8 pair (AF6), so it
+cannot be combined with that fallback. See the pin-header tables above.</p>
 <p>Wire the sensor to J1: SCL -&gt; PA2, SDA -&gt; PA3, VCC -&gt; +3V3 (J2) or the module
 3.3 V, GND -&gt; GND. A breakout with its own pull-ups is assumed; the pins are
 configured with the internal pull-ups as a fallback.</p>
@@ -659,7 +679,9 @@ nsh&gt; ls -l /mnt/sd
 <h3>adc<a class="headerlink" href="#adc" title="Permalink to this heading"></a></h3>
 <p>NSH plus the ADC driver, registered as <code class="docutils literal notranslate"><span class="pre">/dev/adc0</span></code> and read by the <code class="docutils literal notranslate"><span class="pre">adc</span></code>
 example. Channel 8 (ADC_IN8) is routed to <strong>PB0</strong> on the J1 header, so an
-analog voltage applied there is sampled.</p>
+analog voltage applied there is sampled.  PB0 also drives the red LED, which
+loads the input; with <code class="docutils literal notranslate"><span class="pre">CONFIG_USERLED</span></code> or <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> the pin stays
+an LED output and the ADC is registered without an analog pin.</p>
 <p>The ADC converts on demand rather than continuously, so the example is built
 with <code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_ADC_SWTRIG</span></code>: it issues a software trigger and then
 reads a group of samples. It is bounded to 20 groups
@@ -682,7 +704,7 @@ Sample:
 </section>
 <section id="littlefs">
 <h3>littlefs<a class="headerlink" href="#littlefs" title="Permalink to this heading"></a></h3>
-<p>NSH with the last 128 KiB of usable flash (below the Wi-Fi NVDS) exposed as an
+<p>NSH with the last 128 KiB of usable flash (below the NVDS) exposed as an
 MTD device, <code class="docutils literal notranslate"><span class="pre">/dev/gd32flash</span></code>, and mounted as LittleFS on <code class="docutils literal notranslate"><span class="pre">/data</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -748,12 +770,10 @@ the next boot format it again:</p>
           -c "init; halt; flash erase_address 0x083db000 0x20000; reset; exit"
 </pre></div>
 </div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Erase only the progmem region.  The Wi-Fi NVDS lives immediately above it,
-at 0x083fb000; wiping it takes the RF calibration and the MAC address with
-it.  After using the filesystem, <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">scan</span> <span class="pre">wlan0</span></code> in the <code class="docutils literal notranslate"><span class="pre">wapi</span></code>
-configuration is a quick way to confirm the radio is still healthy.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Erase only the progmem region.  The NVDS lives immediately above it, at
+0x083fb000, and holds the BLE bonding data.</p>
 </div>
 </section>
 <section id="sta-softap">
@@ -831,7 +851,8 @@ and read back, and they survive both a <code class="docutils literal notranslate
 <li><p><code class="docutils literal notranslate"><span class="pre">periph</span></code>: every driver registers (<code class="docutils literal notranslate"><span class="pre">/dev/i2c0</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/spi0</span></code>,
 <code class="docutils literal notranslate"><span class="pre">/dev/adc0</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/pwm0</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/capture0</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/watchdog0</span></code>,
 <code class="docutils literal notranslate"><span class="pre">/dev/watchdog1</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/userleds</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/random</span></code>).  The TRNG returns
-fresh entropy on each read, and the three LEDs work.</p></li>
+fresh entropy on each read, and the three LEDs (PB0, PA12, PB4) light in
+sequence under the <code class="docutils literal notranslate"><span class="pre">leds</span></code> example.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">wapi</span></code>: full station path over a live AP – <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">scan</span></code> lists the nearby
 networks, WPA2 associates through the four-way handshake, DHCP obtains an
 address, and <code class="docutils literal notranslate"><span class="pre">ping</span></code> reaches the internet.</p></li>

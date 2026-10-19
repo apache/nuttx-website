@@ -159,6 +159,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#network-functions">Network Functions</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#socket-functions-sys-socket-h">Socket Functions (<code class="docutils literal notranslate"><span class="pre">sys/socket.h</span></code>)</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#dns-functions-net-dns-h">DNS Functions (<code class="docutils literal notranslate"><span class="pre">net/dns.h</span></code>)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#dns-query-functions-resolv-h">DNS Query Functions (<code class="docutils literal notranslate"><span class="pre">resolv.h</span></code>)</a></li>
 </ul>
 </li>
 </ul>
@@ -837,6 +838,68 @@ DNS server list changes (servers added or removed), registered callbacks will be
 </p>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="dns-query-functions-resolv-h">
+<h3>DNS Query Functions (<code class="docutils literal notranslate"><span class="pre">resolv.h</span></code>)<a class="headerlink" href="#dns-query-functions-resolv-h" title="Permalink to this heading"></a></h3>
+<p>These functions send DNS queries for any record type and return the raw
+answer message. <code class="docutils literal notranslate"><span class="pre">arpa/nameser.h</span></code> gives the constants and the macros that
+parse the answer. <code class="docutils literal notranslate"><span class="pre">res_mkquery()</span></code> is always available with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code>. The other three need <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT</span></code> and use
+the same name servers, timeouts and retries as the DNS client.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#c.res_mkquery" title="res_mkquery"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_mkquery()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.res_send" title="res_send"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_send()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.res_query" title="res_query"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_query()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.res_search" title="res_search"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_search()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.res_mkquery">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_mkquery</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">op</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dname</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">rclass</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">datalen</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">newrr</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buf</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">buflen</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_mkquery" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Build a message with one question for <code class="docutils literal notranslate"><span class="pre">dname</span></code> in <code class="docutils literal notranslate"><span class="pre">buf</span></code>, with the
+opcode <code class="docutils literal notranslate"><span class="pre">op</span></code> (normally <code class="docutils literal notranslate"><span class="pre">QUERY</span></code>), a random ID and recursion desired.
+<code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">datalen</span></code> and <code class="docutils literal notranslate"><span class="pre">newrr</span></code> are not used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The size of the message on success; -1 on error.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.res_send">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_send</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">msg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">msglen</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">answer</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">anslen</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_send" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Send the query message <code class="docutils literal notranslate"><span class="pre">msg</span></code> to the name servers over UDP, and copy the
+first valid answer into <code class="docutils literal notranslate"><span class="pre">answer</span></code>. A server that answers <code class="docutils literal notranslate"><span class="pre">SERVFAIL</span></code> or
+<code class="docutils literal notranslate"><span class="pre">REFUSED</span></code> is skipped. There is no TCP fallback: a truncated answer is
+returned with the <code class="docutils literal notranslate"><span class="pre">TC</span></code> bit set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The size of the answer on success; -1 on error.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.res_query">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_query</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dname</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">rclass</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">type</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">answer</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">anslen</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_query" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Query the name servers for the records of class <code class="docutils literal notranslate"><span class="pre">rclass</span></code> and type
+<code class="docutils literal notranslate"><span class="pre">type</span></code> for <code class="docutils literal notranslate"><span class="pre">dname</span></code>, and copy the answer message into <code class="docutils literal notranslate"><span class="pre">answer</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The size of the answer on success; -1 on error with <code class="docutils literal notranslate"><span class="pre">h_errno</span></code>
+set to <code class="docutils literal notranslate"><span class="pre">HOST_NOT_FOUND</span></code>, <code class="docutils literal notranslate"><span class="pre">NO_DATA</span></code>, <code class="docutils literal notranslate"><span class="pre">NO_RECOVERY</span></code> or <code class="docutils literal notranslate"><span class="pre">TRY_AGAIN</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.res_search">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_search</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dname</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">rclass</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">type</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">answer</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">anslen</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_search" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The same as <a class="reference internal" href="#c.res_query" title="res_query"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_query()</span></code></a>. NuttX has no search list.</p>
 </dd></dl>
 
 </section>

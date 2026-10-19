@@ -530,6 +530,106 @@ nsh&gt;
 </pre></div>
 </div>
 </section>
+<section id="halow">
+<h3>halow<a class="headerlink" href="#halow" title="Permalink to this heading"></a></h3>
+<p>This config enables a Wi-Fi HaLow (IEEE 802.11ah) network interface using
+a Morse Micro MM6108 based module (tested with the Seeed Studio XIAO Wi-Fi
+HaLow module, Quectel FGH100M-H) connected to SPI1. See
+<a class="reference internal" href="../../../../../os/drivers/special/wireless/morse.html"><span class="doc">Morse Micro Wi-Fi HaLow (IEEE 802.11ah)</span></a> for the driver documentation.</p>
+<p>The module is wired as below:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>WeAct H743</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>5V</p></td>
+<td><p>5V</p></td>
+<td><p>RF power amplifier, required to transmit</p></td>
+</tr>
+<tr class="row-odd"><td><p>3V3</p></td>
+<td><p>3V3</p></td>
+<td><p>Module digital logic</p></td>
+</tr>
+<tr class="row-even"><td><p>GND</p></td>
+<td><p>GND</p></td>
+<td><p>Keep a ground wire next to the SPI wires</p></td>
+</tr>
+<tr class="row-odd"><td><p>D8 (SCK)</p></td>
+<td><p>PA5</p></td>
+<td><p>SPI1_SCK</p></td>
+</tr>
+<tr class="row-even"><td><p>D9 (MISO)</p></td>
+<td><p>PA6</p></td>
+<td><p>SPI1_MISO</p></td>
+</tr>
+<tr class="row-odd"><td><p>D10 (MOSI)</p></td>
+<td><p>PA7</p></td>
+<td><p>SPI1_MOSI</p></td>
+</tr>
+<tr class="row-even"><td><p>D3 (CS)</p></td>
+<td><p>PA4</p></td>
+<td><p>GPIO chip select</p></td>
+</tr>
+<tr class="row-odd"><td><p>D2 (IRQ)</p></td>
+<td><p>PA1</p></td>
+<td><p>EXTI1, active low</p></td>
+</tr>
+<tr class="row-even"><td><p>D0 (RESET_N)</p></td>
+<td><p>PA2</p></td>
+<td><p>GPIO, held low until the driver boots the chip</p></td>
+</tr>
+<tr class="row-odd"><td><p>D1 (WAKE)</p></td>
+<td><p>PA3</p></td>
+<td><p>Optional, see below</p></td>
+</tr>
+<tr class="row-even"><td><p>D4 (BUSY)</p></td>
+<td><p>PA0</p></td>
+<td><p>Optional, EXTI0, see below</p></td>
+</tr>
+</tbody>
+</table>
+<p>SCK and MOSI use the lowest GPIO slew rate: with jumper wires the ringing
+of faster edges double clocks the module SPI interface. The SPI clock is
+20 MHz (18.75 MHz actual).</p>
+<p>On the Seeed Studio XIAO HaLow module the WAKE (D1) and BUSY (D4) pads are
+not connected to the FGH100M-H: the series resistors are not populated
+(DNP). Without BUSY the chip cannot wake up the host from power save, so by
+default the board does not declare these lines and the driver keeps the
+chip always awake. If the two resistors are populated, enable
+<code class="docutils literal notranslate"><span class="pre">CONFIG_WEACT_STM32H743_HALOW_POWERSAVE</span></code> to use the power save.</p>
+<p>The build downloads the needed files of the Morse Micro MM-IoT-SDK (about
+3 MB: the pre-built <code class="docutils literal notranslate"><span class="pre">libmorse</span></code> host library and the chip firmware, under
+the Morse Micro Binary Distribution License) and the FGH100M-H board
+configuration file (BCF), which is converted with <code class="docutils literal notranslate"><span class="pre">python3</span></code> and
+<code class="docutils literal notranslate"><span class="pre">pyelftools</span></code>. The STM32H7 RNG (clocked by HSI48) provides the entropy
+needed by WPA3-SAE.
+The image is bigger than 1 MiB, so both flash banks must be programmed,
+e.g. with OpenOCD:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ openocd -f interface/stlink.cfg -c "set DUAL_BANK 1" \
+    -f target/stm32h7x.cfg -c "program nuttx.bin 0x08000000 verify reset exit"
+</pre></div>
+</div>
+<p>Wi-Fi HaLow only supports open, OWE and WPA3-SAE networks. Connect to a
+WPA3-SAE access point and get an address with DHCP:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifconfig wlan0 up
+nsh&gt; wapi scan wlan0
+bssid / frequency / signal level / encode / ssid
+1c:bc:ec:30:f7:fb   9.035e+08       -14     0800    silex-ap
+nsh&gt; wapi psk wlan0 mypassphrase 3 3
+nsh&gt; wapi essid wlan0 silex-ap 1
+nsh&gt; renew wlan0
+nsh&gt; ifconfig
+wlan0       Link encap:Ethernet HWaddr 68:24:99:44:6b:6b at RUNNING mtu 1500
+    inet addr:10.0.3.245 DRaddr:10.0.0.1 Mask:255.255.240.0
+nsh&gt; ping -c 3 10.0.0.1
+</pre></div>
+</div>
+<p>The default regulatory domain is US (<code class="docutils literal notranslate"><span class="pre">CONFIG_IEEE80211_MORSE_COUNTRY</span></code>). It
+can be changed while disconnected with <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">country</span> <span class="pre">wlan0</span> <span class="pre">AU</span></code>.</p>
+</section>
 </section>
 </section>
 

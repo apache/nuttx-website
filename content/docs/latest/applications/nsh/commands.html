@@ -240,6 +240,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#time-time-execution-of-another-command"><code class="docutils literal notranslate"><span class="pre">time</span></code> Time execution of another command</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#top-monitor-tasks"><code class="docutils literal notranslate"><span class="pre">top</span></code> Monitor Tasks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#truncate-set-the-size-of-a-file"><code class="docutils literal notranslate"><span class="pre">truncate</span></code> Set the Size of a File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ulimit-show-or-set-resource-limits"><code class="docutils literal notranslate"><span class="pre">ulimit</span></code> Show or Set Resource Limits</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#umount-unmount-a-file-system"><code class="docutils literal notranslate"><span class="pre">umount</span></code> Unmount a File System</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#uname-print-system-information"><code class="docutils literal notranslate"><span class="pre">uname</span></code> Print system information</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#unset-unset-an-environment-variable"><code class="docutils literal notranslate"><span class="pre">unset</span></code> Unset an Environment Variable</a></li>
@@ -599,7 +600,9 @@ indication only if the files differ.</p>
 </div>
 <p><strong>Synopsis</strong>. Copy of the contents of the file at
 <code class="docutils literal notranslate"><span class="pre">&lt;source-path&gt;</span></code> to the location in the file system indicated by
-<code class="docutils literal notranslate"><span class="pre">&lt;dest-path&gt;</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&lt;dest-path&gt;</span></code>.  A new file gets the mode <code class="docutils literal notranslate"><span class="pre">0666</span></code> plus the execute bits
+of the source file, so a copied program stays executable.  An existing
+destination file keeps its mode.</p>
 </section>
 <section id="date-show-or-set-the-date-and-time">
 <span id="cmddate"></span><h2><code class="docutils literal notranslate"><span class="pre">date</span></code> Show or set the date and time<a class="headerlink" href="#date-show-or-set-the-date-and-time" title="Permalink to this heading"></a></h2>
@@ -655,7 +658,7 @@ create a new file of the specified size filled with zero:</p>
 nsh&gt; dd if=/dev/zero of=/tmp/zeros bs=64 count=16
 nsh&gt; ls -l /tmp
 /tmp:
- -rw-rw-rw-    1024 ZEROS
+ -rwxrwxrwx    1024 ZEROS
 </pre></div>
 </div>
 <p>Read from character device, write to block device. This will fill
@@ -840,13 +843,15 @@ executed in background via <code class="docutils literal notranslate"><span clas
 <section id="exit-exit-nsh">
 <span id="cmdexit"></span><h2><code class="docutils literal notranslate"><span class="pre">exit</span></code> Exit NSH<a class="headerlink" href="#exit-exit-nsh" title="Permalink to this heading"></a></h2>
 <p><strong>Command Syntax</strong>:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>exit
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>exit [&lt;status&gt;]
 </pre></div>
 </div>
 <p><strong>Synopsis</strong>. Exit NSH. Only useful for the serial front end if
 you have started some other tasks (perhaps using the <code class="docutils literal notranslate"><span class="pre">exec</span></code>
 command) and you would like to have NSH out of the way. For the
 telnet front-end, <code class="docutils literal notranslate"><span class="pre">exit</span></code> terminates the telnet session.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;status&gt;</span></code> is the exit status of NSH, from 0 to 255. The default is
+0. A script or <code class="docutils literal notranslate"><span class="pre">sh</span> <span class="pre">-c</span></code> can use it to report a failure.</p>
 </section>
 <section id="export-set-an-environment-variable">
 <span id="cmdexport"></span><h2><code class="docutils literal notranslate"><span class="pre">export</span></code> Set an Environment Variable<a class="headerlink" href="#export-set-an-environment-variable" title="Permalink to this heading"></a></h2>
@@ -1283,7 +1288,7 @@ on the loop-mounted file:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; dd if=/dev/zero of=/tmp/image bs=512 count=512
 nsh&gt; ls -l /tmp
 /tmp:
- -rw-rw-rw-   262144 IMAGE
+ -rwxrwxrwx   262144 IMAGE
 nsh&gt; losetup /dev/loop0 /tmp/image
 nsh&gt; ls -l /dev
 /dev:
@@ -1293,11 +1298,11 @@ nsh&gt; mount -t vfat /dev/loop0 /mnt/example
 nsh&gt; ls -l /mnt
 ls -l /mnt
 /mnt:
- drw-rw-rw-       0 example/
+ drwxrwxrwx       0 example/
 nsh&gt; echo "This is a test" &gt;/mnt/example/atest.txt
 nsh&gt; ls -l /mnt/example
 /mnt/example:
- -rw-rw-rw-      16 ATEST.TXT
+ -rwxrwxrwx      16 ATEST.TXT
 nsh&gt; cat /mnt/example/atest.txt
 This is a test
 nsh&gt;
@@ -1485,8 +1490,8 @@ directories in the <em>pseudo</em> file system.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mkdir /mnt/fs/tmp
 nsh&gt; ls -l /mnt/fs
 /mnt/fs:
- drw-rw-rw-       0 TESTDIR/
- drw-rw-rw-       0 TMP/
+ drwxrwxrwx       0 TESTDIR/
+ drwxrwxrwx       0 TMP/
 nsh&gt;
 </pre></div>
 </div>
@@ -1625,6 +1630,11 @@ may be needed to complete the full path but the full path must
 not already exist.</p></li>
 </ol>
 </div></blockquote>
+<p>The ‘-o <code class="docutils literal notranslate"><span class="pre">&lt;options&gt;</span></code>’ argument is a comma-separated list.  The generic
+options <code class="docutils literal notranslate"><span class="pre">ro</span></code>, <code class="docutils literal notranslate"><span class="pre">rw</span></code>, <code class="docutils literal notranslate"><span class="pre">noexec</span></code>, <code class="docutils literal notranslate"><span class="pre">exec</span></code>, <code class="docutils literal notranslate"><span class="pre">nosuid</span></code>, <code class="docutils literal notranslate"><span class="pre">suid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">nodev</span></code>, <code class="docutils literal notranslate"><span class="pre">dev</span></code>, <code class="docutils literal notranslate"><span class="pre">sync</span></code>, <code class="docutils literal notranslate"><span class="pre">async</span></code>, <code class="docutils literal notranslate"><span class="pre">noatime</span></code> and <code class="docutils literal notranslate"><span class="pre">atime</span></code> become
+mount flags (for example <code class="docutils literal notranslate"><span class="pre">MS_RDONLY</span></code> or <code class="docutils literal notranslate"><span class="pre">MS_NOEXEC</span></code>).  The other options
+go to the file system, for example <code class="docutils literal notranslate"><span class="pre">trans=virtio,tag=system</span></code> for v9fs.</p>
 <p>After the volume has been mounted in the NuttX
 <a class="reference internal" href="../../reference/user/10_filesystem.html#file-system-overview"><span class="std std-ref">pseudo file system</span></a>, it may be
 access in the same way as other objects in the file system.</p>
@@ -1640,12 +1650,12 @@ nsh: ls: no such directory: /mnt
 nsh&gt; mount -t vfat /dev/ram0 /mnt/fs
 nsh&gt; ls -l /mnt/fs/testdir
 /mnt/fs/testdir:
- -rw-rw-rw-      15 TESTFILE.TXT
+ -rwxrwxrwx      15 TESTFILE.TXT
 nsh&gt; echo "This is a test" &gt;/mnt/fs/testdir/example.txt
 nsh&gt; ls -l /mnt/fs/testdir
 /mnt/fs/testdir:
--rw-rw-rw-      15 TESTFILE.TXT
- -rw-rw-rw-      16 EXAMPLE.TXT
+-rwxrwxrwx      15 TESTFILE.TXT
+ -rwxrwxrwx      16 EXAMPLE.TXT
 nsh&gt; cat /mnt/fs/testdir/example.txt
 This is a test
 nsh&gt;
@@ -1825,12 +1835,12 @@ file system.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mkdir /mnt/fs/tmp
 nsh&gt; ls -l /mnt/fs
 /mnt/fs:
- drw-rw-rw-       0 TESTDIR/
- drw-rw-rw-       0 TMP/
+ drwxrwxrwx       0 TESTDIR/
+ drwxrwxrwx       0 TMP/
 nsh&gt; rmdir /mnt/fs/tmp
 nsh&gt; ls -l /mnt/fs
 /mnt/fs:
- drw-rw-rw-       0 TESTDIR/
+ drwxrwxrwx       0 TESTDIR/
 nsh&gt;
 </pre></div>
 </div>
@@ -2260,6 +2270,67 @@ option is NOT optional.</p>
 <p>If a &lt;file-path&gt; is larger than the specified size, the extra data is
 lost. If a &lt;file-path&gt; is shorter, it is extended and the extended part
 reads as zero bytes.</p>
+</section>
+<section id="ulimit-show-or-set-resource-limits">
+<span id="cmdulimit"></span><h2><code class="docutils literal notranslate"><span class="pre">ulimit</span></code> Show or Set Resource Limits<a class="headerlink" href="#ulimit-show-or-set-resource-limits" title="Permalink to this heading"></a></h2>
+<p><strong>Command Syntax</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ulimit [-H|-S] [-a|-c|-d|-f|-l|-n|-s|-t|-v] [&lt;limit&gt;|unlimited]
+</pre></div>
+</div>
+<p><strong>Synopsis</strong>. Show or set a resource limit of NSH. The programs that NSH
+starts get the same limits. Without <code class="docutils literal notranslate"><span class="pre">&lt;limit&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">ulimit</span></code> shows the soft
+limit, or the hard limit with <code class="docutils literal notranslate"><span class="pre">-H</span></code>. With <code class="docutils literal notranslate"><span class="pre">&lt;limit&gt;</span></code>, it sets the soft
+limit with <code class="docutils literal notranslate"><span class="pre">-S</span></code>, the hard limit with <code class="docutils literal notranslate"><span class="pre">-H</span></code>, and both without these
+options. Sizes are in KiB, <code class="docutils literal notranslate"><span class="pre">-n</span></code> is a number of files and <code class="docutils literal notranslate"><span class="pre">-t</span></code> is in
+seconds. Without a resource option, <code class="docutils literal notranslate"><span class="pre">ulimit</span></code> uses <code class="docutils literal notranslate"><span class="pre">-f</span></code>, as POSIX says.
+NuttX enforces <code class="docutils literal notranslate"><span class="pre">-n</span></code> and <code class="docutils literal notranslate"><span class="pre">-s</span></code> only; setting another limit fails.</p>
+<p><strong>Options</strong></p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-H</span></code></p></td>
+<td><p>The hard limit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-S</span></code></p></td>
+<td><p>The soft limit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-a</span></code></p></td>
+<td><p>Show all limits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<td><p>Core file size.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
+<td><p>Data segment size.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span></code></p></td>
+<td><p>File size.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span></code></p></td>
+<td><p>Locked memory size.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span></code></p></td>
+<td><p>Number of open files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span></code></p></td>
+<td><p>Stack size: the default stack size of new threads and
+programs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span></code></p></td>
+<td><p>CPU time.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-v</span></code></p></td>
+<td><p>Virtual memory size.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example</strong>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ulimit -S -s 64
+nsh&gt; ulimit -s
+64
+nsh&gt; ulimit -H -s
+unlimited
+</pre></div>
+</div>
 </section>
 <section id="umount-unmount-a-file-system">
 <span id="cmdumount"></span><h2><code class="docutils literal notranslate"><span class="pre">umount</span></code> Unmount a File System<a class="headerlink" href="#umount-unmount-a-file-system" title="Permalink to this heading"></a></h2>
