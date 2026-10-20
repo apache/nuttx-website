@@ -321,6 +321,29 @@ mountpoint <code class="docutils literal notranslate"><span class="pre">i_mode</
 </ul>
 </section>
 </section>
+<section id="execute-permission">
+<h2>Execute permission<a class="headerlink" href="#execute-permission" title="Permalink to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_BINFMT_CHECKEXEC</span></code> (the default with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>), <code class="docutils literal notranslate"><span class="pre">exec()</span></code>, <code class="docutils literal notranslate"><span class="pre">posix_spawn()</span></code> and the other
+functions that start a program from a file refuse a file that has no execute
+permission, with <code class="docutils literal notranslate"><span class="pre">EACCES</span></code>.  Each binary format checks the mode of the file
+that it opens, also for scripts and for their interpreters.  With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>, the owner, group or other execute bit is
+checked for the effective user and group IDs, and root needs any execute bit.
+Without it, any execute bit is enough.</p>
+<p>The mode is the one that <code class="docutils literal notranslate"><span class="pre">stat()</span></code> reports:</p>
+<ul class="simple">
+<li><p>File systems without a stored mode (FAT, xipfs, zipfs, spiffs, nxffs, and
+tmpfs without <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PERMISSION</span></code>) report execute permission for all
+files.</p></li>
+<li><p>File systems that store the mode (littlefs, smartfs, mnemofs, tmpfs with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PERMISSION</span></code>, romfs, cromfs, hostfs, NFS, v9fs) report it.  A
+program that was created with a mode without execute bits needs <code class="docutils literal notranslate"><span class="pre">chmod</span></code>
+before it can run.</p></li>
+<li><p>A file system mounted with <code class="docutils literal notranslate"><span class="pre">MS_NOEXEC</span></code> reports its regular files without
+execute permission.</p></li>
+</ul>
+</section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
 <ul class="simple">

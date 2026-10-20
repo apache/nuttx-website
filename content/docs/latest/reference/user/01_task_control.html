@@ -229,6 +229,20 @@ internal interfaces for the execution of separately built programs that
 reside in a file system. These internal interfaces are, however,
 non-standard and are documented with the NuttX binary
 loader and NXFLAT documentation.</p>
+<p><strong>Resource Limits</strong>. A task keeps its resource limits, and the tasks that
+it creates get the same limits. NuttX enforces two of them:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RLIMIT_NOFILE</span></code>: a new file descriptor must be below the soft limit.
+The default and the largest value is <code class="docutils literal notranslate"><span class="pre">OPEN_MAX</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RLIMIT_STACK</span></code>: when the soft limit is set, it is the default stack
+size of a new thread and the stack size of a new ELF program that does
+not set <code class="docutils literal notranslate"><span class="pre">nx_stacksize</span></code>. The value is kept between
+<code class="docutils literal notranslate"><span class="pre">PTHREAD_STACK_MIN</span></code> and the largest stack that a task can have. By
+default there is no limit, and the stack sizes are
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PTHREAD_STACK_DEFAULT</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_ELF_STACKSIZE</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">getrlimit()</span></code> reports the other resources as <code class="docutils literal notranslate"><span class="pre">RLIM_INFINITY</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">setrlimit()</span></code> fails with <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code> for them.</p>
 <p><strong>Task Control Interfaces</strong>. The following task control interfaces are
 provided by NuttX:</p>
 <div class="admonition note">
@@ -259,6 +273,8 @@ Points</a>.</p>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#c.exit" title="exit"><code class="xref c c-func docutils literal notranslate"><span class="pre">exit()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.getpid" title="getpid"><code class="xref c c-func docutils literal notranslate"><span class="pre">getpid()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.getrlimit" title="getrlimit"><code class="xref c c-func docutils literal notranslate"><span class="pre">getrlimit()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.setrlimit" title="setrlimit"><code class="xref c c-func docutils literal notranslate"><span class="pre">setrlimit()</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <p>Standard <code class="docutils literal notranslate"><span class="pre">fork</span></code>/<code class="docutils literal notranslate"><span class="pre">vfork</span></code> and <code class="docutils literal notranslate"><span class="pre">exec[v|l]</span></code> interfaces:</p>
@@ -1324,6 +1340,57 @@ referenced by <code class="docutils literal notranslate"><span class="pre">attr<
 will return an error number from <code class="docutils literal notranslate"><span class="pre">&lt;errno.h&gt;</span></code></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.getrlimit">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getrlimit</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">resource</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">rlimit</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">rlp</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.getrlimit" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">getrlimit()</span></code> function returns the soft and the hard limit of a
+resource of the calling task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> – The resource, <code class="docutils literal notranslate"><span class="pre">RLIMIT_*</span></code>.</p></li>
+<li><p><strong>rlp</strong> – The location that receives the limits.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>0 on success. On failure, -1 is returned and <code class="docutils literal notranslate"><span class="pre">errno</span></code> is set
+to <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>: <code class="docutils literal notranslate"><span class="pre">rlp</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> or <code class="docutils literal notranslate"><span class="pre">resource</span></code> is not valid.</p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> Comparable to the POSIX interface of the same
+name. Only <code class="docutils literal notranslate"><span class="pre">RLIMIT_NOFILE</span></code> and <code class="docutils literal notranslate"><span class="pre">RLIMIT_STACK</span></code> are limits of the
+task.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.setrlimit">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setrlimit</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">resource</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">rlimit</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">rlp</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.setrlimit" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">setrlimit()</span></code> function sets the soft and the hard limit of a
+resource of the calling task. The tasks that it creates later get the
+same limits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> – <code class="docutils literal notranslate"><span class="pre">RLIMIT_NOFILE</span></code> or <code class="docutils literal notranslate"><span class="pre">RLIMIT_STACK</span></code>.</p></li>
+<li><p><strong>rlp</strong> – The new limits.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>0 on success. On failure, -1 is returned and <code class="docutils literal notranslate"><span class="pre">errno</span></code> is set:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>: <code class="docutils literal notranslate"><span class="pre">rlp</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the soft limit is above the hard
+limit, or NuttX does not enforce the resource.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EPERM</span></code>: an unprivileged task raises a hard limit, or the limit
+of open files is above <code class="docutils literal notranslate"><span class="pre">OPEN_MAX</span></code>.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p><strong>POSIX Compatibility:</strong> Comparable to the POSIX interface of the same
+name. As on Linux, <code class="docutils literal notranslate"><span class="pre">RLIMIT_STACK</span></code> is also the default stack size of
+new threads.</p>
 </dd></dl>
 
 </section>

@@ -433,7 +433,9 @@ inside <code class="docutils literal notranslate"><span class="pre">sched_lock()
 <p>Signals would work fine too. Signals have a side-effect that is sometimes
 helpful and sometimes a pain in the butt: They cause almost all kinds of
 waits (<code class="docutils literal notranslate"><span class="pre">read()</span></code>, <code class="docutils literal notranslate"><span class="pre">sem_wait()</span></code>, etc.) to wake up and return an error with
-<code class="docutils literal notranslate"><span class="pre">errno=EINTR</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">errno=EINTR</span></code>.  A signal that is ignored (that has no action, as
+<code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> by default) is discarded and does not wake a wait, as POSIX
+requires: a program must install a handler for a signal that should wake it.</p>
 <p>That is sometimes helpful because you can wake up a <code class="docutils literal notranslate"><span class="pre">recv()</span></code> or a <code class="docutils literal notranslate"><span class="pre">read()</span></code>
 etc., detect the event that generated the signal, and do something
 about it. It is sometimes a pain because you have to remember to

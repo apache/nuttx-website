@@ -737,7 +737,9 @@ descriptors. <code class="docutils literal notranslate"><span class="pre">fd[0]<
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mkfifo</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">pathname</span></span>, <span class="n"><span class="pre">mode_t</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.mkfifo" title="Permalink to this definition"></a><br /></dt>
 <dd><p>mkfifo() makes a FIFO device driver file with name pathname. Unlike Linux,
 a NuttX FIFO is not a special file type but simply a device driver instance.
-mode specifies the FIFO’s permissions (but is ignored in the current implementation).</p>
+mode specifies the FIFO’s permissions. The file mode creation mask
+(<code class="docutils literal notranslate"><span class="pre">umask()</span></code>) clears bits in it. NuttX keeps the permissions only with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PSEUDOFS_ATTRIBUTES</span></code>.</p>
 <p>Once the FIFO has been created by mkfifo(), any thread can open it for reading
 or writing, in the same way as an ordinary file. However, it must have been
 opened from both reading and writing before input or output can be performed.
@@ -753,7 +755,8 @@ a mounted file system and no file exists at that path, mkfifo() fails with
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>pathname</strong> – The full path to the FIFO instance to attach to or to
 create (if not already created).</p></li>
-<li><p><strong>mode</strong> – Ignored for now</p></li>
+<li><p><strong>mode</strong> – The permissions of the FIFO, less the bits in the file mode
+creation mask.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

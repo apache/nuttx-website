@@ -220,22 +220,77 @@
              
   <section id="scheduling">
 <h1>Scheduling<a class="headerlink" href="#scheduling" title="Permalink to this heading"></a></h1>
-<p>NuttX decides which thread runs, and when.  This page describes that
-decision: the states a thread moves through, the policies that order threads
-of equal priority, and the interface an application uses to choose between
-them.</p>
-<p>The code lives under <code class="docutils literal notranslate"><span class="pre">sched/</span></code>.</p>
+<p>The scheduler is the part of the operating system that decides which
+thread will run.  In NuttX, a thread can be a task, a pthread or a kernel
+thread (the differences are in <a class="reference internal" href="tasks_vs_threads.html"><span class="doc">Tasks vs. Threads</span></a> and
+<a class="reference internal" href="kernel_threads_vs_pthreads.html"><span class="doc">Kernel Threads vs. Pthreads</span></a>).</p>
+<p>In this context, whenever a thread finishes its job, waits for something
+(a semaphore, a message, a sleep), or is paused by another one with a
+higher priority, the scheduler is responsible for orchestrating it.  This
+orchestration happens with other elements as well.  The context switch is
+responsible for the thread swap.  The kernel itself helps the scheduler by
+providing a TCB (Task Control Block) for every thread.  The TCB holds the
+thread’s context, such as its priority, current state, and saved CPU
+registers.</p>
+<p>How does the NuttX scheduler make this orchestration?  The first rule is
+to check the threads’ priorities: among the threads that are ready to
+run, the one with the higher priority number runs first.  When two threads
+have the same priority, the scheduling policy decides who runs first and,
+in NuttX, there are three: <code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code>, <code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code> and
+<code class="docutils literal notranslate"><span class="pre">SCHED_SPORADIC</span></code>.  The last two can be used only when they are enabled
+in the configuration.</p>
+<p>The scheduler itself is in <code class="docutils literal notranslate"><span class="pre">sched/sched/</span></code>.  Threads are created, and
+get their first priority and policy, in <code class="docutils literal notranslate"><span class="pre">sched/task/</span></code> and
+<code class="docutils literal notranslate"><span class="pre">sched/pthread/</span></code>.  The thread states and the TCB are defined in
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/sched.h</span></code>, and each architecture does the context switch
+under <code class="docutils literal notranslate"><span class="pre">arch/</span></code>.</p>
 <section id="priority-comes-first">
 <h2>Priority comes first<a class="headerlink" href="#priority-comes-first" title="Permalink to this heading"></a></h2>
-<p>NuttX is a <strong>strict priority</strong> scheduler.  The thread that runs is always
-the ready-to-run thread with the highest priority.  A lower-priority thread
-runs only while no higher-priority thread is ready; the moment a
-higher-priority one becomes ready, it takes the CPU.  NuttX is fully
-pre-emptible, so that happens immediately, including from inside an
-interrupt handler.</p>
-<p>Priority alone does not say what happens when two ready threads share the
-same priority.  That is what the scheduling policies decide, and it is the
-only thing they decide.</p>
+<p>On a single core, the moment a higher-priority thread becomes ready, it
+takes the CPU, unless preemption is locked with <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> (see
+below).  When an interrupt handler makes it ready, the switch happens as
+the interrupt returns.  See <a class="reference internal" href="../interrupts/index.html"><span class="doc">Interrupts</span></a>.</p>
+<p>Nowadays many chips have more than one core.  That is why NuttX has SMP
+(symmetric multiprocessing) as a build option, <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>.  A dual
+core chip does not run in SMP by default: if <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code> is not set,
+NuttX uses just one core.  Once <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code> is enabled, NuttX uses the
+cores at the same time, each one running its own thread.  The option exists
+only on chips whose port supports several CPUs, so not every MCU has it;
+the NuttX simulator (<code class="docutils literal notranslate"><span class="pre">sim:smp</span></code>) is an easy way to try it.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>, a lower-priority thread can run on one core while a
+higher-priority thread runs on another.  Every thread has an affinity
+mask, the set of cores where it is allowed to run, and the scheduler only
+picks a core inside that mask.  When a core looks for the next thread to
+run, the scheduler goes through the ready-to-run list and takes the one
+with the highest priority.  If the mask of that thread does not allow this
+core, the scheduler skips it and looks at the next one in the list.  This
+shows a situation that may happen: a higher-priority thread can wait in
+the queue while a thread with a lower priority runs.  By default the mask
+holds every core, so NuttX chooses where each thread runs; an application
+narrows the mask with <code class="docutils literal notranslate"><span class="pre">sched_setaffinity()</span></code> (see below).</p>
+<p>When a thread becomes ready, the scheduler first looks for an idle core in
+its mask; if there is one, the thread runs there at once.  If no core is
+idle, the scheduler picks the core that is running the lowest-priority
+thread, and the new thread takes it only if its own priority is higher.</p>
+<p>In NuttX, priorities go from 1 (<code class="docutils literal notranslate"><span class="pre">SCHED_PRIORITY_MIN</span></code>) up to 255
+(<code class="docutils literal notranslate"><span class="pre">SCHED_PRIORITY_MAX</span></code>).  The higher the number, the higher the priority
+of the thread.  A priority is not static, and there are four ways it can
+change:</p>
+<ul class="simple">
+<li><p><strong>Application definition:</strong> an application sets the initial priority of
+a thread when it is created, or later with <code class="docutils literal notranslate"><span class="pre">sched_setparam()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sched_setscheduler()</span></code> or <code class="docutils literal notranslate"><span class="pre">pthread_setschedparam()</span></code>.</p></li>
+<li><p><strong>Sporadic policy:</strong> the system moves the priority of a sporadic thread
+between two levels, a higher one during its budget and a lower one when
+the budget ends (see below).</p></li>
+<li><p><strong>Priority inheritance</strong> (<code class="docutils literal notranslate"><span class="pre">CONFIG_PRIORITY_INHERITANCE</span></code>): a thread
+that holds a resource is temporarily raised to the priority of a
+higher-priority thread that is waiting for it.</p></li>
+<li><p><strong>Priority protection, or ceiling</strong> (<code class="docutils literal notranslate"><span class="pre">CONFIG_PRIORITY_PROTECT</span></code>): a
+thread that locks a mutex with a priority ceiling is raised to that
+ceiling while it holds the lock.</p></li>
+</ul>
+<p>See <a class="reference internal" href="../ipc/index.html"><span class="doc">Inter-Thread Communication</span></a> for inheritance and protection.</p>
 </section>
 <section id="thread-states">
 <h2>Thread states<a class="headerlink" href="#thread-states" title="Permalink to this heading"></a></h2>
@@ -244,40 +299,72 @@ states are defined by <code class="docutils literal notranslate"><span class="pr
 comment beside each one sorts it into a group: <code class="docutils literal notranslate"><span class="pre">INVALID</span></code> for a TCB that has
 not been initialised, <code class="docutils literal notranslate"><span class="pre">READY_TO_RUN</span></code>, and <code class="docutils literal notranslate"><span class="pre">BLOCKED</span></code>.</p>
 <figure class="align-center" id="id1">
-<a class="reference internal image-reference" href="../../_images/task_states.svg"><img alt="A task is created inactive, becomes ready to run, is scheduled onto a CPU, blocks waiting for a resource, and finally exits." src="../../_images/task_states.svg" width="100%" /></a>
+<a class="reference internal image-reference" href="../../_images/task_states.svg"><img alt="A thread is created inactive, becomes ready to run, is scheduled onto a CPU, blocks waiting for a resource, and finally exits." src="../../_images/task_states.svg" width="100%" /></a>
 <figcaption>
-<p><span class="caption-text">The states of <code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">tstate_e</span></code>, and what moves a thread between them.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+<p><span class="caption-text">The states of <code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">tstate_e</span></code>, and what moves a thread between them.
+<code class="docutils literal notranslate"><span class="pre">exited</span></code> is not a state: it is where the thread’s TCB is released.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
+<p>A thread’s life follows the arrows.  <code class="docutils literal notranslate"><span class="pre">task_create()</span></code> builds the TCB in
+the <code class="docutils literal notranslate"><span class="pre">INACTIVE</span></code> state and then calls <code class="docutils literal notranslate"><span class="pre">nxtask_activate()</span></code>, which puts
+it on the ready-to-run list; from there, priority decides whether it
+takes the CPU at once.  A <code class="docutils literal notranslate"><span class="pre">RUNNING</span></code> thread that asks for something not
+yet available (a semaphore at zero, a signal, an event, a message from
+an empty queue or room in a full one) leaves the CPU and moves to the
+<code class="docutils literal notranslate"><span class="pre">WAIT_*</span></code> state that names the reason.  When that happens, it goes back
+to the ready-to-run list.  A thread ends when it returns from its entry
+function or calls <code class="docutils literal notranslate"><span class="pre">exit()</span></code> or <code class="docutils literal notranslate"><span class="pre">pthread_exit()</span></code>.  Another thread can
+also end a task with <code class="docutils literal notranslate"><span class="pre">task_delete()</span></code>, even while it is blocked; see
+<a class="reference internal" href="../../reference/user/01_task_control.html"><span class="doc">Task Control Interfaces</span></a> for when the call is refused or
+deferred.  Either way the kernel releases the TCB.</p>
 <p><code class="docutils literal notranslate"><span class="pre">INACTIVE</span></code> carries the <code class="docutils literal notranslate"><span class="pre">BLOCKED</span></code> comment as well, though it is not
-waiting on anything: it is a task that has been created and not yet
+waiting on anything: it is a thread that has been created and not yet
 activated.</p>
-<p>Two ready-to-run states are left off the diagram to keep it readable, and
-they are not alike.  <code class="docutils literal notranslate"><span class="pre">ASSIGNED</span></code> is <code class="docutils literal notranslate"><span class="pre">READYTORUN</span></code> with a CPU already
-picked, and it is the conditional one – it exists only under
-<code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>.  <code class="docutils literal notranslate"><span class="pre">PENDING</span></code> is always compiled, and it is narrower than its
-name suggests: a thread goes there only if it became ready while another
-thread held <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> <strong>and</strong> would have preempted it.
-<code class="docutils literal notranslate"><span class="pre">nxsched_add_readytorun()</span></code> tests both halves –
-<code class="docutils literal notranslate"><span class="pre">nxsched_islocked_tcb(rtcb)</span></code> and a new priority higher than the running
-thread’s – so a thread that becomes ready at equal or lower priority under
-the lock joins the ordinary ready-to-run list instead.</p>
-<p>A thread in any <em>ready-to-run</em> state is runnable; only one per CPU is
-<code class="docutils literal notranslate"><span class="pre">RUNNING</span></code>.  A thread in any <em>blocked</em> state is waiting for something
-specific, and the state says what: a semaphore, a signal, an event, a
-message arriving, or room to put one.  <code class="docutils literal notranslate"><span class="pre">STOPPED</span></code> waits for <code class="docutils literal notranslate"><span class="pre">SIGCONT</span></code>
-under <code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_SIGSTOP_ACTION</span></code>, and one more state is off the diagram
-too: <code class="docutils literal notranslate"><span class="pre">WAIT_PAGEFILL</span></code>, under <code class="docutils literal notranslate"><span class="pre">CONFIG_LEGACY_PAGING</span></code>.  Sleeping is not a
-state of its own – <code class="docutils literal notranslate"><span class="pre">TSTATE_SLEEPING</span></code> is defined as another name for
-<code class="docutils literal notranslate"><span class="pre">TSTATE_WAIT_SIG</span></code>.  This is why a stack dump tells you not just that a
-thread is stuck but what it is stuck on.</p>
+<p>The ready-to-run group has four states: <code class="docutils literal notranslate"><span class="pre">READYTORUN</span></code>, <code class="docutils literal notranslate"><span class="pre">RUNNING</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ASSIGNED</span></code> and <code class="docutils literal notranslate"><span class="pre">PENDING</span></code> (three without <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>, which drops
+<code class="docutils literal notranslate"><span class="pre">ASSIGNED</span></code>).  The diagram shows the first two; the other two are left
+off to keep it readable, and they are not alike.  <code class="docutils literal notranslate"><span class="pre">ASSIGNED</span></code> is
+<code class="docutils literal notranslate"><span class="pre">READYTORUN</span></code> with a CPU already picked, and it is the conditional one:
+it exists only under <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>.  <code class="docutils literal notranslate"><span class="pre">PENDING</span></code> is always compiled, but
+only the non-SMP scheduler uses it.  Without <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>,
+<code class="docutils literal notranslate"><span class="pre">nxsched_add_readytorun()</span></code> puts a thread there when the running thread
+holds <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> (<code class="docutils literal notranslate"><span class="pre">nxsched_islocked_tcb(rtcb)</span></code>) <strong>and</strong> the new
+thread has a higher priority, so it would have preempted the running
+thread.  A thread that becomes ready at equal or lower priority under the
+lock joins the ordinary ready-to-run list instead.  A ready thread can
+also move to <code class="docutils literal notranslate"><span class="pre">PENDING</span></code> when the thread holding the lock lowers its own
+priority to that thread’s level or below, as <code class="docutils literal notranslate"><span class="pre">sched_yield()</span></code> does under
+the lock.  With <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code> no thread enters <code class="docutils literal notranslate"><span class="pre">PENDING</span></code>: a thread that
+becomes ready stays in the ready-to-run list, and <code class="docutils literal notranslate"><span class="pre">sched_unlock()</span></code>
+checks that list instead.</p>
+<p>A thread in any <em>ready-to-run</em> state is runnable: it waits only for its
+turn.  Only one thread per CPU is <code class="docutils literal notranslate"><span class="pre">RUNNING</span></code>.  A thread in any
+<em>blocked</em> state is waiting for something specific, and the state says
+what: a semaphore (<code class="docutils literal notranslate"><span class="pre">WAIT_SEM</span></code>), a signal (<code class="docutils literal notranslate"><span class="pre">WAIT_SIG</span></code>), an event
+(<code class="docutils literal notranslate"><span class="pre">WAIT_EVENT</span></code>), a message to arrive (<code class="docutils literal notranslate"><span class="pre">WAIT_MQNOTEMPTY</span></code>), or room to
+put one (<code class="docutils literal notranslate"><span class="pre">WAIT_MQNOTFULL</span></code>).  <code class="docutils literal notranslate"><span class="pre">WAIT_EVENT</span></code> exists only under
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_EVENTS</span></code>, and the two message states only while POSIX or
+System V message queues are enabled, that is, unless both
+<code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_MQUEUE</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_MQUEUE_SYSV</span></code> are set.  A
+thread stopped by <code class="docutils literal notranslate"><span class="pre">SIGSTOP</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGTSTP</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGTTIN</span></code> or <code class="docutils literal notranslate"><span class="pre">SIGTTOU</span></code>
+waits in <code class="docutils literal notranslate"><span class="pre">STOPPED</span></code> for <code class="docutils literal notranslate"><span class="pre">SIGCONT</span></code>, under
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_SIGSTOP_ACTION</span></code>.  One more state is off the diagram:
+<code class="docutils literal notranslate"><span class="pre">WAIT_PAGEFILL</span></code>, under <code class="docutils literal notranslate"><span class="pre">CONFIG_LEGACY_PAGING</span></code>.  Sleeping is not a
+state of its own: <code class="docutils literal notranslate"><span class="pre">TSTATE_SLEEPING</span></code> is defined as another name for
+<code class="docutils literal notranslate"><span class="pre">TSTATE_WAIT_SIG</span></code>, so a sleeping thread shows as waiting for a
+signal.  This is why the task list that NuttX prints after a failed
+assertion (with <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_DUMP_TASKS</span></code>) and <code class="docutils literal notranslate"><span class="pre">/proc/&lt;pid&gt;/status</span></code>
+(with <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PROCFS</span></code>) tell you not just that a thread is stuck but
+what it is stuck on.</p>
 </section>
 <section id="scheduling-policies">
 <h2>Scheduling policies<a class="headerlink" href="#scheduling-policies" title="Permalink to this heading"></a></h2>
 <p>The policy applies <strong>between threads of equal priority</strong>.  It never lets a
-lower-priority thread run ahead of a higher-priority one.</p>
+lower-priority thread run ahead of a higher-priority one.  With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code> a lower-priority thread can still run at the same time on
+another CPU, as described above.</p>
 <figure class="align-center" id="id2">
-<a class="reference internal image-reference" href="../../_images/policies.svg"><img alt="Under SCHED_FIFO a thread keeps the CPU until it blocks; under SCHED_RR threads of equal priority take turns; under SCHED_SPORADIC a thread runs at a high priority while it has budget and drops to a low one when the budget is spent." src="../../_images/policies.svg" width="100%" /></a>
+<a class="reference internal image-reference" href="../../_images/policies.svg"><img alt="Under SCHED_FIFO a thread keeps the CPU until it blocks or yields; under SCHED_RR threads of equal priority take turns; under SCHED_SPORADIC a thread runs at a high priority while it has budget and drops to a low one when the budget is spent." src="../../_images/policies.svg" width="100%" /></a>
 <figcaption>
 <p><span class="caption-text">The same two threads under each policy, and what the sporadic parameters
 mean.</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
@@ -285,11 +372,15 @@ mean.</span><a class="headerlink" href="#id2" title="Permalink to this image">�
 </figure>
 <section id="sched-fifo-run-to-completion">
 <h3><code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code> – run to completion<a class="headerlink" href="#sched-fifo-run-to-completion" title="Permalink to this heading"></a></h3>
-<p>A thread runs until it blocks, exits, or is preempted by something of
-higher priority.  Two threads of the same priority do not share the CPU: the
-first one to start keeps it until it gives it up.</p>
-<p>This is the most predictable policy and the cheapest one, and it is what a
-new task gets – but only while round robin is switched off.
+<p>FIFO stands for <em>first in, first out</em>.  A thread runs until it blocks,
+yields, exits, or is preempted by something of higher priority.  Two
+threads of the same priority do not share a CPU: the first one to start
+keeps it until it gives it up.</p>
+<p>This is the most predictable policy and the cheapest one, and a new task
+gets it only while round robin is switched off, that is, while
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> is 0.  That is the Kconfig default, but
+most board configurations set a positive value, so in most of those
+configurations a new task gets <code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code>.
 <code class="docutils literal notranslate"><span class="pre">nxthread_setup_scheduler()</span></code> picks the policy for every new TCB with a
 compile-time test, not a runtime one: <code class="docutils literal notranslate"><span class="pre">TCB_FLAG_SCHED_RR</span></code> and a timeslice
 of <code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> when that value is positive,
@@ -299,21 +390,45 @@ system.</p>
 </section>
 <section id="sched-rr-take-turns">
 <h3><code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code> – take turns<a class="headerlink" href="#sched-rr-take-turns" title="Permalink to this heading"></a></h3>
-<p>Same as <code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code>, except that a thread which has been running for
-<code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> milliseconds is moved to the back of the queue of
+<p>RR stands for <em>round robin</em>.  Same as <code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code>, except that a
+thread which has been running for <code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> milliseconds,
+rounded up to whole system ticks, is moved to the back of the queue of
 threads at its own priority, and the next one runs.</p>
-<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> counts milliseconds and defaults to 0, which disables
-the policy entirely – and <em>entirely</em> is literal: at 0 the <code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code> case
-is not compiled into <code class="docutils literal notranslate"><span class="pre">nxsched_set_scheduler()</span></code> at all, so asking for the
-policy at run time fails rather than being ignored.  Set it to a positive
-value and, as above, every task starts out round-robin.  Use it when several
-threads of the same priority have to make progress together, and none of
-them blocks often enough to give the others a chance on its own.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> counts milliseconds and defaults to 0, which
+disables the policy entirely.  <em>Entirely</em> is literal: at 0 the
+<code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code> case is not compiled into <code class="docutils literal notranslate"><span class="pre">nxsched_set_scheduler()</span></code> at
+all, so asking for the policy at run time fails with <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code> rather
+than being ignored, and <code class="docutils literal notranslate"><span class="pre">pthread_attr_setschedpolicy()</span></code> rejects it
+too.  Set it to a positive value and, as above, every new thread starts
+out round-robin, tasks and pthreads alike (a pthread created with
+<code class="docutils literal notranslate"><span class="pre">PTHREAD_INHERIT_SCHED</span></code> takes its parent’s policy instead).  Use it
+when several threads of the same priority have to make progress
+together, and none of them blocks often enough to give the others a
+chance on its own.</p>
+<p>For example, with <code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> set to 200, a <code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code>
+thread runs for about 200 milliseconds.  Then, if another thread of the
+same priority is ready, the scheduler moves it to the back of the queue and
+runs the next one, and so on.  A thread of higher priority does not wait
+for the slice to end: it takes the CPU at once.  The kernel converts this
+time into system ticks, rounding up.  The tick period is
+<code class="docutils literal notranslate"><span class="pre">CONFIG_USEC_PER_TICK</span></code>, 10 ms by default when the system is not
+tickless (100 interrupts per second, or 100 Hz).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Larger slices make round robin behave more like <code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code>.</p>
+</div>
 </section>
 <section id="sched-sporadic-a-budget-per-period">
 <h3><code class="docutils literal notranslate"><span class="pre">SCHED_SPORADIC</span></code> – a budget per period<a class="headerlink" href="#sched-sporadic-a-budget-per-period" title="Permalink to this heading"></a></h3>
 <p>Enabled by <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_SPORADIC</span></code>.  This one is worth understanding
 before reaching for it, because it behaves unlike the other two.</p>
+<p>Even when <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_SPORADIC</span></code> (“Support sporadic scheduling”) is
+enabled, no thread uses it by default: a thread becomes sporadic only when
+the application asks for it, with <code class="docutils literal notranslate"><span class="pre">sched_setscheduler()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pthread_setschedparam()</span></code> or the attributes of a new pthread.  So a
+system can have, at the same time, one <code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code> thread, several
+<code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code> threads and one <code class="docutils literal notranslate"><span class="pre">SCHED_SPORADIC</span></code> thread, and all of them
+obey the same rule: priority first.</p>
 <p>A sporadic thread has <strong>two</strong> priorities and a <strong>budget</strong>:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -342,33 +457,38 @@ has budget left.</p></td>
 <span class="pre">timespec</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sched_ss_max_repl</span></code></p></td>
-<td><p>How many replenishments may be pending at once
-(<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_SPORADIC_MAXREPL</span></code>).</p></td>
+<td><p>How many replenishments may be pending at once, from 1 to
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_SPORADIC_MAXREPL</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
-<p>While the thread has budget it competes at <code class="docutils literal notranslate"><span class="pre">sched_priority</span></code>.  When the
-budget runs out it is demoted to <code class="docutils literal notranslate"><span class="pre">sched_ss_low_priority</span></code>, so it keeps
-running only if nothing else wants the CPU.  Then the cycle repeats.</p>
-<p>The period <em>contains</em> the budget rather than following it, which is the part
-worth reading twice.  <code class="docutils literal notranslate"><span class="pre">sched_sporadic.c</span></code> asserts
-<code class="docutils literal notranslate"><span class="pre">repl_period</span> <span class="pre">&gt;=</span> <span class="pre">budget</span></code> and spends the difference at the low priority:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>remainder = sporadic-&gt;repl_period - sporadic-&gt;budget;
-</pre></div>
-</div>
-<p>Give a thread a 10 ms budget and a 100 ms period and it runs high for up to
-10 ms, low for the other 90, and is promoted again 100 ms after the cycle
-began – not 100 ms after the budget ran out.  <code class="docutils literal notranslate"><span class="pre">sched_ss_max_repl</span></code> bounds a
-second mechanism rather than this one: when the thread is preempted part-way
-through its budget, each fragment is replenished one period after it was
-consumed, and the field caps how many such replenishments may be outstanding
-at once.</p>
+<p>How the fields work together, in order:</p>
+<ol class="arabic simple">
+<li><p>While the thread has budget, it competes at <code class="docutils literal notranslate"><span class="pre">sched_priority</span></code> and
+responds quickly.</p></li>
+<li><p>When the budget runs out, it drops to <code class="docutils literal notranslate"><span class="pre">sched_ss_low_priority</span></code> and
+runs only while no thread of a higher priority than that is ready.</p></li>
+<li><p>The cycle has a fixed length, <code class="docutils literal notranslate"><span class="pre">sched_ss_repl_period</span></code>, counted from
+its start, not from the end of the budget: the period <em>contains</em> the
+budget, and <code class="docutils literal notranslate"><span class="pre">sched_sporadic.c</span></code> spends the rest of it,
+<code class="docutils literal notranslate"><span class="pre">repl_period</span> <span class="pre">-</span> <span class="pre">budget</span></code>, at the low priority.  With a 10 ms budget
+and a 100 ms period, the thread runs high for up to 10 ms, low for
+the other 90, and is promoted again 100 ms after the cycle began.</p></li>
+<li><p>If it stops running part-way through its budget, preempted or
+blocked, the time it lost is given back later as a <em>replenishment</em>
+that starts half a period after it stopped.  <code class="docutils literal notranslate"><span class="pre">sched_ss_max_repl</span></code>
+caps how many replenishments may be pending at once.</p></li>
+</ol>
+<p>The budget may be at most half the period, a limit of the current
+implementation: <code class="docutils literal notranslate"><span class="pre">nxsched_validate_sporadic()</span></code> returns <code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> for
+a larger one, so <code class="docutils literal notranslate"><span class="pre">sched_setscheduler()</span></code>, <code class="docutils literal notranslate"><span class="pre">sched_setparam()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">pthread_create()</span></code> all reject it.</p>
 <p>What this buys you is a <strong>bounded</strong> amount of high-priority CPU time for a
 thread whose workload you do not fully trust: an event handler that is
 usually short but occasionally is not.  It gets to respond quickly, and it
 cannot starve the rest of the system if it misbehaves.  A thread that would
-otherwise have to be given a low priority – and therefore a poor response
-time – can be given a high one safely.</p>
+otherwise have to be given a low priority (and therefore a poor response
+time) can be given a high one safely.</p>
 </section>
 </section>
 <section id="choosing-a-policy">
@@ -385,16 +505,19 @@ time – can be given a high one safely.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code></p></td>
-<td><p>The normal case.  Threads are ordered by priority and each runs until
-it blocks.</p></td>
+<td><p>Threads of the same priority do not have to take turns: each runs
+until it blocks or yields.  The most predictable and the cheapest
+policy.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code></p></td>
 <td><p>Several threads sit at the same priority and all have to progress,
-for example a set of equivalent workers.</p></td>
+for example a set of equivalent workers.  Needs
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> above 0.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SCHED_SPORADIC</span></code></p></td>
 <td><p>A thread needs a fast response but its running time is not bounded,
-and starving lower-priority work is not acceptable.</p></td>
+and starving lower-priority work is not acceptable.  Needs
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_SPORADIC</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -403,30 +526,46 @@ and starving lower-priority work is not acceptable.</p></td>
 describes as mapping to <code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code> or <code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code>.  In the code that
 mapping goes to <code class="docutils literal notranslate"><span class="pre">SCHED_RR</span></code> and only while <code class="docutils literal notranslate"><span class="pre">CONFIG_RR_INTERVAL</span></code> is
 positive: <code class="docutils literal notranslate"><span class="pre">nxsched_set_scheduler()</span></code> compiles <code class="docutils literal notranslate"><span class="pre">case</span> <span class="pre">SCHED_OTHER</span></code> next to
-<code class="docutils literal notranslate"><span class="pre">case</span> <span class="pre">SCHED_RR</span></code> under that same test.</p>
-<p><code class="docutils literal notranslate"><span class="pre">include/sched.h</span></code> also defines <code class="docutils literal notranslate"><span class="pre">SCHED_BATCH</span></code> and <code class="docutils literal notranslate"><span class="pre">SCHED_IDLE</span></code>.  Neither
-name appears anywhere else in the tree, and <code class="docutils literal notranslate"><span class="pre">nxsched_set_scheduler()</span></code> does
-not accept either, so asking for one fails.  They are numbers reserved in a
-header, not policies you can select.</p>
+<code class="docutils literal notranslate"><span class="pre">case</span> <span class="pre">SCHED_RR</span></code> under that same test.  At 0, <code class="docutils literal notranslate"><span class="pre">SCHED_OTHER</span></code> is still
+accepted.  <code class="docutils literal notranslate"><span class="pre">sched_setscheduler()</span></code> then sets only the priority and leaves
+the thread’s policy as it was, and a thread that <code class="docutils literal notranslate"><span class="pre">pthread_create()</span></code>
+starts with an explicit <code class="docutils literal notranslate"><span class="pre">SCHED_OTHER</span></code> attribute gets <code class="docutils literal notranslate"><span class="pre">SCHED_FIFO</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">include/sched.h</span></code> also defines <code class="docutils literal notranslate"><span class="pre">SCHED_BATCH</span></code> and <code class="docutils literal notranslate"><span class="pre">SCHED_IDLE</span></code>.
+Nothing else in the source code uses either name, and
+<code class="docutils literal notranslate"><span class="pre">nxsched_set_scheduler()</span></code> does not accept either, so asking for one
+fails.  They are numbers reserved in a header, not policies you can
+select.</p>
 </section>
 <section id="application-interface">
 <h2>Application interface<a class="headerlink" href="#application-interface" title="Permalink to this heading"></a></h2>
-<p>The POSIX interface to all of the above – <code class="docutils literal notranslate"><span class="pre">sched_setscheduler()</span></code>,
+<p>The POSIX interface to all of the above (<code class="docutils literal notranslate"><span class="pre">sched_setscheduler()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">sched_setparam()</span></code>, <code class="docutils literal notranslate"><span class="pre">sched_yield()</span></code>, <code class="docutils literal notranslate"><span class="pre">sched_rr_get_interval()</span></code> and the
-rest – is documented in <a class="reference internal" href="../../reference/user/02_task_scheduling.html"><span class="doc">Task Scheduling Interfaces</span></a>.</p>
-<p>Two interfaces are specific to NuttX and worth naming here:</p>
+rest) is documented in <a class="reference internal" href="../../reference/user/02_task_scheduling.html"><span class="doc">Task Scheduling Interfaces</span></a>.</p>
+<p>Two more interfaces are worth naming here:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> / <code class="docutils literal notranslate"><span class="pre">sched_unlock()</span></code></dt><dd><p>Hold off the scheduler without disabling interrupts.  Interrupts still
-run; what is suspended is the switch to another thread.  A thread that
-becomes ready while pre-emption is locked goes to <code class="docutils literal notranslate"><span class="pre">PENDING</span></code>, provided it
-would have preempted the thread holding the lock.  This is
-cheaper and far less disruptive than disabling interrupts, and it is
-almost always the right tool when the goal is “do not switch away from
-me” rather than “do not interrupt me”.  See
-<a class="reference internal" href="preemption_latency.html"><span class="doc">Effects of Disabling Interrupts or Pre-Emption on Response Latency</span></a> for what each choice costs.</p>
+run; what is suspended is the switch to another thread.  Calls nest:
+the lock is a per-thread count, and preemption comes back only when
+every <code class="docutils literal notranslate"><span class="pre">sched_lock()</span></code> has been matched by a <code class="docutils literal notranslate"><span class="pre">sched_unlock()</span></code>.
+Without <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>, a thread that becomes ready while preemption
+is locked goes to <code class="docutils literal notranslate"><span class="pre">PENDING</span></code>, provided it would have preempted the
+thread holding the lock; with <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code> it stays in the
+ready-to-run list.  This is cheaper and far less disruptive than
+disabling interrupts, and it is almost always the right tool when the
+goal is “do not switch away from me” rather than “do not interrupt
+me”.  See <a class="reference internal" href="preemption_latency.html"><span class="doc">Effects of Disabling Interrupts or Pre-Emption on Response Latency</span></a> for what each choice costs.  It is
+not a lock for shared data: under <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code> the other CPUs keep
+running, and interrupt handlers run on every CPU.  To protect data
+shared between threads, use a mutex or a semaphore (see
+<a class="reference internal" href="../ipc/index.html"><span class="doc">Inter-Thread Communication</span></a>); for data shared with an interrupt handler, see
+<a class="reference internal" href="../interrupts/critical_sections.html"><span class="doc">Critical Sections</span></a>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">sched_setaffinity()</span></code> / <code class="docutils literal notranslate"><span class="pre">sched_getaffinity()</span></code></dt><dd><p>Restrict a thread to a set of CPUs under <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>.  See
-<a class="reference internal" href="smp.html"><span class="doc">SMP (Symmetric MultiProcessing)</span></a>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">sched_setaffinity()</span></code> / <code class="docutils literal notranslate"><span class="pre">sched_getaffinity()</span></code></dt><dd><p>Restrict a thread to a set of CPUs under <code class="docutils literal notranslate"><span class="pre">CONFIG_SMP</span></code>.  By default
+the set holds every CPU (<code class="docutils literal notranslate"><span class="pre">CONFIG_SMP_DEFAULT_CPUSET</span></code>), so NuttX
+picks the CPU, and a new thread inherits the set of its parent.  For
+a pthread, <code class="docutils literal notranslate"><span class="pre">pthread_attr_setaffinity_np()</span></code> sets it before creation
+and <code class="docutils literal notranslate"><span class="pre">pthread_setaffinity_np()</span></code> changes it afterwards.  A set with a
+single CPU pins the thread to that CPU.  See <a class="reference internal" href="smp.html"><span class="doc">SMP (Symmetric MultiProcessing)</span></a>.</p>
 </dd>
 </dl>
 </section>
