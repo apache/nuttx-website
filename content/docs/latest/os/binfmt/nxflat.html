@@ -312,6 +312,18 @@ will be unable to correctly access data memory. Special logic
 is in place to handle some NuttX callbacks: Signal callbacks
 and watchdog timer callbacks. But other callbacks (like those
 used with qsort() must be avoided in an NXFLAT module.</p></li>
+<li><p><strong>Emulated Thread-Local Storage Only</strong>:
+A module can use <code class="docutils literal notranslate"><span class="pre">__thread</span></code> and C++ <code class="docutils literal notranslate"><span class="pre">thread_local</span></code> variables only
+when the toolchain emulates TLS (GCC configured with <code class="docutils literal notranslate"><span class="pre">--disable-tls</span></code>).
+The compiler then calls <code class="docutils literal notranslate"><span class="pre">__emutls_get_address()</span></code>, which the module
+imports from the base code like any other function. <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code>
+refuses a module that holds native TLS sections (<code class="docutils literal notranslate"><span class="pre">.tdata</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.tbss</span></code>).</p></li>
+<li><p><strong>No Static Constructors</strong>:
+Nothing runs the static constructors and destructors of a module
+(<code class="docutils literal notranslate"><span class="pre">.init_array</span></code>, <code class="docutils literal notranslate"><span class="pre">.fini_array</span></code>), so <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> refuses a module
+that has them. A C++ <code class="docutils literal notranslate"><span class="pre">thread_local</span></code> object needs no static
+constructor: each thread constructs it at its first use.</p></li>
 </ul>
 </div></blockquote>
 </section>
@@ -405,6 +417,10 @@ object is what these produce, in this order:
 <p><code class="docutils literal notranslate"><span class="pre">-e</span></code> and <code class="docutils literal notranslate"><span class="pre">-o</span></code> are required.  The in-tree <code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> has no <code class="docutils literal notranslate"><span class="pre">-d</span></code>
 option, which the older, out-of-tree tool had.  It converts ARM objects
 only, and refuses an object for another machine.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ldnxflat</span></code> places the sections of each segment itself, in the order of
+the section headers, and does not use the addresses that the linker script
+gives.  So a section that the script does not name, such as a member of a
+C++ COMDAT group that <code class="docutils literal notranslate"><span class="pre">ld</span> <span class="pre">-r</span></code> keeps apart, does not overlap another one.</p>
 </section>
 <section id="mksymtab">
 <h3>mksymtab<a class="headerlink" href="#mksymtab" title="Permalink to this heading"></a></h3>

@@ -243,8 +243,8 @@
 <p>This page describes the NuttX port for the <a class="reference external" href="https://www.st.com/en/evaluation-tools/stm32h7s78-dk.html">STMicro SMT32H7S8-DK</a>
 Discovery kit. The board is based on the 600 MHz STM32H7S3L8
 Cortex-M7 microcontroller.</p>
-<section id="flashing-nsh-image">
-<h2>Flashing NSH image<a class="headerlink" href="#flashing-nsh-image" title="Permalink to this heading"></a></h2>
+<section id="flashing-internal-nsh-image">
+<h2>Flashing internal NSH image<a class="headerlink" href="#flashing-internal-nsh-image" title="Permalink to this heading"></a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>nsh image is restricted in size to fit in and execute from
@@ -267,6 +267,59 @@ command-line executable.:</p>
 </div>
 <p>The internal nsh image presents a shell on the ST-link console on startup.</p>
 </section>
+<section id="xip-boot">
+<h2>XIP Boot<a class="headerlink" href="#xip-boot" title="Permalink to this heading"></a></h2>
+<p>The STM32H7S3L8 has 64 KB of internal flash.  The board also carries a
+32 MB MX25UW25645G NOR flash on XSPI2, mapped at <code class="docutils literal notranslate"><span class="pre">0x70000000</span></code>.  Running
+NuttX from the external flash uses two images:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">boot-xip</span></code> runs from internal flash at <code class="docutils literal notranslate"><span class="pre">0x08000000</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nsh-xip</span></code> executes in place from XSPI2 flash at <code class="docutils literal notranslate"><span class="pre">0x70000000</span></code>.</p></li>
+</ul>
+<p>The bootloader configures the MX25UW25645G in octal STR memory-mapped mode,
+validates the initial stack pointer and reset vector, and starts the external
+image.  Image management, rollback, integrity checking, and authentication
+are not currently provided.</p>
+</section>
+<section id="flashing-bootloader-and-external-image">
+<h2>Flashing bootloader and external image<a class="headerlink" href="#flashing-bootloader-and-external-image" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">XSPI2_HSLV</span></code> option byte must be set to <code class="docutils literal notranslate"><span class="pre">1</span></code> before using the
+external flash.  The option byte setting is persistent.</p>
+</div>
+<p>Build the external image:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cmake -B build/nsh-xip -DBOARD_CONFIG=nucleo-h7s3l8:nsh-xip -GNinja
+cmake --build build/nsh-xip
+</pre></div>
+</div>
+<p>Build the internal bootloader:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cmake -B build/boot-xip -DBOARD_CONFIG=nucleo-h7s3l8:boot-xip -GNinja
+cmake --build build/boot-xip
+</pre></div>
+</div>
+<p>Install STM32CubeProgrammer and set <code class="docutils literal notranslate"><span class="pre">CUBE_PROGRAMMER</span></code> to the path of its
+command-line executable.  The external loader is supplied by the
+STM32CubeProgrammer installation:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CUBE_PROGRAMMER=/path/to/STM32_Programmer_CLI
+EXTERNAL_LOADER="$(dirname "$CUBE_PROGRAMMER")/ExternalLoader/MX66UW1G45G_STM32H7S78-DK.stldr"
+</pre></div>
+</div>
+<p>Erase the external flash, then program and verify the XIP image:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>"$CUBE_PROGRAMMER" --connect port=SWD mode=Normal --erase all \
+  -el "$EXTERNAL_LOADER"
+"$CUBE_PROGRAMMER" --connect port=SWD mode=Normal \
+  --download build/nsh-xip/nuttx.bin 0x70000000 --verify \
+  --skipErase \
+  -el "$EXTERNAL_LOADER"
+</pre></div>
+</div>
+<p>Program and verify the internal bootloader, then reset the board:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>"$CUBE_PROGRAMMER" --connect port=SWD reset=HWrst \
+  --download build/boot-xip/nuttx.bin 0x08000000 --verify --rst
+</pre></div>
+</div>
+</section>
 <section id="configurations">
 <h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading"></a></h2>
 <p>Each configuration is maintained in a subdirectory of <code class="docutils literal notranslate"><span class="pre">configs</span></code> and can be
@@ -280,6 +333,27 @@ selected as follows:</p>
 <p>Provides a basic NuttShell configuration in internal flash and
 includes support for on-board LEDs and user button.  The default
 console is the ST-LINK virtual COM port on USART4.</p>
+</section>
+<section id="nsh-xip">
+<h3>nsh-xip<a class="headerlink" href="#nsh-xip" title="Permalink to this heading"></a></h3>
+<p>Provides NuttShell, common diagnostic commands, and <code class="docutils literal notranslate"><span class="pre">ostest</span></code>.  The image is
+linked for execution from XSPI2 flash at <code class="docutils literal notranslate"><span class="pre">0x70000000</span></code> and requires an XIP
+bootloader in internal flash.</p>
+</section>
+<section id="jumbo-xip">
+<h3>jumbo-xip<a class="headerlink" href="#jumbo-xip" title="Permalink to this heading"></a></h3>
+<p>Much as <code class="docutils literal notranslate"><span class="pre">nsh-xip</span></code>, but adds Ethernet networking. The IP address is obtained by DHCP.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">jumbo-xip</span></code> enables CONFIG_STM32_ETH_GPIO_MDIO to communicate via
+GPIO pins PB2 and PA2 with LAN8742A Ethernet transceiver on the board,
+and requires jumper JP6 to be in its default setting. If JP6 is in
+alternate position, CONFIG_STM32_ETH_GPIO_MDIO must be disabled.</p>
+</div>
+</section>
+<section id="boot-xip">
+<h3>boot-xip<a class="headerlink" href="#boot-xip" title="Permalink to this heading"></a></h3>
+<p>Provides the internal-flash NuttX bootloader used to start the <code class="docutils literal notranslate"><span class="pre">nsh-xip</span></code> or <code class="docutils literal notranslate"><span class="pre">jumbo-xip</span></code> image.</p>
 </section>
 </section>
 </section>

@@ -434,6 +434,54 @@ and microSD automount, started from the board <code class="docutils literal notr
 <h3>nsh_trace<a class="headerlink" href="#nsh-trace" title="Permalink to this heading"></a></h3>
 <p>NSH with the system trace subsystem enabled for scheduler/syscall tracing.</p>
 </section>
+<section id="nxdoom">
+<h3>nxdoom<a class="headerlink" href="#nxdoom" title="Permalink to this heading"></a></h3>
+<p>NXDoom (<code class="docutils literal notranslate"><span class="pre">apps/games/NXDoom</span></code>) on an ILI9340 display attached to the
+Spresense extension board, with the keys read from the serial console.</p>
+<p>The display is used as a frame buffer through <code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_FRAMEBUFFER</span></code>
+and runs 320x240 in landscape. The keys are read from the serial console,
+and the WAD file is kept in the on-board SPI flash, which is mounted at
+<code class="docutils literal notranslate"><span class="pre">/mnt/spif</span></code>.</p>
+<p>To play:</p>
+<ol class="arabic">
+<li><p>Get a WAD file and name it <code class="docutils literal notranslate"><span class="pre">doom1.wad</span></code>. It has to fit in the 4 MB of
+flash. See <a class="reference internal" href="../../../../../applications/games/nxdoom/index.html"><span class="doc">NXDoom</span></a> for what NXDoom can use.
+The one-level <a class="reference external" href="https://github.com/fragglet/squashware/releases">Squashware</a>
+IWAD is known to work.</p></li>
+<li><p>Build and flash the configuration as described above, then open the NSH
+console with a terminal program. Some terminal programs reset the board
+when they open the serial port, so connect first and only then continue.</p></li>
+<li><p>Receive the WAD file into the flash. <code class="docutils literal notranslate"><span class="pre">rz</span></code> waits for the sender for
+120 seconds, so start the transfer from the terminal program right after:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; rz -p /mnt/spif
+</pre></div>
+</div>
+<p>In Tera Term, for example, use <span class="menuselection">File ‣ Transfer ‣
+ZMODEM ‣ Send</span> and pick <code class="docutils literal notranslate"><span class="pre">doom1.wad</span></code>. The file stays in the flash, so
+this is needed only once.</p>
+</li>
+<li><p>Check that the whole file arrived. The size must match the file on the
+host:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls -l /mnt/spif
+</pre></div>
+</div>
+</li>
+<li><p>Start the game:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; nxdoom -iwad /mnt/spif/doom1.wad
+</pre></div>
+</div>
+</li>
+</ol>
+<p>While the game runs, everything typed in the terminal is read as a game key,
+including what is meant for NSH. Move with the W, A, S and D keys (or the
+arrow keys), fire with J, run with K, strafe with L, use with E and open the
+menu with Q.</p>
+<p>The board has 1.5 MB of RAM, so the screen wipe is disabled
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_GAMES_NXDOOM_NOWIPE</span></code>) and the render buffer is placed in
+<code class="docutils literal notranslate"><span class="pre">.bss</span></code>. The flash area that holds the WAD is 4 MB, so the shareware
+<code class="docutils literal notranslate"><span class="pre">DOOM1.WAD</span></code> (about 4.2 MB) does not fit in it. Only the one-level Squashware
+IWAD has been tried.</p>
+</section>
 <section id="ostest">
 <h3>ostest<a class="headerlink" href="#ostest" title="Permalink to this heading"></a></h3>
 <p>Standard NuttX OS test suite (<code class="docutils literal notranslate"><span class="pre">apps/testing/ostest</span></code>).</p>

@@ -326,15 +326,27 @@ parsed. If a valid dependency cannot be fetched, has no common history, its
 commit list cannot be determined, or it causes a cherry-pick conflict,
 <code class="docutils literal notranslate"><span class="pre">Fetch-Source</span></code> fails instead of silently testing without the requested
 dependency.</p>
+<p>A dependency that is already merged is skipped. <code class="docutils literal notranslate"><span class="pre">Fetch-Source</span></code> reads the
+state of each dependency through the GitHub API. If the dependency is merged
+and its merge commit is in the checkout, its commits are already in the tree,
+so CI does not cherry-pick them again. Thus a <code class="docutils literal notranslate"><span class="pre">Depends-On:</span></code> declaration can
+stay in the description after the dependency is merged. A dependency that is
+merged into a different branch, or whose merge commit is not in the checkout,
+is applied as before. If CI cannot read the state, it also applies the
+dependency as before.</p>
+<p>A dependency that is closed without merge is an error. <code class="docutils literal notranslate"><span class="pre">Fetch-Source</span></code> does
+not apply it and fails. Remove the dependency from the <code class="docutils literal notranslate"><span class="pre">Depends-On:</span></code>
+declaration, or reopen the dependency pull request.</p>
 <p>The memory footprint workflow applies the same declarations independently,
 using the same parser and apply sequence (see <a class="reference internal" href="#memory-footprint-tracking">Memory Footprint Tracking</a>).</p>
 <p>When a valid dependency report is available, the follow-up comment reports one
 of three outcomes:</p>
 <ul class="simple">
 <li><p>successfully applied dependencies and their fetched head SHAs (abbreviated in
-the comment)</p></li>
+the comment); a skipped dependency is marked “already merged, skipped”</p></li>
 <li><p>a declaration from which no valid dependency could be parsed</p></li>
-<li><p>valid dependencies that could not be applied and the failure reason</p></li>
+<li><p>valid dependencies that could not be applied and the failure reason; a
+dependency that is closed without merge is marked “closed without merge”</p></li>
 </ul>
 <p>The write-capable follow-up workflow does not execute fork code. It validates
 the untrusted report’s structure, repository allow-list, run and current PR
@@ -418,7 +430,9 @@ regressions. It:</p>
 workflow (see <a class="reference internal" href="#pull-request-dependencies">Pull Request Dependencies</a>), so a pull request that only builds
 on top of another one is measured against a tree that compiles. The declaration
 rules and the <code class="docutils literal notranslate"><span class="pre">master</span></code>-only gate are the same. A dependency that cannot be
-fetched or applied fails the job in both workflows.</p>
+fetched or applied fails the job in both workflows. Both workflows skip a
+dependency that is already merged, and fail on a dependency that is closed
+without merge.</p>
 </section>
 </section>
 
