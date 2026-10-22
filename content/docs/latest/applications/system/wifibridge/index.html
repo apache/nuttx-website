@@ -251,6 +251,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#keeping-the-configuration">Keeping the configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
 </ul>
@@ -336,15 +337,21 @@ and <code class="docutils literal notranslate"><span class="pre">wlan0</span></c
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_WIFIBRIDGE_DHCPD</span></code></dt><dd><p>Allow the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option, which runs the DHCP server on the bridge
 (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_DHCPD</span></code>).</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_WIFIBRIDGE_PERSIST</span></code></dt><dd><p>Allow <code class="docutils literal notranslate"><span class="pre">save</span></code> and <code class="docutils literal notranslate"><span class="pre">clear</span></code>, which keep the configuration across resets
+(see <a class="reference internal" href="#keeping-the-configuration">Keeping the configuration</a>).</p>
+</dd>
 </dl>
 <p>Change the default passphrase before deploying a board.</p>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">wifibridge start [-s &lt;ssid&gt;] [-p &lt;passphrase&gt;] [-c &lt;channel&gt;] [-3]</span>
-<span class="go">                 [-a &lt;ipaddr&gt;] [-d]</span>
+<span class="go">                 [-a &lt;ipaddr&gt;] [-d|-D]</span>
 <span class="go">wifibridge stop</span>
 <span class="go">wifibridge status</span>
+<span class="go">wifibridge save [-s &lt;ssid&gt;] [-p &lt;passphrase&gt;] [-c &lt;channel&gt;] [-3]</span>
+<span class="go">                [-a &lt;ipaddr&gt;] [-d|-D]</span>
+<span class="go">wifibridge clear</span>
 </pre></div>
 </div>
 <dl>
@@ -366,6 +373,9 @@ it.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">-d</span></code></dt><dd><p>Run the DHCP server on the bridge.  Leave it out when another DHCP
 server is reachable through the Ethernet port.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-D</span></code></dt><dd><p>Do not run the DHCP server.  It is the default; with <code class="docutils literal notranslate"><span class="pre">save</span></code> it
+turns off a <code class="docutils literal notranslate"><span class="pre">-d</span></code> that was kept before.</p>
+</dd>
 </dl>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">stop</span></code></dt><dd><p>Stop the DHCP server, remove the ports, delete the bridge and stop the
@@ -374,10 +384,44 @@ access point.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">status</span></code></dt><dd><p>Show whether the bridge exists, its address, the state of the two
 ports and the SSID of the access point.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">save</span></code></dt><dd><p>Keep the configuration, see <a class="reference internal" href="#keeping-the-configuration">Keeping the configuration</a>.  It takes the
+same options as <code class="docutils literal notranslate"><span class="pre">start</span></code>, and does not start anything.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">clear</span></code></dt><dd><p>Forget the saved configuration.</p>
+</dd>
 </dl>
 <p>The Ethernet and Wi-Fi interfaces carry no IP address of their own: only
 the bridge does.  The Ethernet interface needs a MAC address, which a
 board without a factory programmed one has to provide.</p>
+</section>
+<section id="keeping-the-configuration">
+<h2>Keeping the configuration<a class="headerlink" href="#keeping-the-configuration" title="Permalink to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_WIFIBRIDGE_PERSIST</span></code>, <code class="docutils literal notranslate"><span class="pre">wifibridge</span> <span class="pre">save</span></code> keeps the
+SSID, the passphrase, the channel, the security, the address and the DHCP
+server option, and <code class="docutils literal notranslate"><span class="pre">wifibridge</span> <span class="pre">start</span></code> uses them instead of the defaults
+of the configuration.  The options of <code class="docutils literal notranslate"><span class="pre">start</span></code> still win, for that run
+only.  <code class="docutils literal notranslate"><span class="pre">wifibridge</span> <span class="pre">clear</span></code> forgets them and the defaults are used again.
+The options of <code class="docutils literal notranslate"><span class="pre">save</span></code> are applied over what is already saved, if there is
+something, and over the defaults otherwise.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; wifibridge save -s MyBridge -p mypassphrase -c 11 -a 10.0.0.7 -d</span>
+<span class="go">nsh&gt; reboot</span>
+<span class="go">...</span>
+<span class="go">nsh&gt; wifibridge start</span>
+<span class="go">nsh&gt; wifibridge status</span>
+<span class="go">br0   present 10.0.0.7</span>
+<span class="go">eth0  up</span>
+<span class="go">wlan0 up ssid "MyBridge"</span>
+</pre></div>
+</div>
+<p>The configuration is one record, with a CRC, at the start of
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_WIFIBRIDGE_STORAGE</span></code>.  That is a file of a file system
+that is mounted at boot (the default is <code class="docutils literal notranslate"><span class="pre">/data/wifibridge.conf</span></code>), or a block
+device, such as the MTD of a few pages of the flash (it needs <code class="docutils literal notranslate"><span class="pre">CONFIG_BCH</span></code>
+to be opened by name).  Saving a device erases and writes the flash that
+holds it, so it should be used for this alone.  A record that is missing or
+damaged is ignored.  The passphrase is stored as is.</p>
+<p>On the PIC32MZ-W1, <code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_PROGMEM</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_PROGMEM</span></code>
+provides such a device in the last pages of the program flash.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
@@ -396,8 +440,8 @@ board without a factory programmed one has to provide.</p>
 <li><p>Only the access point mode is supported.  A station cannot be bridged
 at layer 2 because it cannot send frames with foreign source addresses.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start</span></code> fails with <code class="docutils literal notranslate"><span class="pre">EEXIST</span></code> if the bridge already exists.</p></li>
-<li><p>The SSID and the passphrase are not saved: they come from the
-command line or from the defaults of the configuration.</p></li>
+<li><p>The saved configuration does not include the names of the interfaces and
+the netmask, which come from the configuration.</p></li>
 <li><p>The rest of the limits of the bridge apply, see
 <a class="reference internal" href="../../../os/networking/bridge.html"><span class="doc">Ethernet Bridge</span></a>.</p></li>
 </ul>
