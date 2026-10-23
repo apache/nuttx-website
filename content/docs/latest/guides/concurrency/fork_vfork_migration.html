@@ -474,10 +474,11 @@ kernel build) select it today.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">vfork()</span></code> parent is now resumed when the child’s TCB is torn down, so by
 the time it runs the child is completely gone.  Where the child called
 <code class="docutils literal notranslate"><span class="pre">exec()</span></code> this makes no difference – <code class="docutils literal notranslate"><span class="pre">exec_swap()</span></code> has already given the
-loaded program the child’s pid, and that program is still running, so
-<code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> behaves normally.  Where the child called <code class="docutils literal notranslate"><span class="pre">_exit()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> can only return its status if <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_CHILD_STATUS</span></code> is
-enabled; otherwise it returns <code class="docutils literal notranslate"><span class="pre">ECHILD</span></code>, because NuttX does not retain the
+loaded program the child’s pid, so <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> behaves normally.  Where the
+child called <code class="docutils literal notranslate"><span class="pre">_exit()</span></code>, or the loaded program exits before the parent calls
+<code class="docutils literal notranslate"><span class="pre">waitpid()</span></code>, <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> can only return its status if
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_CHILD_STATUS</span></code> is enabled (the default in a kernel build);
+otherwise it returns <code class="docutils literal notranslate"><span class="pre">ECHILD</span></code>, because NuttX does not retain the
 status of a task that no longer exists.  That is a pre-existing property of
 that configuration, not a change:  the previous implementation blocked in a
 libc <code class="docutils literal notranslate"><span class="pre">waitpid(WNOWAIT)</span></code> and an application’s own <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> afterwards hit

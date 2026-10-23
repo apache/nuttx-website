@@ -428,21 +428,12 @@ be tested. Default: <code class="docutils literal notranslate"><span class="pre"
 </ul>
 <p><strong>Notes</strong>:</p>
 <ol class="arabic">
-<li><p><code class="docutils literal notranslate"><span class="pre">CFLAGS</span></code> should be provided in <code class="docutils literal notranslate"><span class="pre">CMODULEFLAGS</span></code>. RAM and FLASH memory regions
-may require long allcs. For ARM, this might be:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CMODULEFLAGS = $(CFLAGS) -mlong-calls
-</pre></div>
-</div>
-<p>Similarly for C++ flags which must be provided in <code class="docutils literal notranslate"><span class="pre">CXXMODULEFLAGS</span></code>.</p>
-</li>
-<li><p>Your top-level <code class="docutils literal notranslate"><span class="pre">nuttx/Make.defs</span></code> file must also include an appropriate
-definition, LDMODULEFLAGS, to generate a relocatable ELF object. With GNU LD,
-this should include <code class="docutils literal notranslate"><span class="pre">-r</span></code> and <code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">&lt;entry</span> <span class="pre">point&gt;</span></code>.:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>LDMODULEFLAGS = -r -e module_initialize
-</pre></div>
-</div>
-<p>If you use GCC to link, you make also need to include <code class="docutils literal notranslate"><span class="pre">-nostdlib</span></code>.</p>
-</li>
+<li><p>The arch <code class="docutils literal notranslate"><span class="pre">Toolchain.defs</span></code> sets <code class="docutils literal notranslate"><span class="pre">CMODULEFLAGS</span></code> and <code class="docutils literal notranslate"><span class="pre">LDMODULEFLAGS</span></code>. For
+example, on ARM they contain <code class="docutils literal notranslate"><span class="pre">-mlong-calls</span></code>, <code class="docutils literal notranslate"><span class="pre">-r</span></code> and the linker script
+<code class="docutils literal notranslate"><span class="pre">libs/libc/elf/gnu-elf.ld</span></code>. A board <code class="docutils literal notranslate"><span class="pre">scripts/Make.defs</span></code> can add an option
+with <code class="docutils literal notranslate"><span class="pre">+=</span></code>, for example <code class="docutils literal notranslate"><span class="pre">LDMODULEFLAGS</span> <span class="pre">+=</span> <span class="pre">-melf32lriscv</span></code>. Do not set these
+variables again with <code class="docutils literal notranslate"><span class="pre">=</span></code>: the board then loses the options that the arch
+adds for the configuration, for example the FDPIC options.</p></li>
 <li><p>This example also requires <code class="docutils literal notranslate"><span class="pre">genromfs</span></code>. <code class="docutils literal notranslate"><span class="pre">genromfs</span></code> can be build as part of the
 nuttx toolchain. Or can built from the <code class="docutils literal notranslate"><span class="pre">genromfs</span></code> sources that can be found
 in the NuttX tools repository (<code class="docutils literal notranslate"><span class="pre">genromfs-0.5.2.tar.gz</span></code>). In any event, the
@@ -457,15 +448,6 @@ Windows-native binary format.</p>
 <p>If you really want to do this, you can create a NuttX x86 <code class="docutils literal notranslate"><span class="pre">buildroot</span></code>
 toolchain and use that be build the ELF executables for the ROMFS file
 system.</p>
-</li>
-<li><p>Linker scripts. You might also want to use a linker scripts to combine
-sections better. An example linker script is at
-<code class="docutils literal notranslate"><span class="pre">nuttx/libc/elf/gnu-elf.ld</span></code>. That example might have to be tuned for your
-particular linker output to position additional sections correctly. The GNU
-LD <code class="docutils literal notranslate"><span class="pre">LDMODULEFLAGS</span></code> then might be:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>LDMODULEFLAGS = -r -e module_initialize -T$(TOPDIR)/libc/elf/gnu-elf.ld
-</pre></div>
-</div>
 </li>
 </ol>
 </section>

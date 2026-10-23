@@ -222,6 +222,30 @@ last component of the path. <code class="docutils literal notranslate"><span cla
 target. A link with an absolute target is not followed and fails with
 <code class="docutils literal notranslate"><span class="pre">ENOTSUP</span></code>, because the target is a path on the server.</p>
 </section>
+<section id="owner-and-group">
+<h1>Owner and Group<a class="headerlink" href="#owner-and-group" title="Permalink to this heading"></a></h1>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_USER_IDENTITY</span></code>, V9FS attaches to the server once for
+each effective user ID that uses the mount. A new file, directory or
+symbolic link gets the effective user ID and the effective group ID of the
+caller. <code class="docutils literal notranslate"><span class="pre">chown()</span></code> and <code class="docutils literal notranslate"><span class="pre">fchown()</span></code> send <code class="docutils literal notranslate"><span class="pre">Tsetattr</span></code>, and <code class="docutils literal notranslate"><span class="pre">stat()</span></code>
+shows the owner and the group that the server returns.</p>
+<p>The server decides what it does with the owner. In QEMU, the
+<code class="docutils literal notranslate"><span class="pre">security_model</span></code> option of <code class="docutils literal notranslate"><span class="pre">-fsdev</span></code> or <code class="docutils literal notranslate"><span class="pre">-virtfs</span></code> selects it:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mapped-xattr</span></code>: QEMU keeps the owner, the group and the mode of a
+file in extended attributes of the host file (<code class="docutils literal notranslate"><span class="pre">user.virtfs.uid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">user.virtfs.gid</span></code>, <code class="docutils literal notranslate"><span class="pre">user.virtfs.mode</span></code>). Use this model when
+NuttX needs the owner and the group of its files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mapped-file</span></code>: the same, in hidden <code class="docutils literal notranslate"><span class="pre">.virtfs_metadata</span></code> files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">passthrough</span></code>: QEMU changes the owner of the host file. QEMU must
+run as root, else the creation of a file fails with <code class="docutils literal notranslate"><span class="pre">EPERM</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">none</span></code>: QEMU ignores the owner of a new file. <code class="docutils literal notranslate"><span class="pre">stat()</span></code> shows the
+owner of the host file, and <code class="docutils literal notranslate"><span class="pre">chown()</span></code> fails with <code class="docutils literal notranslate"><span class="pre">EPERM</span></code> unless
+QEMU runs as root.</p></li>
+</ul>
+</div></blockquote>
+</section>
 <section id="v9fs-mount-command">
 <h1>V9FS Mount Command<a class="headerlink" href="#v9fs-mount-command" title="Permalink to this heading"></a></h1>
 <p>In V9FS, we have some special parameters</p>
@@ -246,6 +270,8 @@ passing. Here are some examples:</p>
 <span class="go">-device virtio-9p-device,id=fs1,fsdev=fsdev1,mount_tag=&lt;mount_tag&gt;</span>
 </pre></div>
 </div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">security_model=mapped-xattr</span></code> to keep the owner and the group of the
+files (see <a class="reference internal" href="#owner-and-group">Owner and Group</a>).</p>
 <p>For how to start virtio-9p in QEMU, please refer to the document:</p>
 <blockquote>
 <div><ul class="simple">

@@ -668,9 +668,10 @@ Merged into <code class="docutils literal notranslate"><span class="pre">POSIX_D
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="fn9" role="note">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">9</a><span class="fn-bracket">]</span></span>
-<p>NuttX provides dummy implementations for <code class="docutils literal notranslate"><span class="pre">_POSIX_MEMORY_PROTECTION</span></code>
-which is sufficient for devices without MMU, but doesn’t meet the
-requirement for devices with MMU.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mprotect()</span></code> changes the page permissions only with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ADDRENV</span></code> on arm64 and RISC-V.  On other targets it
+checks the arguments and changes nothing, which is sufficient for
+devices without MMU.</p>
 </aside>
 </aside>
 </section>
@@ -4513,15 +4514,20 @@ the required functionality.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">mprotect()</span></code></p></td>
-<td><p>Dummy <a class="footnote-reference brackets" href="#fn17" id="id23" role="doc-noteref"><span class="fn-bracket">[</span>17<span class="fn-bracket">]</span></a></p></td>
+<td><p>Yes <a class="footnote-reference brackets" href="#fn17" id="id23" role="doc-noteref"><span class="fn-bracket">[</span>17<span class="fn-bracket">]</span></a></p></td>
 </tr>
 </tbody>
 </table>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="fn17" role="note">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id23">17</a><span class="fn-bracket">]</span></span>
-<p>The function returns a success value but doesn’t implement
-the required functionality.</p>
+<p>All builds return <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code> when <code class="docutils literal notranslate"><span class="pre">addr</span></code> is not a multiple of
+<code class="docutils literal notranslate"><span class="pre">sysconf(_SC_PAGESIZE)</span></code> or <code class="docutils literal notranslate"><span class="pre">prot</span></code> has an unknown bit.  With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_ADDRENV</span></code> on arm64 and RISC-V the function changes
+the page permissions, and returns <code class="docutils literal notranslate"><span class="pre">ENOMEM</span></code> when a page of the
+range is not mapped.  Other configurations return a success value
+for a valid request and change nothing: without an MMU the
+permissions cannot be enforced.</p>
 </aside>
 </aside>
 </section>
