@@ -270,9 +270,10 @@ Software).</span><a class="headerlink" href="#id1" title="Permalink to this imag
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>GD32W515PIQ6 MCU, 25 MHz crystal, no 32 kHz crystal</p></li>
-<li><p>0.96” 160x80 IPS LCD (ST7735S, SPI) with PWM backlight</p></li>
+<li><p>0.96” 160x80 IPS LCD (ST7735S, SPI) with a switched backlight</p></li>
 <li><p>GSL6157 capacitive fingerprint sensor (SPI)</p></li>
-<li><p>Capacitive touch key (TSI), vibration motor, four LEDs</p></li>
+<li><p>Capacitive touch key (TSI), vibration motor, heater coil, microphone,
+four LEDs</p></li>
 <li><p>GD25Q128E 16 MB QSPI NOR flash (U6)</p></li>
 <li><p>GD30BC2416 battery charger, GD30LD1002 LDO, LiPo connector</p></li>
 <li><p>On-board GD-Link (CMSIS-DAP) on the mini-USB connector</p></li>
@@ -283,9 +284,8 @@ libraries only support 26 MHz and 40 MHz crystals.</p>
 </section>
 <section id="pin-mapping">
 <h2>Pin mapping<a class="headerlink" href="#pin-mapping" title="Permalink to this heading"></a></h2>
-<p>No schematic of this board is public. The pins below were read back from
-the GPIO setup of the factory firmware and checked on the hardware where
-noted.</p>
+<p>The pins below follow the board schematic (GD-xD-W515-EVAL V1.0,
+GigaDevice, 2023-05).</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Function</p></th>
@@ -307,7 +307,7 @@ noted.</p>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>LCD backlight</p></td>
-<td><p>PB0</p></td>
+<td><p>PC14 (active high)</p></td>
 <td><p>On with the display</p></td>
 </tr>
 <tr class="row-even"><td><p>Motor</p></td>
@@ -315,7 +315,7 @@ noted.</p>
 <td><p>/dev/pwm0 channel 1</p></td>
 </tr>
 <tr class="row-odd"><td><p>LEDs</p></td>
-<td><p>PB1, PC4, PC5, PC3</p></td>
+<td><p>PC5, PC4, PB0, PB1</p></td>
 <td><p>LED1..LED4, active high</p></td>
 </tr>
 <tr class="row-even"><td><p>I2C0</p></td>
@@ -326,8 +326,8 @@ noted.</p>
 <td><p>PB12 (sampling), PB14 (channel)</p></td>
 <td><p>TSI, AF4, /dev/buttons</p></td>
 </tr>
-<tr class="row-even"><td><p>Heater</p></td>
-<td><p>PC14</p></td>
+<tr class="row-even"><td><p>Heater coil</p></td>
+<td><p>PB7 (COIL_EN, active low)</p></td>
 <td><p>/dev/gpio0 (output)</p></td>
 </tr>
 <tr class="row-odd"><td><p>Fingerprint</p></td>
@@ -343,30 +343,46 @@ noted.</p>
 <td><p>/dev/gpio2 (interrupt)</p></td>
 </tr>
 <tr class="row-even"><td><p>USB detect</p></td>
-<td><p>PC1 (high with USB power)</p></td>
+<td><p>PC1 (micro-USB VBUS / 2)</p></td>
 <td><p>/dev/gpio1 (interrupt)</p></td>
 </tr>
 <tr class="row-odd"><td><p>Charger IRQ</p></td>
 <td><p>PB2</p></td>
 <td><p>GD30BC2416 driver (*)</p></td>
 </tr>
-<tr class="row-even"><td><p>Analog inputs</p></td>
+<tr class="row-even"><td><p>Charger enable</p></td>
+<td><p>PC3 (CHRG_EN, active high)</p></td>
+<td><p>Held high</p></td>
+</tr>
+<tr class="row-odd"><td><p>Analog inputs</p></td>
 <td><p>PA1, PA2, PA3, PC2</p></td>
 <td><p>ADC channels 1/2/3/6 (*)</p></td>
 </tr>
-<tr class="row-odd"><td><p>QSPI flash</p></td>
+<tr class="row-even"><td><p>GD-Link VBUS</p></td>
+<td><p>PC0 (mini-USB VBUS / 2)</p></td>
+<td><p>ADC channel 4 (unused)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Microphone</p></td>
+<td><p>PA15 (MIC_OUT)</p></td>
+<td><p>Digital input</p></td>
+</tr>
+<tr class="row-even"><td><p>QSPI flash</p></td>
 <td><p>PA4 (SCK), PA5 (CS)</p></td>
 <td><p>GD25Q128E, AF3</p></td>
 </tr>
-<tr class="row-even"><td><p>QSPI flash</p></td>
+<tr class="row-odd"><td><p>QSPI flash</p></td>
 <td><p>PA6, PA7, PB3, PB4</p></td>
 <td><p>IO0..IO3, AF3</p></td>
 </tr>
 </tbody>
 </table>
-<p>(*) The analog inputs are configured by the factory firmware, but none of
-them follows the battery voltage: the battery is only measured by the
-charger. PB2 is <code class="docutils literal notranslate"><span class="pre">/dev/gpio3</span></code> when the charger driver is disabled.</p>
+<p>(*) The analog inputs are the NTC thermistors of the heater coil (PA1),
+of the battery (PA2) and of the USB connector (PA3), each a 10 kOhm NTC
+with a 10 kOhm pull-up to 3.3 V, and the battery current (PC2): an
+INA181A1 (gain 20) on a 20 mOhm shunt with a 1.8 V offset, so
+<code class="docutils literal notranslate"><span class="pre">I</span> <span class="pre">=</span> <span class="pre">(V</span> <span class="pre">-</span> <span class="pre">1.8)</span> <span class="pre">/</span> <span class="pre">0.4</span></code> A, negative while the battery charges. The battery
+voltage is only measured by the charger. PB2 is <code class="docutils literal notranslate"><span class="pre">/dev/gpio3</span></code> when the
+charger driver is disabled.</p>
 </section>
 <section id="fingerprint-sensor">
 <h2>Fingerprint sensor<a class="headerlink" href="#fingerprint-sensor" title="Permalink to this heading"></a></h2>
@@ -397,17 +413,22 @@ reference measured at boot (do not touch it then) and released above 85 %.</p>
 and fault registers.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BATIOC_GET_VOLTAGE</span></code>: the battery voltage, in mV, from the charger ADC.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BATIOC_VOLTAGE</span></code>: the charge voltage (4100, 4200, 4300, 4350 or 4400 mV).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">BATIOC_CURRENT</span></code>: 100/75/50/25 % of the ISET current (unknown on this
-board, the 1.5 A maximum of the charger is assumed).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BATIOC_CURRENT</span></code>: 100/75/50/25 % of the ISET current, 333 mA on this
+board (R34 = 30 kOhm).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BATIOC_OPERATE</span></code>: <code class="docutils literal notranslate"><span class="pre">BATIO_OPRTN_CHARGE</span></code> and <code class="docutils literal notranslate"><span class="pre">BATIO_OPRTN_BOOST</span></code>.</p></li>
 </ul>
 <p>The charger powers up with the charge disabled, and returns to its reset
 configuration when the USB power is removed. The driver keeps the requested
 charge voltage, charge current and enables, and writes them again on the
 IRQ of the charger (PB2, pulsed on each event) and before each status read;
-the IRQ also wakes up <code class="docutils literal notranslate"><span class="pre">poll()</span></code> on <code class="docutils literal notranslate"><span class="pre">/dev/batt0</span></code>. Enable
-<code class="docutils literal notranslate"><span class="pre">CONFIG_GD30BC2416_CHARGE</span></code> to start the charge at boot. PC1
-(<code class="docutils literal notranslate"><span class="pre">/dev/gpio1</span></code>) follows the USB power.</p>
+the IRQ also wakes up <code class="docutils literal notranslate"><span class="pre">poll()</span></code> on <code class="docutils literal notranslate"><span class="pre">/dev/batt0</span></code>. The start of the
+charge raises no IRQ, so after an IRQ with the USB power present the driver
+polls the state for up to 2 s. Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_GD30BC2416_CHARGE</span></code> to start
+the charge at boot. PC1 (<code class="docutils literal notranslate"><span class="pre">/dev/gpio1</span></code>) follows the USB power, and the
+board holds CHRG_EN (PC3) high.</p>
+<p>Without a battery, powered by the USB only, the charger answers on I2C in
+time windows (about 300 ms every 880 ms): the driver retries a NACKed
+transfer for up to 1 s.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The charger is for a single Li-ion/LiPo cell. Do not connect
@@ -437,6 +458,9 @@ secure alias when TrustZone is enabled, so program the image there:</p>
   -c "program nuttx.bin 0x0c000000 verify" -c "reset run" -c shutdown
 </pre></div>
 </div>
+<p>Do not use the <code class="docutils literal notranslate"><span class="pre">load</span></code> command of gdb: it writes the ELF image at
+0x08000000, where the flash driver has no bank, and leaves an inconsistent
+image. Program the binary as above, then attach gdb without <code class="docutils literal notranslate"><span class="pre">load</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>With TrustZone enabled, the secure debug port reads the
@@ -490,9 +514,15 @@ example).</p>
 (<code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_ST7735_INVCOLOR</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_ST7735_BGR</span></code>), and a
 26/1 pixel offset (<code class="docutils literal notranslate"><span class="pre">CONFIG_LCD_ST7735_XOFFSET</span></code>/<code class="docutils literal notranslate"><span class="pre">YOFFSET</span></code>) for its
 80x160 window.</p>
-<p>Light the four LEDs, then switch them off:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; printf \x0000000f &gt; /dev/userleds
-nsh&gt; printf \x00000000 &gt; /dev/userleds
+<p>Blink the four LEDs (PC5, PC4, PB0, PB1) in sequence:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; leds
+leds_main: Starting the led_daemon
+leds_main: led_daemon started
+led_daemon (pid# 6): Running
+led_daemon: Opening /dev/userleds
+led_daemon: Supported LEDs 0x0f
+led_daemon: LED set 0x01
+led_daemon: LED set 0x02
 </pre></div>
 </div>
 <p>Run the vibration motor for 2 seconds:</p>

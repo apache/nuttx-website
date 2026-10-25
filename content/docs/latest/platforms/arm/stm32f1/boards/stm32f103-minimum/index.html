@@ -776,6 +776,90 @@ to a real vehicle or bench network. Common parts include SN65HVD230, MCP2551,
 and TJA1050.</p>
 </section>
 </section>
+<section id="max3421e-usb-host">
+<h2>MAX3421E USB Host<a class="headerlink" href="#max3421e-usb-host" title="Permalink to this heading"></a></h2>
+<p>The STM32F103C8 only has a USB device controller.  USB host support can be
+added with an external MAX3421E USB host controller on SPI1, for example
+the low cost “USB Host Mini” (HW-244) module.  See
+<a class="reference internal" href="../../../../../os/drivers/special/usbhost/max3421e.html"><span class="doc">Maxim MAX3421E USB Host Controller</span></a> for the driver and for the
+VBUS modification that the module needs (the USB-A socket must get 5V
+while the MAX3421E itself runs at 3.3V).</p>
+<p>Connect the module this way:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>MAX3421E module</p></th>
+<th class="head"><p>STM32F103 Minimum</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCK</p></td>
+<td><p>PA5</p></td>
+<td><p>SPI1 SCK</p></td>
+</tr>
+<tr class="row-odd"><td><p>MISO</p></td>
+<td><p>PA6</p></td>
+<td><p>SPI1 MISO</p></td>
+</tr>
+<tr class="row-even"><td><p>MOSI</p></td>
+<td><p>PA7</p></td>
+<td><p>SPI1 MOSI</p></td>
+</tr>
+<tr class="row-odd"><td><p>SS</p></td>
+<td><p>PA4</p></td>
+<td><p>SPI1 chip select (shared with the
+other SPI1 devices of this board)</p></td>
+</tr>
+<tr class="row-even"><td><p>INT</p></td>
+<td><p>PB8</p></td>
+<td><p>Falling edge interrupt (EXTI8)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Reset</p></td>
+<td><p>PB9</p></td>
+<td><p>Active low, pulsed at boot</p></td>
+</tr>
+<tr class="row-even"><td><p>VCC</p></td>
+<td><p>3.3V</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>GND</p></td>
+<td><p>GND</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>VBUS pad</p></td>
+<td><p>5V</p></td>
+<td><p>Only after cutting the VBUS trace</p></td>
+</tr>
+</tbody>
+</table>
+<p>PB8 and PB9 are not used by any other function of this board.  PA4 is the
+common SPI1 chip select of this board, so do not enable another SPI1 device
+in the same configuration.</p>
+<p>Board options (<code class="docutils literal notranslate"><span class="pre">Board</span> <span class="pre">Selection</span></code> menu, visible when
+<code class="docutils literal notranslate"><span class="pre">CONFIG_USBHOST_MAX3421E</span></code> is enabled):</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32F103MINIMUM_MAX3421E_FREQUENCY</span></code></dt><dd><p>SPI clock (default 4.5MHz).  SPI1 divides PCLK2 (72MHz) by a power of
+two, so the real clock is the nearest lower value.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32F103MINIMUM_MAX3421E_RST</span></code></dt><dd><p>Drive the MAX3421E <code class="docutils literal notranslate"><span class="pre">RES#</span></code> pin from PB9 (default y).  Disable it if
+<code class="docutils literal notranslate"><span class="pre">RES#</span></code> is tied to 3.3V; PB9 is then left untouched.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32F103MINIMUM_MAX3421E_CONNMON_STACKSIZE</span></code></dt><dd><p>Stack size of the thread that waits for USB devices to be connected and
+enumerates them.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32F103MINIMUM_MAX3421E_CONNMON_PRIORITY</span></code></dt><dd><p>Priority of that thread.</p>
+</dd>
+</dl>
+<p>At boot the board checks that the MAX3421E answers before starting the
+driver (revision register, a register write/read-back test and the 12MHz
+oscillator).  The result is printed on the console:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>MAX3421E: REVISION=0x13 GPINPOL rd=0x55/0xaa USBIRQ=0x01
+MAX3421E: USB host initialized
+</pre></div>
+</div>
+<p>If the chip does not answer, the driver is not started and an error is
+printed instead.</p>
+</section>
 <section id="stm32f103-minimum-specific-configuration-options">
 <h2>STM32F103 Minimum - specific Configuration Options<a class="headerlink" href="#stm32f103-minimum-specific-configuration-options" title="Permalink to this heading"></a></h2>
 <blockquote>
@@ -901,6 +985,23 @@ connect the transceiver’s CANH and CANL to the bus.
 See the ‘CAN support’ section above for pins, transceivers, and limitations.</p>
 <p>A UART adapter on USART1 (PA9/PA10) is required for the NSH console on a
 host PC.</p>
+</section>
+<section id="usbhost">
+<h3>usbhost<a class="headerlink" href="#usbhost" title="Permalink to this heading"></a></h3>
+<p>USB host on a MAX3421E module (see the <a class="reference internal" href="#max3421e-usb-host">MAX3421E USB Host</a> section for the
+wiring) with the HID mouse class driver.  When a mouse is connected it is
+registered as <code class="docutils literal notranslate"><span class="pre">/dev/mouse0</span></code> and can be tested with the <code class="docutils literal notranslate"><span class="pre">tc</span></code> (touchscreen
+example) application, which prints the mouse reports:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /dev
+/dev:
+ console
+ mouse0
+ ttyS0
+nsh&gt; tc 10
+</pre></div>
+</div>
+<p>The image is larger than 64KiB, so it relies on the 128KiB of flash that
+most STM32F103C8 chips have (see <a class="reference internal" href="#using-128kib-of-flash-instead-of-64kib">Using 128KiB of Flash instead of 64KiB</a>).</p>
 </section>
 </section>
 </section>

@@ -471,6 +471,56 @@ and USB keyboard:</p>
 </pre></div>
 </div>
 </section>
+<section id="mw">
+<h3>mw<a class="headerlink" href="#mw" title="Permalink to this heading"></a></h3>
+<p>Microwindows demo configuration using framebuffer, USB HID keyboard in event
+mode (<code class="docutils literal notranslate"><span class="pre">/dev/kbda</span></code>), and USB HID mouse.</p>
+<p>Build the demo with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cd nuttx
+tools/configure.sh qemu-intel64:mw
+make -j$(nproc)
+</pre></div>
+</div>
+<p>The build produces a flat <code class="docutils literal notranslate"><span class="pre">nuttx.elf</span></code> image.  To run it on QEMU you need a
+bootable ISO with GRUB2:</p>
+<ol class="arabic">
+<li><p>Create the ISO directory structure:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mkdir -p iso/boot/grub
+</pre></div>
+</div>
+</li>
+<li><p>Write <code class="docutils literal notranslate"><span class="pre">grub.cfg</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>echo 'set timeout=0'          &gt; iso/boot/grub/grub.cfg
+echo 'set default=0'         &gt;&gt; iso/boot/grub/grub.cfg
+echo 'menuentry "kernel" {'  &gt;&gt; iso/boot/grub/grub.cfg
+echo '  multiboot2 /boot/nuttx.elf' &gt;&gt; iso/boot/grub/grub.cfg
+echo '}'                     &gt;&gt; iso/boot/grub/grub.cfg
+</pre></div>
+</div>
+</li>
+<li><p>Copy <code class="docutils literal notranslate"><span class="pre">nuttx.elf</span></code> and create the ISO:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cp nuttx.elf iso/boot/
+grub-mkrescue -o boot.iso iso
+</pre></div>
+</div>
+</li>
+<li><p>Run QEMU (omit <code class="docutils literal notranslate"><span class="pre">-nographic</span></code> so the framebuffer window opens):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 2G -cdrom boot.iso
+</pre></div>
+</div>
+</li>
+</ol>
+<p>The pre-built config sets <code class="docutils literal notranslate"><span class="pre">CONFIG_INIT_ENTRYPOINT=&quot;mwdemo_main&quot;</span></code> so the
+demo starts immediately.  See
+<a class="reference internal" href="../../../../../applications/graphics/microwindows/index.html"><span class="doc">Microwindows</span></a> for Microwindows details.</p>
+</section>
+<section id="nanox">
+<h3>nanox<a class="headerlink" href="#nanox" title="Permalink to this heading"></a></h3>
+<p>Nano-X configuration that boots directly into the <code class="docutils literal notranslate"><span class="pre">nxterm</span></code> terminal
+emulator, using framebuffer, USB HID keyboard in event mode (<code class="docutils literal notranslate"><span class="pre">/dev/kbda</span></code>),
+and USB HID mouse.  See <a class="reference internal" href="../../../../../applications/graphics/microwindows/index.html"><span class="doc">Microwindows</span></a> for
+details.</p>
+</section>
 </section>
 </section>
 

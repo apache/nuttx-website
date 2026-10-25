@@ -163,6 +163,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#transport-modes">Transport Modes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#architecture">Architecture</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-records-fc20-and-fc21">File Records (FC20 and FC21)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#termios-support">Termios Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#api-reference">API Reference</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exception-codes">Exception Codes</a></li>
@@ -268,13 +269,18 @@ FreeModBus, remove any <code class="docutils literal notranslate"><span class="p
 <li><p><strong>FC16</strong> (0x10): Write Multiple Holding Registers</p></li>
 <li><p><strong>FC23</strong> (0x17): Read/Write Multiple Holding Registers</p></li>
 </ul>
+<p>File Access (server-side only):</p>
+<ul class="simple">
+<li><p><strong>FC20</strong> (0x14): Read File Record</p></li>
+<li><p><strong>FC21</strong> (0x15): Write File Record</p></li>
+</ul>
 <p>Diagnostics and Identification:</p>
 <ul class="simple">
 <li><p><strong>FC08</strong> (0x08): Diagnostics (sub-function 0x0000 Return Query Data)</p></li>
 <li><p><strong>FC17</strong> (0x11): Report Server ID</p></li>
 </ul>
 <p>Each server-side function code handler can be individually enabled or disabled
-via Kconfig (all enabled by default). Disabled handlers respond with
+via Kconfig (all enabled by default except FC20 and FC21, see below). Disabled handlers respond with
 Illegal Function exception. Client-side request functions are always available
 when <code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_CLIENT</span></code> is enabled. Custom function codes can be
 registered via <code class="docutils literal notranslate"><span class="pre">nxmb_register_custom_fc()</span></code> when <code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_CUSTOM_FC</span></code>
@@ -329,7 +335,8 @@ allowing runtime selection of transport mode.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_TCP</span></code> – Enable Modbus TCP transport (requires <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_RAW_ADU</span></code> – Enable raw ADU transport (custom backends)</p></li>
 </ul>
-<p>Function Code Selection (server-side, all enabled by default):</p>
+<p>Function Code Selection (server-side, all enabled by default except FC20 and
+FC21):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_FUNC_READ_COILS</span></code> – FC01 Read Coils</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_FUNC_READ_DISCRETE</span></code> – FC02 Read Discrete Inputs</p></li>
@@ -342,6 +349,8 @@ allowing runtime selection of transport mode.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_FUNC_WRITE_HOLDINGS</span></code> – FC16 Write Multiple Holding Registers</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_FUNC_REPORT_SERVER_ID</span></code> – FC17 Report Server ID</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_FUNC_READWRITE_HOLDINGS</span></code> – FC23 Read/Write Multiple Holding Registers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_FUNC_READ_FILE</span></code> – FC20 Read File Record (default: n)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_FUNC_WRITE_FILE</span></code> – FC21 Write File Record (default: n)</p></li>
 </ul>
 <p>Instance and Buffer Configuration:</p>
 <ul class="simple">
@@ -383,6 +392,38 @@ using pre-configured serial devices.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NXMODBUS_CUSTOM_FC</span></code> – Enable custom function code handler registration</p></li>
 </ul>
+</section>
+<section id="file-records-fc20-and-fc21">
+<h2>File Records (FC20 and FC21)<a class="headerlink" href="#file-records-fc20-and-fc21" title="Permalink to this heading"></a></h2>
+<p>FC20 and FC21 move whole files, such as a configuration or a firmware image,
+to a device that has only a Modbus link. Like the other function codes, they
+keep no data inside the stack: the application provides the <code class="docutils literal notranslate"><span class="pre">file_cb</span></code>
+member of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">nxmb_callbacks_s</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>int file_cb(FAR uint8_t *buf, uint16_t file, uint16_t record,
+            uint16_t nregs, enum nxmb_regmode_e mode, FAR void *priv);
+</pre></div>
+</div>
+<p>The callback is called once for each group of <code class="docutils literal notranslate"><span class="pre">nregs</span></code> 16-bit records that a
+sub-request names, starting at <code class="docutils literal notranslate"><span class="pre">record</span></code> of <code class="docutils literal notranslate"><span class="pre">file</span></code> (<code class="docutils literal notranslate"><span class="pre">file</span></code> is 1 to 0xffff
+and <code class="docutils literal notranslate"><span class="pre">record</span></code> is 0 to 9999, as on the wire). <code class="docutils literal notranslate"><span class="pre">buf</span></code> holds the registers in
+wire order, big endian, 2 bytes each: the application fills it for
+<code class="docutils literal notranslate"><span class="pre">NXMB_REG_READ</span></code> (FC20) and consumes it for <code class="docutils literal notranslate"><span class="pre">NXMB_REG_WRITE</span></code> (FC21).
+Return <code class="docutils literal notranslate"><span class="pre">-ENOENT</span></code> for a file or record that does not exist, which becomes
+exception 2 (Illegal Data Address); any other error is reported as a device
+failure (exception 4).</p>
+<p>The sub-requests are validated in full before the first callback: the
+reference type must be 6, a group must stay inside the 10000 records of its
+file, and the response of an FC20 must fit in 0xf5 bytes and in the ADU. A
+request carries at most 35 sub-requests.</p>
+<p>An FC21 is not atomic, as the Modbus specification does not make it so: if the
+callback fails, the groups before it stay written. An application that needs
+all-or-nothing behavior has to write to a temporary area and commit it
+itself, for example with a final write that the application treats as the
+end of the transfer.</p>
+<p>Both options are off by default so that existing configurations do not change
+in size. On an Arm Cortex-M4 the handlers take about 612 bytes (FC20) and 362
+bytes (FC21) of code. The <code class="docutils literal notranslate"><span class="pre">nxmbserver</span></code> example serves two files from RAM and
+can be used to try them; <code class="docutils literal notranslate"><span class="pre">nxmbclient</span></code> has no commands for FC20 and FC21.</p>
 </section>
 <section id="termios-support">
 <h2>Termios Support<a class="headerlink" href="#termios-support" title="Permalink to this heading"></a></h2>

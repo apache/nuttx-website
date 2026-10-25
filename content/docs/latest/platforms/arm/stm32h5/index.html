@@ -212,6 +212,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#icache">ICACHE</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#usb-fs-host">USB FS Host</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#timer-capture">Timer Capture</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#otp">OTP</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#clocks">Clocks</a></li>
 </ul>
@@ -580,6 +581,31 @@ HSI48 cannot be reliably used in host mode due to drift. It can only be used in 
 <li><p>STM32H5_USBDRD_NCHANNELS - Number of host channels. Default 8</p></li>
 <li><p>STM32H5_USBDRD_DESCSIZE - Maximum size of a descriptor.  Default: 128</p></li>
 </ul>
+</section>
+<section id="timer-capture">
+<h3>Timer Capture<a class="headerlink" href="#timer-capture" title="Permalink to this heading"></a></h3>
+<p>The STM32H5 timer capture driver measures the frequency and the duty cycle of
+a PWM input signal using the PWM input mode of the timer. It is registered as
+<code class="docutils literal notranslate"><span class="pre">/dev/cap0</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/cap1</span></code>, … (see <code class="docutils literal notranslate"><span class="pre">include/nuttx/timers/capture.h</span></code>).</p>
+<p>Only the timers with two input channels can be used: TIM1, TIM2, TIM3, TIM4,
+TIM5, TIM8, TIM12 and TIM15.</p>
+<p>Pre-requisites:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_CAPTURE</span></code> - Enable the upper-half capture driver</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_TIMn</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_TIMn_CAP</span></code> - Reserve timer <code class="docutils literal notranslate"><span class="pre">n</span></code> for capture</p></li>
+</ul>
+<p>Options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_TIMn_CHANNEL</span></code> - The input channel, 1 or 2. The signal is measured
+on the pin of that channel. The other channel is mapped internally to the same input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_TIMn_CLOCK</span></code> - The counter frequency. It limits the resolution
+of the measurement and the lowest frequency that can be measured (the counter must not
+overflow within a period of the input signal).</p></li>
+</ul>
+<p>The board must define the pin of the selected channel in <code class="docutils literal notranslate"><span class="pre">board.h</span></code>, e.g.
+<code class="docutils literal notranslate"><span class="pre">GPIO_TIM4_CH1IN</span></code> (see <code class="docutils literal notranslate"><span class="pre">GPIO_TIMn_CHmIN_x</span></code> in the pin map) and register the drivers
+with <code class="docutils literal notranslate"><span class="pre">stm32_cap_initialize()</span></code> and <code class="docutils literal notranslate"><span class="pre">cap_register_multiple()</span></code>, see the nucleo-h563zi
+board for an example.</p>
 </section>
 <section id="otp">
 <h3>OTP<a class="headerlink" href="#otp" title="Permalink to this heading"></a></h3>

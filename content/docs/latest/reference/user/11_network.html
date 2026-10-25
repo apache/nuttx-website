@@ -846,16 +846,36 @@ DNS server list changes (servers added or removed), registered callbacks will be
 <p>These functions send DNS queries for any record type and return the raw
 answer message. <code class="docutils literal notranslate"><span class="pre">arpa/nameser.h</span></code> gives the constants and the macros that
 parse the answer. <code class="docutils literal notranslate"><span class="pre">res_mkquery()</span></code> is always available with
-<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code>. The other three need <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT</span></code> and use
-the same name servers, timeouts and retries as the DNS client.</p>
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code>. <code class="docutils literal notranslate"><span class="pre">res_init()</span></code>, <code class="docutils literal notranslate"><span class="pre">res_send()</span></code>, <code class="docutils literal notranslate"><span class="pre">res_query()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">res_search()</span></code> need <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT</span></code>; the last three use the same
+name servers, timeouts and retries as the DNS client. <code class="docutils literal notranslate"><span class="pre">dn_comp()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dn_expand()</span></code> and <code class="docutils literal notranslate"><span class="pre">dn_skipname()</span></code> are always available with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code>.</p>
 <blockquote>
 <div><ul class="simple">
+<li><p><a class="reference internal" href="#c.res_init" title="res_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_init()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.res_mkquery" title="res_mkquery"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_mkquery()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.res_send" title="res_send"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_send()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.res_query" title="res_query"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_query()</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.res_search" title="res_search"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_search()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.dn_skipname" title="dn_skipname"><code class="xref c c-func docutils literal notranslate"><span class="pre">dn_skipname()</span></code></a></p></li>
 </ul>
 </div></blockquote>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.res_init">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_init</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_init" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize the resolver. The DNS client gets the name servers at each
+query: from <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_RESOLVCONF_PATH</span></code> with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_RESOLVCONF</span></code>, otherwise from the list that
+<code class="docutils literal notranslate"><span class="pre">dns_add_nameserver()</span></code> changes. Thus a change of the name servers is
+used at the next query, and <code class="docutils literal notranslate"><span class="pre">res_init()</span></code> has nothing to do.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Always 0.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="c function">
 <dt class="sig sig-object c" id="c.res_mkquery">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_mkquery</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">op</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dname</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">rclass</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">datalen</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">newrr</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">buf</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">buflen</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_mkquery" title="Permalink to this definition"></a><br /></dt>
@@ -900,6 +920,20 @@ set to <code class="docutils literal notranslate"><span class="pre">HOST_NOT_FOU
 <dt class="sig sig-object c" id="c.res_search">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_search</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dname</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">rclass</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">type</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">answer</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">anslen</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_search" title="Permalink to this definition"></a><br /></dt>
 <dd><p>The same as <a class="reference internal" href="#c.res_query" title="res_query"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_query()</span></code></a>. NuttX has no search list.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.dn_skipname">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dn_skipname</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">src</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">end</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.dn_skipname" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Find the size of the compressed domain name at <code class="docutils literal notranslate"><span class="pre">src</span></code> in a DNS message
+that ends at <code class="docutils literal notranslate"><span class="pre">end</span></code>, without expanding it. The name ends at the root
+label or at a compression pointer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The size of the name in bytes on success; -1 if the name is not
+valid or does not end before <code class="docutils literal notranslate"><span class="pre">end</span></code>.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

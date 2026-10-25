@@ -732,6 +732,10 @@ by <code class="docutils literal notranslate"><span class="pre">oldtype</span></
 and <code class="docutils literal notranslate"><span class="pre">PTHREAD_CANCEL_ASYNCHRONOUS</span></code>.</p>
 <p>The cancellability state and type of any newly created threads are
 <code class="docutils literal notranslate"><span class="pre">PTHREAD_CANCEL_ENABLE</span></code> and <code class="docutils literal notranslate"><span class="pre">PTHREAD_CANCEL_DEFERRED</span> <span class="pre">respectively</span></code>.</p>
+<p>Deferred cancellation needs <code class="docutils literal notranslate"><span class="pre">CONFIG_CANCELLATION_POINTS</span></code>.  Without it,
+<code class="docutils literal notranslate"><span class="pre">pthread_cancel()</span></code> acts at once, the type is always
+<code class="docutils literal notranslate"><span class="pre">PTHREAD_CANCEL_ASYNCHRONOUS</span></code> (<code class="docutils literal notranslate"><span class="pre">oldtype</span></code> reports it), and
+<code class="docutils literal notranslate"><span class="pre">PTHREAD_CANCEL_DEFERRED</span></code> fails with <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>.</p>
 <p><strong>Input Parameters:</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -796,6 +800,9 @@ cleanup stack and invoked with the argument arg when:</p>
 <li><p>The thread calls <code class="docutils literal notranslate"><span class="pre">pthread_cleanup_pop()</span></code> with a non-zero execute
 argument.</p></li>
 </ul>
+<p>The stack has <code class="docutils literal notranslate"><span class="pre">CONFIG_TLS_NCLEANUP</span></code> entries.  With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_TLS_NCLEANUP=0</span></code> the function does not exist and a program that
+calls it does not link.</p>
 <p><strong>Input Parameters:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">routine</span></code>. The cleanup routine to be pushed on the cleanup stack.</p></li>
