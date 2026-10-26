@@ -230,7 +230,9 @@ with <code class="docutils literal notranslate"><span class="pre">EPERM</span></
 <code class="docutils literal notranslate"><span class="pre">task_create()</span></code>, <code class="docutils literal notranslate"><span class="pre">exec()</span></code>, <code class="docutils literal notranslate"><span class="pre">execve()</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PR_CAP_ADMIN</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> reset and poweroff</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boardctl()</span></code> reset and poweroff; signalling,
+rescheduling, cancelling or renaming a thread of
+another process (signal 0 stays open)</p></td>
 </tr>
 </tbody>
 </table>
@@ -239,9 +241,11 @@ with <code class="docutils literal notranslate"><span class="pre">EPERM</span></
 </pre></div>
 </div>
 <p>A drop is permanent. The set lives in the task group and a new group copies
-its creator’s. The checks sit in the internal functions, so kernel code
-running for a process is held to that process’s set. Kernel threads hold
-all three.</p>
+its creator’s. The spawn and raw storage checks sit in the internal
+functions, so kernel code running for a process is held to that process’s
+set. The cross-process checks sit in the public calls, since the kernel
+signals and reschedules other processes on its own account through the
+unchecked <code class="docutils literal notranslate"><span class="pre">nx</span></code> variants. Kernel threads hold all three.</p>
 </section>
 
 

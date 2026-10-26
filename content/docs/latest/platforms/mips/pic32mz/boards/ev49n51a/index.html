@@ -166,6 +166,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-amd.html">vendor:amd (1)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-arm.html">vendor:arm (5)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-artery.html">vendor:artery (1)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-bluetrum.html">vendor:bluetrum (2)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-bouffalolab.html">vendor:bouffalolab (2)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-broadcom.html">vendor:broadcom (2)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-canaan.html">vendor:canaan (2)</a></li>
@@ -738,6 +739,30 @@ an address by DHCP:</p>
 WPA3-Personal network. <code class="docutils literal notranslate"><span class="pre">wapi</span> <span class="pre">scan</span> <span class="pre">wlan0</span></code> lists the access points in
 range.</p>
 </section>
+<section id="bridge">
+<h3>bridge<a class="headerlink" href="#bridge" title="Permalink to this heading"></a></h3>
+<p>The Ethernet to Wi-Fi bridge the board was designed for: the <code class="docutils literal notranslate"><span class="pre">wlan0</span></code>
+SoftAP and <code class="docutils literal notranslate"><span class="pre">eth0</span></code> are joined at layer 2 by <code class="docutils literal notranslate"><span class="pre">br0</span></code>, so that a laptop or
+phone on the access point reaches the device on the Ethernet port as if it
+were on the same cable. The <code class="docutils literal notranslate"><span class="pre">rcS</span></code> script runs <code class="docutils literal notranslate"><span class="pre">wifibridge</span> <span class="pre">start</span></code> at
+boot (see <a class="reference internal" href="../../../../../applications/system/wifibridge/index.html"><span class="doc">wifibridge Wi-Fi to Ethernet bridge</span></a>). It builds with
+XC32 only, like <code class="docutils literal notranslate"><span class="pre">wlan</span></code>.</p>
+<p>With the defaults the access point is <code class="docutils literal notranslate"><span class="pre">NuttX-BR</span></code> (WPA2, passphrase
+<code class="docutils literal notranslate"><span class="pre">nuttxbridge</span></code>, channel 6) and the bridge has the address 10.0.0.2. Change
+them with <code class="docutils literal notranslate"><span class="pre">wifibridge</span> <span class="pre">save</span></code>; the configuration is kept in the last two
+4 KB pages of the program flash (<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_PROGMEM</span></code>), which the
+board registers as <code class="docutils literal notranslate"><span class="pre">/dev/mtdblock1</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; wifibridge save -s MyBridge -p mypassphrase -c 1 -a 10.0.0.9</span>
+<span class="go">nsh&gt; wifibridge status</span>
+<span class="go">br0   present 10.0.0.9</span>
+<span class="go">eth0  up</span>
+<span class="go">wlan0 up ssid "MyBridge"</span>
+</pre></div>
+</div>
+<p>Change the default passphrase before deploying a board. The configuration
+does not use the BA414E accelerator, so WPA3 (<code class="docutils literal notranslate"><span class="pre">-3</span></code>) is not available;
+see <a class="reference internal" href="#wi-fi">Wi-Fi</a>.</p>
+</section>
 </section>
 <section id="ethernet">
 <h2>Ethernet<a class="headerlink" href="#ethernet" title="Permalink to this heading"></a></h2>
@@ -821,10 +846,10 @@ the stations can be started on <code class="docutils literal notranslate"><span 
 <section id="wpa3-personal">
 <h3>WPA3-Personal<a class="headerlink" href="#wpa3-personal" title="Permalink to this heading"></a></h3>
 <p>WPA3-Personal (SAE) needs big number and elliptic curve (P-256)
-operations, which the driver runs on the PIC32MZ-W1’s BA414E public key
-engine (<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E</span></code>, enabled in the <code class="docutils literal notranslate"><span class="pre">wlan</span></code>
-configuration). Without it, only open and WPA/WPA2-Personal networks are
-supported.</p>
+operations. By default the driver runs them in software, with the
+functions of <code class="docutils literal notranslate"><span class="pre">crypto/ecc.c</span></code>: a point multiplication takes about 50 ms. With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E</span></code> (enabled in the <code class="docutils literal notranslate"><span class="pre">wlan</span></code> configuration) they run
+on the PIC32MZ-W1’s BA414E public key engine instead.</p>
 <p>The BA414E runs a microcode program that is not part of NuttX either. By
 default (<code class="docutils literal notranslate"><span class="pre">CONFIG_PIC32MZ_W1_BA414E_UCODE_BUILTIN</span></code>) the build downloads
 <code class="docutils literal notranslate"><span class="pre">drivers/ba414e/src/drv_ba414e.c</span></code> from the MPLAB Harmony
@@ -878,6 +903,9 @@ dropped by the library with a “decap action fail” message.</p></li>
 <li><p>I2C1/I2C2 build but are not tested.</p></li>
 <li><p>SPI flash: only reads were tested (JEDEC ID and data), not writes or
 erases.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bridge</span></code>: the Ethernet cable must be connected when the bridge starts.
+Without a link <code class="docutils literal notranslate"><span class="pre">ifup</span> <span class="pre">eth0</span></code> fails after the auto-negotiation timeout and
+<code class="docutils literal notranslate"><span class="pre">wifibridge</span> <span class="pre">start</span></code> gives up.</p></li>
 <li><p>UART3 is not wired up.</p></li>
 <li><p>No button driver.</p></li>
 </ul>

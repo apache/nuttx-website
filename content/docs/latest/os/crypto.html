@@ -357,6 +357,17 @@
 <code class="docutils literal notranslate"><span class="pre">include/crypto/ecc.h</span></code>. It can be used for ECC key generation, ECDH shared
 secret computation, and ECDSA sign/verify. Public key export is available in
 compressed form (<code class="docutils literal notranslate"><span class="pre">ECC_BYTES</span> <span class="pre">+</span> <span class="pre">1</span></code>) as well as X/Y uncompressed form.</p>
+<p>The same header exports the building blocks of protocols that need more than
+ECDH and ECDSA, such as the SAE handshake of WPA3, on the curve selected at
+build time (P-256 by default). All values are big endian with <code class="docutils literal notranslate"><span class="pre">ECC_BYTES</span></code>
+bytes, and the input and output buffers may overlap:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ecc_point_add()</span></code>, <code class="docutils literal notranslate"><span class="pre">ecc_point_mul()</span></code> and <code class="docutils literal notranslate"><span class="pre">ecc_point_is_on_curve()</span></code> work
+on affine points. The first two return 1 when the result is the point at
+infinity, which is represented as (0, 0).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ecc_mod_add()</span></code>, <code class="docutils literal notranslate"><span class="pre">ecc_mod_sub()</span></code>, <code class="docutils literal notranslate"><span class="pre">ecc_mod_mul()</span></code> and <code class="docutils literal notranslate"><span class="pre">ecc_mod_exp()</span></code>
+work modulo any value, and are faster when it is the prime of the curve.</p></li>
+</ul>
 </section>
 <section id="rsa-digital-signature-operations">
 <h3>RSA Digital Signature Operations<a class="headerlink" href="#rsa-digital-signature-operations" title="Permalink to this heading"></a></h3>

@@ -309,6 +309,34 @@ an address by DHCP:
 WPA3-Personal network. ``wapi scan wlan0`` lists the access points in
 range.
 
+bridge
+------
+
+The Ethernet to Wi-Fi bridge the board was designed for: the ``wlan0``
+SoftAP and ``eth0`` are joined at layer 2 by ``br0``, so that a laptop or
+phone on the access point reaches the device on the Ethernet port as if it
+were on the same cable. The ``rcS`` script runs ``wifibridge start`` at
+boot (see :doc:`/applications/system/wifibridge/index`). It builds with
+XC32 only, like ``wlan``.
+
+With the defaults the access point is ``NuttX-BR`` (WPA2, passphrase
+``nuttxbridge``, channel 6) and the bridge has the address 10.0.0.2. Change
+them with ``wifibridge save``; the configuration is kept in the last two
+4 KB pages of the program flash (``CONFIG_PIC32MZ_PROGMEM``), which the
+board registers as ``/dev/mtdblock1``:
+
+.. code:: console
+
+   nsh> wifibridge save -s MyBridge -p mypassphrase -c 1 -a 10.0.0.9
+   nsh> wifibridge status
+   br0   present 10.0.0.9
+   eth0  up
+   wlan0 up ssid "MyBridge"
+
+Change the default passphrase before deploying a board. The configuration
+does not use the BA414E accelerator, so WPA3 (``-3``) is not available;
+see `Wi-Fi`_.
+
 Ethernet
 ========
 
@@ -408,10 +436,10 @@ WPA3-Personal
 -------------
 
 WPA3-Personal (SAE) needs big number and elliptic curve (P-256)
-operations, which the driver runs on the PIC32MZ-W1's BA414E public key
-engine (``CONFIG_PIC32MZ_W1_BA414E``, enabled in the ``wlan``
-configuration). Without it, only open and WPA/WPA2-Personal networks are
-supported.
+operations. By default the driver runs them in software, with the
+functions of ``crypto/ecc.c``: a point multiplication takes about 50 ms. With
+``CONFIG_PIC32MZ_W1_BA414E`` (enabled in the ``wlan`` configuration) they run
+on the PIC32MZ-W1's BA414E public key engine instead.
 
 The BA414E runs a microcode program that is not part of NuttX either. By
 default (``CONFIG_PIC32MZ_W1_BA414E_UCODE_BUILTIN``) the build downloads
@@ -471,6 +499,9 @@ Limitations
 * I2C1/I2C2 build but are not tested.
 * SPI flash: only reads were tested (JEDEC ID and data), not writes or
   erases.
+* ``bridge``: the Ethernet cable must be connected when the bridge starts.
+  Without a link ``ifup eth0`` fails after the auto-negotiation timeout and
+  ``wifibridge start`` gives up.
 * UART3 is not wired up.
 * No button driver.
 
