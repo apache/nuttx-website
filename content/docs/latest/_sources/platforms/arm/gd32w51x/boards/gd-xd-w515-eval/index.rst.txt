@@ -57,7 +57,7 @@ USB detect     PC1 (micro-USB VBUS / 2)             /dev/gpio1 (interrupt)
 Charger IRQ    PB2                                  GD30BC2416 driver (*)
 Charger enable PC3 (CHRG_EN, active high)           Held high
 Analog inputs  PA1, PA2, PA3, PC2                   ADC channels 1/2/3/6 (*)
-GD-Link VBUS   PC0 (mini-USB VBUS / 2)              ADC channel 4 (unused)
+GD-Link VBUS   PC0 (mini-USB VBUS / 2)              ADC channel 4 (*)
 Microphone     PA15 (MIC_OUT)                       Digital input
 QSPI flash     PA4 (SCK), PA5 (CS)                  GD25Q128E, AF3
 QSPI flash     PA6, PA7, PB3, PB4                   IO0..IO3, AF3
@@ -67,8 +67,10 @@ QSPI flash     PA6, PA7, PB3, PB4                   IO0..IO3, AF3
 of the battery (PA2) and of the USB connector (PA3), each a 10 kOhm NTC
 with a 10 kOhm pull-up to 3.3 V, and the battery current (PC2): an
 INA181A1 (gain 20) on a 20 mOhm shunt with a 1.8 V offset, so
-``I = (V - 1.8) / 0.4`` A, negative while the battery charges. The battery
-voltage is only measured by the charger. PB2 is ``/dev/gpio3`` when the
+``I = (V - 1.8) / 0.4`` A, negative while the battery charges. PC0 is the
+GD-Link USB supply through a 10 kOhm / 10 kOhm divider: about 2.5 V with
+the GD-Link cable plugged in, near 0 V without it. The battery voltage is
+only measured by the charger. PB2 is ``/dev/gpio3`` when the
 charger driver is disabled.
 
 Fingerprint sensor
@@ -248,7 +250,8 @@ reboot:
 
 - ``/data``: the last 128 KB of the internal flash (``/dev/gd32flash``).
 - ``/flash``: the 16 MB QSPI NOR flash (``/dev/qspiflash``, GD25 driver in
-  QSPI mode).
+  QSPI mode).  Reads of 64 bytes or more go through DMA1 channel 0
+  (``CONFIG_GD32W51X_QSPI_DMA``): 256 KB in 60 ms instead of 80 ms.
 
 ::
 
@@ -259,3 +262,59 @@ reboot:
     nsh> echo hello > /flash/hello.txt
     nsh> cat /flash/hello.txt
     hello
+
+With ``CONFIG_GD_XD_W515_EVAL_QSPI_MEMMAP`` the QSPI flash is not registered:
+it is mapped read-only at 0x90000000 (memory-mapped mode,
+``gd32_qspi_enter_memorymapped()``), so that constant data stored in it can
+be read in place.
+
+::
+
+    nsh> xd 0x90000000 16
+    Hex dump:
+    0000: cc 00 00 00 f0 0f ff f7 6c 69 74 74 6c 65 66 73 ........littlefs
+
+``CONFIG_GD_XD_W515_EVAL_QSPI_XIP`` adds code and constant data run in place
+from the last MiB of the QSPI flash: functions and data marked
+``locate_code(".qspixip")`` and ``locate_data(".qspixip")`` go to the
+``.qspixip`` section.  It is linked at 0x10f00000, which the instruction
+cache remaps to the window (0x90f00000), and stored after the image in the
+internal flash: the board programs it to the QSPI flash at boot when it
+differs, so ``nuttx.bin`` is still programmed as usual.  A self-test runs a
+CRC-32 function from the QSPI flash over a string read in place::
+
+    QSPI XIP section programmed (176 bytes)
+    QSPI XIP: code at 0x10f00001, data at 0x10f0002c: crc 21821ab6 OK
+
+.. note::
+   Code run from the window at 0x90000000 itself hangs the bus as soon as
+   it also reads the window (its literal pool, its data); through the
+   instruction cache remap both work.  Nothing may access the window
+   directly while code runs from the QSPI flash.  After such a hang the
+   debugger only connects under reset
+   (``reset_config srst_only srst_nogate connect_assert_srst``).
+
+pm
+--
+
+NSH with the power management (``CONFIG_PM``, activity governor) and the
+RTC.  After a few seconds without activity the governor selects
+``PM_STANDBY``, which is the deep-sleep mode of the GD32W51x: the core and
+bus clocks stop, the SRAM and the registers keep their contents.  The chip
+wakes up on any EXTI interrupt and on the RTC wake-up timer every
+``CONFIG_GD32W51X_PM_WAKEUP_MS`` (1 s), sets the PLL up again and corrects
+the system time with the time spent asleep, read from the RTC with its
+sub-second counter.  Timers may run late by up to that period while the
+board sleeps, and a character received while the board sleeps is lost:
+press Enter until NSH answers, then the console activity keeps the board
+awake.  The debugger connection is kept in deep-sleep, so a sleeping board
+can still be programmed.
+
+::
+
+    nsh> cat /proc/pm/state0
+    DOMAIN0                   WAKE           SLEEP          TOTAL
+    normal                   20s  17%        1s   0%       21s  18%
+    idle                     15s  13%        0s   0%       15s  13%
+    standby                  76s  67%        0s   0%       76s  67%
+    sleep                     0s   0%        0s   0%        0s   0%

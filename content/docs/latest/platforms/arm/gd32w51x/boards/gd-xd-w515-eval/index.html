@@ -361,7 +361,7 @@ GigaDevice, 2023-05).</p>
 </tr>
 <tr class="row-even"><td><p>GD-Link VBUS</p></td>
 <td><p>PC0 (mini-USB VBUS / 2)</p></td>
-<td><p>ADC channel 4 (unused)</p></td>
+<td><p>ADC channel 4 (*)</p></td>
 </tr>
 <tr class="row-odd"><td><p>Microphone</p></td>
 <td><p>PA15 (MIC_OUT)</p></td>
@@ -381,8 +381,10 @@ GigaDevice, 2023-05).</p>
 of the battery (PA2) and of the USB connector (PA3), each a 10 kOhm NTC
 with a 10 kOhm pull-up to 3.3 V, and the battery current (PC2): an
 INA181A1 (gain 20) on a 20 mOhm shunt with a 1.8 V offset, so
-<code class="docutils literal notranslate"><span class="pre">I</span> <span class="pre">=</span> <span class="pre">(V</span> <span class="pre">-</span> <span class="pre">1.8)</span> <span class="pre">/</span> <span class="pre">0.4</span></code> A, negative while the battery charges. The battery
-voltage is only measured by the charger. PB2 is <code class="docutils literal notranslate"><span class="pre">/dev/gpio3</span></code> when the
+<code class="docutils literal notranslate"><span class="pre">I</span> <span class="pre">=</span> <span class="pre">(V</span> <span class="pre">-</span> <span class="pre">1.8)</span> <span class="pre">/</span> <span class="pre">0.4</span></code> A, negative while the battery charges. PC0 is the
+GD-Link USB supply through a 10 kOhm / 10 kOhm divider: about 2.5 V with
+the GD-Link cable plugged in, near 0 V without it. The battery voltage is
+only measured by the charger. PB2 is <code class="docutils literal notranslate"><span class="pre">/dev/gpio3</span></code> when the
 charger driver is disabled.</p>
 </section>
 <section id="fingerprint-sensor">
@@ -555,7 +557,8 @@ reboot:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/data</span></code>: the last 128 KB of the internal flash (<code class="docutils literal notranslate"><span class="pre">/dev/gd32flash</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">/flash</span></code>: the 16 MB QSPI NOR flash (<code class="docutils literal notranslate"><span class="pre">/dev/qspiflash</span></code>, GD25 driver in
-QSPI mode).</p></li>
+QSPI mode).  Reads of 64 bytes or more go through DMA1 channel 0
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_GD32W51X_QSPI_DMA</span></code>): 256 KB in 60 ms instead of 80 ms.</p></li>
 </ul>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount
   /data type littlefs
@@ -564,6 +567,59 @@ QSPI mode).</p></li>
 nsh&gt; echo hello &gt; /flash/hello.txt
 nsh&gt; cat /flash/hello.txt
 hello
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_GD_XD_W515_EVAL_QSPI_MEMMAP</span></code> the QSPI flash is not registered:
+it is mapped read-only at 0x90000000 (memory-mapped mode,
+<code class="docutils literal notranslate"><span class="pre">gd32_qspi_enter_memorymapped()</span></code>), so that constant data stored in it can
+be read in place.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; xd 0x90000000 16
+Hex dump:
+0000: cc 00 00 00 f0 0f ff f7 6c 69 74 74 6c 65 66 73 ........littlefs
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_GD_XD_W515_EVAL_QSPI_XIP</span></code> adds code and constant data run in place
+from the last MiB of the QSPI flash: functions and data marked
+<code class="docutils literal notranslate"><span class="pre">locate_code(&quot;.qspixip&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">locate_data(&quot;.qspixip&quot;)</span></code> go to the
+<code class="docutils literal notranslate"><span class="pre">.qspixip</span></code> section.  It is linked at 0x10f00000, which the instruction
+cache remaps to the window (0x90f00000), and stored after the image in the
+internal flash: the board programs it to the QSPI flash at boot when it
+differs, so <code class="docutils literal notranslate"><span class="pre">nuttx.bin</span></code> is still programmed as usual.  A self-test runs a
+CRC-32 function from the QSPI flash over a string read in place:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>QSPI XIP section programmed (176 bytes)
+QSPI XIP: code at 0x10f00001, data at 0x10f0002c: crc 21821ab6 OK
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Code run from the window at 0x90000000 itself hangs the bus as soon as
+it also reads the window (its literal pool, its data); through the
+instruction cache remap both work.  Nothing may access the window
+directly while code runs from the QSPI flash.  After such a hang the
+debugger only connects under reset
+(<code class="docutils literal notranslate"><span class="pre">reset_config</span> <span class="pre">srst_only</span> <span class="pre">srst_nogate</span> <span class="pre">connect_assert_srst</span></code>).</p>
+</div>
+</section>
+<section id="pm">
+<h3>pm<a class="headerlink" href="#pm" title="Permalink to this heading"></a></h3>
+<p>NSH with the power management (<code class="docutils literal notranslate"><span class="pre">CONFIG_PM</span></code>, activity governor) and the
+RTC.  After a few seconds without activity the governor selects
+<code class="docutils literal notranslate"><span class="pre">PM_STANDBY</span></code>, which is the deep-sleep mode of the GD32W51x: the core and
+bus clocks stop, the SRAM and the registers keep their contents.  The chip
+wakes up on any EXTI interrupt and on the RTC wake-up timer every
+<code class="docutils literal notranslate"><span class="pre">CONFIG_GD32W51X_PM_WAKEUP_MS</span></code> (1 s), sets the PLL up again and corrects
+the system time with the time spent asleep, read from the RTC with its
+sub-second counter.  Timers may run late by up to that period while the
+board sleeps, and a character received while the board sleeps is lost:
+press Enter until NSH answers, then the console activity keeps the board
+awake.  The debugger connection is kept in deep-sleep, so a sleeping board
+can still be programmed.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; cat /proc/pm/state0
+DOMAIN0                   WAKE           SLEEP          TOTAL
+normal                   20s  17%        1s   0%       21s  18%
+idle                     15s  13%        0s   0%       15s  13%
+standby                  76s  67%        0s   0%       76s  67%
+sleep                     0s   0%        0s   0%        0s   0%
 </pre></div>
 </div>
 </section>

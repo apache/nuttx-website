@@ -778,6 +778,37 @@ the next boot format it again:</p>
 0x083fb000, and holds the BLE bonding data.</p>
 </div>
 </section>
+<section id="pm">
+<h3>pm<a class="headerlink" href="#pm" title="Permalink to this heading"></a></h3>
+<p>NSH with the power management (<code class="docutils literal notranslate"><span class="pre">CONFIG_PM</span></code>, activity governor) and the
+RTC.  After a few seconds without activity the governor selects
+<code class="docutils literal notranslate"><span class="pre">PM_STANDBY</span></code>, which is the deep-sleep mode of the GD32VW55x: the core and
+bus clocks stop, the SRAM and the registers keep their contents.  The RTC
+wake-up timer ends the deep-sleep at the next system timer event, at most
+<code class="docutils literal notranslate"><span class="pre">CONFIG_GD32VW55X_PM_WAKEUP_MS</span></code> (1 s) later, and so does any EXTI
+interrupt.  On the way out the PLL is set up again and the system timer is
+advanced by the time spent asleep, measured on the RTC calendar.  The
+system time then follows the IRC32K while the board sleeps (within about
+0.1 percent here, the board has no 32.768 kHz crystal), and the timers keep
+their time.  A character received while the board sleeps is lost: press
+Enter until NSH answers, then the console activity keeps the board awake.
+The radios are not supported in deep-sleep.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; cat /proc/pm/state0
+DOMAIN0                   WAKE           SLEEP          TOTAL
+normal                   18s  10%        9s   5%       27s  15%
+idle                      9s   5%        0s   0%        9s   5%
+standby                 134s  78%        0s   0%      134s  78%
+sleep                     0s   0%        0s   0%        0s   0%
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The debug module does not answer while the core is in deep-sleep, so
+OpenOCD fails to examine a sleeping board.  Keep the board awake by
+pressing Enter on the console (or by sending characters in a loop) while
+it is programmed, or press RESET right before.</p>
+</div>
+</section>
 <section id="sta-softap">
 <h3>sta_softap<a class="headerlink" href="#sta-softap" title="Permalink to this heading"></a></h3>
 <p>NSH plus the Wi-Fi softAP: the board becomes an access point and a DHCP server.

@@ -475,6 +475,36 @@ these options.</p>
 </li>
 </ol>
 </section>
+<section id="software-watchdog-implementation-watchdog-wdog">
+<h2>Software Watchdog Implementation (watchdog_wdog)<a class="headerlink" href="#software-watchdog-implementation-watchdog-wdog" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_WDOG</span></code> option provides a watchdog “lower half” built on
+the NuttX internal wdog timers, for the platforms that have no watchdog
+hardware, such as the simulator. It is the watchdog counterpart of
+<code class="docutils literal notranslate"><span class="pre">timer_wdog</span></code>. Like any watchdog it expires if it is not fed within its
+timeout, but since there is no hardware to reset the system, it does what
+<code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_WDOG_ACTION</span></code> selects: panic, reboot (<code class="docutils literal notranslate"><span class="pre">board_reset()</span></code>) or
+power off (<code class="docutils literal notranslate"><span class="pre">board_power_off()</span></code>). With the last two, <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_WDOG_STATUS</span></code>
+is the status given to the board.</p>
+<p>Because it relies on the system tick, it can not detect a system where the tick
+stopped. It is not the same as <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_AUTOMONITOR_BY_WDOG</span></code>, where a
+wdog feeds a real watchdog, and it is not available with the oneshot and timer
+auto-monitors.</p>
+<p>Call <code class="docutils literal notranslate"><span class="pre">watchdog_wdog_initialize()</span></code> from the board initialization code to
+register it. The initial timeout is <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_WDOG_TIMEOUT</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;nuttx/timers/watchdog_wdog.h&gt;</span>
+
+<span class="cp">#ifdef CONFIG_WATCHDOG_WDOG</span>
+<span class="w">  </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">watchdog_wdog_initialize</span><span class="p">(</span><span class="n">CONFIG_WATCHDOG_DEVPATH</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ret</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">syslog</span><span class="p">(</span><span class="n">LOG_ERR</span><span class="p">,</span><span class="w"> </span><span class="s">"ERROR: watchdog_wdog_initialize failed: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ret</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>The simulator uses it, see the <code class="docutils literal notranslate"><span class="pre">watchdog</span></code> configuration of the
+<a class="reference internal" href="../../../../platforms/sim/sim/boards/sim/index.html"><span class="doc">sim</span></a>.</p>
+</section>
 </section>
 
 

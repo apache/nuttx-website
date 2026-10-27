@@ -185,6 +185,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#example-code">Example Code</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#avr-da-db-implementation">AVR DA/DB implementation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#avr-da-db-configuration-options">AVR DA/DB Configuration Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#non-default-interrupt-handling">Non-default interrupt handling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../programs/fully_linked_elf.html">ELF Programs – No Symbol Tables</a></li>
@@ -508,6 +513,40 @@ the configuration</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nuttx/boards/arm/stm32f1/viewtool-stm32f107/src/stm32_highpri</span></code> Test
 driver.</p></li>
 </ul>
+</section>
+</section>
+<section id="avr-da-db-implementation">
+<h2>AVR DA/DB implementation<a class="headerlink" href="#avr-da-db-implementation" title="Permalink to this heading"></a></h2>
+<p>Implementation of high priority interrupts allows the user to bypass the generic
+interrupt handling. There is, however, no mechanism described in the “Getting Back
+into the Game” section.</p>
+<p>This AVR family only has one interrupt vector that can be declared as high-priority.
+Nevertheless, you can disable the generic handler for multiple vectors - they will
+execute with regular priority though.</p>
+<section id="avr-da-db-configuration-options">
+<h3>AVR DA/DB Configuration Options<a class="headerlink" href="#avr-da-db-configuration-options" title="Permalink to this heading"></a></h3>
+<p>High priority interrupts are enabled in
+<span class="menuselection">System type ‣ Enable high priority interrupts</span></p>
+<p>Enabling this option allows fine-grained selection of interrupt handlers
+which should have their default implementation disabled.</p>
+<p>Interrupt handlers that relate to hardware controlled by drivers must
+not be overridden this way.</p>
+</section>
+<section id="non-default-interrupt-handling">
+<h3>Non-default interrupt handling<a class="headerlink" href="#non-default-interrupt-handling" title="Permalink to this heading"></a></h3>
+<p>With GCC, interrupt handler is defined using the following code:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">__vector_avrdx_usart2_dre</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span>\
+<span class="w">     </span><span class="n">__attribute__</span><span class="w"> </span><span class="p">((</span><span class="n">__signal__</span><span class="p">,</span><span class="n">__used__</span><span class="p">,</span><span class="w"> </span><span class="n">__externally_visible__</span><span class="p">));</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">__vector_avrdx_usart2_dre</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="cm">/* your implementation */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The compiled code will preserve contents of all registers (not just call-preserved ones
+like in regular functions) and return using <code class="docutils literal notranslate"><span class="pre">reti</span></code> (return from interrupt) instruction.</p>
+<p>The function name always corresponds to interrupt name as specified in datasheet
+for the chip in question.</p>
 </section>
 </section>
 </section>
