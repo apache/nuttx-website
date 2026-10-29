@@ -346,6 +346,30 @@ the <code class="docutils literal notranslate"><span class="pre">net/can/</span>
 </pre></div>
 </div>
 </section>
+<section id="local-loopback">
+<h3>Local Loopback<a class="headerlink" href="#local-loopback" title="Permalink to this heading"></a></h3>
+<p>As in Linux, <code class="docutils literal notranslate"><span class="pre">CAN_RAW_LOOPBACK</span></code> is enabled by default: a frame sent on a
+CAN_RAW socket is also delivered to the other CAN_RAW sockets bound to the
+same interface on the same node (subject to their filters).  The sending
+socket receives its own frames only with <code class="docutils literal notranslate"><span class="pre">CAN_RAW_RECV_OWN_MSGS</span></code>; those
+copies are flagged with <code class="docutils literal notranslate"><span class="pre">MSG_CONFIRM</span></code> in <code class="docutils literal notranslate"><span class="pre">msg_flags</span></code> and can be used as a
+transmit confirmation.  Disable the loopback with:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="n">setsockopt</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="n">SOL_CAN_RAW</span><span class="p">,</span><span class="w"> </span><span class="n">CAN_RAW_LOOPBACK</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">off</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">off</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>If the network device is not a loopback device, the stack loops the frame
+back itself after the driver accepted it.  Looped back frames are counted in
+the received CAN statistics.</p>
+</section>
+<section id="socket-address">
+<h3>Socket Address<a class="headerlink" href="#socket-address" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">getsockname()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">sockaddr_can</span></code> with <code class="docutils literal notranslate"><span class="pre">can_family</span></code> set
+to <code class="docutils literal notranslate"><span class="pre">AF_CAN</span></code> and <code class="docutils literal notranslate"><span class="pre">can_ifindex</span></code> set to the index of the interface the
+socket is bound to, or 0 if the socket is not bound to an interface.  The
+address buffer must be at least <code class="docutils literal notranslate"><span class="pre">sizeof(struct</span> <span class="pre">sockaddr_can)</span></code> bytes,
+otherwise <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code> is returned.</p>
+</section>
 <section id="features">
 <h3>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h3>
 <ul class="simple">

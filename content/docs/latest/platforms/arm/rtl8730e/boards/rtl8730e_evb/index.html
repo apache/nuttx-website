@@ -188,7 +188,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-onsemi.html">vendor:onsemi (1)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-phyplus.html">vendor:phyplus (1)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-quicklogic.html">vendor:quicklogic (1)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-raspberry-pi.html">vendor:raspberry-pi (18)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../_tags/vendor-raspberry-pi.html">vendor:raspberry-pi (19)</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../../../../_tags/vendor-realtek.html">vendor:realtek (4)</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="../../../rtl8720f/boards/rtl8720f_evb/index.html">RTL8720F EVB</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../rtl8721dx/boards/pke8721daf/index.html">Realtek PKE8721DAF</a></li>
@@ -295,6 +295,8 @@ microsecond timeouts and a periodic expiration callback</p></li>
 <li><p>On-chip watchdog exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/watchdog0</span></code> character device</p></li>
 <li><p>12-bit ADC exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/adc0</span></code> character device, sampled in polling
 mode through the SDK fwlib register layer</p></li>
+<li><p>On-chip RTC exposed as a <code class="docutils literal notranslate"><span class="pre">/dev/rtc0</span></code> character device, with a one-shot
+alarm</p></li>
 <li><p>littlefs persistent storage mounted at <code class="docutils literal notranslate"><span class="pre">/data</span></code> (a dedicated SPI NOR flash
 partition), backing the Wi-Fi key-value store</p></li>
 <li><p>Wi-Fi station and SoftAP through the <code class="docutils literal notranslate"><span class="pre">wapi</span></code> tool</p></li>
@@ -449,6 +451,28 @@ UART1 or PWM pads: a config that registers one of those too must drop the
 clashing channel from the table. The input range is 0 to 3.3 V with 12-bit
 samples, reported as raw codes. Exercise it with the example:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; adc -n 1     # sample CH2-CH5 once on /dev/adc0
+</pre></div>
+</div>
+</section>
+<section id="rtc">
+<h3>rtc<a class="headerlink" href="#rtc" title="Permalink to this heading"></a></h3>
+<p>Minimal NSH with the RTC driver and the <code class="docutils literal notranslate"><span class="pre">alarm</span></code> example
+(<code class="docutils literal notranslate"><span class="pre">examples/alarm</span></code>) enabled (no Wi-Fi). The board registers the on-chip RTC
+at <code class="docutils literal notranslate"><span class="pre">/dev/rtc0</span></code> (see <code class="docutils literal notranslate"><span class="pre">boards/arm/rtl8730e/rtl8730e_evb/src/rtl8730e_rtc.c</span></code>)
+and the system time is seeded from it at boot. The RTC has no board wiring
+(it is an internal clock in the always-on domain). The hardware keeps only a
+year and a day-of-year, so the driver converts to and from calendar
+month/day in software. After a cold power-up the counter starts in 1900; the
+driver then seeds it with <code class="docutils literal notranslate"><span class="pre">CONFIG_START_YEAR/MONTH/DAY</span></code>, while a warm
+RTC that already holds a later date is left alone. The RTC is reset by
+CHIP_EN, power-on and system reset (which the board reset button
+triggers), but not by BOR, thermal, deep-sleep or watchdog resets. After a
+reset button press the registers therefore read back as zero (year 1900)
+when the driver starts and the clock is seeded again, whereas after a
+watchdog reset the time carries on. Exercise it with <code class="docutils literal notranslate"><span class="pre">date</span></code> and the alarm example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; date -s "Oct 28 12:00:00 2026"
+nsh&gt; date
+nsh&gt; alarm 5      # one-shot alarm on /dev/rtc0 firing in 5 seconds
 </pre></div>
 </div>
 </section>

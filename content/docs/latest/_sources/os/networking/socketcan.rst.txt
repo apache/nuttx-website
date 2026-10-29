@@ -136,6 +136,34 @@ SocketCAN uses the standard socket programming model:
    /* Receive CAN frame */
    recv(sock, &frame, sizeof(frame), 0);
 
+Local Loopback
+--------------
+
+As in Linux, ``CAN_RAW_LOOPBACK`` is enabled by default: a frame sent on a
+CAN_RAW socket is also delivered to the other CAN_RAW sockets bound to the
+same interface on the same node (subject to their filters).  The sending
+socket receives its own frames only with ``CAN_RAW_RECV_OWN_MSGS``; those
+copies are flagged with ``MSG_CONFIRM`` in ``msg_flags`` and can be used as a
+transmit confirmation.  Disable the loopback with:
+
+.. code-block:: c
+
+   int off = 0;
+   setsockopt(sock, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &off, sizeof(off));
+
+If the network device is not a loopback device, the stack loops the frame
+back itself after the driver accepted it.  Looped back frames are counted in
+the received CAN statistics.
+
+Socket Address
+--------------
+
+``getsockname()`` returns a ``struct sockaddr_can`` with ``can_family`` set
+to ``AF_CAN`` and ``can_ifindex`` set to the index of the interface the
+socket is bound to, or 0 if the socket is not bound to an interface.  The
+address buffer must be at least ``sizeof(struct sockaddr_can)`` bytes,
+otherwise ``EINVAL`` is returned.
+
 Features
 --------
 
