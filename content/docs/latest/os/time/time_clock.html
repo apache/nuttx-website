@@ -502,6 +502,13 @@ delays up to 120 hours.</p>
 <p>This value should never be less than the underlying resolution
 of the timer. Errors may ensue.</p>
 </li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_TIMER_ADJUST_NSEC</span></code>: Adjusts the scheduled wake-up time by
+this many nanoseconds so timers fire that much earlier,
+compensating for interrupt latency.  It replaces
+<code class="docutils literal notranslate"><span class="pre">CONFIG_TIMER_ADJUST_USEC</span></code>; the unit changed from microseconds to
+nanoseconds.  It is used by the tickless watchdog path
+(<code class="docutils literal notranslate"><span class="pre">wd_adjust_next_tick()</span></code>) even when <code class="docutils literal notranslate"><span class="pre">CONFIG_HRTIMER</span></code> is not
+enabled.</p></li>
 </ul>
 </section>
 <section id="tickless-imported-interfaces">
@@ -871,6 +878,12 @@ definition.</p>
 </section>
 <section id="high-resolution-timer-interfaces">
 <h2>High-resolution Timer Interfaces<a class="headerlink" href="#high-resolution-timer-interfaces" title="Permalink to this heading"></a></h2>
+<p><strong>CONFIG_HRTIMER_PRECISION_SHIFT</strong>.  Reduces the resolution of the
+high-resolution timer to decrease the frequency of timer interrupts.
+The value N defines the left-shift bits of the precision unit:
+precision = 1 &lt;&lt; N nanoseconds and the mask is precision - 1 (default
+0 = full precision).  This option is only available with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_HRTIMER</span></code>.</p>
 <p>Hard real-time applications, such as motor control, often
 require nanosecond-level task timing, which tick-based timers
 like wdog cannot provide. Reducing the tick interval to micro-

@@ -505,6 +505,118 @@ register it. The initial timeout is <code class="docutils literal notranslate"><
 <p>The simulator uses it, see the <code class="docutils literal notranslate"><span class="pre">watchdog</span></code> configuration of the
 <a class="reference internal" href="../../../../platforms/sim/sim/boards/sim/index.html"><span class="doc">sim</span></a>.</p>
 </section>
+<section id="task-supervision">
+<h2>Task Supervision<a class="headerlink" href="#task-supervision" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_AUTOMONITOR_TASKS</span></code> makes the auto-monitor supervise the
+tasks that use a watchdog device. The auto-monitor feeds the hardware watchdog,
+with the keepalive method selected for it, only while every task feeds the
+device in time, so a task that hangs, exits or crashes makes the system reset.
+Without it, the auto-monitor feeds the hardware watchdog unconditionally.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">open()</span></code> creates a <em>channel</em>, armed with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_AUTOMONITOR_TASKS_TIMEOUT</span></code>. The commands follow the Linux
+watchdog API but act on the channel, never on the hardware watchdog:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Operation</p></th>
+<th class="head"><p>Effect on the channel</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">write()</span></code></p></td>
+<td><p>Feeds the channel. A buffer with a <code class="docutils literal notranslate"><span class="pre">'V'</span></code>
+disarms it instead, if <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_MAGIC_V</span></code>
+is set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WDIOC_KEEPALIVE</span></code></p></td>
+<td><p>Feeds the channel.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WDIOC_SETTIMEOUT</span></code></p></td>
+<td><p>Sets the time-out in milliseconds and feeds the
+channel. Zero fails with <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WDIOC_GETSTATUS</span></code></p></td>
+<td><p>Returns the flags, the time-out and the time left.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WDIOC_START</span></code></p></td>
+<td><p>Arms the channel again.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WDIOC_STOP</span></code></p></td>
+<td><p>Disarms the channel, same as writing a <code class="docutils literal notranslate"><span class="pre">'V'</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WDIOC_CAPTURE</span></code>, others</p></td>
+<td><p>Fail with <code class="docutils literal notranslate"><span class="pre">ENOSYS</span></code> and <code class="docutils literal notranslate"><span class="pre">ENOTTY</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">close()</span></code></p></td>
+<td><p>Releases the channel only if it is disarmed.</p></td>
+</tr>
+</tbody>
+</table>
+<p>A channel closed while armed is never fed again, so a task that exits or is
+killed without writing a <code class="docutils literal notranslate"><span class="pre">'V'</span></code> makes the channel time out, as on Linux.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="n">CONFIG_WATCHDOG_DEVPATH</span><span class="p">,</span><span class="w"> </span><span class="n">O_WRONLY</span><span class="p">);</span>
+
+<span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">WDIOC_SETTIMEOUT</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">);</span><span class="w">   </span><span class="cm">/* 2 s */</span>
+
+<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">running</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">do_work</span><span class="p">();</span>
+<span class="w">    </span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="s">"x"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w">               </span><span class="cm">/* feed */</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="s">"V"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w">                   </span><span class="cm">/* done, stop supervising */</span>
+<span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The hardware watchdog is armed when the device is registered and fed even
+with no channel, so the system also resets if the keepalive method stops, for
+example the low priority work queue with <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_AUTOMONITOR_BY_WORKER</span></code>.
+When a channel times out the auto-monitor logs the pid and the name of its task
+and stops feeding, or panics with <code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_AUTOMONITOR_TASKS_PANIC</span></code>.
+A time-out is detected up to one keepalive interval late
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_AUTOMONITOR_PING_INTERVAL</span></code>), but a channel that timed out
+can not be recovered by feeding, disarming or arming it. The time-out of a
+channel is independent of the hardware time-out
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_WATCHDOG_AUTOMONITOR_TIMEOUT</span></code>), which only limits how long the
+keepalive method can stay stopped. The keepalive methods that run in interrupt
+context are supported, the channels are protected by a spinlock. The tasks to supervise have to open the device early, because the
+auto-monitor only knows the tasks that did.</p>
+<p>The keepalive method also decides what else makes the system reset, besides a
+channel that times out:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Also resets the system when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BY_WORKER</span></code></p></td>
+<td><p>The low priority work queue stops, for example a task that locks
+the scheduler or a priority inversion that starves it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BY_WDOG</span></code></p></td>
+<td><p>The system tick stops. It runs in interrupt context, so a task that
+locks the scheduler is not detected.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BY_TIMER</span></code>,</p></td>
+<td><p>The timer or oneshot interrupt stops. They run in interrupt</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BY_ONESHOT</span></code></p></td>
+<td><p>context like <code class="docutils literal notranslate"><span class="pre">BY_WDOG</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BY_CAPTURE</span></code></p></td>
+<td><p>The hardware watchdog interrupt is not served. The channels are
+checked only when the early warning interrupt happens, which is
+the latest possible moment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BY_IDLE</span></code></p></td>
+<td><p>The system never goes idle, so it must not be busy all the time
+with this method.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">taskwdt_test</span></code> application (<code class="docutils literal notranslate"><span class="pre">CONFIG_TESTING_TASKWDT</span></code>) exercises the
+supervision: run it without arguments for the list of test cases.</p>
+</section>
 </section>
 
 
