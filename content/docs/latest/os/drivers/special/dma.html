@@ -223,6 +223,10 @@ in the controller implementation.</p>
 <p>The framework is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_DMA</span></code> (<code class="docutils literal notranslate"><span class="pre">drivers/dma/Kconfig</span></code>),
 which selects <code class="docutils literal notranslate"><span class="pre">ARCH_DMA</span></code>. Scatter/gather-style link transfers
 additionally require <code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_LINK</span></code>.</p>
+<p>This page also documents the separate <strong>DMA-BUF</strong> buffer-sharing
+subsystem (<code class="docutils literal notranslate"><span class="pre">drivers/dma-buf/</span></code>). DMA-BUF is not a DMA controller:
+it exports memory buffers as file descriptors so multiple drivers and
+userspace can share them without copying. See <a class="reference internal" href="#dma-buf">DMA-BUF</a> below.</p>
 </section>
 <section id="architecture">
 <h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading"></a></h2>
@@ -473,6 +477,57 @@ capability selects.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_BUFFER_NUMBYTES</span></code> / <code class="docutils literal notranslate"><span class="pre">CONFIG_AUDIO_NUM_BUFFERS</span></code>:
 default buffer geometry used by <code class="docutils literal notranslate"><span class="pre">audio_dma_initialize()</span></code>.</p></li>
 </ul>
+</section>
+<section id="dma-buf">
+<h2>DMA-BUF<a class="headerlink" href="#dma-buf" title="Permalink to this heading"></a></h2>
+<p>DMA-BUF (<code class="docutils literal notranslate"><span class="pre">drivers/dma-buf/</span></code>) is a Linux-style buffer-sharing
+framework. An exporter creates a buffer and hands a file descriptor
+to importers (other drivers or userspace). Importers attach, map into
+device address space, and access the buffer through
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_buf_ops</span></code>.</p>
+<p>This is unrelated to the DMA controller interface above
+(<code class="docutils literal notranslate"><span class="pre">include/nuttx/dma/dma.h</span></code>). DMA-BUF moves or shares <em>memory</em>;
+the controller framework starts hardware DMA <em>transfers</em>.</p>
+<section id="userspace-model">
+<h3>Userspace model<a class="headerlink" href="#userspace-model" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_SHARED_BUFFER</span></code>: enable the DMA-BUF core
+(<code class="docutils literal notranslate"><span class="pre">drivers/dma-buf/dma-buf.c</span></code>, <code class="docutils literal notranslate"><span class="pre">include/nuttx/dma-buf.h</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DMABUF_HEAPS</span></code>: enable userspace heaps under
+<code class="docutils literal notranslate"><span class="pre">/dev/dma_heap/</span></code> (<code class="docutils literal notranslate"><span class="pre">dma-heap.c</span></code>, <code class="docutils literal notranslate"><span class="pre">system_heap.c</span></code>,
+<code class="docutils literal notranslate"><span class="pre">include/nuttx/dma-heap.h</span></code>). Selects <code class="docutils literal notranslate"><span class="pre">DMA_SHARED_BUFFER</span></code>.</p></li>
+<li><p>System heap node: <code class="docutils literal notranslate"><span class="pre">/dev/dma_heap/system</span></code>. Userspace allocates with
+<code class="docutils literal notranslate"><span class="pre">DMA_BUF_HEAP_IOCTL_ALLOC</span></code> and receives a DMA-BUF file
+descriptor (Linux dma-heap model).</p></li>
+<li><p>CPU access is bracketed with <code class="docutils literal notranslate"><span class="pre">DMA_BUF_IOCTL_SYNC</span></code>. Optional naming
+via <code class="docutils literal notranslate"><span class="pre">DMA_BUF_SET_NAME</span></code> is for debugging.</p></li>
+</ul>
+</section>
+<section id="kernel-api">
+<h3>Kernel API<a class="headerlink" href="#kernel-api" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Exporter: fill <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">dma_buf_export_info</span></code> and call
+<code class="docutils literal notranslate"><span class="pre">dma_buf_export()</span></code>, then <code class="docutils literal notranslate"><span class="pre">dma_buf_fd()</span></code> to get a file
+descriptor. Callers must <code class="docutils literal notranslate"><span class="pre">dma_buf_put()</span></code> after <code class="docutils literal notranslate"><span class="pre">dma_buf_fd()</span></code>
+because the descriptor holds its own reference.</p></li>
+<li><p>Importer: <code class="docutils literal notranslate"><span class="pre">dma_buf_get(fd)</span></code>, <code class="docutils literal notranslate"><span class="pre">dma_buf_attach()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dma_buf_map_attachment()</span></code>; release with the matching unmap,
+detach, and put.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mmap()</span></code> on a DMA-BUF descriptor holds a reference for the
+lifetime of the mapping.</p></li>
+</ul>
+</section>
+<section id="system-heap-notes">
+<h3>System heap notes<a class="headerlink" href="#system-heap-notes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Payloads are allocated with 32-byte alignment so importers that
+need DMA-aligned addresses work correctly.</p></li>
+<li><p>When a buffer is mapped into a device, <code class="docutils literal notranslate"><span class="pre">DMA_BUF_IOCTL_SYNC</span></code>
+brackets dcache invalidate/flush.</p></li>
+<li><p>On flat / non-addrenv builds the CPU virtual address is used as
+the DMA address.</p></li>
+</ul>
+</section>
 </section>
 </section>
 

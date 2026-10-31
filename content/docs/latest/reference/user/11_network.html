@@ -851,7 +851,10 @@ parse the answer. <code class="docutils literal notranslate"><span class="pre">r
 <code class="docutils literal notranslate"><span class="pre">res_search()</span></code> need <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT</span></code>; the last three use the same
 name servers, timeouts and retries as the DNS client. <code class="docutils literal notranslate"><span class="pre">dn_comp()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">dn_expand()</span></code> and <code class="docutils literal notranslate"><span class="pre">dn_skipname()</span></code> are always available with
-<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_NETDB</span></code>. <code class="docutils literal notranslate"><span class="pre">&lt;resolv.h&gt;</span></code> also has the resolver state of BIND:
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">__res_state</span></code>, <code class="docutils literal notranslate"><span class="pre">res_state</span></code>, <code class="docutils literal notranslate"><span class="pre">_res</span></code> and the <code class="docutils literal notranslate"><span class="pre">RES_*</span></code> options.
+<code class="docutils literal notranslate"><span class="pre">_res</span></code> needs <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_DNSCLIENT</span></code>. Each task group has its own state.
+The DNS client does not use the resolver state.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#c.res_init" title="res_init"><code class="xref c c-func docutils literal notranslate"><span class="pre">res_init()</span></code></a></p></li>
@@ -865,14 +868,15 @@ name servers, timeouts and retries as the DNS client. <code class="docutils lite
 <dl class="c function">
 <dt class="sig sig-object c" id="c.res_init">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_init</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.res_init" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Initialize the resolver. The DNS client gets the name servers at each
-query: from <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_RESOLVCONF_PATH</span></code> with
-<code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_RESOLVCONF</span></code>, otherwise from the list that
-<code class="docutils literal notranslate"><span class="pre">dns_add_nameserver()</span></code> changes. Thus a change of the name servers is
-used at the next query, and <code class="docutils literal notranslate"><span class="pre">res_init()</span></code> has nothing to do.</p>
+<dd><p>Initialize the resolver. It sets <code class="docutils literal notranslate"><span class="pre">RES_INIT</span></code> and the defaults of BIND in
+<code class="docutils literal notranslate"><span class="pre">_res</span></code>. The DNS client gets the name servers at each query: from
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_RESOLVCONF_PATH</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDB_RESOLVCONF</span></code>,
+otherwise from the list that <code class="docutils literal notranslate"><span class="pre">dns_add_nameserver()</span></code> changes. Thus a
+change of the name servers is used at the next query.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Always 0.</p>
+<dd class="field-odd"><p>0, or -1 with <code class="docutils literal notranslate"><span class="pre">errno</span></code> <code class="docutils literal notranslate"><span class="pre">ENOMEM</span></code> if the resolver state cannot
+be allocated.</p>
 </dd>
 </dl>
 </dd></dl>

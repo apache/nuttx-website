@@ -188,6 +188,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#avr-da-db-implementation">AVR DA/DB implementation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#avr-da-db-configuration-options">AVR DA/DB Configuration Options</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#non-default-interrupt-handling">Non-default interrupt handling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#getting-back-into-the-game-avr">Getting Back into the Game (AVR)</a></li>
 </ul>
 </li>
 </ul>
@@ -518,8 +519,7 @@ driver.</p></li>
 <section id="avr-da-db-implementation">
 <h2>AVR DA/DB implementation<a class="headerlink" href="#avr-da-db-implementation" title="Permalink to this heading"></a></h2>
 <p>Implementation of high priority interrupts allows the user to bypass the generic
-interrupt handling. There is, however, no mechanism described in the “Getting Back
-into the Game” section.</p>
+interrupt handling.</p>
 <p>This AVR family only has one interrupt vector that can be declared as high-priority.
 Nevertheless, you can disable the generic handler for multiple vectors - they will
 execute with regular priority though.</p>
@@ -547,6 +547,17 @@ not be overridden this way.</p>
 like in regular functions) and return using <code class="docutils literal notranslate"><span class="pre">reti</span></code> (return from interrupt) instruction.</p>
 <p>The function name always corresponds to interrupt name as specified in datasheet
 for the chip in question.</p>
+</section>
+<section id="getting-back-into-the-game-avr">
+<h3>Getting Back into the Game (AVR)<a class="headerlink" href="#getting-back-into-the-game-avr" title="Permalink to this heading"></a></h3>
+<p>Unlike the ARM Cortex-M described above, AVR DA/DB devices do not have a dedicated
+software interrupt mechanism. Instead, there is an emulated implementation
+that uses interrupts triggered by manual manipulation of an I/O pin. This is described
+in <a class="reference internal" href="../../platforms/avr/avrdx/docs/software_interrupt.html"><span class="doc">AVR DA/DB family software interrupt emulation</span></a>.</p>
+<p>Your implementation simply needs to request a software interrupt vector number
+during initialization and then pass it to <code class="docutils literal notranslate"><span class="pre">avrdx_swint_raise</span></code> function
+if it needs to trigger an interrupt that can be handled with access to the operating
+system interfaces.</p>
 </section>
 </section>
 </section>
