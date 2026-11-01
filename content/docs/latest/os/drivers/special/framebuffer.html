@@ -261,6 +261,17 @@ In general, the binding sequence is:</p>
 </li>
 </ol>
 </section>
+<section id="non-consecutive-buffers">
+<h3>Non-consecutive buffers<a class="headerlink" href="#non-consecutive-buffers" title="Permalink to this heading"></a></h3>
+<p>The character driver supports equal-sized, non-consecutive buffers in the
+primary plane. The driver’s <code class="docutils literal notranslate"><span class="pre">getplaneinfo()</span></code> callback uses
+<code class="docutils literal notranslate"><span class="pre">fb_planeinfo_s.display</span></code> as a zero-based buffer index and returns that
+buffer’s <code class="docutils literal notranslate"><span class="pre">fbmem</span></code> and <code class="docutils literal notranslate"><span class="pre">fblen</span></code>. Set <code class="docutils literal notranslate"><span class="pre">yres_virtual</span></code> to <code class="docutils literal notranslate"><span class="pre">yres</span></code> times the
+buffer count, excluding gaps. For consecutive buffers, return the same base
+address and total length for each index.</p>
+<p>The current address table holds at most four buffers and is cached during
+registration; changing buffer addresses afterward is not supported.</p>
+</section>
 </section>
 <section id="vsync">
 <h2>VSYNC<a class="headerlink" href="#vsync" title="Permalink to this heading"></a></h2>
@@ -319,18 +330,27 @@ By selecting the <code class="docutils literal notranslate"><span class="pre">tt
 <h3>NuttX Simulator<a class="headerlink" href="#nuttx-simulator" title="Permalink to this heading"></a></h3>
 <p><a class="reference internal" href="../../../platforms/sim/sim/index.html"><span class="doc">NuttX Simulator</span></a> provides a X11-based framebuffer driver to simulate the framebuffer usage into a X11-compatible host.</p>
 <p>By selecting the <code class="docutils literal notranslate"><span class="pre">sim:lvgl_fb</span></code> config, the <code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code> example will be built with the framebuffer driver.</p>
-<ul>
+<ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">boards/sim/sim/sim/src/sim_bringup.c</span></code> registers the framebuffer driver the same way <a class="reference internal" href="#ttgotdisplayesp32-fb"><span class="std std-ref">TTGO T-Display ESP32 board</span></a>;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/up_framebuffer.c</span></code> and <code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/up_x11framebuffer.c</span></code> will be built as <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_FRAMEBUFFER</span> <span class="pre">=</span> <span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_X11FB</span> <span class="pre">=</span> <span class="pre">y</span></code> are set, respectively;</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">up_framebuffer.c</span></code> provides <code class="docutils literal notranslate"><span class="pre">up_fbinitialize</span></code> and,</p></li>
-<li><p>calls <code class="docutils literal notranslate"><span class="pre">up_x11initialize</span></code> from <code class="docutils literal notranslate"><span class="pre">up_x11framebuffer.c</span></code> that initializes a X11-based window as a framebuffer. This is the underlying “driver”.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/sim_framebuffer.c</span></code> and <code class="docutils literal notranslate"><span class="pre">arch/sim/src/sim/posix/sim_x11framebuffer.c</span></code> will be built as <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_FRAMEBUFFER</span> <span class="pre">=</span> <span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_X11FB</span> <span class="pre">=</span> <span class="pre">y</span></code> are set, respectively;</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">sim_framebuffer.c</span></code> provides <code class="docutils literal notranslate"><span class="pre">up_fbinitialize</span></code>, which calls
+<code class="docutils literal notranslate"><span class="pre">sim_x11initialize</span></code> from <code class="docutils literal notranslate"><span class="pre">sim_x11framebuffer.c</span></code> to create the
+X11 framebuffer window.</p></li>
 </ul>
-</div></blockquote>
 </li>
-<li><p>The LVGL demo application (<code class="docutils literal notranslate"><span class="pre">lvgldemo</span></code>) makes use of the <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> system call to trigger a <code class="docutils literal notranslate"><span class="pre">FBIO_UPDATE</span></code> request to the higher-level device driver in order to refresh the LCD screen with framebuffer data as usual;</p></li>
+<li><p>The LVGL demo maps the framebuffer and uses <code class="docutils literal notranslate"><span class="pre">FBIOPAN_DISPLAY</span></code> to switch
+between buffers.</p></li>
 </ul>
+<p>For two non-consecutive X11 framebuffers, use:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">CONFIG_SIM_FRAMEBUFFER_COUNT</span><span class="o">=</span><span class="s">2</span>
+<span class="na">CONFIG_SIM_FB_INTERVAL_LINE</span><span class="o">=</span><span class="s">17</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_FB_INTERVAL_LINE=0</span></code> keeps buffers consecutive; a positive value
+adds that many rows between buffers. Applications pass logical pan offsets
+without these gaps; SIM adds them when selecting the displayed buffer. See
+<a class="reference internal" href="../../graphics/framebuffer_char_driver.html"><span class="doc">Framebuffer Character Driver</span></a> for file offsets and mapping rules.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>One must consider that framebuffer requires that the entire display’s pixels to be represented.
