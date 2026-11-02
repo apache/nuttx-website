@@ -994,8 +994,7 @@ be associated with all defined keys in the new thread.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> is a pointer to the key to create.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">destructor</span></code> is an optional destructor function that may be
-associated with each key that is invoked when a thread exits.
-However, this argument is ignored in the current implementation.</p></li>
+associated with each key that is invoked when a thread exits.</p></li>
 </ul>
 <p><strong>Returned Value:</strong></p>
 <p>If successful, the <code class="docutils literal notranslate"><span class="pre">pthread_key_create()</span></code> function will store the
@@ -1011,7 +1010,12 @@ number of keys per task {<code class="docutils literal notranslate"><span class=
 <p><strong>POSIX Compatibility:</strong> Comparable to the POSIX interface of the same
 name.</p>
 <ul class="simple">
-<li><p>The present implementation ignores the <code class="docutils literal notranslate"><span class="pre">destructor</span></code> argument.</p></li>
+<li><p>When a thread exits, the destructor of each key with a value that is
+not <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is called with that value; the value is set to <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
+first.  If a destructor sets a value again, the destructors are
+called again, up to <code class="docutils literal notranslate"><span class="pre">PTHREAD_DESTRUCTOR_ITERATIONS</span></code> (4) times.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PTHREAD_KEYS_MAX</span></code> is <code class="docutils literal notranslate"><span class="pre">CONFIG_TLS_NELEM</span></code>.  POSIX requires at
+least <code class="docutils literal notranslate"><span class="pre">_POSIX_THREAD_KEYS_MAX</span></code> (128) keys.</p></li>
 </ul>
 </dd></dl>
 
