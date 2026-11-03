@@ -223,6 +223,7 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#built-in-properties">Built-in Properties</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#commands">Commands</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#mounting-file-systems">Mounting File Systems</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#compound-commands">Compound Commands</a></li>
 </ul>
 </li>
@@ -378,6 +379,15 @@ never set up at all (there is no <code class="docutils literal notranslate"><spa
 <code class="docutils literal notranslate"><span class="pre">&lt;device&gt;</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_NXINIT_CONSOLE_DEV</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/console</span></code> by
 default, if omitted) and duplicating it onto the service’s stdin, stdout
 and stderr before it is spawned.</p>
+<p>After the start, the device is also the controlling terminal of the
+service (<code class="docutils literal notranslate"><span class="pre">TIOCSCTTY</span></code> with the PID of the service), as init and getty do
+on other systems: Ctrl-C and Ctrl-Z send <code class="docutils literal notranslate"><span class="pre">SIGINT</span></code> and <code class="docutils literal notranslate"><span class="pre">SIGTSTP</span></code> to it
+(with <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGTSTP</span></code>), and a shell finds
+its foreground process group with <code class="docutils literal notranslate"><span class="pre">tcgetpgrp()</span></code>, so it can use job
+control. A device without these signals keeps working as before. The NSH
+<code class="docutils literal notranslate"><span class="pre">sh</span></code> program gives up the terminal at its prompt and makes each
+foreground command the foreground process, so Ctrl-C at its prompt does
+not end it.</p>
 <p>This is required for a plain shell service (e.g. <code class="docutils literal notranslate"><span class="pre">service</span> <span class="pre">console</span> <span class="pre">sh</span></code>)
 to actually be usable as an interactive console. It is not needed for
 <code class="docutils literal notranslate"><span class="pre">nsh</span></code> (the full NSH application, as opposed to plain <code class="docutils literal notranslate"><span class="pre">sh</span></code>), which
@@ -506,16 +516,45 @@ For example, audio waits for ap’s <code class="docutils literal notranslate"><
 <p>The commands supported by an action fall into three types: the built-in
 commands of NXInit, the built-in commands of NSH (if NSH is enabled), and
 Builtin Apps.</p>
-<p>The following is an explanation of some of NXInit’s built-in commands.</p>
+<p>These are the built-in commands of NXInit:</p>
 <ul class="simple">
-<li><p>System Operations: mount/umount (mount/unmount file systems), setprop
-(set system properties), chmod/chown (modify file permissions/owner).</p></li>
-<li><p>Service Management: start/stop/restart (start/stop/restart services),
-class_start/class_stop (batch start/stop service categories).</p></li>
-<li><p>File Operations: mkdir (create directories with configurable permissions,
-owner, and encryption settings), copy/write (copy files/write file content).</p></li>
-<li><p>Others: trigger (trigger events).</p></li>
+<li><p>System operations: <code class="docutils literal notranslate"><span class="pre">mount</span></code>/<code class="docutils literal notranslate"><span class="pre">umount</span></code> (mount/unmount file systems, see
+below), <code class="docutils literal notranslate"><span class="pre">set</span></code> (set an environment variable), <code class="docutils literal notranslate"><span class="pre">setprop</span></code> (set a system
+property), <code class="docutils literal notranslate"><span class="pre">unlink</span></code> (remove a file).</p></li>
+<li><p>Service management: <code class="docutils literal notranslate"><span class="pre">start</span></code>/<code class="docutils literal notranslate"><span class="pre">stop</span></code> (start/stop a service),
+<code class="docutils literal notranslate"><span class="pre">exec_start</span></code> (start a service and wait until it exits),
+<code class="docutils literal notranslate"><span class="pre">class_start</span></code>/<code class="docutils literal notranslate"><span class="pre">class_stop</span></code> (start/stop all services of a class).</p></li>
+<li><p>Programs: <code class="docutils literal notranslate"><span class="pre">exec</span> <span class="pre">--</span> <span class="pre">&lt;program&gt;</span> <span class="pre">[&lt;argument&gt;]*</span></code> (run a program and wait until
+it exits).</p></li>
+<li><p>Others: <code class="docutils literal notranslate"><span class="pre">trigger</span></code> (trigger an event), and <code class="docutils literal notranslate"><span class="pre">netinit</span></code>, <code class="docutils literal notranslate"><span class="pre">boot</span></code>,
+<code class="docutils literal notranslate"><span class="pre">start_cpu</span></code>, <code class="docutils literal notranslate"><span class="pre">board_finalinit</span></code> and <code class="docutils literal notranslate"><span class="pre">rptun</span></code> when their configuration
+options are on (<code class="docutils literal notranslate"><span class="pre">CONFIG_NETUTILS_NETINIT</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_BOOT_IMAGE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_START_CPU</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_BOARDCTL_FINALINIT</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RPTUN</span></code>).</p></li>
 </ul>
+<section id="mounting-file-systems">
+<h3>Mounting File Systems<a class="headerlink" href="#mounting-file-systems" title="Permalink to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mount &lt;type&gt; &lt;device&gt; &lt;dir&gt; [&lt;flag&gt;]* [&lt;options&gt;]
+mount -t &lt;type&gt; [-o &lt;options&gt;] [&lt;device&gt;] &lt;dir&gt;
+umount &lt;dir&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;flag&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">defaults</span></code>, <code class="docutils literal notranslate"><span class="pre">rw</span></code>, <code class="docutils literal notranslate"><span class="pre">ro</span></code>, <code class="docutils literal notranslate"><span class="pre">nosuid</span></code>, <code class="docutils literal notranslate"><span class="pre">nodev</span></code>, <code class="docutils literal notranslate"><span class="pre">noexec</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sync</span></code>, <code class="docutils literal notranslate"><span class="pre">remount</span></code>, <code class="docutils literal notranslate"><span class="pre">dirsync</span></code> or <code class="docutils literal notranslate"><span class="pre">noatime</span></code>. In both forms, <code class="docutils literal notranslate"><span class="pre">&lt;options&gt;</span></code>
+is a comma-separated list of flags and file system options. For a file system
+without a device, <code class="docutils literal notranslate"><span class="pre">&lt;device&gt;</span></code> is any name that is not a device, for example
+<code class="docutils literal notranslate"><span class="pre">none</span></code>. The second form is the one of the NSH command.
+In the pseudo file system, <code class="docutils literal notranslate"><span class="pre">&lt;dir&gt;</span></code> does not need to exist: NuttX makes the
+mount point. For example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>on boot
+    mount tmpfs none /run
+    mount v9fs none /mnt trans=virtio,tag=host
+    mount -t hostfs -o fs=. /data
+</pre></div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">mount</span></code> line in neither form fails. With <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_MOUNTPOINT</span></code>,
+NXInit has no <code class="docutils literal notranslate"><span class="pre">mount</span></code> and <code class="docutils literal notranslate"><span class="pre">umount</span></code> commands.</p>
+</section>
 <section id="compound-commands">
 <h3>Compound Commands<a class="headerlink" href="#compound-commands" title="Permalink to this heading"></a></h3>
 <p>A single line inside an action body may chain multiple commands with

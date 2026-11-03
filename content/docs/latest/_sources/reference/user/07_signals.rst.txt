@@ -12,6 +12,13 @@ priority. The signal handler is a user-supplied function that is bound
 to a specific signal and performs whatever actions are necessary
 whenever the signal is received.
 
+**Pending signals**.  A signal that the receiver blocks stays pending
+until the receiver unblocks it.  A signal sent to the whole task group
+(``kill()``) and a signal sent to one thread (``pthread_kill()``,
+``tgkill()``) are pending apart: each target has at most one pending
+instance of a signal that is not a real-time signal.  The signals that
+are pending for a thread are discarded when the thread exits.
+
 By default, there are no predefined actions for any signal. The default
 action for all signals (i.e., when no signal handler has been supplied
 by the user) is to ignore the signal. In this sense, all NuttX are *real
@@ -528,8 +535,9 @@ Equivalent to sigtimedwait() with a NULL timeout parameter. (see below).
 
   :param pid: The id of the task to receive the signal. The POSIX
     ``kill()`` specification encodes process group information as zero
-    and negative pid values. Only positive, non-zero values of pid are
-    supported by this implementation. ID of the task to receive signal
+    and negative pid values. A process group is one process in NuttX:
+    ``0`` is the caller and ``-pid`` is the process ``pid``. ``-1`` (all
+    processes) is not supported and gives ``ENOSYS``.
   :param signo: The signal number to send. If signo is zero, no signal is
     sent, but all error checking is performed.
 
@@ -540,7 +548,9 @@ Equivalent to sigtimedwait() with a NULL timeout parameter. (see below).
 
   -  Default action is to ignore signals.
   -  Signals are processed one at a time in order
-  -  Sending of signals to 'process groups' is not supported in NuttX.
+  -  A process group is one process, so a signal to a process group goes
+     to that process. A signal to all processes (``pid`` -1) is not
+     supported.
 
 .. c:function:: int pause(void);
 

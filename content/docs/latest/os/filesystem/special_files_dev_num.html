@@ -283,6 +283,15 @@ the following, internal interface:</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">path</span></code> argument determines where in the pseudo-file system the
 device file should be placed. <code class="docutils literal notranslate"><span class="pre">mode</span></code> provides device file privileges.
 The <code class="docutils literal notranslate"><span class="pre">fops</span></code> and <code class="docutils literal notranslate"><span class="pre">priv</span></code> provide the internal information for the <code class="docutils literal notranslate"><span class="pre">registry</span></code>.</p>
+<p>A driver that creates its device files below a directory later, as the
+pseudo-terminal driver does with <code class="docutils literal notranslate"><span class="pre">/dev/pts/N</span></code>, creates the empty
+directory when it initializes:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">register_pseudodir</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kt">mode_t</span><span class="w"> </span><span class="n">mode</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Then the directory exists before the first device file does.  User code
+cannot do this with <code class="docutils literal notranslate"><span class="pre">mkdir()</span></code> once a file system is mounted at <code class="docutils literal notranslate"><span class="pre">/</span></code>:
+<code class="docutils literal notranslate"><span class="pre">mkdir()</span></code> creates the directory in that file system.</p>
 <p>So the when you open a device driver in NuttX, many fewer steps are
 involved: The system must still open the device file, but then
 since the pseudo-file system <cite>is</cite> the device registry, all of the

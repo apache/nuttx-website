@@ -173,7 +173,11 @@
 <li class="toctree-l3"><a class="reference internal" href="../ipwan/index.html"><code class="docutils literal notranslate"><span class="pre">ipwan</span></code> IEEE 802.15.4 Command Line Tool</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../libmac/index.html"><code class="docutils literal notranslate"><span class="pre">libmac</span></code> IEEE 802.15.4 MAC library routines</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nimble</span></code> Apache NimBLE (BLE host-layer) for NuttX</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="porting.html">Porting Layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bluetooth-mesh">Bluetooth Mesh</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="porting.html">Porting Layer</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../wapi/index.html"><code class="docutils literal notranslate"><span class="pre">wapi</span></code> WAPI (Wireless API)</a></li>
@@ -219,6 +223,57 @@ in NuttX.</p>
 <p>For a Central/Peripheral example that tests connections, GATT service
 discovery, and subscriptions without Bluetooth hardware, see
 <a class="reference internal" href="../../../guides/simulation/simulator.html#simulator-bluetooth-testing"><span class="std std-ref">Testing Bluetooth without hardware</span></a>.</p>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>NimBLE needs <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BLUETOOTH</span></code> and a Bluetooth controller exposed
+through the NuttX HCI socket, and conflicts with the NuttX host
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_WIRELESS_BLUETOOTH_HOST</span></code> must be off). Enable the GAP roles the
+application needs with <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_ROLE_*</span></code>.</p>
+<p>Cryptography uses Mbed TLS (<code class="docutils literal notranslate"><span class="pre">CONFIG_MBEDTLS_MINIMAL</span></code> is enabled by
+default). <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_TINYCRYPT</span></code> builds the legacy bundled TinyCrypt
+instead.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_EVENTQ_SIZE</span></code> sets the depth of the host event queue. Hosts
+that scan need room for the advertising reports queued by the transport;
+the default is 16, or 32 with mesh.</p>
+</section>
+<section id="bluetooth-mesh">
+<h2>Bluetooth Mesh<a class="headerlink" href="#bluetooth-mesh" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH</span></code> builds the NimBLE mesh stack. Provisioning bearers
+and node features:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_PB_ADV</span></code> - PB-ADV, needs the broadcaster and
+observer roles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_PB_GATT</span></code> - PB-GATT, needs the peripheral role.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_GATT_PROXY</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_RELAY</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_FRIEND</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_LOW_POWER</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_PROVISIONER</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_DEVICE_NAME</span></code> - name in the PB-GATT and proxy scan
+response.</p></li>
+</ul>
+<p>Resource limits: <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_SUBNET_COUNT</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_APP_KEY_COUNT</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_MODEL_KEY_COUNT</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_MODEL_GROUP_COUNT</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_ADV_BUF_COUNT</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_TX_SEG_MAX</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_NIMBLE_MESH_RX_SEG_MAX</span></code>.</p>
+<p>A mesh node scans continuously and the host is busy for up to a second
+during provisioning (ECDH), so the Bluetooth socket must absorb a burst
+of advertising reports: set <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_BLUETOOTH_BACKLOG=32</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_NBUFFERS=64</span></code>. With the defaults (8 and 8) the socket drops
+the oldest queued HCI event, which can be a Command Complete, and the
+host resets on an HCI timeout.</p>
+<p>The controller must support scanning and advertising at the same time.
+With the nRF52 SoftDevice Controller the peripheral-only configuration
+has no scanning, so mesh needs <code class="docutils literal notranslate"><span class="pre">CONFIG_NRF52_SDC_MULTIROLE</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_BLUETOOTH_MAX_CONN=2</span></code> (one peripheral plus one central role).</p>
+<p>Mesh applications create the HCI socket task, register the mesh GATT
+services with <code class="docutils literal notranslate"><span class="pre">bt_mesh_register_gatt()</span></code> before the host starts, call
+<code class="docutils literal notranslate"><span class="pre">bt_mesh_init()</span></code> from the host sync callback, run <code class="docutils literal notranslate"><span class="pre">mesh_adv_thread()</span></code>
+on its own thread and enable provisioning with <code class="docutils literal notranslate"><span class="pre">bt_mesh_prov_enable()</span></code>.
+See the <a class="reference internal" href="../../examples/nimble_mesh_node/index.html"><span class="doc">node</span></a>,
+<a class="reference internal" href="../../examples/nimble_mesh_sensor/index.html"><span class="doc">sensor</span></a> and
+<a class="reference internal" href="../../examples/nimble_mesh_vendor/index.html"><span class="doc">vendor</span></a> examples.</p>
+<p>Nodes can be provisioned from Linux with BlueZ <code class="docutils literal notranslate"><span class="pre">bluetooth-meshd</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mesh-cfgclient</span></code>. <code class="docutils literal notranslate"><span class="pre">meshd</span></code> needs exclusive access to the adapter, so
+<code class="docutils literal notranslate"><span class="pre">bluetoothd</span></code> must not manage it at the same time.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
 <ul>
@@ -228,6 +283,7 @@ discovery, and subscriptions without Bluetooth hardware, see
 </li>
 </ul>
 </div>
+</section>
 </section>
 
 

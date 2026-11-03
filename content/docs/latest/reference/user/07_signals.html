@@ -211,6 +211,12 @@ task-specified signal handler function the next time that the task has
 priority. The signal handler is a user-supplied function that is bound
 to a specific signal and performs whatever actions are necessary
 whenever the signal is received.</p>
+<p><strong>Pending signals</strong>.  A signal that the receiver blocks stays pending
+until the receiver unblocks it.  A signal sent to the whole task group
+(<code class="docutils literal notranslate"><span class="pre">kill()</span></code>) and a signal sent to one thread (<code class="docutils literal notranslate"><span class="pre">pthread_kill()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tgkill()</span></code>) are pending apart: each target has at most one pending
+instance of a signal that is not a real-time signal.  The signals that
+are pending for a thread are discarded when the thread exits.</p>
 <p>By default, there are no predefined actions for any signal. The default
 action for all signals (i.e., when no signal handler has been supplied
 by the user) is to ignore the signal. In this sense, all NuttX are <em>real
@@ -941,8 +947,9 @@ delivered more than once.”</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>pid</strong> – The id of the task to receive the signal. The POSIX
 <code class="docutils literal notranslate"><span class="pre">kill()</span></code> specification encodes process group information as zero
-and negative pid values. Only positive, non-zero values of pid are
-supported by this implementation. ID of the task to receive signal</p></li>
+and negative pid values. A process group is one process in NuttX:
+<code class="docutils literal notranslate"><span class="pre">0</span></code> is the caller and <code class="docutils literal notranslate"><span class="pre">-pid</span></code> is the process <code class="docutils literal notranslate"><span class="pre">pid</span></code>. <code class="docutils literal notranslate"><span class="pre">-1</span></code> (all
+processes) is not supported and gives <code class="docutils literal notranslate"><span class="pre">ENOSYS</span></code>.</p></li>
 <li><p><strong>signo</strong> – The signal number to send. If signo is zero, no signal is
 sent, but all error checking is performed.</p></li>
 </ul>
@@ -956,7 +963,9 @@ name. Differences from the POSIX interface include:</p>
 <ul class="simple">
 <li><p>Default action is to ignore signals.</p></li>
 <li><p>Signals are processed one at a time in order</p></li>
-<li><p>Sending of signals to ‘process groups’ is not supported in NuttX.</p></li>
+<li><p>A process group is one process, so a signal to a process group goes
+to that process. A signal to all processes (<code class="docutils literal notranslate"><span class="pre">pid</span></code> -1) is not
+supported.</p></li>
 </ul>
 </dd></dl>
 

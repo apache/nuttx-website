@@ -240,7 +240,8 @@ or <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGTS
 NuttX does not implement POSIX sessions or process groups, so the
 foreground process group is collapsed onto a single PID stored in
 the driver (<code class="docutils literal notranslate"><span class="pre">pgrp</span> <span class="pre">==</span> <span class="pre">pid</span></code>, one member per group); the signal is
-delivered with <code class="docutils literal notranslate"><span class="pre">nxsig_kill(pid,</span> <span class="pre">signo)</span></code>.</p>
+delivered with <code class="docutils literal notranslate"><span class="pre">nxsig_kill(pid,</span> <span class="pre">signo)</span></code>.  The driver discards the
+character that sends the signal, so the task does not read it.</p>
 <p>The following terminal <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands manage this PID:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TIOCSCTTY</span></code> makes the terminal the controlling terminal.  The
@@ -257,10 +258,10 @@ session leader PID.</p></li>
 a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> pointer or a PID that is not positive gives <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>.</p></li>
 </ul>
 <p>The C library exposes these through <code class="docutils literal notranslate"><span class="pre">tcgetpgrp()</span></code>, <code class="docutils literal notranslate"><span class="pre">tcsetpgrp()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">tcgetsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">setsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">getsid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setpgid()</span></code>.  Because
-sending a signal to a process group (<code class="docutils literal notranslate"><span class="pre">kill(-pgrp,</span> <span class="pre">signo)</span></code>) is not
-supported, TTY signals always target the single foreground PID rather
-than an entire group.</p>
+<code class="docutils literal notranslate"><span class="pre">tcgetsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">setsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">getsid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setpgid()</span></code>.  A process
+group is one process, so <code class="docutils literal notranslate"><span class="pre">kill(-pgrp,</span> <span class="pre">signo)</span></code> and <code class="docutils literal notranslate"><span class="pre">killpg()</span></code> send
+the signal to the process <code class="docutils literal notranslate"><span class="pre">pgrp</span></code>, and TTY signals go to the single
+foreground PID.</p>
 </li>
 <li><p><strong>User Access</strong>. Serial drivers are, ultimately, normal
 <a class="reference external" href="#chardrivers">character drivers</a> and are accessed as other

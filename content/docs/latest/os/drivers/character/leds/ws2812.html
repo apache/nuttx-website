@@ -235,6 +235,51 @@ in <code class="docutils literal notranslate"><span class="pre">arch/&lt;archite
 directory for the specific processor <code class="docutils literal notranslate"><span class="pre">&lt;architecture&gt;</span></code> and for
 the specific <code class="docutils literal notranslate"><span class="pre">&lt;chip&gt;</span></code> ws2812 peripheral devices.</p></li>
 </ul>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>Upper half configuration resides in <span class="menuselection">Device Drivers ‣ LED support ‣ WS2812 LED driver</span> .
+Some of the configuration options are described here - mostly for the purpose of helping
+with implementation of lower half drivers and board code.</p>
+<section id="ws2812-driver-variant">
+<h3>WS2812 driver variant<a class="headerlink" href="#ws2812-driver-variant" title="Permalink to this heading"></a></h3>
+<p>Allows user to choose between old-style SPI driver and driver split into upper and
+lower-half. The old style SPI driver could only drive the LEDs using a SPI interface,
+the new style can use any hardware supported by the lower half (including SPI,
+despite the naming.)</p>
+<p>When implementing lower half driver for new architecture, make the appropriate
+Kconfig option depend on <span class="menuselection">WS2812_NON_SPI_DRIVER</span></p>
+<p>The old-style driver and its associated options are not described in this document.</p>
+</section>
+<section id="number-of-ws2812s-connected">
+<h3>Number of ws2812s connected<a class="headerlink" href="#number-of-ws2812s-connected" title="Permalink to this heading"></a></h3>
+<p>These LEDs are designed to be chained and this configuration option allows the user
+to specify how many LEDs are in the chain.</p>
+<p>Do note though that this is only a suggestion for other code - for example for default
+board configuration. The value set here may be ignored by the lower half and it is
+not used by the upper half either. The upper half reads the LED count from <code class="docutils literal notranslate"><span class="pre">nleds</span></code>
+element of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ws2812_dev_s</span></code></p>
+</section>
+<section id="ws2812s-have-white-led">
+<h3>ws2812s have white LED<a class="headerlink" href="#ws2812s-have-white-led" title="Permalink to this heading"></a></h3>
+<p>Some variants of these LEDs have a white component byte. Lower half can disable support
+for such devices if this configuration option is not set.</p>
+</section>
+<section id="add-byte-order-transformation-functions">
+<h3>Add byte order transformation functions<a class="headerlink" href="#add-byte-order-transformation-functions" title="Permalink to this heading"></a></h3>
+<p>According to datasheets, these LEDs expect RGB data in green-red-blue order on the wire.
+Data provided by the user space are formatted as 32bit pixels in RGB order
+(ie. <code class="docutils literal notranslate"><span class="pre">0x00RRGGBB</span></code>.) The lower half driver therefore needs to reorder bytes received
+from the user space through the upper half to transmit them in the order the LED expects.</p>
+<p>However, there are variants of these LEDs available on the market which expect the RGB
+data in red-green-blue order. This configuration option adds byte order transformation
+functions (currently one) to the upper half driver. If requested by <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ws2812_dev_s</span></code>
+member <code class="docutils literal notranslate"><span class="pre">byte_order_transformation</span></code>, chosen transformation function is called on data
+received from user space before passing them to the lower half when writing. For reads,
+reverse transformation is applied.</p>
+<p>Do note that choosing - and making use - of this option requires a buffer allocated
+by lower half for every driver instance that needs this feature.</p>
+</section>
+</section>
 </section>
 
 
