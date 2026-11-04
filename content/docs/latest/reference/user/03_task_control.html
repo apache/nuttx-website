@@ -327,6 +327,12 @@ like:</p>
 <span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sigaction</span><span class="p">(</span><span class="n">SIGCHLD</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 </pre></div>
 </div>
+<p>A later <code class="docutils literal notranslate"><span class="pre">sigaction()</span></code> for <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> without <code class="docutils literal notranslate"><span class="pre">SA_NOCLDWAIT</span></code> (and
+not <code class="docutils literal notranslate"><span class="pre">SIG_IGN</span></code>) keeps the child status again.  While the status is not
+kept, <code class="docutils literal notranslate"><span class="pre">wait()</span></code>, <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> and <code class="docutils literal notranslate"><span class="pre">waitid()</span></code> block until all
+children exit and then fail with <code class="docutils literal notranslate"><span class="pre">ECHILD</span></code>.  NuttX decides when a child
+is created if its status is kept: a child created while the status is
+not kept does not become waitable later.</p>
 </section>
 <section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h2>
@@ -653,8 +659,15 @@ normal process termination, whether via <code class="docutils literal notranslat
 the program’s <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_ATEXIT</span></code> must be defined to enable this function.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_MAX_EXITFUNS</span></code> must be larger than 0 to build
+<code class="docutils literal notranslate"><span class="pre">atexit()</span></code>, <code class="docutils literal notranslate"><span class="pre">on_exit()</span></code> and <code class="docutils literal notranslate"><span class="pre">at_quick_exit()</span></code>.  A C++ ELF
+program (built with <code class="docutils literal notranslate"><span class="pre">-fno-use-cxa-atexit</span></code>) with a static object in
+a function calls <code class="docutils literal notranslate"><span class="pre">atexit()</span></code> too.</p>
 </div>
+<p>The number of functions is limited only by memory: the first
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_MAX_EXITFUNS</span></code> entries are in the task information, the
+next ones come from the heap.  <code class="docutils literal notranslate"><span class="pre">atexit()</span></code>, <code class="docutils literal notranslate"><span class="pre">on_exit()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">at_quick_exit()</span></code> and <code class="docutils literal notranslate"><span class="pre">__cxa_atexit()</span></code> share the list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -662,17 +675,14 @@ the program’s <code class="docutils literal notranslate"><span class="pre">mai
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>On success, <code class="docutils literal notranslate"><span class="pre">atexit()</span></code> returns OK (0). On error,
-ERROR (-1) is returned, and <code class="docutils literal notranslate"><span class="pre">`errno</span></code> &lt;#ErrnoAccess&gt;`__ is set to
-indicate the cause of the failure.</p>
+<dd class="field-even"><p>On success, <code class="docutils literal notranslate"><span class="pre">atexit()</span></code> returns OK (0). On error (no memory),
+a non-zero value is returned.</p>
 </dd>
 </dl>
 <p><strong>POSIX Compatibility:</strong> Comparable to the ISO C interface of the same
 name. Limitations in the current implementation:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>Only a single <code class="docutils literal notranslate"><span class="pre">atexit</span></code> function can be registered unless
-<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_ATEXIT_MAX</span></code> defines a larger number.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">atexit()</span></code> functions are not inherited when a new task is created.</p></li>
 </ol>
 </div></blockquote>
@@ -687,6 +697,11 @@ normal process termination, whether via <code class="docutils literal notranslat
 the program’s <code class="docutils literal notranslate"><span class="pre">main()</span></code>. The function is passed the status argument
 given to the last call to <code class="docutils literal notranslate"><span class="pre">exit()</span></code> and the <code class="docutils literal notranslate"><span class="pre">arg</span></code> argument from
 <code class="docutils literal notranslate"><span class="pre">on_exit()</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_MAX_EXITFUNS</span></code> must be larger than 0 to build
+this function.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -706,8 +721,7 @@ present in libc4, libc5 and glibc. It no longer occurs in Solaris (SunOS
 5). Avoid this function, and use the standard <code class="docutils literal notranslate"><span class="pre">atexit()</span></code> instead.</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>Only a single <code class="docutils literal notranslate"><span class="pre">on_exit</span></code> function can be registered unless
-<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_ONEXIT_MAX</span></code> defines a larger number.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">on_exit()</span></code> shares the list of <code class="docutils literal notranslate"><span class="pre">atexit()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">on_exit()</span></code> functions are not inherited when a new task is created.</p></li>
 </ol>
 </div></blockquote>
