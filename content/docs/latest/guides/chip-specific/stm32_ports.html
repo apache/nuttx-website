@@ -240,6 +240,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#source-naming-rules">Source naming rules</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#ip-core-naming-convention">IP-core naming convention</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#hardware-definition-naming-convention">Hardware definition naming convention</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#board-clock-configuration-convention">Board clock configuration convention</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#next-steps">Next steps</a><ul>
@@ -3328,6 +3329,30 @@ definitions across families and create unnecessary differences between ports.</p
 size macros must use <code class="docutils literal notranslate"><span class="pre">STM32_</span></code> prefix (not <code class="docutils literal notranslate"><span class="pre">STM32F7_</span></code>, <code class="docutils literal notranslate"><span class="pre">STM32H5_</span></code>, etc.).</p>
 <p><strong>Per-family hardware register definitions</strong> (in <code class="docutils literal notranslate"><span class="pre">arch/arm/src/&lt;family&gt;/hardware/</span></code>)
 must use <code class="docutils literal notranslate"><span class="pre">STM32_XXX_</span></code> (not <code class="docutils literal notranslate"><span class="pre">STM32L4_XXX_</span></code>, <code class="docutils literal notranslate"><span class="pre">STM32WB4_XXX_</span></code>, etc.).</p>
+</section>
+<section id="board-clock-configuration-convention">
+<h3>Board clock configuration convention<a class="headerlink" href="#board-clock-configuration-convention" title="Permalink to this heading"></a></h3>
+<p>The board <code class="docutils literal notranslate"><span class="pre">board.h</span></code> configures the clock tree and the family RCC code
+writes what the board defines.  All families use the same interface:</p>
+<ul>
+<li><p>Register field values, built from the field macros of the family RCC
+header: <code class="docutils literal notranslate"><span class="pre">STM32_PLLCFG_*</span></code> for the PLLs and <code class="docutils literal notranslate"><span class="pre">STM32_RCC_&lt;REG&gt;_&lt;FIELD&gt;</span></code> for
+the other fields, for example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#define STM32_PLLCFG_PLLM        RCC_PLLCFG_PLLM(4)
+#define STM32_RCC_CFGR_PPRE1     RCC_CFGR_PPRE1_HCLKd2
+</pre></div>
+</div>
+</li>
+<li><p>Clock frequencies matching those fields: <code class="docutils literal notranslate"><span class="pre">STM32_SYSCLK_FREQUENCY</span></code>,
+<code class="docutils literal notranslate"><span class="pre">STM32_HCLK_FREQUENCY</span></code>, <code class="docutils literal notranslate"><span class="pre">STM32_PCLKn_FREQUENCY</span></code> and the other
+<code class="docutils literal notranslate"><span class="pre">STM32_&lt;clock&gt;_FREQUENCY</span></code> macros, as constants or expressions of other
+frequencies.</p></li>
+<li><p>Peripheral input clocks: <code class="docutils literal notranslate"><span class="pre">STM32_TIMn_CLKIN</span></code> and <code class="docutils literal notranslate"><span class="pre">STM32_LPTIMn_CLKIN</span></code>
+(see above), one for every instance of the chip.</p></li>
+</ul>
+<p>The board does not pass numeric divisors for the RCC code to convert into
+register fields.  The RCC code keeps reserved register bits at their reset
+value.</p>
 </section>
 </section>
 <section id="next-steps">

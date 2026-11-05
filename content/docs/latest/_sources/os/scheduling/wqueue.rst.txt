@@ -275,6 +275,20 @@ Work Queue Interfaces
   :return: Zero on success, ``-EINVAL`` for an invalid or predefined
     queue, or ``-EDEADLK`` when called by one of the queue's workers.
 
+.. c:function:: bool work_queue_in_queue(FAR struct kwork_wqueue_s *wqueue)
+
+  Report whether the caller runs on one of the queue's worker threads.
+  Kernel only.
+
+  :return: ``true`` if the caller is a worker of ``wqueue``.
+
+.. c:function:: void work_queue_dispatch(FAR struct kwork_wqueue_s *wqueue)
+
+  Run the expired work of ``wqueue`` on the calling thread. A callback
+  that waits for a result produced by another work item of the same
+  queue uses this to let that item run. Does nothing when the caller is
+  not one of the queue's workers. Kernel only.
+
 .. c:function:: int work_queue_wq(FAR struct kwork_wqueue_s *wqueue, \
                FAR struct work_s *work, worker_t worker, FAR void *arg, \
                clock_t delay)
@@ -338,6 +352,16 @@ Work Queue Interfaces
   Return the common scheduling priority of a custom queue's worker pool.
 
   :return: The worker priority on success or a negated errno on failure.
+
+.. c:function:: int work_queue_setpriority_wq( \
+               FAR struct kwork_wqueue_s *wqueue, int priority)
+
+  Set the scheduling priority of every worker of a custom queue.
+  ``work_queue_setpriority(qid, priority)`` does the same for ``HPWORK``
+  or ``LPWORK``. Kernel only.
+
+  :return: Zero on success or ``-EINVAL`` for an invalid queue or
+    priority.
 
 .. c:function:: int work_signal(int qid)
 

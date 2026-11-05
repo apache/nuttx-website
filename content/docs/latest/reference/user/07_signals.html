@@ -408,6 +408,9 @@ receive the signal.</p></li>
 <li><p>If a task group receives a signal and more than one thread is waiting
 on that signal, then one and only one indeterminate thread out of
 that waiting group will receive the signal.</p></li>
+<li><p>If the action of the signal is the default action <em>Abnormal
+Termination</em>, all threads of the task group end at once, also the
+threads that block the signal.</p></li>
 </ul>
 <p>You can mask out that signal using ‘’sigprocmask()’’ (or
 ‘’pthread_sigmask()’’). That signal will then be effectively disabled
@@ -573,7 +576,10 @@ action to be associated with the specified signal. If the argument oact
 is not NULL, the action previously associated with the signal is stored
 in the location pointed to by the argument oact. If the argument act is
 NULL, signal handling is unchanged by this function call; thus, the call
-can be used to inquire about the current handling of a given signal.</p>
+can be used to inquire about the current handling of a given signal.
+With <code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_DEFAULT</span></code>, oact reports <code class="docutils literal notranslate"><span class="pre">SIG_DFL</span></code> for a signal at its
+default action, also when the default action is to ignore the signal
+(<code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code>, for example).</p>
 <p>When a signal is caught by a signal-catching function installed by the
 sigaction() function, a new signal mask is calculated and installed for
 the duration of the signal-catching function. This mask is formed by
@@ -602,8 +608,8 @@ sigaction().</p>
 name. Differences from the POSIX implementation include:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>There are no default actions so the special value <code class="docutils literal notranslate"><span class="pre">SIG_DFL</span></code> is
-treated like <code class="docutils literal notranslate"><span class="pre">SIG_IGN</span></code>.</p></li>
+<li><p>Without <code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_DEFAULT</span></code>, there are no default actions so the
+special value <code class="docutils literal notranslate"><span class="pre">SIG_DFL</span></code> is treated like <code class="docutils literal notranslate"><span class="pre">SIG_IGN</span></code>.</p></li>
 <li><p>All <code class="docutils literal notranslate"><span class="pre">sa_flags</span></code> in struct sigaction of act input are ignored (all
 treated like <code class="docutils literal notranslate"><span class="pre">SA_SIGINFO</span></code>). The one exception is if
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_CHILD_STATUS</span></code> is defined; then <code class="docutils literal notranslate"><span class="pre">SA_NOCLDWAIT</span></code> is

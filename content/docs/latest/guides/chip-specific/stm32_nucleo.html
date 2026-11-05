@@ -199,7 +199,10 @@
 <li class="toctree-l2"><a class="reference internal" href="smaller_vector_tables.html">Smaller Vector Tables</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">STM32 Nucleo standard</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#serial-console">Serial console</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#common-board-initialization">Common board initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#common-board-initialization">Common board initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#timers">Timers</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="stm32_ports.html">STM32 ports</a></li>
@@ -320,12 +323,45 @@ instances</p></td>
 </table>
 <p>The file systems are not mounted when <code class="docutils literal notranslate"><span class="pre">CONFIG_DISABLE_MOUNTPOINT</span></code> is
 set. The IWDG uses <code class="docutils literal notranslate"><span class="pre">STM32_LSI_FREQUENCY</span></code> from the board <code class="docutils literal notranslate"><span class="pre">board.h</span></code>.</p>
+<section id="timers">
+<h3>Timers<a class="headerlink" href="#timers" title="Permalink to this heading"></a></h3>
+<p>Timer and oneshot devices are registered from one option per instance,
+N being the TIM or LPTIM instance number:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Device</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_STM32_COMMON_TIMn_TIMER</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/timerN</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_STM32_COMMON_TIMn_ONESHOT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/oneshotN</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_STM32_COMMON_LPTIMn_TIMER</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/lptimerN</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_BOARD_STM32_COMMON_LPTIMn_ONESHOT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/lponeshotN</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>The options need <code class="docutils literal notranslate"><span class="pre">CONFIG_TIMER</span></code> or <code class="docutils literal notranslate"><span class="pre">CONFIG_ONESHOT</span></code> (a TIM oneshot
+also <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_ONESHOT</span></code>) and the <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_TIMn</span></code> or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_LPTIMn</span></code> instance. An instance is either a timer or a
+oneshot. A TIM oneshot counts in microseconds. An LPTIM counts on its
+kernel clock, <code class="docutils literal notranslate"><span class="pre">STM32_LPTIMn_CLKIN</span></code> in the board <code class="docutils literal notranslate"><span class="pre">board.h</span></code>.</p>
 <p>Rules for boards:</p>
 <ul class="simple">
 <li><p>Do not repeat any of the features above in the board directory.</p></li>
 <li><p>Board-independent initialization is added to
 <code class="docutils literal notranslate"><span class="pre">stm32_common_initialize()</span></code>, not to individual boards.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">board.h</span></code> defines <code class="docutils literal notranslate"><span class="pre">STM32_LPTIMn_CLKIN</span></code> for every LPTIM instance of
+the chip.</p></li>
 </ul>
+</section>
 </section>
 </section>
 

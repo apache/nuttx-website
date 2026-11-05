@@ -409,6 +409,37 @@ with either the SYSLOGIOC_GETCHANNELS or SYSLOGIOC_SETFILTER.</p>
 specified channel.</p></li>
 </ul>
 </section>
+<section id="syslog-channel-priorities">
+<h3>SYSLOG Channel Priorities<a class="headerlink" href="#syslog-channel-priorities" title="Permalink to this heading"></a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_DROPMASK</span></code>, each channel can drop the messages of
+some priorities. The field <code class="docutils literal notranslate"><span class="pre">sc_dropmask</span></code> of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">syslog_channel_s</span></code>
+is an OR of <code class="docutils literal notranslate"><span class="pre">LOG_MASK()</span></code> values: the channel does not write the
+messages of these priorities. Zero (the value of a channel that does not
+set the field) means that the channel writes the messages of all
+priorities.</p>
+<p><code class="docutils literal notranslate"><span class="pre">setlogmask()</span></code> selects the messages for all channels. <code class="docutils literal notranslate"><span class="pre">sc_dropmask</span></code>
+selects them for one channel. For example, the console can show only
+the urgent messages while the RAMLOG keeps all of them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CONSOLE_LEVEL</span></code> sets <code class="docutils literal notranslate"><span class="pre">sc_dropmask</span></code> of the console
+channels (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_DEFAULT</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CONSOLE</span></code>).
+These channels write only the messages of this priority and of the more
+urgent priorities: 0 is <code class="docutils literal notranslate"><span class="pre">LOG_EMERG</span></code>, 3 is <code class="docutils literal notranslate"><span class="pre">LOG_ERR</span></code>, 7 is
+<code class="docutils literal notranslate"><span class="pre">LOG_DEBUG</span></code>. With 7 (the default), the console writes all messages.
+The assertion and crash reports use <code class="docutils literal notranslate"><span class="pre">LOG_ALERT</span></code> and <code class="docutils literal notranslate"><span class="pre">LOG_EMERG</span></code>, so
+a value of 1 or more keeps them on the console.</p>
+<p>Output that does not come from <code class="docutils literal notranslate"><span class="pre">syslog()</span></code> has no priority, and all
+channels write it. This output is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">syslog_write()</span></code> (for example a write to <code class="docutils literal notranslate"><span class="pre">/dev/log</span></code> with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CHARDEV</span></code>, or the console output with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_CONSOLE_SYSLOG</span></code>).</p></li>
+<li><p>The output that the interrupt buffer (<code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_INTBUFFER</span></code>)
+saved. With the interrupt buffer, the messages from interrupt
+handlers lose their priority.</p></li>
+</ul>
+<p>Kernel code that writes the text of a message with <code class="docutils literal notranslate"><span class="pre">syslog_write()</span></code>
+can call <code class="docutils literal notranslate"><span class="pre">syslog_write_priority()</span></code> instead, to give its priority.</p>
+</section>
 <section id="interrupt-level-syslog-output">
 <h3>Interrupt Level SYSLOG Output<a class="headerlink" href="#interrupt-level-syslog-output" title="Permalink to this heading"></a></h3>
 <p>As a general statement, SYSLOG output only supports <em>normal</em>
@@ -797,6 +828,8 @@ fixed at compile time.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_MAX_CHANNELS</span></code>: Set the maximum number of syslog channels (default: 1 in the architecture, configurable per platform).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_DEFAULT</span></code>: Enable the <strong>default channel</strong> (maps to UART output).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CRLF</span></code>: (Shared) Applies line ending conversion to all channel output.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_DROPMASK</span></code>: Each channel can drop messages by priority (default: n). See <a class="reference internal" href="#syslog-channel-priorities">SYSLOG Channel Priorities</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_CONSOLE_LEVEL</span></code>: The lowest message priority that the console channels write (default: 7, all messages). See <a class="reference internal" href="#syslog-channel-priorities">SYSLOG Channel Priorities</a>.</p></li>
 </ul>
 </section>
 <section id="individual-channel-destination-options">

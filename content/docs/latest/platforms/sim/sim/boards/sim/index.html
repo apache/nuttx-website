@@ -1249,6 +1249,54 @@ definitions to the defconfig file:</p>
 </div>
 </div>
 </section>
+<section id="nxcamera">
+<h2>nxcamera<a class="headerlink" href="#nxcamera" title="Permalink to this heading"></a></h2>
+<p>This configuration tests the V4L2 drivers. The sim camera driver
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_CAMERA</span></code>) opens the V4L2 capture devices of the host and
+registers each one as <code class="docutils literal notranslate"><span class="pre">/dev/videoN</span></code> in the simulator, and <code class="docutils literal notranslate"><span class="pre">nxcamera</span></code>
+streams frames from such a device to the framebuffer or to a file.</p>
+<p><strong>Capture</strong></p>
+<p>A host without a camera can use the <code class="docutils literal notranslate"><span class="pre">v4l2loopback</span></code> module, fed with a test
+pattern by FFmpeg:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>modprobe<span class="w"> </span>v4l2loopback
+<span class="gp">$ </span>ffmpeg<span class="w"> </span>-re<span class="w"> </span>-f<span class="w"> </span>lavfi<span class="w"> </span>-i<span class="w"> </span><span class="nv">testsrc</span><span class="o">=</span><span class="nv">size</span><span class="o">=</span>640x480:rate<span class="o">=</span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-pix_fmt<span class="w"> </span>yuv420p<span class="w"> </span>-f<span class="w"> </span>v4l2<span class="w"> </span>/dev/video0
+</pre></div>
+</div>
+<p>To write ten frames to a file on the host, enable <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_HOSTFS</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_HOSTFS</span></code> and run:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; mount -t hostfs -o fs=/tmp /host</span>
+<span class="go">nsh&gt; nxcamera</span>
+<span class="go">nxcamera&gt; input /dev/video0</span>
+<span class="go">nxcamera&gt; output /host/frames.yuv 10</span>
+<span class="go">nxcamera&gt; stream 640 480 30 YU12</span>
+<span class="go">nxcamera&gt; q</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">frames.yuv</span></code> then holds ten 640x480 YUV 4:2:0 frames.</p>
+<p><strong>Memory-to-memory decoding</strong></p>
+<p>The sim decoder (<code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_VIDEO_DECODER</span></code>) is a V4L2 memory-to-memory
+device, <code class="docutils literal notranslate"><span class="pre">/dev/video1</span></code> by default, that decodes H.264 with OpenH264. On top of
+this configuration it needs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_VIDEOUTILS_OPENH264</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_VIDEO_DECODER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_HAVE_CXX</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_HAVE_CXXINITIALIZE</span></code>, for the C++ runtime
+OpenH264 uses (the default minimal C++ library is enough)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_SYSTEM_NXCODEC</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_HOSTFS</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIM_HOSTFS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_NSH_MAXARGUMENTS=16</span></code>, for the <code class="docutils literal notranslate"><span class="pre">nxcodec</span></code> command line</p></li>
+</ul>
+<p>Create a stream on the host:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>ffmpeg<span class="w"> </span>-f<span class="w"> </span>lavfi<span class="w"> </span>-i<span class="w"> </span><span class="nv">testsrc</span><span class="o">=</span><span class="nv">size</span><span class="o">=</span>320x240:rate<span class="o">=</span><span class="m">30</span><span class="w"> </span>-t<span class="w"> </span><span class="m">2</span><span class="w"> </span>-c:v<span class="w"> </span>libx264<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-profile:v<span class="w"> </span>baseline<span class="w"> </span>-pix_fmt<span class="w"> </span>yuv420p<span class="w"> </span>-f<span class="w"> </span>h264<span class="w"> </span>/tmp/t.h264
+</pre></div>
+</div>
+<p>and decode it in the simulator to YUV 4:2:0 frames:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nsh&gt; mount -t hostfs -o fs=/tmp /host</span>
+<span class="go">nsh&gt; cd /host</span>
+<span class="go">nsh&gt; nxcodec -d /dev/video1 -s 320x240 -f H264 -i t.h264 -f YU12 -o o.yuv</span>
+</pre></div>
+</div>
+</section>
 <section id="nxdoom">
 <h2>nxdoom<a class="headerlink" href="#nxdoom" title="Permalink to this heading"></a></h2>
 <p>Play <a class="reference internal" href="../../../../../applications/games/nxdoom/index.html"><span class="doc">NXDoom</span></a> on the Simulator using X11
