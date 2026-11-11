@@ -46,8 +46,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="CONFIG_NET_GUARDSIZE" href="netguardsize.html" />
-    <link rel="prev" title="Network Drivers" href="netdriver.html" /> 
+    <link rel="next" title="PHY Abstraction Layer (PHYLIB)" href="phylib.html" />
+    <link rel="prev" title="Note over NETDEV" href="note.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -156,11 +156,15 @@
 <li class="toctree-l4"><a class="reference internal" href="bridge.html">Ethernet Bridge</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netdev.html">Network Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netdriver.html">Network Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="netpoll.html">Netpoll</a></li>
+<li class="toctree-l4"><a class="reference internal" href="note.html">Note over NETDEV</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">MDIO Bus Driver</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#driver-architecture">Driver Architecture</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#implementing-a-lower-half-driver">Implementing a Lower-Half Driver</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="phylib.html">PHY Abstraction Layer (PHYLIB)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="phylib_vendor_porting.html">PHYLIB Vendor Porting Guide</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netguardsize.html">CONFIG_NET_GUARDSIZE</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netlink.html">Netlink Route support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="slip.html">SLIP</a></li>
@@ -215,7 +219,7 @@
 <h1>MDIO Bus Driver<a class="headerlink" href="#mdio-bus-driver" title="Permalink to this heading"></a></h1>
 <p>The NuttX MDIO bus driver provides a standardized interface for communicating with Ethernet PHY (Physical Layer) transceivers.
 It employs a classic upper-half/lower-half architecture to abstract hardware-specific logic from the generic MDIO protocol,
-which is currently compliant with Clause 22 of the IEEE 802.3 standard.
+which supports both Clause 22 and (optionally, under <code class="docutils literal notranslate"><span class="pre">CONFIG_MDIO_CLAUSE_45</span></code>) Clause 45 of the IEEE 802.3 standard.
 The primary implementation of the upper-half can be found in <code class="docutils literal notranslate"><span class="pre">drivers/net/mdio.c</span></code>.</p>
 <section id="driver-architecture">
 <h2>Driver Architecture<a class="headerlink" href="#driver-architecture" title="Permalink to this heading"></a></h2>
@@ -245,7 +249,8 @@ The contract between the upper and lower halves is defined in <code class="docut
 <li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdio_ops_s</span></code>: A structure containing function pointers that the lower-half driver must implement to perform hardware-level operations.
 *   <code class="docutils literal notranslate"><span class="pre">read</span></code>: Performs a Clause 22 MDIO read operation.
 *   <code class="docutils literal notranslate"><span class="pre">write</span></code>: Performs a Clause 22 MDIO write operation.
-*   <code class="docutils literal notranslate"><span class="pre">reset</span></code>: An optional function to execute a hardware-specific PHY reset.</p></li>
+*   <code class="docutils literal notranslate"><span class="pre">read_c45</span></code> / <code class="docutils literal notranslate"><span class="pre">write_c45</span></code>: Optional native Clause 45 (MMD) read/write operations, available when <code class="docutils literal notranslate"><span class="pre">CONFIG_MDIO_CLAUSE_45</span></code> is enabled. When a lower-half leaves them NULL, the upper-half falls back to indirect MMD access over the Clause 22 registers 13/14.
+*   <code class="docutils literal notranslate"><span class="pre">reset</span></code>: An optional PHY hardware reset-line control. It is a level control, not a one-shot pulse: <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">!=</span> <span class="pre">0</span></code> asserts reset (drives the PHY into reset) and <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">==</span> <span class="pre">0</span></code> deasserts it (releases the PHY). The lower-half owns pin polarity and the datasheet-mandated settle delays, and is responsible for any idempotency since a single bus may host several PHY addresses.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdio_lowerhalf_s</span></code>: The container for the lower-half instance, which holds a pointer to the <code class="docutils literal notranslate"><span class="pre">mdio_ops_s</span></code> vtable
 and an optional private data pointer for the driver’s internal state.</p></li>
 </ol>
@@ -273,8 +278,8 @@ which is subsequently used by the PHY driver to interact with the bus.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="netdriver.html" class="btn btn-neutral float-left" title="Network Drivers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="netguardsize.html" class="btn btn-neutral float-right" title="CONFIG_NET_GUARDSIZE" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="note.html" class="btn btn-neutral float-left" title="Note over NETDEV" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="phylib.html" class="btn btn-neutral float-right" title="PHY Abstraction Layer (PHYLIB)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

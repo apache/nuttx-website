@@ -152,6 +152,7 @@
 <li class="toctree-l4 current"><a class="current reference internal" href="#">SocketCAN</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#socketcan-device-drivers">SocketCAN Device Drivers</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#socketcan-protocol-stack">SocketCAN protocol stack</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#iso-tp">ISO-TP</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="pkt.html">“Raw” packet socket support</a></li>
@@ -160,7 +161,11 @@
 <li class="toctree-l4"><a class="reference internal" href="bridge.html">Ethernet Bridge</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netdev.html">Network Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netdriver.html">Network Drivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="netpoll.html">Netpoll</a></li>
+<li class="toctree-l4"><a class="reference internal" href="note.html">Note over NETDEV</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mdio.html">MDIO Bus Driver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="phylib.html">PHY Abstraction Layer (PHYLIB)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="phylib_vendor_porting.html">PHYLIB Vendor Porting Guide</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netguardsize.html">CONFIG_NET_GUARDSIZE</a></li>
 <li class="toctree-l4"><a class="reference internal" href="netlink.html">Netlink Route support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="slip.html">SLIP</a></li>
@@ -380,6 +385,29 @@ otherwise <code class="docutils literal notranslate"><span class="pre">EINVAL</s
 <li><p><strong>Extensible</strong>: Easy to extend for additional CAN protocols</p></li>
 </ul>
 </section>
+</section>
+<section id="iso-tp">
+<h2>ISO-TP<a class="headerlink" href="#iso-tp" title="Permalink to this heading"></a></h2>
+<p>ISO-TP (<code class="docutils literal notranslate"><span class="pre">CAN_ISOTP</span></code>) is a socket protocol that provides message-oriented
+communication over CAN. It is enabled with <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_CAN_ISOTP=y</span></code> option.</p>
+<p>By default a message may carry up to 4095 bytes, the maximum length the
+classic 12-bit First Frame <code class="docutils literal notranslate"><span class="pre">FF_DL</span></code> field can encode. Selecting
+<code class="docutils literal notranslate"><span class="pre">CONFIG_LIBC_CAN_ISOTP_LONG_PDU=y</span></code> enables the 32-bit <code class="docutils literal notranslate"><span class="pre">FF_DL</span></code> escape
+sequence (ISO 15765-2:2016), extending the maximum message length to
+2^32-1 bytes at the cost of a larger First Frame header and wider internal
+length fields.
+Leave it disabled on classic-CAN-only configurations that never transfer long
+messages so no extra code or memory is spent. A <code class="docutils literal notranslate"><span class="pre">send</span></code> of a message larger
+than the configured limit fails with <code class="docutils literal notranslate"><span class="pre">EMSGSIZE</span></code>.</p>
+<p>A socket is created with <code class="docutils literal notranslate"><span class="pre">AF_CAN</span></code> / <code class="docutils literal notranslate"><span class="pre">SOCK_DGRAM</span></code> / <code class="docutils literal notranslate"><span class="pre">CAN_ISOTP</span></code> and
+bound to a <code class="docutils literal notranslate"><span class="pre">sockaddr_can</span></code> specifying the interface and the TX/RX CAN IDs
+via <code class="docutils literal notranslate"><span class="pre">can_addr.tp.tx_id</span></code> and <code class="docutils literal notranslate"><span class="pre">can_addr.tp.rx_id</span></code>. Each <code class="docutils literal notranslate"><span class="pre">send</span></code> call
+transmits one complete message; each <code class="docutils literal notranslate"><span class="pre">recv</span></code> call returns one complete
+reassembled message.</p>
+<p>Segmentation, flow control, and reassembly are handled transparently by the
+kernel. TX waits up to 15000 ms for a Flow Control frame after a First Frame
+(N_Bs); RX waits up to 1000 ms for Consecutive Frames after a First Frame
+(N_Cr).</p>
 </section>
 </section>
 
