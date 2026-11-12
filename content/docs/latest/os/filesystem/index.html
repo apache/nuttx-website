@@ -278,6 +278,9 @@ belonging to a unified interface:</p>
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">open</span></span></span><span class="sig-paren">(</span><span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">file</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">filep</span></span>, <span class="pre">FAR</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">relpath</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">oflags</span></span>, <span class="n"><span class="pre">mode_t</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span><span class="sig-paren">)</span><br /></dt>
 <dd><p>Opens a file. Files are required to be opened before any other file
 operations are performed on it.</p>
+<p>For a directory, return <code class="docutils literal notranslate"><span class="pre">-EISDIR</span></code>. The VFS then opens the directory with
+<code class="docutils literal notranslate"><span class="pre">opendir()</span></code> for <code class="docutils literal notranslate"><span class="pre">O_RDONLY</span></code>, and fails with <code class="docutils literal notranslate"><span class="pre">-EISDIR</span></code> for the other
+access modes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -680,6 +683,9 @@ the values that need to be updated.</p></li>
 operations can be used after this to do various directory related operations
 . We say the directory stream points to the first entry, but you need
 <code class="docutils literal notranslate"><span class="pre">readdir()</span></code> to read the first entry.</p>
+<p>For an <code class="docutils literal notranslate"><span class="pre">open()</span></code> with <code class="docutils literal notranslate"><span class="pre">O_DIRECTORY</span></code>, the VFS first checks the path with
+<code class="docutils literal notranslate"><span class="pre">stat()</span></code>: a path that is not a directory fails with <code class="docutils literal notranslate"><span class="pre">-ENOTDIR</span></code>. A file
+system without <code class="docutils literal notranslate"><span class="pre">stat()</span></code> must do this check in <code class="docutils literal notranslate"><span class="pre">opendir()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

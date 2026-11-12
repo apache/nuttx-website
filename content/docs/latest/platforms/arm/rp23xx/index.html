@@ -452,12 +452,19 @@ datasheet for more information.</p>
 <p>The port offers three options for configuring the heaps to use
 the external PSRAM, described below. More custom configurations
 can be used with custom board initialization functions.</p>
+<p>The atomic operations of the RP2350 work across the two cores only
+in the internal SRAM (RP2350 datasheet, section 2.1.6). In the PSRAM
+they exclude only the local core. So with <cite>SMP</cite> only the separate
+heap is available (it is the default there), and a lock or an atomic
+variable must not be allocated from the <cite>psram</cite> heap: with <cite>SMP</cite> an
+atomic operation outside the SRAM never ends.</p>
 <section id="use-psram-and-sram-as-a-single-main-heap">
 <h3>Use PSRAM and SRAM as a single main heap<a class="headerlink" href="#use-psram-and-sram-as-a-single-main-heap" title="Permalink to this heading"></a></h3>
 <p>This option is selected with <cite>RP23XX_PSRAM_HEAP_SINGLE</cite> and
 requires <cite>MM_REGIONS &gt; 1</cite>, as the PSRAM memory region will
 be added to the heap. It is also necessary to disable
-<cite>MM_KERNEL_HEAP</cite>, as there will only be a single heap.</p>
+<cite>MM_KERNEL_HEAP</cite>, as there will only be a single heap. It is
+not available with <cite>SMP</cite>.</p>
 <p>This is the simplest configuration because it will unify the
 memories into a single main heap. This way you can see the <cite>free</cite>
 command output the total amount of usable RAM in the heap.</p>
@@ -469,7 +476,8 @@ consider the other options.</p>
 <section id="use-psram-as-user-heap-sram-as-kernel-heap">
 <h3>Use PSRAM as user heap, SRAM as kernel heap<a class="headerlink" href="#use-psram-as-user-heap-sram-as-kernel-heap" title="Permalink to this heading"></a></h3>
 <p>This option is selected with <cite>RP23XX_PSRAM_HEAP_USER</cite> and
-requires <cite>MM_KERNEL_HEAP</cite> to be set.</p>
+requires <cite>MM_KERNEL_HEAP</cite> to be set. It is not available with
+<cite>SMP</cite>.</p>
 <p>The external PSRAM is allocated to the default heap, while
 the internal SRAM will be used for the kernel heap. This
 configuration is useful because it allows drivers to

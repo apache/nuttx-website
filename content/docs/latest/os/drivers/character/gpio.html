@@ -248,6 +248,7 @@ are supported:</p>
 <li><p><a class="reference internal" href="#c.GPIOC_SETPINTYPE" title="GPIOC_SETPINTYPE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">GPIOC_SETPINTYPE</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.GPIOC_SETDEBOUNCE" title="GPIOC_SETDEBOUNCE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">GPIOC_SETDEBOUNCE</span></code></a></p></li>
 <li><p><a class="reference internal" href="#c.GPIOC_IRQ_SETMASK" title="GPIOC_IRQ_SETMASK"><code class="xref c c-macro docutils literal notranslate"><span class="pre">GPIOC_IRQ_SETMASK</span></code></a></p></li>
+<li><p><a class="reference internal" href="#c.GPIOC_TOGGLE" title="GPIOC_TOGGLE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">GPIOC_TOGGLE</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <dl class="c macro">
@@ -365,6 +366,22 @@ The exact meaning of the mask depends on the platform implementation.</p>
 <p>Typical use case:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">irq_mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="cm">/* platform-specific mask value */</span><span class="p">;</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">GPIOC_IRQ_SETMASK</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">irq_mask</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.GPIOC_TOGGLE">
+<span class="sig-name descname"><span class="n"><span class="pre">GPIOC_TOGGLE</span></span></span><a class="headerlink" href="#c.GPIOC_TOGGLE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">GPIOC_TOGGLE</span></code> command inverts the level of an output GPIO and returns
+the new level. The argument is a pointer to a bool value to receive the
+result. A lower half with a native toggle register can provide
+<code class="docutils literal notranslate"><span class="pre">go_toggle</span></code> to do this atomically; otherwise the driver reads the pin and
+writes back the inverted value. Pins registered through <code class="docutils literal notranslate"><span class="pre">gpio_lower_half</span></code>
+forward the request to the I/O expander and return <code class="docutils literal notranslate"><span class="pre">-ENOTSUP</span></code> if it does
+not implement <code class="docutils literal notranslate"><span class="pre">ioe_toggle</span></code>. Typical use case is:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">value</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">GPIOC_TOGGLE</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">value</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="application-example">
