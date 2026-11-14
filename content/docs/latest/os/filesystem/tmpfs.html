@@ -210,6 +210,24 @@ implements the optional <code class="docutils literal notranslate"><span class="
 <p>Access into the mount from the pseudoFS is gated by the VFS (parent and
 mountpoint <code class="docutils literal notranslate"><span class="pre">X_OK</span></code>).  See <a class="reference internal" href="file_permission.html#file-permission"><span class="std std-ref">Filesystem Permission Interface</span></a>.</p>
 </section>
+<section id="timestamps">
+<h2>Timestamps<a class="headerlink" href="#timestamps" title="Permalink to this heading"></a></h2>
+<p>Every tmpfs file and directory keeps <code class="docutils literal notranslate"><span class="pre">st_atime</span></code>, <code class="docutils literal notranslate"><span class="pre">st_mtime</span></code> and
+<code class="docutils literal notranslate"><span class="pre">st_ctime</span></code>.  They are kept in RAM only and are lost when the volume is
+unmounted.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">read()</span></code> updates <code class="docutils literal notranslate"><span class="pre">st_atime</span></code> unless the file is opened with
+<code class="docutils literal notranslate"><span class="pre">O_NOATIME</span></code>.  <code class="docutils literal notranslate"><span class="pre">mmap()</span></code> also updates it, because tmpfs cannot trap the
+first access to the mapping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write()</span></code>, <code class="docutils literal notranslate"><span class="pre">ftruncate()</span></code>, <code class="docutils literal notranslate"><span class="pre">open()</span></code> with <code class="docutils literal notranslate"><span class="pre">O_TRUNC</span></code> and <code class="docutils literal notranslate"><span class="pre">msync()</span></code>
+of a shared mapping update <code class="docutils literal notranslate"><span class="pre">st_mtime</span></code> and <code class="docutils literal notranslate"><span class="pre">st_ctime</span></code>.</p></li>
+<li><p>Creating, removing or renaming an entry updates <code class="docutils literal notranslate"><span class="pre">st_mtime</span></code> and
+<code class="docutils literal notranslate"><span class="pre">st_ctime</span></code> of the directories involved, and <code class="docutils literal notranslate"><span class="pre">st_ctime</span></code> of a renamed
+object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utimensat()</span></code> and <code class="docutils literal notranslate"><span class="pre">futimens()</span></code> set <code class="docutils literal notranslate"><span class="pre">st_atime</span></code> and <code class="docutils literal notranslate"><span class="pre">st_mtime</span></code>.  Any
+change of the times, mode or owner updates <code class="docutils literal notranslate"><span class="pre">st_ctime</span></code>.</p></li>
+</ul>
+</section>
 </section>
 
 
