@@ -276,7 +276,7 @@ set through <code class="docutils literal notranslate"><span class="pre">pwm_inf
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_info_s</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="cm">/* Frequency of the pulse train */</span>
-<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">frequency</span><span class="p">;</span>
+<span class="w">  </span><span class="n">pwm_freq_t</span><span class="w"> </span><span class="n">frequency</span><span class="p">;</span>
 <span class="w">  </span><span class="cm">/* Per-channel output state */</span>
 <span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">pwm_chan_s</span><span class="w"> </span><span class="n">channels</span><span class="p">[</span><span class="n">CONFIG_PWM_NCHANNELS</span><span class="p">];</span>
 <span class="w">  </span><span class="cm">/* User provided argument to be used in the lower half */</span>
@@ -284,6 +284,9 @@ set through <code class="docutils literal notranslate"><span class="pre">pwm_inf
 <span class="p">};</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_freq_t</span></code> is <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> (Hz).  With <code class="docutils literal notranslate"><span class="pre">CONFIG_PWM_FREQUENCY_FIXED</span></code>
+it is <code class="docutils literal notranslate"><span class="pre">ub32_t</span></code> (Hz in 32.32 fixed point), so frequencies below 1 Hz
+can be set.</p>
 <p>Structure <code class="docutils literal notranslate"><span class="pre">pwm_chan_s</span></code> holds the representation of one PWM channel.</p>
 <dl class="c struct">
 <dt class="sig sig-object c" id="c.pwm_chan_s">
@@ -394,6 +397,52 @@ but the user will get the currently active faults. If NULL is passed as
 an argument, then all currently set faults are cleared and fetch is not
 performed.</p>
 <p>This may not be supported by all drivers.</p>
+<p>The following commands call optional lower half methods.  They return
+<code class="docutils literal notranslate"><span class="pre">-ENOSYS</span></code> if the lower half does not provide the method.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_SETOUTPUTIDLE">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_SETOUTPUTIDLE</span></span></span><a class="headerlink" href="#c.PWMIOC_SETOUTPUTIDLE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Force the output of a channel to its idle state (see <code class="docutils literal notranslate"><span class="pre">dcpol</span></code>) at once.
+The argument is the channel number.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_GETOUTPUTSTATE">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_GETOUTPUTSTATE</span></span></span><a class="headerlink" href="#c.PWMIOC_GETOUTPUTSTATE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Read the output level of a channel.  The argument is a pointer to
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pwm_output_state_s</span></code>: the caller sets <code class="docutils literal notranslate"><span class="pre">channel</span></code> and the driver
+fills <code class="docutils literal notranslate"><span class="pre">state</span></code> (<code class="docutils literal notranslate"><span class="pre">true</span></code> for high).</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_ENABLENOTIFY">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_ENABLENOTIFY</span></span></span><a class="headerlink" href="#c.PWMIOC_ENABLENOTIFY" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Enable the edge notification of a channel.  The argument is a pointer to
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pwm_notify_s</span></code> with the channel and the edge (<code class="docutils literal notranslate"><span class="pre">PWM_EDGE_RISING</span></code>,
+<code class="docutils literal notranslate"><span class="pre">PWM_EDGE_FALLING</span></code> or <code class="docutils literal notranslate"><span class="pre">PWM_EDGE_BOTH</span></code>).</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_DISABLENOTIFY">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_DISABLENOTIFY</span></span></span><a class="headerlink" href="#c.PWMIOC_DISABLENOTIFY" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Disable the edge notification of a channel.  The argument is the channel
+number.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_GETPOWERSTATE">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_GETPOWERSTATE</span></span></span><a class="headerlink" href="#c.PWMIOC_GETPOWERSTATE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Read the power state of the device.  The argument is a pointer to
+<code class="docutils literal notranslate"><span class="pre">uint8_t</span></code>.  <code class="docutils literal notranslate"><span class="pre">PWM_FULL_POWER</span></code> is the full power state; other values are
+driver specific.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PWMIOC_SETPOWERSTATE">
+<span class="sig-name descname"><span class="n"><span class="pre">PWMIOC_SETPOWERSTATE</span></span></span><a class="headerlink" href="#c.PWMIOC_SETPOWERSTATE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Change the power state of the device.  The argument is the new state.</p>
 <section id="application-example">
 <h3>Application Example<a class="headerlink" href="#application-example" title="Permalink to this heading"></a></h3>
 <p>An example application can be found in <code class="docutils literal notranslate"><span class="pre">nuttx-apps</span></code> repository under the

@@ -69,12 +69,16 @@ set through ``pwm_info_s`` structure.
     struct pwm_info_s
     {
       /* Frequency of the pulse train */
-      uint32_t frequency;
+      pwm_freq_t frequency;
       /* Per-channel output state */
       struct pwm_chan_s channels[CONFIG_PWM_NCHANNELS];
       /* User provided argument to be used in the lower half */
       FAR void *arg;
     };
+
+``pwm_freq_t`` is ``uint32_t`` (Hz).  With ``CONFIG_PWM_FREQUENCY_FIXED``
+it is ``ub32_t`` (Hz in 32.32 fixed point), so frequencies below 1 Hz
+can be set.
 
 Structure ``pwm_chan_s`` holds the representation of one PWM channel.
 
@@ -181,6 +185,41 @@ an argument, then all currently set faults are cleared and fetch is not
 performed.
 
 This may not be supported by all drivers.
+
+The following commands call optional lower half methods.  They return
+``-ENOSYS`` if the lower half does not provide the method.
+
+.. c:macro:: PWMIOC_SETOUTPUTIDLE
+
+Force the output of a channel to its idle state (see ``dcpol``) at once.
+The argument is the channel number.
+
+.. c:macro:: PWMIOC_GETOUTPUTSTATE
+
+Read the output level of a channel.  The argument is a pointer to
+``struct pwm_output_state_s``: the caller sets ``channel`` and the driver
+fills ``state`` (``true`` for high).
+
+.. c:macro:: PWMIOC_ENABLENOTIFY
+
+Enable the edge notification of a channel.  The argument is a pointer to
+``struct pwm_notify_s`` with the channel and the edge (``PWM_EDGE_RISING``,
+``PWM_EDGE_FALLING`` or ``PWM_EDGE_BOTH``).
+
+.. c:macro:: PWMIOC_DISABLENOTIFY
+
+Disable the edge notification of a channel.  The argument is the channel
+number.
+
+.. c:macro:: PWMIOC_GETPOWERSTATE
+
+Read the power state of the device.  The argument is a pointer to
+``uint8_t``.  ``PWM_FULL_POWER`` is the full power state; other values are
+driver specific.
+
+.. c:macro:: PWMIOC_SETPOWERSTATE
+
+Change the power state of the device.  The argument is the new state.
 
 Application Example
 ~~~~~~~~~~~~~~~~~~~

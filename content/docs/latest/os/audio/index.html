@@ -399,7 +399,10 @@ meaningful preference; it is normally guarded by
 <h2>Polling and Memory Mapping<a class="headerlink" href="#polling-and-memory-mapping" title="Permalink to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">poll()</span></code> reports <code class="docutils literal notranslate"><span class="pre">POLLIN</span> <span class="pre">|</span> <span class="pre">POLLOUT</span></code> while the shared ring has room for more
 data, and adds <code class="docutils literal notranslate"><span class="pre">POLLERR</span></code> when the application has fallen behind the hardware
-read pointer, that is, on an under-run.</p>
+read pointer, that is, on an under-run.  On a device without a shared ring
+there is no buffer level to report, so <code class="docutils literal notranslate"><span class="pre">poll()</span></code> instead reports
+<code class="docutils literal notranslate"><span class="pre">POLLIN</span> <span class="pre">|</span> <span class="pre">POLLOUT</span></code> while the queue registered with <code class="docutils literal notranslate"><span class="pre">AUDIO_MQ_KERNEL</span></code>
+holds a message, and never <code class="docutils literal notranslate"><span class="pre">POLLERR</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mmap()</span></code> is available when <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_FILEMAP</span></code> is enabled, and the
 requested length selects what gets mapped:</p>
 <ul class="simple">
@@ -447,6 +450,10 @@ asked first; if it does not answer, the format last set through
 <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_CONFIGURE</span></code> is returned instead.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETLATENCY</span></code>, <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETPOSITION</span></code>
 Query the current latency, respectively playback position.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_SETPARAMTER</span></code> / <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_GETPARAMTER</span></code>
+Set, respectively query, a driver-specific parameter given as a
+<code class="docutils literal notranslate"><span class="pre">key=value</span></code> string.  The upper half passes both to the lower half
+unchanged.</p></li>
 </ul>
 </section>
 <section id="buffer-management">
@@ -492,7 +499,15 @@ Move this application’s write position to the current ring tail, discarding
 the backlog.  Used to recover from an under-run.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_REGISTERMQ</span></code> / <code class="docutils literal notranslate"><span class="pre">AUDIOIOC_UNREGISTERMQ</span></code>
 Register, respectively remove, the message queue on which the driver reports
-<code class="docutils literal notranslate"><span class="pre">AUDIO_MSG_DEQUEUE</span></code>, <code class="docutils literal notranslate"><span class="pre">AUDIO_MSG_COMPLETE</span></code> and error events.</p></li>
+<code class="docutils literal notranslate"><span class="pre">AUDIO_MSG_DEQUEUE</span></code>, <code class="docutils literal notranslate"><span class="pre">AUDIO_MSG_COMPLETE</span></code> and error events.  The
+argument is the application’s <code class="docutils literal notranslate"><span class="pre">mqd_t</span></code>, or <code class="docutils literal notranslate"><span class="pre">AUDIO_MQ_KERNEL</span></code> to have the
+upper half create a queue for this open file.  That queue is removed on
+<code class="docutils literal notranslate"><span class="pre">AUDIOIOC_UNREGISTERMQ</span></code> or <code class="docutils literal notranslate"><span class="pre">close()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AUDIOIOC_RECEIVEMSG</span></code>
+Wait for the next message on the registered queue.  The argument is a
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">audio_msg_timeout_s</span></code>: <code class="docutils literal notranslate"><span class="pre">ticks</span></code> is the timeout in clock ticks, or
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> to wait forever, and <code class="docutils literal notranslate"><span class="pre">msg</span></code> receives the message.  Fails with
+<code class="docutils literal notranslate"><span class="pre">-EINVAL</span></code> if no queue is registered.</p></li>
 </ul>
 </section>
 <section id="debugging">
