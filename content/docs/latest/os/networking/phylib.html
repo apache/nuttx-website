@@ -367,6 +367,8 @@ CONFIG_NET_PHYLIB_MAX_DRIVERS=8<span class="w">        </span><span class="c1">#
 CONFIG_NET_PHYLIB_MAX_PHYS=8<span class="w">           </span><span class="c1"># Maximum number of PHY devices</span>
 </pre></div>
 </div>
+<p>See <a class="reference internal" href="../drivers/special/net/phy.html"><span class="doc">PHY Device Drivers</span></a> for
+device-specific configuration and registration.</p>
 </section>
 <section id="core-data-structures">
 <h2>5. Core Data Structures<a class="headerlink" href="#core-data-structures" title="Permalink to this heading"></a></h2>
@@ -413,9 +415,8 @@ GETH) avoids the indirect transactions. Controlled by
 <span class="cm">   * by logic level rather than a one-shot pulse. value != 0 asserts</span>
 <span class="cm">   * (into reset); value == 0 deasserts (release). The lower-half handles</span>
 <span class="cm">   * pin polarity (active-low RESET_N handled internally) and the</span>
-<span class="cm">   * datasheet-specified assert/deassert settle delays; the upper-half</span>
-<span class="cm">   * mdio_reset() handles idempotency (skips when already at the target</span>
-<span class="cm">   * state).</span>
+<span class="cm">   * datasheet-specified assert/deassert settle delays, and any</span>
+<span class="cm">   * idempotency (a single bus may host several PHY addresses).</span>
 <span class="cm">   */</span>
 <span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">reset</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdio_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">phyaddr</span><span class="p">,</span>
 <span class="w">               </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
@@ -1386,8 +1387,10 @@ lock (the framework already holds it; doing so deadlocks).</p>
 
 <span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
 
-<span class="w">  </span><span class="cm">/* 1. Register the vendor PHY driver (idempotent) */</span>
-<span class="w">  </span><span class="n">phy_realtek_register</span><span class="p">();</span>
+<span class="w">  </span><span class="cm">/* 1. Register the vendor PHY driver once at boot (not idempotent:</span>
+<span class="cm">   * each call consumes a driver-table slot, so do not call repeatedly).</span>
+<span class="cm">   */</span>
+<span class="w">  </span><span class="n">rtl8221b_register</span><span class="p">();</span>
 
 <span class="w">  </span><span class="cm">/* 2. Fill the lower-half and register with the upper-half, get the handle */</span>
 <span class="w">  </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">mdio_lower</span><span class="p">.</span><span class="n">ops</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">g_aurix_mdio_ops</span><span class="p">;</span>

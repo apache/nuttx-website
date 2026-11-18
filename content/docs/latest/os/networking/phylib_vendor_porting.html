@@ -426,6 +426,20 @@ nuttx/drivers/net/Make.defs
 <p>A successful <code class="docutils literal notranslate"><span class="pre">phy_connect(phydev,</span> <span class="pre">&amp;priv-&gt;dev)</span></code> also sets
 <code class="docutils literal notranslate"><span class="pre">priv-&gt;dev.phydev</span></code>, so the netdev upper-half dispatches standard PHY
 ioctls to <code class="docutils literal notranslate"><span class="pre">phy_ioctl()</span></code>.</p>
+<p>For switch ports, or MACs that must apply their link mode before reporting
+carrier, <code class="docutils literal notranslate"><span class="pre">phy_connect(phydev,</span> <span class="pre">NULL)</span></code> creates a connection without automatic
+carrier notification or netdev ioctl dispatch. The MAC consumes
+<code class="docutils literal notranslate"><span class="pre">state/link/speed/duplex</span></code> under <code class="docutils literal notranslate"><span class="pre">phydev-&gt;lock</span></code>, applies its hardware
+configuration, and reports carrier itself. It must forward PHY ioctls
+explicitly and release the device with <code class="docutils literal notranslate"><span class="pre">phy_disconnect()</span></code>. This also
+allows several independently negotiated switch PHYs to contribute to one
+network interface’s carrier without overwriting <code class="docutils literal notranslate"><span class="pre">lower-&gt;phydev</span></code>.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">phydev-&gt;interface</span></code> before connecting. For RMII, select
+<code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_RMII</span></code> when the reference clock is supplied to the PHY,
+or <code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_RMII_PHY_CLK_OUT</span></code> when the PHY supplies the clock.
+MAC and PHY drivers must handle both modes as RMII signaling, with opposite
+reference-clock directions. The PHY driver owns <code class="docutils literal notranslate"><span class="pre">phydev-&gt;priv</span></code>; MAC and
+board code must not overwrite or free it.</p>
 </section>
 <section id="implementing-the-mdio-lower-half">
 <h2>5. Implementing the MDIO Lower-half<a class="headerlink" href="#implementing-the-mdio-lower-half" title="Permalink to this heading"></a></h2>
@@ -640,6 +654,13 @@ restart; otherwise set a fixed mode</p></td>
 </tr>
 </tbody>
 </table>
+<p>Clause 22 drivers can reuse <code class="docutils literal notranslate"><span class="pre">genphy_c22_config_init()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">genphy_c22_config_aneg()</span></code>, <code class="docutils literal notranslate"><span class="pre">genphy_c22_read_status()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">genphy_c22_config_power()</span></code> and <code class="docutils literal notranslate"><span class="pre">genphy_c22_soft_reset()</span></code> from the
+internal <code class="docutils literal notranslate"><span class="pre">drivers/net/phy/phy.h</span></code> interface. Callback tables can reference
+these shared operations directly; forwarding wrappers are unnecessary.
+Implementation-only helpers remain static. Clause 45 operations use the
+separate <code class="docutils literal notranslate"><span class="pre">genphy_c45_*</span></code> naming.</p>
 </section>
 <section id="capability-dependent-callbacks">
 <h3>6.4 Capability-dependent Callbacks<a class="headerlink" href="#capability-dependent-callbacks" title="Permalink to this heading"></a></h3>
