@@ -42,6 +42,9 @@ Hardware-specific drivers embed a ``struct ptp_lowerhalf_s`` and point its
    {
      FAR const struct ptp_ops_s *ops;  /* Lower half driver operations */
      FAR void *upper;                  /* The upper handle */
+     uint8_t n_ext_ts;                 /* Number of external time stamp inputs */
+     uint8_t n_per_out;                /* Number of periodic outputs */
+     bool    pps;                      /* Whether PTP_ENABLE_PPS is supported */
    };
 
    struct ptp_ops_s
@@ -60,6 +63,8 @@ Hardware-specific drivers embed a ``struct ptp_lowerhalf_s`` and point its
                         FAR struct timespec *res);
      CODE int (*control)(FAR struct ptp_lowerhalf_s *lower,
                          int cmd, unsigned long arg);
+     CODE int (*enable)(FAR struct ptp_lowerhalf_s *lower,
+                        FAR struct ptp_clock_request *rq, bool on);
    };
 
 The units are:
@@ -81,6 +86,21 @@ half from which operations exist and from ``max_adj``, so there is no
 operation to report them. Ioctl commands that the upper half does not know
 are passed to ``control``.
 
+``enable`` switches an ancillary feature on or off: an external time stamp
+input (``PTP_CLK_REQ_EXTTS``), a periodic output (``PTP_CLK_REQ_PEROUT``) or
+the PPS event (``PTP_CLK_REQ_PPS``). The number of inputs and outputs is
+declared in ``n_ext_ts`` and ``n_per_out`` and reported in the capabilities.
+A driver that time stamps an edge on an enabled input reports it with:
+
+.. code-block:: c
+
+   void ptp_clock_event(FAR struct ptp_lowerhalf_s *lower,
+                        FAR const struct ptp_clock_event *event);
+
+The upper half queues the event and the application reads it from the
+device. ``ptp_clock_event()`` can be called from a normal interrupt handler,
+but not from a zero latency (``CONFIG_ARCH_HIPRI_INTERRUPT``) handler.
+
 Configuration Options
 =====================
 
@@ -98,6 +118,17 @@ The PTP clock framework can be enabled with the following Kconfig options:
 ``CONFIG_CLOCK_ADJTIME``
   Enable the ``clock_adjtime()`` system call, required for frequency and
   phase adjustments of PTP clocks.
+
+``CONFIG_PTP_CLOCK_EXTTS_QUEUE_SIZE``
+  Number of external time stamp events kept until the application reads them
+  (default 16). When the queue is full the oldest event is dropped.
+
+``CONFIG_PTP_CLOCK_NPOLLWAITERS``
+  Number of threads that can ``poll()`` one device at the same time.
+
+``CONFIG_PTP_PPS``
+  PPS disciplined software PTP clock, see
+  `PPS Disciplined Software Clock`_ below.
 
 Device Interface
 ================
@@ -184,6 +215,35 @@ The following ioctl commands are supported:
 ``PTP_CLOCK_GETSTATS`` and ``PTP_CLOCK_SETSTATS``
   Read or set the drift statistics kept by the upper half
   (``struct ptp_statistics_s``).
+
+``PTP_EXTTS_REQUEST``
+  Enable or disable an external time stamp input. Every edge seen on an
+  enabled input is time stamped with the PTP clock and returned by
+  ``read()`` as a ``struct ptp_extts_event``. ``read()`` blocks until an
+  event is available (unless ``O_NONBLOCK`` is set) and ``poll()`` reports
+  ``POLLIN`` when events are queued. Enabling an input discards the events
+  that were queued before.
+
+  .. code-block:: c
+
+     struct ptp_extts_request req;
+     struct ptp_extts_event ev;
+
+     memset(&req, 0, sizeof(req));
+     req.index = 0;
+     req.flags = PTP_ENABLE_FEATURE | PTP_RISING_EDGE;
+     ioctl(fd, PTP_EXTTS_REQUEST, &req);
+
+     while (read(fd, &ev, sizeof(ev)) == sizeof(ev))
+       {
+         printf("edge on %u at %lld.%09u\n", ev.index,
+                (long long)ev.t.sec, ev.t.nsec);
+       }
+
+``PTP_PEROUT_REQUEST`` and ``PTP_ENABLE_PPS``
+  Configure a periodic output (``struct ptp_perout_request``, a zero period
+  disables it) or enable the PPS event. They are passed to the ``enable``
+  operation of the lower half.
 
 The ``PTP_CLOCK_GETCAPS``, ``PTP_SYS_OFFSET``, ``PTP_SYS_OFFSET_PRECISE`` and
 ``PTP_SYS_OFFSET_EXTENDED`` commands also exist with a ``2`` suffix
@@ -415,6 +475,65 @@ Time Offset Adjustment
      close(fd);
      return 0;
    }
+
+PPS Disciplined Software Clock
+==============================
+
+``CONFIG_PTP_PPS`` (``drivers/timers/ptp_pps.c``) builds a PTP clock on top
+of a capture lower half (``struct cap_lowerhalf_s``, see
+:doc:`/os/drivers/character/timers/capture`) whose free running 32-bit
+counter latches the edges of its input in hardware, typically a timer input
+capture channel. Its main use is to synchronize boards to GNSS time: the PPS
+output of a GNSS receiver goes to the capture input, the ``gnsspps``
+application reads the EXTTS events and disciplines the clock. See
+:doc:`/applications/system/gnsspps/index`.
+
+The time is a linear function of the counter,
+``t = base_ns + ((cnt - base_cnt) * mult + base_frac) >> shift``, where
+``shift`` is chosen so that ``mult`` stays below 2\ :sup:`31`. This gives a
+frequency resolution better than 1 ppb for any counter frequency, an exact
+conversion (the remainder is kept in ``base_frac``) and phase continuous
+frequency changes. A watchdog re-bases the clock every 2\ :sup:`30` counter
+periods so the conversion never overflows, even without PPS.
+
+The board registers the clock on a capture lower half:
+
+.. code-block:: c
+
+   int ptp_pps_register(FAR struct cap_lowerhalf_s *lower, uint32_t freq,
+                        int devno);
+
+``freq`` is the frequency of the counter of the lower half. Besides
+``start`` and ``stop``, the lower half must implement these operations of
+``struct cap_ops_s`` (``bind`` and ``unbind`` need
+``CONFIG_CAPTURE_NOTIFY``):
+
+``getcount``
+  Read the free running counter. It must count up and wrap around from
+  ``0xffffffff`` to 0. ``clock_gettime()`` converts it to the time of the
+  clock.
+``bind`` / ``unbind``
+  The EXTTS input 0 of the clock is the capture channel. Enabling it with
+  ``PTP_EXTTS_REQUEST`` binds a notification callback for the requested
+  edges.
+``getcapture``
+  Called from the notification callback, it returns the counter value
+  latched by the hardware on the edge, which is converted to the time of the
+  clock and queued as a ``struct ptp_extts_event``. Because the counter is
+  latched by hardware, the interrupt latency does not affect the time stamp;
+  the callback only has to run within 2\ :sup:`31` counter periods.
+
+Existing lower halves:
+
+- The STM32 timer capture (``CONFIG_STM32_TIMx_CAP``,
+  ``arch/arm/src/common/stm32/stm32_capture_m3m4_v1_lowerhalf.c``) with a
+  32-bit timer, TIM2 or TIM5, at the full timer clock
+  (``CONFIG_STM32_TIMx_CLOCK``). See ``stm32f4discovery:gnsspps``.
+- The fake capture driver (``CONFIG_FAKE_CAPTURE``,
+  ``drivers/timers/fake_capture.c``), whose simulated counter has a
+  configurable frequency error and whose simulated PPS has a configurable
+  jitter. ``CONFIG_PTP_PPS_FAKE`` registers a clock on it, to test the
+  complete chain on the simulator.
 
 Implementing a Lower-Half Driver
 =================================

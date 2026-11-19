@@ -371,7 +371,7 @@ depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_C
 <p>The <code class="docutils literal notranslate"><span class="pre">CONFIG_FAKE_CAPTURE</span></code> option enables a software-based fake capture
 driver that simulates a 10Hz square wave with 50% duty cycle. This is
 useful for development and testing without requiring actual hardware.
-It depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_CAPTURE</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_CAPTURE_NSIGNALS</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>.</p>
+It depends on <code class="docutils literal notranslate"><span class="pre">CONFIG_CAPTURE_NOTIFY</span></code>.</p>
 <p>Without it, capture is still possible manually by including the appropriate
 header (e.g., <code class="docutils literal notranslate"><span class="pre">arch/arm/src/stm32h7/stm32_capture.h</span></code>) and performing a
 manual initialization.</p>
@@ -558,15 +558,41 @@ which will halt or crash the system.</p></li>
 frequency counters</p></li>
 </ul>
 </section>
+<section id="edge-time-stamps">
+<h4>Edge Time Stamps<a class="headerlink" href="#edge-time-stamps" title="Permalink to this heading"></a></h4>
+<p>A lower half whose timer counter runs freely can also implement two optional
+operations:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">getcount()</span></code> reads the current value of the counter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">getcapture()</span></code> returns the counter value latched by the hardware on the
+last notified edge. It is called from the notification callback set by
+<code class="docutils literal notranslate"><span class="pre">bind()</span></code>, so the time of the edge does not depend on the interrupt
+latency.</p></li>
+</ul>
+<p>They are used by kernel drivers built on a capture lower half, such as the
+PPS disciplined PTP clock (<code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_PPS</span></code>, see
+<a class="reference internal" href="../../special/ptp.html"><span class="doc">PTP Clock Driver Framework</span></a>). The STM32 timer capture
+(<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/stm32/stm32_capture_m3m4_v1_lowerhalf.c</span></code>) and the fake
+capture driver implement them.</p>
+</section>
 <section id="fake-capture-driver">
 <h4>Fake Capture Driver<a class="headerlink" href="#fake-capture-driver" title="Permalink to this heading"></a></h4>
 <p>The fake capture driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_FAKE_CAPTURE</span></code>) provides:</p>
 <ul class="simple">
 <li><p>Software simulation of capture events using watchdog timers</p></li>
-<li><p>Fixed 10Hz frequency with 50% duty cycle</p></li>
+<li><p>10Hz frequency with 50% duty cycle</p></li>
 <li><p>Edge toggles every 50ms (rising and falling)</p></li>
 <li><p>Supports all standard capture operations including notifications</p></li>
+<li><p>Edge time stamps (<code class="docutils literal notranslate"><span class="pre">getcount()</span></code> and <code class="docutils literal notranslate"><span class="pre">getcapture()</span></code>) from a simulated
+free running counter of <code class="docutils literal notranslate"><span class="pre">CONFIG_FAKE_CAPTURE_COUNTER_FREQ</span></code> Hz, with a
+frequency error (<code class="docutils literal notranslate"><span class="pre">CONFIG_FAKE_CAPTURE_ERROR_PPB</span></code>) and a jitter
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_FAKE_CAPTURE_JITTER_NS</span></code>). The edges happen at fixed times of
+<code class="docutils literal notranslate"><span class="pre">perf_gettime()</span></code> and the counter is latched at the edge, so the latency
+of the watchdog does not affect the time stamps.</p></li>
 <li><p>Available at <code class="docutils literal notranslate"><span class="pre">/dev/fake_capture0</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/fake_capture1</span></code>, etc.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fake_capture_create()</span></code> creates an instance with another frequency and
+duty cycle without registering it, for a kernel driver such as the PPS
+disciplined PTP clock (<code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_PPS_FAKE</span></code>)</p></li>
 <li><p>Useful for development, testing, and CI/CD without hardware</p></li>
 <li><p>Platform-independent implementation</p></li>
 <li><p>Automatically initialized at boot (2 channels by default)</p></li>
@@ -574,7 +600,8 @@ frequency counters</p></li>
 <p>Limitations:</p>
 <ul class="simple">
 <li><p>Fixed timing parameters (not configurable at runtime)</p></li>
-<li><p>Software timing accuracy (not hardware-precise)</p></li>
+<li><p>Software timing accuracy (not hardware-precise); the time stamps are as good
+as <code class="docutils literal notranslate"><span class="pre">perf_gettime()</span></code></p></li>
 <li><p>Suitable for functional testing, not timing precision validation</p></li>
 </ul>
 </section>

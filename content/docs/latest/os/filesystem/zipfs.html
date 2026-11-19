@@ -227,6 +227,132 @@ this<span class="w"> </span>is<span class="w"> </span>zipfs<span class="w"> </sp
 </pre></div>
 </div>
 </section>
+<section id="write-mode-wzipfs">
+<h2>Write Mode (wzipfs)<a class="headerlink" href="#write-mode-wzipfs" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">wzipfs</span></code> mount type provides a write-only streaming ZIP filesystem
+backed by a regular file, FIFO, or socket.  It is compiled independently
+of the read-only <code class="docutils literal notranslate"><span class="pre">zipfs</span></code> driver via <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_ZIPFS_WRITE</span></code>.</p>
+<section id="mount">
+<h3>Mount<a class="headerlink" href="#mount" title="Permalink to this heading"></a></h3>
+<p>Syntax:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mount -t wzipfs -o src=&lt;backing&gt;[,method=store|deflate] &lt;mountpoint&gt;
+mount -t wzipfs -o fd=&lt;N&gt;[,method=store|deflate]        &lt;mountpoint&gt;
+</pre></div>
+</div>
+<p>Exactly one of <code class="docutils literal notranslate"><span class="pre">src=</span></code> or <code class="docutils literal notranslate"><span class="pre">fd=</span></code> must be supplied.</p>
+<p>Behavior:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">src=&lt;backing&gt;</span></code> – wzipfs opens the path.  If <code class="docutils literal notranslate"><span class="pre">&lt;backing&gt;</span></code> does not
+exist or has zero size, a new ZIP archive is streamed into it.  If it
+is a regular file with <code class="docutils literal notranslate"><span class="pre">st_size</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, mount fails with <code class="docutils literal notranslate"><span class="pre">-EEXIST</span></code>;
+remove or truncate the backing file before mounting to start a fresh
+archive.  FIFO and socket targets are always accepted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fd=&lt;N&gt;</span></code> – wzipfs duplicates the caller-provided writable file
+descriptor into its own backing.  The caller retains the original fd
+and MUST keep it open until <code class="docutils literal notranslate"><span class="pre">umount(2)</span></code> returns, so that the final
+close on that fd (after umount) releases any shared inode state
+(e.g. pipe writer count, socket reference).  No stat/size check is
+performed: callers are responsible for their own backing semantics
+(pipe, socket, regular file).  Typical use cases are streaming to an
+anonymous <code class="docutils literal notranslate"><span class="pre">pipe(2)</span></code>, to a connected socket, or to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>.</p></li>
+</ul>
+</section>
+<section id="compression">
+<h3>Compression<a class="headerlink" href="#compression" title="Permalink to this heading"></a></h3>
+<p>Selected at mount time via <code class="docutils literal notranslate"><span class="pre">method=</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">method=store</span></code> – no compression (default; always available).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method=deflate</span></code> – DEFLATE compression; requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_ZIPFS_WRITE_DEFLATE=y</span></code>.  Without that config,
+<code class="docutils literal notranslate"><span class="pre">method=deflate</span></code> returns <code class="docutils literal notranslate"><span class="pre">-ENOTSUP</span></code>.</p></li>
+</ul>
+<p>The method applies to every entry written during the mount.</p>
+</section>
+<section id="supported-operations">
+<h3>Supported Operations<a class="headerlink" href="#supported-operations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">open</span></code> – create a new entry.  Only one entry may be open at a time;
+a second <code class="docutils literal notranslate"><span class="pre">open</span></code> blocks until the first <code class="docutils literal notranslate"><span class="pre">close</span></code> returns.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write</span></code> – stream data into the current entry.  Entry header is
+emitted lazily on the first write.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">close</span></code> – finalise the current entry.  Empty files become a
+zero-byte STORE entry.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span></code> – create a directory entry (trailing <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">AE_IFDIR</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">umount</span></code> – flush the central directory and close the backing.</p></li>
+</ul>
+</section>
+<section id="unsupported-operations">
+<h3>Unsupported Operations<a class="headerlink" href="#unsupported-operations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code>, <code class="docutils literal notranslate"><span class="pre">readdir</span></code>, <code class="docutils literal notranslate"><span class="pre">opendir</span></code>, <code class="docutils literal notranslate"><span class="pre">stat</span></code> – wzipfs is write-only.
+To list or read entries, unmount and mount the same backing as
+read-only <code class="docutils literal notranslate"><span class="pre">zipfs</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unlink</span></code>, <code class="docutils literal notranslate"><span class="pre">rmdir</span></code>, <code class="docutils literal notranslate"><span class="pre">rename</span></code>, <code class="docutils literal notranslate"><span class="pre">truncate</span></code> – ZIP entries are
+immutable once committed.  Modifying a committed entry requires
+rewriting the whole archive (every subsequent LFH+data shifted, plus
+CD rebuilt); on embedded flash this cost is unacceptable and real-world
+use cases are rare.  Applications that need this should decompress,
+modify, and rebuild from scratch.</p></li>
+<li><p>Creating encrypted entries – libarchive supports WinZip AES-128/256
+but requires a secure passphrase delivery mechanism (NuttX kernel
+lacks a keyring subsystem; passing passphrases via mount options is
+an anti-pattern).  Applications needing encryption should encrypt
+payload bytes before writing.</p></li>
+</ul>
+</section>
+<section id="ram-budget">
+<h3>RAM Budget<a class="headerlink" href="#ram-budget" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>~64 KB libarchive writer workspace</p></li>
+<li><p>~5 KB wzipfs mount structure</p></li>
+<li><p>+~260 KB zlib workspace if <code class="docutils literal notranslate"><span class="pre">method=deflate</span></code> (only when selected)</p></li>
+</ul>
+<p>Devices with less than 128 KB heap cannot use wzipfs with DEFLATE.</p>
+</section>
+<section id="known-limitations">
+<h3>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>No crash safety</strong>: power loss during a write session leaves an
+incomplete ZIP.  The central directory is written only on clean
+<code class="docutils literal notranslate"><span class="pre">umount</span></code>.</p></li>
+<li><p><strong>Single writer</strong>: one file descriptor at a time.  A second <code class="docutils literal notranslate"><span class="pre">open</span></code>
+blocks until the first closes.</p></li>
+</ul>
+</section>
+<section id="usage-examples">
+<h3>Usage Examples<a class="headerlink" href="#usage-examples" title="Permalink to this heading"></a></h3>
+<p>Write to a regular file:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>: &gt; /data/out.zip
+mount -t wzipfs -o src=/data/out.zip /mnt/zip
+echo hello &gt; /mnt/zip/hello.txt
+umount /mnt/zip
+</pre></div>
+</div>
+<p>Stream to a FIFO (pipe to another process):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mkfifo /dev/zipstream
+mount -t wzipfs -o src=/dev/zipstream /mnt/zip
+echo data &gt; /mnt/zip/data.txt
+umount /mnt/zip
+</pre></div>
+</div>
+<p>Stream to a caller-provided fd (anonymous pipe, socket, stdout):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>int pipefd[2];
+char opts[32];
+
+pipe(pipefd);
+snprintf(opts, sizeof(opts), "fd=%d", pipefd[1]);
+mount(NULL, "/mnt/zip", "wzipfs", 0, opts);
+/* write entries through /mnt/zip/... while another task drains pipefd[0] */
+umount("/mnt/zip");         /* closes wzipfs's own dup of the fd */
+close(pipefd[1]);           /* final close: delivers EOF to pipefd[0] reader */
+</pre></div>
+</div>
+<p>DEFLATE compression:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mount -t wzipfs -o src=/data/out.zip,method=deflate /mnt/zip
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 

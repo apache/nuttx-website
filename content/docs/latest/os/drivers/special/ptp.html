@@ -239,6 +239,9 @@ to other NuttX device drivers.</p>
 <span class="p">{</span>
 <span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_ops_s</span><span class="w"> </span><span class="o">*</span><span class="n">ops</span><span class="p">;</span><span class="w">  </span><span class="cm">/* Lower half driver operations */</span>
 <span class="w">  </span><span class="n">FAR</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">upper</span><span class="p">;</span><span class="w">                  </span><span class="cm">/* The upper handle */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">n_ext_ts</span><span class="p">;</span><span class="w">                 </span><span class="cm">/* Number of external time stamp inputs */</span>
+<span class="w">  </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">n_per_out</span><span class="p">;</span><span class="w">                </span><span class="cm">/* Number of periodic outputs */</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w">    </span><span class="n">pps</span><span class="p">;</span><span class="w">                      </span><span class="cm">/* Whether PTP_ENABLE_PPS is supported */</span>
 <span class="p">};</span>
 
 <span class="k">struct</span><span class="w"> </span><span class="nc">ptp_ops_s</span>
@@ -257,6 +260,8 @@ to other NuttX device drivers.</p>
 <span class="w">                     </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">res</span><span class="p">);</span>
 <span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">control</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
 <span class="w">                      </span><span class="kt">int</span><span class="w"> </span><span class="n">cmd</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">arg</span><span class="p">);</span>
+<span class="w">  </span><span class="n">CODE</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">enable</span><span class="p">)(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_clock_request</span><span class="w"> </span><span class="o">*</span><span class="n">rq</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">on</span><span class="p">);</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -278,6 +283,18 @@ fail the same way, and <code class="docutils literal notranslate"><span class="p
 half from which operations exist and from <code class="docutils literal notranslate"><span class="pre">max_adj</span></code>, so there is no
 operation to report them. Ioctl commands that the upper half does not know
 are passed to <code class="docutils literal notranslate"><span class="pre">control</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">enable</span></code> switches an ancillary feature on or off: an external time stamp
+input (<code class="docutils literal notranslate"><span class="pre">PTP_CLK_REQ_EXTTS</span></code>), a periodic output (<code class="docutils literal notranslate"><span class="pre">PTP_CLK_REQ_PEROUT</span></code>) or
+the PPS event (<code class="docutils literal notranslate"><span class="pre">PTP_CLK_REQ_PPS</span></code>). The number of inputs and outputs is
+declared in <code class="docutils literal notranslate"><span class="pre">n_ext_ts</span></code> and <code class="docutils literal notranslate"><span class="pre">n_per_out</span></code> and reported in the capabilities.
+A driver that time stamps an edge on an enabled input reports it with:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">ptp_clock_event</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">FAR</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_clock_event</span><span class="w"> </span><span class="o">*</span><span class="n">event</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The upper half queues the event and the application reads it from the
+device. <code class="docutils literal notranslate"><span class="pre">ptp_clock_event()</span></code> can be called from a normal interrupt handler,
+but not from a zero latency (<code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_HIPRI_INTERRUPT</span></code>) handler.</p>
 </section>
 </section>
 <section id="configuration-options">
@@ -293,6 +310,14 @@ using <code class="docutils literal notranslate"><span class="pre">CLOCK_REALTIM
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">CONFIG_CLOCK_ADJTIME</span></code></dt><dd><p>Enable the <code class="docutils literal notranslate"><span class="pre">clock_adjtime()</span></code> system call, required for frequency and
 phase adjustments of PTP clocks.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_CLOCK_EXTTS_QUEUE_SIZE</span></code></dt><dd><p>Number of external time stamp events kept until the application reads them
+(default 16). When the queue is full the oldest event is dropped.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_CLOCK_NPOLLWAITERS</span></code></dt><dd><p>Number of threads that can <code class="docutils literal notranslate"><span class="pre">poll()</span></code> one device at the same time.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_PPS</span></code></dt><dd><p>PPS disciplined software PTP clock, see
+<a class="reference internal" href="#pps-disciplined-software-clock">PPS Disciplined Software Clock</a> below.</p>
 </dd>
 </dl>
 </section>
@@ -362,6 +387,32 @@ and after reading the device time (<code class="docutils literal notranslate"><s
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETSTATS</span></code> and <code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_SETSTATS</span></code></dt><dd><p>Read or set the drift statistics kept by the upper half
 (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_statistics_s</span></code>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">PTP_EXTTS_REQUEST</span></code></dt><dd><p>Enable or disable an external time stamp input. Every edge seen on an
+enabled input is time stamped with the PTP clock and returned by
+<code class="docutils literal notranslate"><span class="pre">read()</span></code> as a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_extts_event</span></code>. <code class="docutils literal notranslate"><span class="pre">read()</span></code> blocks until an
+event is available (unless <code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code> is set) and <code class="docutils literal notranslate"><span class="pre">poll()</span></code> reports
+<code class="docutils literal notranslate"><span class="pre">POLLIN</span></code> when events are queued. Enabling an input discards the events
+that were queued before.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ptp_extts_request</span><span class="w"> </span><span class="n">req</span><span class="p">;</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">ptp_extts_event</span><span class="w"> </span><span class="n">ev</span><span class="p">;</span>
+
+<span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">req</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">req</span><span class="p">));</span>
+<span class="n">req</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="n">req</span><span class="p">.</span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PTP_ENABLE_FEATURE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">PTP_RISING_EDGE</span><span class="p">;</span>
+<span class="n">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">PTP_EXTTS_REQUEST</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">req</span><span class="p">);</span>
+
+<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ev</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">ev</span><span class="p">))</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">ev</span><span class="p">))</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"edge on %u at %lld.%09u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ev</span><span class="p">.</span><span class="n">index</span><span class="p">,</span>
+<span class="w">           </span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">ev</span><span class="p">.</span><span class="n">t</span><span class="p">.</span><span class="n">sec</span><span class="p">,</span><span class="w"> </span><span class="n">ev</span><span class="p">.</span><span class="n">t</span><span class="p">.</span><span class="n">nsec</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">PTP_PEROUT_REQUEST</span></code> and <code class="docutils literal notranslate"><span class="pre">PTP_ENABLE_PPS</span></code></dt><dd><p>Configure a periodic output (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_perout_request</span></code>, a zero period
+disables it) or enable the PPS event. They are passed to the <code class="docutils literal notranslate"><span class="pre">enable</span></code>
+operation of the lower half.</p>
 </dd>
 </dl>
 <p>The <code class="docutils literal notranslate"><span class="pre">PTP_CLOCK_GETCAPS</span></code>, <code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET</span></code>, <code class="docutils literal notranslate"><span class="pre">PTP_SYS_OFFSET_PRECISE</span></code> and
@@ -586,6 +637,61 @@ is enabled. It creates a <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 </section>
+</section>
+<section id="pps-disciplined-software-clock">
+<h2>PPS Disciplined Software Clock<a class="headerlink" href="#pps-disciplined-software-clock" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_PPS</span></code> (<code class="docutils literal notranslate"><span class="pre">drivers/timers/ptp_pps.c</span></code>) builds a PTP clock on top
+of a capture lower half (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">cap_lowerhalf_s</span></code>, see
+<a class="reference internal" href="../character/timers/capture.html"><span class="doc">Capture</span></a>) whose free running 32-bit
+counter latches the edges of its input in hardware, typically a timer input
+capture channel. Its main use is to synchronize boards to GNSS time: the PPS
+output of a GNSS receiver goes to the capture input, the <code class="docutils literal notranslate"><span class="pre">gnsspps</span></code>
+application reads the EXTTS events and disciplines the clock. See
+<a class="reference internal" href="../../../applications/system/gnsspps/index.html"><span class="doc">gnsspps GNSS PPS clock discipline</span></a>.</p>
+<p>The time is a linear function of the counter,
+<code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">base_ns</span> <span class="pre">+</span> <span class="pre">((cnt</span> <span class="pre">-</span> <span class="pre">base_cnt)</span> <span class="pre">*</span> <span class="pre">mult</span> <span class="pre">+</span> <span class="pre">base_frac)</span> <span class="pre">&gt;&gt;</span> <span class="pre">shift</span></code>, where
+<code class="docutils literal notranslate"><span class="pre">shift</span></code> is chosen so that <code class="docutils literal notranslate"><span class="pre">mult</span></code> stays below 2<sup>31</sup>. This gives a
+frequency resolution better than 1 ppb for any counter frequency, an exact
+conversion (the remainder is kept in <code class="docutils literal notranslate"><span class="pre">base_frac</span></code>) and phase continuous
+frequency changes. A watchdog re-bases the clock every 2<sup>30</sup> counter
+periods so the conversion never overflows, even without PPS.</p>
+<p>The board registers the clock on a capture lower half:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">ptp_pps_register</span><span class="p">(</span><span class="n">FAR</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">cap_lowerhalf_s</span><span class="w"> </span><span class="o">*</span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">freq</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">int</span><span class="w"> </span><span class="n">devno</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">freq</span></code> is the frequency of the counter of the lower half. Besides
+<code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code>, the lower half must implement these operations of
+<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">cap_ops_s</span></code> (<code class="docutils literal notranslate"><span class="pre">bind</span></code> and <code class="docutils literal notranslate"><span class="pre">unbind</span></code> need
+<code class="docutils literal notranslate"><span class="pre">CONFIG_CAPTURE_NOTIFY</span></code>):</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">getcount</span></code></dt><dd><p>Read the free running counter. It must count up and wrap around from
+<code class="docutils literal notranslate"><span class="pre">0xffffffff</span></code> to 0. <code class="docutils literal notranslate"><span class="pre">clock_gettime()</span></code> converts it to the time of the
+clock.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">bind</span></code> / <code class="docutils literal notranslate"><span class="pre">unbind</span></code></dt><dd><p>The EXTTS input 0 of the clock is the capture channel. Enabling it with
+<code class="docutils literal notranslate"><span class="pre">PTP_EXTTS_REQUEST</span></code> binds a notification callback for the requested
+edges.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">getcapture</span></code></dt><dd><p>Called from the notification callback, it returns the counter value
+latched by the hardware on the edge, which is converted to the time of the
+clock and queued as a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">ptp_extts_event</span></code>. Because the counter is
+latched by hardware, the interrupt latency does not affect the time stamp;
+the callback only has to run within 2<sup>31</sup> counter periods.</p>
+</dd>
+</dl>
+<p>Existing lower halves:</p>
+<ul class="simple">
+<li><p>The STM32 timer capture (<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_TIMx_CAP</span></code>,
+<code class="docutils literal notranslate"><span class="pre">arch/arm/src/common/stm32/stm32_capture_m3m4_v1_lowerhalf.c</span></code>) with a
+32-bit timer, TIM2 or TIM5, at the full timer clock
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_TIMx_CLOCK</span></code>). See <code class="docutils literal notranslate"><span class="pre">stm32f4discovery:gnsspps</span></code>.</p></li>
+<li><p>The fake capture driver (<code class="docutils literal notranslate"><span class="pre">CONFIG_FAKE_CAPTURE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">drivers/timers/fake_capture.c</span></code>), whose simulated counter has a
+configurable frequency error and whose simulated PPS has a configurable
+jitter. <code class="docutils literal notranslate"><span class="pre">CONFIG_PTP_PPS_FAKE</span></code> registers a clock on it, to test the
+complete chain on the simulator.</p></li>
+</ul>
 </section>
 <section id="implementing-a-lower-half-driver">
 <h2>Implementing a Lower-Half Driver<a class="headerlink" href="#implementing-a-lower-half-driver" title="Permalink to this heading"></a></h2>

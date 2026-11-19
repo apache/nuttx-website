@@ -162,7 +162,7 @@ depends on ``CONFIG_CAPTURE``.
 The ``CONFIG_FAKE_CAPTURE`` option enables a software-based fake capture
 driver that simulates a 10Hz square wave with 50% duty cycle. This is
 useful for development and testing without requiring actual hardware.
-It depends on ``CONFIG_CAPTURE`` and ``CONFIG_CAPTURE_NSIGNALS > 0``.
+It depends on ``CONFIG_CAPTURE_NOTIFY``.
 
 Without it, capture is still possible manually by including the appropriate
 header (e.g., ``arch/arm/src/stm32h7/stm32_capture.h``) and performing a
@@ -356,16 +356,43 @@ When ``CONFIG_CAPTURE_NOTIFY`` is enabled:
 * Ideal for event-driven applications like tachometers, encoders, and
   frequency counters
 
+Edge Time Stamps
+~~~~~~~~~~~~~~~~
+
+A lower half whose timer counter runs freely can also implement two optional
+operations:
+
+* ``getcount()`` reads the current value of the counter.
+* ``getcapture()`` returns the counter value latched by the hardware on the
+  last notified edge. It is called from the notification callback set by
+  ``bind()``, so the time of the edge does not depend on the interrupt
+  latency.
+
+They are used by kernel drivers built on a capture lower half, such as the
+PPS disciplined PTP clock (``CONFIG_PTP_PPS``, see
+:doc:`/os/drivers/special/ptp`). The STM32 timer capture
+(``arch/arm/src/common/stm32/stm32_capture_m3m4_v1_lowerhalf.c``) and the fake
+capture driver implement them.
+
 Fake Capture Driver
 ~~~~~~~~~~~~~~~~~~~
 
 The fake capture driver (``CONFIG_FAKE_CAPTURE``) provides:
 
 * Software simulation of capture events using watchdog timers
-* Fixed 10Hz frequency with 50% duty cycle
+* 10Hz frequency with 50% duty cycle
 * Edge toggles every 50ms (rising and falling)
 * Supports all standard capture operations including notifications
+* Edge time stamps (``getcount()`` and ``getcapture()``) from a simulated
+  free running counter of ``CONFIG_FAKE_CAPTURE_COUNTER_FREQ`` Hz, with a
+  frequency error (``CONFIG_FAKE_CAPTURE_ERROR_PPB``) and a jitter
+  (``CONFIG_FAKE_CAPTURE_JITTER_NS``). The edges happen at fixed times of
+  ``perf_gettime()`` and the counter is latched at the edge, so the latency
+  of the watchdog does not affect the time stamps.
 * Available at ``/dev/fake_capture0``, ``/dev/fake_capture1``, etc.
+* ``fake_capture_create()`` creates an instance with another frequency and
+  duty cycle without registering it, for a kernel driver such as the PPS
+  disciplined PTP clock (``CONFIG_PTP_PPS_FAKE``)
 * Useful for development, testing, and CI/CD without hardware
 * Platform-independent implementation
 * Automatically initialized at boot (2 channels by default)
@@ -373,5 +400,6 @@ The fake capture driver (``CONFIG_FAKE_CAPTURE``) provides:
 Limitations:
 
 * Fixed timing parameters (not configurable at runtime)
-* Software timing accuracy (not hardware-precise)
+* Software timing accuracy (not hardware-precise); the time stamps are as good
+  as ``perf_gettime()``
 * Suitable for functional testing, not timing precision validation

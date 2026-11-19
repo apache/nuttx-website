@@ -611,7 +611,7 @@ AES/CRYP      to be done    not supported
 CAN/FDCAN     FDCAN         arch/arm/src/stm32h5/stm32_fdcan.c     
 DAC           to be done    not supported                          
 DTS           to be done    arch/arm/src/stm32h5/stm32_dts.c       
-ETH           to be done    arch/arm/src/stm32h5/stm32_ethernet.c  
+ETH           v2            arch/arm/src/common/stm32/stm32_eth_v2.c
 EXTI          to be done    arch/arm/src/stm32h5/stm32_exti_gpio.c 
 FLASH         to be done    arch/arm/src/stm32h5/stm32_flash.c     
 GPIO          to be done    arch/arm/src/stm32h5/stm32_gpio.c      
@@ -647,7 +647,7 @@ CAN/FDCAN     FDCAN         arch/arm/src/stm32h7/stm32_fdcan_sock.c
 DAC           to be done    not supported                          
 DMA           v2 style      arch/arm/src/stm32h7/stm32_dma.c       
 DMA2D         to be done    not supported                          
-ETH           to be done    arch/arm/src/stm32h7/stm32_ethernet.c  
+ETH           v2            arch/arm/src/common/stm32/stm32_eth_v2.c
 EXTI          to be done    arch/arm/src/stm32h7/stm32_exti_gpio.c 
 FLASH         to be done    arch/arm/src/stm32h7/stm32_flash.c     
 FMC/FSMC      to be done    arch/arm/src/stm32h7/stm32_fmc.c       
@@ -773,7 +773,7 @@ Peripheral    Core version  Driver
 ADC           to be done    not supported
 CAN/FDCAN     to be done    not supported
 DAC           to be done    not supported
-ETH           to be done    not supported
+ETH           v2            arch/arm/src/common/stm32/stm32_eth_v2.c
 EXTI          M33M55 v1     arch/arm/src/common/stm32/stm32_exti_gpio_m33m55_v1.c
 GPIO          M33M55 v1     arch/arm/src/common/stm32/stm32_gpio_m33m55_v1.c
 GPDMA         v1            arch/arm/src/common/stm32/stm32_dma_gpdma.c
@@ -1148,6 +1148,25 @@ writes what the board defines.  All families use the same interface:
 The board does not pass numeric divisors for the RCC code to convert into
 register fields.  The RCC code keeps reserved register bits at their reset
 value.
+
+Board configurations
+====================
+
+* ``nsh`` is NuttShell with the ``hello`` example.  It does not enable
+  ``ostest``.
+* ``ostest`` (``CONFIG_TESTING_OSTEST``) is enabled only in the ``ostest``
+  and ``jumbo`` configurations, and only on boards with at least 256 KB of
+  flash.
+* An ``ostest`` configuration is ``nsh`` plus ``ostest``: NSH with builtin
+  applications (``CONFIG_NSH_BUILTIN_APPS``) and
+  ``CONFIG_INIT_ENTRYPOINT="nsh_main"``, built with full optimization and LTO
+  (``CONFIG_DEBUG_FULLOPT``, ``CONFIG_LTO_FULL``).  ``ostest`` is run from
+  NSH.
+* ``kostest`` configurations (``ostest`` in the protected build) are the
+  exception and start ``ostest_main`` directly.
+* Configurations for a specific feature do not enable ``ostest``.  The
+  exception is a configuration made to run ``ostest`` with that feature, for
+  example ``stm32f4discovery:sporadic``.
 
 Next steps
 ==========

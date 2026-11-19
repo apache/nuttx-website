@@ -42,7 +42,12 @@ IRQs are managed by LAPIC(X2APIC) and IOAPIC.
 Clock source
 ------------
 
-TSC DEADLINE timer, APIC timer or HPET can be used as system clock.
+TSC DEADLINE timer, APIC timer or HPET can be used as system clock. The APIC
+timer does not support ``CONFIG_SCHED_TICKLESS``.
+
+``CONFIG_RTC_HIRES`` needs the TSC DEADLINE timer or the APIC timer: the
+high resolution RTC counts the TSC and needs its frequency, which only these
+two timers set.
 
 SMP
 ---
@@ -53,6 +58,17 @@ HPET
 ----
 
 High Precision Event Timer (HPET) is supported as oneshot timer.
+
+RTC
+---
+
+The CMOS clock of the PC (MC146818) is supported as RTC. Enable ``CONFIG_RTC``
+to use it. The system then takes the date and the time from this clock at
+boot, and ``settimeofday()`` changes the clock. QEMU gives the date and the
+time of the host in this clock.
+
+With ``CONFIG_RTC_HIRES``, the RTC is a counter of the TSC instead. This
+counter starts at 0 at each boot.
 
 RDRAND
 ------
