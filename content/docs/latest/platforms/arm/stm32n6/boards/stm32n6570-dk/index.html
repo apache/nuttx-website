@@ -414,6 +414,27 @@ its 125 MHz CLK125 output clocks the MAC.  The MAC address is derived from the u
 device ID.  The interface is <code class="docutils literal notranslate"><span class="pre">eth0</span></code>; check it with <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code> and
 <code class="docutils literal notranslate"><span class="pre">ping</span></code>, and read the PHY registers with <code class="docutils literal notranslate"><span class="pre">mdio</span></code>.</p>
 </section>
+<section id="lcd">
+<h2>LCD<a class="headerlink" href="#lcd" title="Permalink to this heading"></a></h2>
+<p>The 5” 800x480 Rocktech RK050HR18 panel is driven by the LTDC (RGB888
+output, pins in <code class="docutils literal notranslate"><span class="pre">board.h</span></code>) and registered as <code class="docutils literal notranslate"><span class="pre">/dev/fb0</span></code>.  The 25 MHz
+pixel clock is IC16 (PLL1 / 96).  PQ3 enables the panel, PQ6 the backlight
+and PE1 is the shared panel/touch reset.  Layer 1 is RGB565 and its
+framebuffer is placed in AXISRAM1/2 at 0x34080000 (768000 bytes), below
+the image, so the heap is not affected.  Run <code class="docutils literal notranslate"><span class="pre">fb</span></code> to draw the test
+pattern.</p>
+<p>The GT911 touch controller on I2C2 (interrupt on PQ4) is reset at bring-up
+with PQ4 held low, which selects address 0x5d, and registered as
+<code class="docutils literal notranslate"><span class="pre">/dev/input0</span></code>; <code class="docutils literal notranslate"><span class="pre">tc</span></code> prints the touch coordinates.</p>
+</section>
+<section id="time-of-flight-sensor">
+<h2>Time-of-flight sensor<a class="headerlink" href="#time-of-flight-sensor" title="Permalink to this heading"></a></h2>
+<p>The VL53L5CX on the camera module (MB1854) is on I2C1 at 0x29, with INT on
+PQ0 and LPn on PQ5.  The board powers the module through PD2 with the
+IMX335 held in reset (PC8) and registers the sensor as the V4L2 depth
+camera <code class="docutils literal notranslate"><span class="pre">/dev/video1</span></code> (Z16, 8x8 or 4x4).  INT uses EXTI0, so the TAMP
+button has no interrupt when the sensor is enabled.</p>
+</section>
 <section id="clocking">
 <h2>Clocking<a class="headerlink" href="#clocking" title="Permalink to this heading"></a></h2>
 <p>By default the CPU runs at 800 MHz and the system buses at 400 MHz.  PLL1 is
@@ -438,6 +459,17 @@ enabled.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">nsh</span></code> configuration with Ethernet: IPv4, TCP, UDP, ICMP, a DHCP
 client started by NSH, <code class="docutils literal notranslate"><span class="pre">ping</span></code>, <code class="docutils literal notranslate"><span class="pre">telnetd</span></code> and <code class="docutils literal notranslate"><span class="pre">mdio</span></code>.  The link is
 auto-negotiated up to 1000 Mbps when <code class="docutils literal notranslate"><span class="pre">eth0</span></code> comes up.</p>
+</section>
+<section id="fb">
+<h3>fb<a class="headerlink" href="#fb" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">nsh</span></code> plus the LCD framebuffer <code class="docutils literal notranslate"><span class="pre">/dev/fb0</span></code> and the <code class="docutils literal notranslate"><span class="pre">fb</span></code> example, which
+draws nested coloured rectangles on the panel.</p>
+</section>
+<section id="lvgl">
+<h3>lvgl<a class="headerlink" href="#lvgl" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">fb</span></code> plus the touch controller, LVGL and its widgets demo.  Start it
+with <code class="docutils literal notranslate"><span class="pre">lvgldemo</span> <span class="pre">&amp;</span></code>.  The image is close to the 511 KiB limit of the boot
+ROM, so LVGL logging and extra fonts are left out.</p>
 </section>
 </section>
 </section>

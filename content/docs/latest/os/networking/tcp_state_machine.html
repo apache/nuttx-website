@@ -677,6 +677,20 @@ RST may be sent.</p>
 </div></blockquote>
 </li>
 </ul>
+<section id="reset-by-the-peer">
+<h3>Reset by the peer<a class="headerlink" href="#reset-by-the-peer" title="Permalink to this heading"></a></h3>
+<p>A RST from the peer closes the connection (<code class="docutils literal notranslate"><span class="pre">TCP_ABORT</span></code> callback).  In
+<code class="docutils literal notranslate"><span class="pre">TCP_SYN_SENT</span></code> it refuses the connection: <code class="docutils literal notranslate"><span class="pre">connect()</span></code> and <code class="docutils literal notranslate"><span class="pre">SO_ERROR</span></code>
+give <code class="docutils literal notranslate"><span class="pre">ECONNREFUSED</span></code>.  In <code class="docutils literal notranslate"><span class="pre">TCP_ESTABLISHED</span></code>, <code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">TCP_FIN_WAIT_2</span></code> the application gets the reset once.  The data that came
+before the RST is read first.  Then the first receive without data, the first
+send or <code class="docutils literal notranslate"><span class="pre">getsockopt(SO_ERROR)</span></code> gives <code class="docutils literal notranslate"><span class="pre">ECONNRESET</span></code>.  After that a receive
+gives end-of-file and a send gives <code class="docutils literal notranslate"><span class="pre">EPIPE</span></code> (and <code class="docutils literal notranslate"><span class="pre">SIGPIPE</span></code> without
+<code class="docutils literal notranslate"><span class="pre">MSG_NOSIGNAL</span></code>).  <code class="docutils literal notranslate"><span class="pre">poll()</span></code> gives <code class="docutils literal notranslate"><span class="pre">POLLHUP</span></code> and <code class="docutils literal notranslate"><span class="pre">POLLIN</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">POLLERR</span></code> while the <code class="docutils literal notranslate"><span class="pre">ECONNRESET</span></code> is not yet reported.  After the FIN of
+the peer the application already read the end of the stream: a RST does not
+change what a receive (end-of-file) or a send (<code class="docutils literal notranslate"><span class="pre">EPIPE</span></code>) gives.</p>
+</section>
 </section>
 <section id="deviations-and-notable-simplifications">
 <h2>Deviations and Notable Simplifications<a class="headerlink" href="#deviations-and-notable-simplifications" title="Permalink to this heading"></a></h2>

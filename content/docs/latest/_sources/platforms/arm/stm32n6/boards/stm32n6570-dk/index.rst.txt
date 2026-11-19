@@ -167,6 +167,30 @@ its 125 MHz CLK125 output clocks the MAC.  The MAC address is derived from the u
 device ID.  The interface is ``eth0``; check it with ``ifconfig`` and
 ``ping``, and read the PHY registers with ``mdio``.
 
+LCD
+===
+
+The 5" 800x480 Rocktech RK050HR18 panel is driven by the LTDC (RGB888
+output, pins in ``board.h``) and registered as ``/dev/fb0``.  The 25 MHz
+pixel clock is IC16 (PLL1 / 96).  PQ3 enables the panel, PQ6 the backlight
+and PE1 is the shared panel/touch reset.  Layer 1 is RGB565 and its
+framebuffer is placed in AXISRAM1/2 at 0x34080000 (768000 bytes), below
+the image, so the heap is not affected.  Run ``fb`` to draw the test
+pattern.
+
+The GT911 touch controller on I2C2 (interrupt on PQ4) is reset at bring-up
+with PQ4 held low, which selects address 0x5d, and registered as
+``/dev/input0``; ``tc`` prints the touch coordinates.
+
+Time-of-flight sensor
+=====================
+
+The VL53L5CX on the camera module (MB1854) is on I2C1 at 0x29, with INT on
+PQ0 and LPn on PQ5.  The board powers the module through PD2 with the
+IMX335 held in reset (PC8) and registers the sensor as the V4L2 depth
+camera ``/dev/video1`` (Z16, 8x8 or 4x4).  INT uses EXTI0, so the TAMP
+button has no interrupt when the sensor is enabled.
+
 Clocking
 ========
 
@@ -196,3 +220,16 @@ netnsh
 The ``nsh`` configuration with Ethernet: IPv4, TCP, UDP, ICMP, a DHCP
 client started by NSH, ``ping``, ``telnetd`` and ``mdio``.  The link is
 auto-negotiated up to 1000 Mbps when ``eth0`` comes up.
+
+fb
+--
+
+``nsh`` plus the LCD framebuffer ``/dev/fb0`` and the ``fb`` example, which
+draws nested coloured rectangles on the panel.
+
+lvgl
+----
+
+``fb`` plus the touch controller, LVGL and its widgets demo.  Start it
+with ``lvgldemo &``.  The image is close to the 511 KiB limit of the boot
+ROM, so LVGL logging and extra fonts are left out.
