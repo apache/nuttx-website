@@ -364,7 +364,7 @@ sim                √            √</p>
 <p># Enable gcov app
 3. CONFIG_SYSTEM_GCOV=y</p>
 </div></blockquote>
-<ol class="arabic simple" start="2">
+<ol class="arabic" start="2">
 <li><p>Compile and run
 <code class="docutils literal notranslate"><span class="pre">`</span>
 <span class="pre">$</span> <span class="pre">After</span> <span class="pre">the</span> <span class="pre">code</span> <span class="pre">is</span> <span class="pre">compiled,</span> <span class="pre">a</span> <span class="pre">*.gcno</span> <span class="pre">file</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">name</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">generated</span> <span class="pre">next</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">*.o</span> <span class="pre">file.</span>
@@ -384,14 +384,14 @@ sim                √            √</p>
 <code class="docutils literal notranslate"><span class="pre">`</span>
 <span class="pre">$</span> <span class="pre">./tools/configure.sh</span> <span class="pre">sim:nsh</span>
 <span class="pre">nsh:</span> <span class="pre">poweroff</span>
-<span class="pre">$</span> <span class="pre">./nuttx/tools/gcov.py</span> <span class="pre">-t</span> <span class="pre">gcov</span>
-<span class="pre">Then</span> <span class="pre">open</span> <span class="pre">./gcov/result/index.html</span> <span class="pre">with</span> <span class="pre">your</span> <span class="pre">browser</span>
-<span class="pre">`</span></code></p></li>
+<span class="pre">$</span> <span class="pre">./tools/gcov.py</span> <span class="pre">-e</span> <span class="pre">nuttx</span> <span class="pre">-s</span> <span class="pre">.</span>
+<span class="pre">Then</span> <span class="pre">open</span> <span class="pre">the</span> <span class="pre">report</span> <span class="pre">link</span> <span class="pre">printed</span> <span class="pre">by</span> <span class="pre">the</span> <span class="pre">tool</span>
+<span class="pre">(file://&lt;abs</span> <span class="pre">path&gt;/gcov/report/index.html)</span> <span class="pre">with</span> <span class="pre">your</span> <span class="pre">browser</span>
+<span class="pre">`</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">-a</span></code> defaults to the current directory and <code class="docutils literal notranslate"><span class="pre">-o</span></code> to <code class="docutils literal notranslate"><span class="pre">gcov</span></code>.</p>
+</li>
 </ol>
 </div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Applicable to device</p></li>
-</ol>
 <ol class="arabic simple" start="2">
 <li><p>Applicable to device</p></li>
 </ol>
@@ -440,18 +440,20 @@ You need to use your method to export the file to the host</p>
 </ol>
 <blockquote>
 <div><p>Run the following command to generate coverage report</p>
-<p># By default, it is generated in the root directory of the vela project. Add parameters to specify the report generation location
-# The -t parameter specifies the gcov version, which needs to match the gcc version</p>
-<p># sim
-./tools/gcov.py -t gcov</p>
-<p># arm platform
-./tools/gcov.py -t arm-none-eabi-gcov</p>
+<p># The toolchain (gcc or clang) and the target architecture are
+# detected from the ELF passed with -e, so the same command works
+# on sim and on cross targets. -s is the directory holding the
+# *.gcno files (the build directory), -a the exported data.</p>
+<p># sim / arm / other targets
+./tools/gcov.py -e nuttx -s . -a path_to_exported_data</p>
+<p># If the sources were built in another tree, map the recorded
+# paths, e.g. -b /build/root=/home/me/nuttx</p>
 </div></blockquote>
 </div></blockquote>
 <ol class="arabic simple" start="5">
 <li><p>Impact and precautions
 <code class="docutils literal notranslate"><span class="pre">`</span>
-<span class="pre">1.</span> <span class="pre">Before</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">.tools/gcov.sh</span> <span class="pre">tool,</span> <span class="pre">you</span> <span class="pre">need</span> <span class="pre">to</span> <span class="pre">ensure</span> <span class="pre">that</span> <span class="pre">*.gcno</span> <span class="pre">and</span> <span class="pre">*.gcda</span> <span class="pre">files</span> <span class="pre">exist</span>
+<span class="pre">1.</span> <span class="pre">Before</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">tools/gcov.py</span> <span class="pre">tool,</span> <span class="pre">you</span> <span class="pre">need</span> <span class="pre">to</span> <span class="pre">ensure</span> <span class="pre">that</span> <span class="pre">*.gcno</span> <span class="pre">and</span> <span class="pre">*.gcda</span> <span class="pre">files</span> <span class="pre">exist</span>
 <span class="pre">2.</span> <span class="pre">If</span> <span class="pre">*.gcno</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">exist,</span> <span class="pre">recompile</span> <span class="pre">the</span> <span class="pre">code</span> <span class="pre">after</span> <span class="pre">distclean.</span>
 <span class="pre">3.</span> <span class="pre">If</span> <span class="pre">*.gcda</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">exist,</span> <span class="pre">please</span> <span class="pre">check</span> <span class="pre">and</span> <span class="pre">use</span> <span class="pre">poweroff</span> <span class="pre">to</span> <span class="pre">exit</span> <span class="pre">Vela</span> <span class="pre">normally</span>
 <span class="pre">`</span></code></p></li>
@@ -520,15 +522,16 @@ __llvm_prf_cnts : {
 <li><p>Generate Report</p></li>
 </ol>
 <blockquote>
-<div><p>Please execute the following command, where</p>
-<ol class="arabic simple">
-<li><p>xxxfile: the file for exporting data on the device</p></li>
-<li><p>xxxelf: the ELF file corresponding to the device</p></li>
-</ol>
-<p># Convert the exported coverage data file
-llvm-profdata merge -sparse xxxfile -o result.profdata</p>
-<p># Generate a visualization html file
-llvm-cov show -format=html xxxelf -instr-profile=result.profdata -output-dir=./coverage/html</p>
+<div><p>The same command as for GCC produces the report: the ELF given with
+-e tells gcov.py that the data is clang source-based coverage, the
+exported *.profraw files are passed with -a, and llvm-profdata and
+llvm-cov are driven automatically.</p>
+<p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">$</span> <span class="pre">./tools/gcov.py</span> <span class="pre">-e</span> <span class="pre">nuttx</span> <span class="pre">-a</span> <span class="pre">path_to_exported_data</span>
+<span class="pre">`</span></code></p>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">--llvm-html</span></code> to render with <code class="docutils literal notranslate"><span class="pre">llvm-cov</span> <span class="pre">show</span></code> instead of
+genhtml, which keeps region-level highlighting at the cost of a
+report that differs from the GCC one.</p>
 </div></blockquote>
 </div></blockquote>
 </div></blockquote>
