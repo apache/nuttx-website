@@ -281,6 +281,8 @@ So an old configuration file may not be usable anymore until it is refreshed.</p
 <span class="go">     Do not prompt for new default selections; accept all recommended default values</span>
 <span class="go">  --nocopy</span>
 <span class="go">     Do not copy defconfig from nuttx/boards/&lt;board&gt;/configs to nuttx/.config</span>
+<span class="go">  --cmake</span>
+<span class="go">     Use CMake refresh target instead of make refresh to refresh the defconfig</span>
 <span class="go">  --help</span>
 <span class="go">     Show this help message and exit</span>
 <span class="go">  &lt;board&gt;</span>
@@ -323,6 +325,20 @@ depending on the <code class="docutils literal notranslate"><span class="pre">--
 </li>
 <li><p>Restore the <code class="docutils literal notranslate"><span class="pre">.config</span></code> and <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code> files from step 1.</p></li>
 </ol>
+<p>With the <code class="docutils literal notranslate"><span class="pre">--cmake</span></code> option, the configuration is refreshed with the CMake build
+instead, so it also works for board configurations that have no <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code>
+file.  For each configuration, <code class="docutils literal notranslate"><span class="pre">refresh.sh</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Configures a temporary CMake build directory <code class="docutils literal notranslate"><span class="pre">refresh/</span></code> in the top-level
+NuttX directory with <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-B</span> <span class="pre">refresh</span> <span class="pre">-DBOARD_CONFIG=&lt;config&gt;</span> <span class="pre">-GNinja</span></code>.</p></li>
+<li><p>Runs <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">--build</span> <span class="pre">refresh</span> <span class="pre">-t</span> <span class="pre">refreshsilent</span></code>, which updates the
+configuration with the default values and creates the new defconfig file.</p></li>
+<li><p>Copies the new defconfig file out of <code class="docutils literal notranslate"><span class="pre">refresh/</span></code>, removes <code class="docutils literal notranslate"><span class="pre">refresh/</span></code>, and
+compares and saves the new defconfig file in the same way as the Make-based
+refresh.</p></li>
+</ol>
+<p>The <code class="docutils literal notranslate"><span class="pre">.config</span></code> and <code class="docutils literal notranslate"><span class="pre">Make.defs</span></code> files in the top-level directory are not used
+or modified in this mode.</p>
 <section id="usage-examples">
 <h2>Usage examples<a class="headerlink" href="#usage-examples" title="Permalink to this heading"></a></h2>
 <p>Update all boards without verbose output:</p>
@@ -353,6 +369,10 @@ from the <code class="docutils literal notranslate"><span class="pre">sim</span>
 <p>Update the <cite>nsh</cite> config from <code class="docutils literal notranslate"><span class="pre">stm32f103-minimum</span></code> board, using the path to the
 configuration subdirectory:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/refresh.sh<span class="w"> </span>--defaults<span class="w"> </span>boards/arm/stm32f1/stm32f103-minimum/configs/nsh
+</pre></div>
+</div>
+<p>Update the <cite>nsh</cite> config from the <code class="docutils literal notranslate"><span class="pre">qemu-armv7a</span></code> board with the CMake build:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./tools/refresh.sh<span class="w"> </span>--silent<span class="w"> </span>--cmake<span class="w"> </span>qemu-armv7a:nsh
 </pre></div>
 </div>
 </section>

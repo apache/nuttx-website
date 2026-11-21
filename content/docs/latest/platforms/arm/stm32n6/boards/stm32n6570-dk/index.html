@@ -437,6 +437,22 @@ IMX335 held in reset (PC8) and registers the sensor as the V4L2 depth
 camera <code class="docutils literal notranslate"><span class="pre">/dev/video1</span></code> (Z16, 8x8 or 4x4).  INT uses EXTI0, so the TAMP
 button has no interrupt when the sensor is enabled.</p>
 </section>
+<section id="microsd">
+<h2>microSD<a class="headerlink" href="#microsd" title="Permalink to this heading"></a></h2>
+<p>The microSD slot is on SDMMC2 (4-bit, IDMA): PC2 CK, PC3 CMD, PC4-PC5 D0-D1,
+PC0 D2, PE4 D3 (AF11), card detect PN12 (low with a card) and card power
+enable PQ7 (high).  The kernel clock is IC4 = 200 MHz, giving 400 kHz for
+identification and 25 MHz for transfers.  The card is <code class="docutils literal notranslate"><span class="pre">/dev/mmcsd0</span></code>;
+insertion and removal are reported through the card detect interrupt.
+With a FAT formatted card:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; mount -t vfat /dev/mmcsd0 /mnt
+nsh&gt; echo hello &gt; /mnt/test.txt
+nsh&gt; cat /mnt/test.txt
+nsh&gt; dd if=/dev/zero of=/mnt/big.bin bs=4096 count=256
+nsh&gt; umount /mnt
+</pre></div>
+</div>
+</section>
 <section id="clocking">
 <h2>Clocking<a class="headerlink" href="#clocking" title="Permalink to this heading"></a></h2>
 <p>By default the CPU runs at 800 MHz and the system buses at 400 MHz.  PLL1 is
@@ -472,6 +488,11 @@ draws nested coloured rectangles on the panel.</p>
 <p><code class="docutils literal notranslate"><span class="pre">fb</span></code> plus the touch controller, LVGL and its widgets demo.  Start it
 with <code class="docutils literal notranslate"><span class="pre">lvgldemo</span> <span class="pre">&amp;</span></code>.  The image is close to the 511 KiB limit of the boot
 ROM, so LVGL logging and extra fonts are left out.</p>
+</section>
+<section id="sdcard">
+<h3>sdcard<a class="headerlink" href="#sdcard" title="Permalink to this heading"></a></h3>
+<p>NuttShell with the microSD slot on SDMMC2 and the FAT file system, see
+<a class="reference internal" href="#microsd">microSD</a>.</p>
 </section>
 </section>
 </section>

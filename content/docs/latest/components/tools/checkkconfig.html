@@ -246,19 +246,25 @@
 It can be used to check whether my config changes are what I expected.</p>
 <p>Help message:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ tools/checkkconfig.py -h
-usage: checkkconfig.py [-h] -f FILE (-s CONFIG VALUE | -d DIFF)
+usage: checkkconfig.py [-h] [-o OUT_DIR] -f FILE
+                       (-s CONFIG [VALUE ...] | -d DIFF)
 
-optional arguments:
+Simulate the effects of modifying CONFIG items in NuttX
+
+options:
   -h, --help            show this help message and exit
+  -o OUT_DIR, --out_dir OUT_DIR
+                        Binary dir for CMake configured
   -f FILE, --file FILE  Path to the input defconfig file
-  -s CONFIG_XXX VALUE, --single CONFIG VALUE
-                        Analyze single change: CONFIG_NAME y/m/n
+  -s CONFIG [VALUE ...], --set CONFIG [VALUE ...]
+                        Analyze multiple changes: CONFIG_NAME1 y/m/n
+                        CONFIG_NAME2 y/m/n ...
   -d DIFF, --diff DIFF  Analyze changes from diff file
 
 example: ./tools/checkkconfig.py -f defconfig -s ELF n
 
 outputs:
-Change report for ELF=n
+Change report for config changes
 Config Option                            Old                  New
 ----------------------------------------------------------------------
 BINFMT_LOADABLE                          y                    n
@@ -279,6 +285,19 @@ if I turn off ELF in defconfig at this time,
 it will bring about the following configuration linkage changes</p>
 <p>It can also parse diff files, which can be used to check the changes of multiple
 configs.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-s</span></code>/<code class="docutils literal notranslate"><span class="pre">--set</span></code> accepts several <code class="docutils literal notranslate"><span class="pre">CONFIG</span> <span class="pre">VALUE</span></code> pairs, so the combined effect of
+multiple changes can be checked at once.  A value other than <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code> or
+<code class="docutils literal notranslate"><span class="pre">n</span></code> is set as is, for example a number or a string:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/checkkconfig.py -f defconfig -s ELF y TASK_NAME_SIZE 16
+</pre></div>
+</div>
+<p>CMake builds keep the configuration in the build directory instead of the
+top-level NuttX directory.  Pass that directory with <code class="docutils literal notranslate"><span class="pre">-o</span></code>/<code class="docutils literal notranslate"><span class="pre">--out_dir</span></code> to
+analyze a CMake configuration:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cmake -B build -DBOARD_CONFIG=sim:nsh -GNinja
+$ ./tools/checkkconfig.py -o build -f build/.config -s ELF y
+</pre></div>
+</div>
 </section>
 
 

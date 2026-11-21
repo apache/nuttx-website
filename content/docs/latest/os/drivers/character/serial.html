@@ -237,12 +237,14 @@ If``TTY_LAUNCH_FILE`` you can set file path by <code class="docutils literal not
 <li><p><strong>Job control / controlling terminal</strong>. When <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code>
 or <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGTSTP</span></code> is enabled, the TTY layer can generate
 <code class="docutils literal notranslate"><span class="pre">SIGINT</span></code> (Ctrl-C) and <code class="docutils literal notranslate"><span class="pre">SIGTSTP</span></code> (Ctrl-Z) for a foreground task.
-NuttX does not implement POSIX sessions or process groups, so the
-foreground process group is collapsed onto a single PID stored in
-the driver (<code class="docutils literal notranslate"><span class="pre">pgrp</span> <span class="pre">==</span> <span class="pre">pid</span></code>, one member per group); the signal is
-delivered with <code class="docutils literal notranslate"><span class="pre">nxsig_kill(pid,</span> <span class="pre">signo)</span></code>.  The driver discards the
-character that sends the signal, so the task does not read it.</p>
-<p>The following terminal <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands manage this PID:</p>
+The driver keeps the ID of the foreground process group.  With
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_PROCESS_GROUPS</span></code>, each process of that process group
+gets the signal.  An ID that no process group has is a process ID
+(NSH sets one with <code class="docutils literal notranslate"><span class="pre">TIOCSCTTY</span></code>): that process gets the signal.
+Without the option, a process group is one process, and the process
+with that ID gets the signal.  The driver discards the character
+that sends the signal, so the task does not read it.</p>
+<p>The following terminal <code class="docutils literal notranslate"><span class="pre">ioctl</span></code> commands manage this ID:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TIOCSCTTY</span></code> makes the terminal the controlling terminal.  The
 <code class="docutils literal notranslate"><span class="pre">arg</span></code> is treated as a flag: a value of <code class="docutils literal notranslate"><span class="pre">0</span></code> selects the
@@ -257,20 +259,23 @@ session leader PID.</p></li>
 <code class="docutils literal notranslate"><span class="pre">tcsetpgrp()</span></code> passes it, <code class="docutils literal notranslate"><span class="pre">arg</span></code> points to the PID (<code class="docutils literal notranslate"><span class="pre">pid_t</span> <span class="pre">*</span></code>);
 a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> pointer or a PID that is not positive gives <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>.</p></li>
 </ul>
-<p>The C library exposes these through <code class="docutils literal notranslate"><span class="pre">tcgetpgrp()</span></code>, <code class="docutils literal notranslate"><span class="pre">tcsetpgrp()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">tcgetsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">setsid()</span></code>, <code class="docutils literal notranslate"><span class="pre">getsid()</span></code> and <code class="docutils literal notranslate"><span class="pre">setpgid()</span></code>.  A process
-group is one process, so <code class="docutils literal notranslate"><span class="pre">kill(-pgrp,</span> <span class="pre">signo)</span></code> and <code class="docutils literal notranslate"><span class="pre">killpg()</span></code> send
-the signal to the process <code class="docutils literal notranslate"><span class="pre">pgrp</span></code>, and TTY signals go to the single
-foreground PID.</p>
+<p>The C library exposes these through <code class="docutils literal notranslate"><span class="pre">tcgetpgrp()</span></code>, <code class="docutils literal notranslate"><span class="pre">tcsetpgrp()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">tcgetsid()</span></code>.  With <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_PROCESS_GROUPS</span></code>, <code class="docutils literal notranslate"><span class="pre">setpgid()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">getpgid()</span></code>, <code class="docutils literal notranslate"><span class="pre">setsid()</span></code> and <code class="docutils literal notranslate"><span class="pre">getsid()</span></code> keep the process groups
+and the sessions of POSIX, and <code class="docutils literal notranslate"><span class="pre">kill(-pgrp,</span> <span class="pre">signo)</span></code> and <code class="docutils literal notranslate"><span class="pre">killpg()</span></code>
+send the signal to each process of the process group.  Without it, a
+process group is one process: <code class="docutils literal notranslate"><span class="pre">setpgid()</span></code> accepts only the process
+ID as the process group ID, and <code class="docutils literal notranslate"><span class="pre">kill(-pgrp,</span> <span class="pre">signo)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">killpg()</span></code> send the signal to the process <code class="docutils literal notranslate"><span class="pre">pgrp</span></code>.</p>
 </li>
 <li><p><strong>Window size</strong>. <code class="docutils literal notranslate"><span class="pre">TIOCGWINSZ</span></code> returns the terminal size in a
 <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">winsize</span></code> and <code class="docutils literal notranslate"><span class="pre">TIOCSWINSZ</span></code> sets it.  The size is 0 rows
 and 0 columns until a program sets it (for example <code class="docutils literal notranslate"><span class="pre">openpty()</span></code> or
 a remote login server).  A change of the size sends <code class="docutils literal notranslate"><span class="pre">SIGWINCH</span></code> to
-the foreground PID when <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code> or
+the foreground process group, as above, when <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code> or
 <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGTSTP</span></code> is enabled.  A pseudo-terminal keeps one size
-for the master and the slave; the signal goes to the foreground PID
-of the slave.</p></li>
+for the master and the slave; the signal goes to the foreground
+process group of the slave.</p></li>
 <li><p><strong>User Access</strong>. Serial drivers are, ultimately, normal
 <a class="reference external" href="#chardrivers">character drivers</a> and are accessed as other
 character drivers.</p></li>
