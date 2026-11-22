@@ -438,6 +438,17 @@ sends FIN and transitions:</p>
         -&gt; TCP_CLOSED              (timer expiry)
 </pre></div>
 </div>
+<p>The FIN goes after the data that the application queued before <code class="docutils literal notranslate"><span class="pre">close()</span></code>
+or <code class="docutils literal notranslate"><span class="pre">shutdown(SHUT_WR)</span></code>.  A <code class="docutils literal notranslate"><span class="pre">close()</span></code> with received data that the
+application did not read, or with <code class="docutils literal notranslate"><span class="pre">SO_LINGER</span></code> on and a time of zero, sends
+a RST instead and drops the queued data (RFC 1122, section 4.2.2.13).</p>
+<p>After <code class="docutils literal notranslate"><span class="pre">close()</span></code> the connection keeps one callback (<code class="docutils literal notranslate"><span class="pre">tcp_close.c</span></code>) until it
+ends; it is then freed.  When the device of the connection goes down, the
+connection is closed at once.  When <code class="docutils literal notranslate"><span class="pre">socket()</span></code> or a new connection from a
+listener finds no free connection structure, or <code class="docutils literal notranslate"><span class="pre">close()</span></code> finds no free
+callback, the oldest connection that no socket uses and that only waits for
+the end of its close (for example in <code class="docutils literal notranslate"><span class="pre">TCP_TIME_WAIT</span></code>) is freed to make room
+(<code class="docutils literal notranslate"><span class="pre">tcp_reclaim()</span></code> in <code class="docutils literal notranslate"><span class="pre">tcp_conn.c</span></code>).</p>
 </section>
 <section id="simultaneous-close">
 <h3>Simultaneous close<a class="headerlink" href="#simultaneous-close" title="Permalink to this heading"></a></h3>
@@ -677,6 +688,34 @@ RST may be sent.</p>
 </div></blockquote>
 </li>
 </ul>
+<section id="retransmission-timer">
+<h3>Retransmission timer<a class="headerlink" href="#retransmission-timer" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The retransmission timer starts when a segment that takes sequence space</dt><dd><p>(data, SYN or FIN) is sent while data is unacknowledged.  A segment without
+data (an ACK) does not restart it (RFC 6298, section 5).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>An incoming ACK restarts the timer only when it acknowledges new data.  An</dt><dd><p>ACK that is not beyond the highest ACK so far gives no RTT sample and does
+not reset the count of retransmissions.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>At each expiry the timeout doubles (RFC 6298, section 5.5): the next timeout</dt><dd><p>is the initial timeout (<code class="docutils literal notranslate"><span class="pre">NET_TCP_RTO</span></code>) times 2, 4, 8 and then 16.  With
+<code class="docutils literal notranslate"><span class="pre">NET_TCP_FIXED_RTO</span></code> it does not change.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>A duplicate ACK carries no data (RFC 5681, section 2).  A segment with data</dt><dd><p>that repeats the ACK number does not count toward a fast retransmission.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
 <section id="reset-by-the-peer">
 <h3>Reset by the peer<a class="headerlink" href="#reset-by-the-peer" title="Permalink to this heading"></a></h3>
 <p>A RST from the peer closes the connection (<code class="docutils literal notranslate"><span class="pre">TCP_ABORT</span></code> callback).  In

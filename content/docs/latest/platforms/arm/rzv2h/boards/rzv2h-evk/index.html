@@ -681,6 +681,92 @@ devices in ascending hardware-channel order. Their TX and RX pin choices are
 board-specific and are defined by <code class="docutils literal notranslate"><span class="pre">BOARD_SCIn_TXD_GPIO</span></code> and
 <code class="docutils literal notranslate"><span class="pre">BOARD_SCIn_RXD_GPIO</span></code> in <code class="docutils literal notranslate"><span class="pre">boards/arm/rzv2h/rzv2h-evk/include/board.h</span></code>.</p>
 </section>
+<section id="qspi-flash">
+<h2>QSPI Flash<a class="headerlink" href="#qspi-flash" title="Permalink to this heading"></a></h2>
+<p>The board port drives the xSPI controller in QSPI mode (see
+<a class="reference internal" href="../../index.html"><span class="doc">the RZV2H peripheral overview</span></a>) to talk to a SPI NOR
+flash device. There is no flash part wired into the NuttX tree for this
+board; select the matching <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_*</span></code> driver for the part actually
+fitted on the EVK before enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_QSPI</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rzv2h_qspi_initialize()</span></code>
+(<code class="docutils literal notranslate"><span class="pre">boards/arm/rzv2h/rzv2h-evk/src/rzv2h_qspi.c</span></code>) brings up the bus,
+initializes the selected MTD flash driver, and then either:</p>
+<ul class="simple">
+<li><p>mounts the whole chip as a single flat LittleFS volume at <code class="docutils literal notranslate"><span class="pre">/mnt/qspi</span></code>
+(default), or</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_PARTITION</span></code> is enabled, splits the chip into three MTD
+partitions first (see Partitioning below), and mounts LittleFS on the
+remaining space only.</p></li>
+</ul>
+<section id="read-protocol">
+<h3>Read protocol<a class="headerlink" href="#read-protocol" title="Permalink to this heading"></a></h3>
+<p>The default read protocol is <code class="docutils literal notranslate"><span class="pre">1S-4S-4S</span></code>. <code class="docutils literal notranslate"><span class="pre">1S-1S-1S</span></code>, <code class="docutils literal notranslate"><span class="pre">1S-2S-2S</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">4S-4S-4S</span></code> also work on this board. They are selected with the
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_EVK_QSPI_N25QXXX_PROTOCOL_*</span></code> choice (see
+<a class="reference internal" href="../../index.html"><span class="doc">the RZV2H peripheral overview</span></a>).</p>
+<p>This board ties <code class="docutils literal notranslate"><span class="pre">XSPI0_DS</span></code> to GND through a 10K resistor (R47). It
+also leaves <code class="docutils literal notranslate"><span class="pre">XSPI0_IO4</span></code>-<code class="docutils literal notranslate"><span class="pre">XSPI0_IO7</span></code> unconnected to the flash. As a
+result, the DDR protocols cannot work here:</p>
+<ul class="simple">
+<li><p>Selecting <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_EVK_QSPI_N25QXXX_PROTOCOL_4S4D4D</span></code> stops the build
+with an <code class="docutils literal notranslate"><span class="pre">#error</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">8D-8D-8D</span></code> is not supported.</p></li>
+</ul>
+</section>
+<section id="partitioning">
+<h3>Partitioning<a class="headerlink" href="#partitioning" title="Permalink to this heading"></a></h3>
+<p>Enabling <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_PARTITION</span></code> (plus <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_CONFIG</span></code> or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_CONFIG_NVS</span></code>) makes <code class="docutils literal notranslate"><span class="pre">rzv2h_qspi_partition()</span></code> divide
+the flash chip into three independent regions, so that firmware,
+parameters, and logging cannot corrupt one another on the same chip:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Partition</p></th>
+<th class="head"><p>Size (Kconfig)</p></th>
+<th class="head"><p>Exposed as</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Firmware image</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_EVK_QSPI_FW_PART_SIZE</span></code> (KiB, default 4096)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/mtdfw0</span></code> (raw MTD, no filesystem)</p></td>
+<td><p>Fixed-offset region for a flight-stack (e.g. PX4) firmware image,
+read/written directly by a bootloader/loader</p></td>
+</tr>
+<tr class="row-odd"><td><p>Parameter/configuration</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_EVK_QSPI_PARAM_PART_SIZE</span></code> (KiB, default 256)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/dev/config</span></code> (via <code class="docutils literal notranslate"><span class="pre">mtdconfig_register()</span></code>)</p></td>
+<td><p>Key/value parameter and configuration store, isolated from
+filesystem I/O</p></td>
+</tr>
+<tr class="row-even"><td><p>Mission data / flight logs</p></td>
+<td><p>remainder of the chip</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/mnt/qspi</span></code> (LittleFS)</p></td>
+<td><p>Ordinary files: mission data, flight logs, and (optionally) the
+redirected syslog file described below</p></td>
+</tr>
+</tbody>
+</table>
+<p>Both partition sizes are rounded down to a multiple of the flash erase
+size. If the requested firmware and parameter partitions do not fit
+within the chip’s erase-block count, <code class="docutils literal notranslate"><span class="pre">rzv2h_qspi_initialize()</span></code>
+fails with an error logged via <code class="docutils literal notranslate"><span class="pre">syslog()</span></code>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_PARTITION</span></code> is disabled, none of the above applies and
+the chip is used as a single flat LittleFS volume, as before.</p>
+</section>
+<section id="persistent-syslog">
+<h3>Persistent syslog<a class="headerlink" href="#persistent-syslog" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_EVK_QSPI_SYSLOG_FILE</span></code> redirects kernel <code class="docutils literal notranslate"><span class="pre">syslog()</span></code> output to
+a file on the mounted QSPI LittleFS volume (default path
+<code class="docutils literal notranslate"><span class="pre">/mnt/qspi/syslog.txt</span></code>, set via <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_EVK_QSPI_SYSLOG_FILE_PATH</span></code>)
+once it is mounted, so log messages persist across resets. This requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_LITTLEFS</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SYSLOG_FILE</span></code>. When
+<code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_PARTITION</span></code> is enabled, this file lives in the mission-data
+/ flight-log partition described above, not in the firmware or parameter
+partitions.</p>
+</section>
+</section>
 <section id="bring-up">
 <h2>Bring-up<a class="headerlink" href="#bring-up" title="Permalink to this heading"></a></h2>
 <p>This section describes what has been brought up so far for the CR8_0 core.
@@ -755,6 +841,17 @@ active-low <code class="docutils literal notranslate"><span class="pre">P0_0</sp
 <code class="docutils literal notranslate"><span class="pre">/dev/gpio2</span></code> interfaces are also available for individual read/write
 testing.  Automatic OS-status LED control through <code class="docutils literal notranslate"><span class="pre">CONFIG_ARCH_LEDS</span></code> is
 not yet implemented.</p>
+</section>
+<section id="nsh-xspi">
+<h3>nsh-xspi<a class="headerlink" href="#nsh-xspi" title="Permalink to this heading"></a></h3>
+<p>Exercises the xSPI controller in QSPI mode (see QSPI Flash above).
+Enables <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_QSPI</span></code> with an <code class="docutils literal notranslate"><span class="pre">N25QXXX</span></code> MTD flash driver,
+mounted as a single flat LittleFS volume at <code class="docutils literal notranslate"><span class="pre">/mnt/qspi</span></code>. Partitioning
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_MTD_PARTITION</span></code>) and syslog redirection
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_EVK_QSPI_SYSLOG_FILE</span></code>) are optional features (see above) not
+enabled by this defconfig. As with the other configurations, there is no
+working console driver yet, so this is intended for bring-up validation
+with a debugger.</p>
 </section>
 </section>
 </section>
