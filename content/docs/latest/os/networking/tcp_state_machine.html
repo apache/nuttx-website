@@ -730,6 +730,22 @@ gives end-of-file and a send gives <code class="docutils literal notranslate"><s
 the peer the application already read the end of the stream: a RST does not
 change what a receive (end-of-file) or a send (<code class="docutils literal notranslate"><span class="pre">EPIPE</span></code>) gives.</p>
 </section>
+<section id="close-or-reset-before-accept-or-connect-returns">
+<h3>Close or reset before accept() or connect() returns<a class="headerlink" href="#close-or-reset-before-accept-or-connect-returns" title="Permalink to this heading"></a></h3>
+<p>The peer can close (FIN) or reset (RST) the connection after the handshake,
+before <code class="docutils literal notranslate"><span class="pre">accept()</span></code> or <code class="docutils literal notranslate"><span class="pre">connect()</span></code> returns.  After a FIN (<code class="docutils literal notranslate"><span class="pre">TCP_CLOSE_WAIT</span></code>)
+<code class="docutils literal notranslate"><span class="pre">accept()</span></code> and <code class="docutils literal notranslate"><span class="pre">connect()</span></code> succeed: a receive gives the data that came,
+then end-of-file, and a send still reaches the peer.  After a RST
+<code class="docutils literal notranslate"><span class="pre">accept()</span></code> gives the socket, and the reset is reported as above (the data
+that came before the RST, then <code class="docutils literal notranslate"><span class="pre">ECONNRESET</span></code> once, then end-of-file).
+<code class="docutils literal notranslate"><span class="pre">connect()</span></code> fails with <code class="docutils literal notranslate"><span class="pre">ECONNRESET</span></code>, and the socket is not connected.  A
+connection that the peer resets while it waits in the backlog of the
+listener is freed: <code class="docutils literal notranslate"><span class="pre">accept()</span></code> waits for the next connection.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tcp_start_monitor()</span></code> sets the connection state of the socket
+(<code class="docutils literal notranslate"><span class="pre">_SF_CONNECTED</span></code>, <code class="docutils literal notranslate"><span class="pre">_SF_CLOSED</span></code>) with the device locked, where the monitor
+changes it for an event of the peer.  <code class="docutils literal notranslate"><span class="pre">accept()</span></code> and <code class="docutils literal notranslate"><span class="pre">connect()</span></code> do not
+change it after that (<code class="docutils literal notranslate"><span class="pre">SOCKCAP_CONNSTATE</span></code>).</p>
+</section>
 </section>
 <section id="deviations-and-notable-simplifications">
 <h2>Deviations and Notable Simplifications<a class="headerlink" href="#deviations-and-notable-simplifications" title="Permalink to this heading"></a></h2>

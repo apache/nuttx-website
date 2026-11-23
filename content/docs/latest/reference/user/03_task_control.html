@@ -405,12 +405,17 @@ little more compliant to specifications. Without
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HAVE_PARENT</span></code>, <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> simply supports waiting
 for any task to complete execution. With
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HAVE_PARENT</span></code>, <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> will use <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> and
-can, therefore, wait for any child of the parent to complete. The
-implementation is incomplete in either case, however: it does not
-support process groups. Nor does NuttX retain the
-status of exited tasks so if <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> is called after a task has
-exited, then no status will be available. The options argument is
-currently ignored.</p>
+can, therefore, wait for any child of the parent to complete, and it
+is <code class="docutils literal notranslate"><span class="pre">waitid()</span></code> with a status in place of the <code class="docutils literal notranslate"><span class="pre">siginfo_t</span></code>.
+<code class="docutils literal notranslate"><span class="pre">WUNTRACED</span></code> and <code class="docutils literal notranslate"><span class="pre">WCONTINUED</span></code> report a child that stopped on
+<code class="docutils literal notranslate"><span class="pre">SIGSTOP</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGTSTP</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGTTIN</span></code> or <code class="docutils literal notranslate"><span class="pre">SIGTTOU</span></code> and a child that
+continued on <code class="docutils literal notranslate"><span class="pre">SIGCONT</span></code> (<code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_SIGSTOP_ACTION</span></code>), as the job
+control of a shell needs.  A <code class="docutils literal notranslate"><span class="pre">pid</span></code> of 0 or less than -1 selects a
+process group: with <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_PROCESS_GROUPS</span></code> the process groups
+of <code class="docutils literal notranslate"><span class="pre">setpgid()</span></code>; without it a process group contains only one
+process.  NuttX keeps the status of an exited child only with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_CHILD_STATUS</span></code>: without it, if <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> is called
+after a task has exited, then no status will be available.</p>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> functions will obtain status information pertaining to
 one of the caller’s child processes. The <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> function will
@@ -430,7 +435,7 @@ configuration file.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>pid</strong> – The task ID of the thread to wait for</p></li>
 <li><p><strong>stat_loc</strong> – The location to return the exit status</p></li>
-<li><p><strong>options</strong> – ignored</p></li>
+<li><p><strong>options</strong> – <code class="docutils literal notranslate"><span class="pre">WNOHANG</span></code>, <code class="docutils literal notranslate"><span class="pre">WUNTRACED</span></code>, <code class="docutils literal notranslate"><span class="pre">WCONTINUED</span></code> (see below)</p></li>
 </ul>
 </dd>
 </dl>
@@ -544,17 +549,16 @@ name, but the implementation is incomplete (as detailed above).</p>
 <dd><div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The following discussion is a general description of the <code class="docutils literal notranslate"><span class="pre">waitid()</span></code>
-interface. However, as of this writing, the implementation of
-<code class="docutils literal notranslate"><span class="pre">waitid()</span></code> is incomplete (but usable). If
-<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HAVE_PARENT</span></code> is defined, <code class="docutils literal notranslate"><span class="pre">waitid()</span></code> will be a
-little more compliant to specifications. <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> simply
-supports waiting a specific child task (<code class="docutils literal notranslate"><span class="pre">P_PID</span></code> or for any child
-task <code class="docutils literal notranslate"><span class="pre">P_ALL</span></code> to complete execution. <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> is used. The
-implementation is incomplete in either case, however: it does not
-support process groups. Nor does NuttX retain the
-status of exited tasks so if <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> is called after a task has
-exited, then no status will be available. The options argument is
-currently ignored.</p>
+interface. <code class="docutils literal notranslate"><span class="pre">waitid()</span></code> needs <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HAVE_PARENT</span></code>.  It
+waits for a specific child (<code class="docutils literal notranslate"><span class="pre">P_PID</span></code>), for a child in a process
+group (<code class="docutils literal notranslate"><span class="pre">P_PGID</span></code>; an <code class="docutils literal notranslate"><span class="pre">id</span></code> of 0 is the process group of the
+caller) or for any child (<code class="docutils literal notranslate"><span class="pre">P_ALL</span></code>), and <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> is used.
+<code class="docutils literal notranslate"><span class="pre">WSTOPPED</span></code> and <code class="docutils literal notranslate"><span class="pre">WCONTINUED</span></code> need <code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_SIGSTOP_ACTION</span></code>.
+NuttX keeps the status of an exited child only with
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_CHILD_STATUS</span></code>: without it, if <code class="docutils literal notranslate"><span class="pre">waitid()</span></code> is called
+after a task has exited, then no status will be available.  Options
+other than those below, or no <code class="docutils literal notranslate"><span class="pre">WEXITED</span></code>, <code class="docutils literal notranslate"><span class="pre">WSTOPPED</span></code> or
+<code class="docutils literal notranslate"><span class="pre">WCONTINUED</span></code>, give <code class="docutils literal notranslate"><span class="pre">EINVAL</span></code>.</p>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">waitid()</span></code> function suspends the calling thread until one child of
 the process containing the calling thread changes state. It records the
@@ -581,7 +585,7 @@ more of the following flags:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">WEXITED</span></code>: Wait for processes that have exited.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">WSTOPPED</span></code>: Status will be returned for any child that has stopped
 upon receipt of a signal.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">WCONTINUES</span></code>: Status will be returned for any child that was
+<li><p><code class="docutils literal notranslate"><span class="pre">WCONTINUED</span></code>: Status will be returned for any child that was
 stopped and has been continued.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">WNOHANG</span></code>: Return immediately if there are no children to wait for.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">WNOWAIT</span></code>: Keep the process whose status is returned in <code class="docutils literal notranslate"><span class="pre">info</span></code> in

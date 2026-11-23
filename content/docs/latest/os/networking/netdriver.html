@@ -334,6 +334,11 @@ stalls), so cap it near the out-of-order reassembly capacity and bound TX
 with <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_SEND_BUFSIZE</span></code>.  That same cap limits UDP read-ahead, so a
 UDP-throughput-critical socket should raise its own buffer via
 <code class="docutils literal notranslate"><span class="pre">setsockopt(SO_RCVBUF)</span></code> rather than changing the TCP-safe default.
+When an option is 0, a TCP connection still has a limit: its read-ahead
+and its write buffers each use 1/8 of the IOBs above
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_THROTTLE</span></code>, and at least one segment of the largest MSS.  So
+one connection cannot take the whole pool.  <code class="docutils literal notranslate"><span class="pre">SO_RCVBUF</span></code> and
+<code class="docutils literal notranslate"><span class="pre">SO_SNDBUF</span></code> change the limit of a TCP socket also then.
 Enlarging the buffer helps only up to the rate the socket can be drained;
 sustained overload is dropped regardless.  Keeping out-of-order reassembly
 (<code class="docutils literal notranslate"><span class="pre">CONFIG_NET_TCP_OUT_OF_ORDER</span></code>) enabled lets a single loss recover in one

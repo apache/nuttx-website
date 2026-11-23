@@ -358,6 +358,14 @@ summarized in the following tables:</p>
 </tr>
 </tbody>
 </table>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HAVE_PARENT</span></code>, the parent of a process that stops gets
+<code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> with <code class="docutils literal notranslate"><span class="pre">si_code</span></code> <code class="docutils literal notranslate"><span class="pre">CLD_STOPPED</span></code> (<code class="docutils literal notranslate"><span class="pre">si_status</span></code> is the signal),
+and <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> with <code class="docutils literal notranslate"><span class="pre">WUNTRACED</span></code> (<code class="docutils literal notranslate"><span class="pre">waitid()</span></code> with <code class="docutils literal notranslate"><span class="pre">WSTOPPED</span></code>)
+reports the stop once.  When the process continues on <code class="docutils literal notranslate"><span class="pre">SIGCONT</span></code>, the
+parent gets <code class="docutils literal notranslate"><span class="pre">CLD_CONTINUED</span></code>, and <code class="docutils literal notranslate"><span class="pre">WCONTINUED</span></code> reports it.  If the
+<code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> action of the parent has <code class="docutils literal notranslate"><span class="pre">SA_NOCLDSTOP</span></code>, the parent gets no
+<code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> for the two events, but <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code> and <code class="docutils literal notranslate"><span class="pre">waitid()</span></code> still
+report them.  <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code> also ends a stopped process.</p>
 </section>
 <section id="ignored-by-default">
 <h2>Ignored By Default<a class="headerlink" href="#ignored-by-default" title="Permalink to this heading"></a></h2>
@@ -615,7 +623,10 @@ treated like <code class="docutils literal notranslate"><span class="pre">SA_SIG
 <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_CHILD_STATUS</span></code> is defined; then <code class="docutils literal notranslate"><span class="pre">SA_NOCLDWAIT</span></code> is
 supported but only for <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code>.  <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> set to <code class="docutils literal notranslate"><span class="pre">SIG_IGN</span></code>
 has the same effect if <code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_DEFAULT</span></code> is defined.  Any
-other action for <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> keeps the child status again.</p></li>
+other action for <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> keeps the child status again.
+<code class="docutils literal notranslate"><span class="pre">SA_NOCLDSTOP</span></code> for <code class="docutils literal notranslate"><span class="pre">SIGCHLD</span></code> is also supported if
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_HAVE_PARENT</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SIG_SIGSTOP_ACTION</span></code> are
+defined.</p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
