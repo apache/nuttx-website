@@ -39,6 +39,9 @@ MPU         Yes      Static PMSAv7 region table (ITCM/DTCM/SRAM/code)
 TIMER       Yes      MPCore Private Timer used as the system tick source
 SCI         Yes      Interrupt-driven SCI-B asynchronous UART on channels 0-9
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
+RIIC I2C    Yes      Interrupt-driven RIIC master on channels 0-8
+SCI I2C     Yes      Interrupt-driven SCI simple I2C master on channels 0-9
+PWM         Yes      GPT (General PWM Timer) PWM on channels 0-15
 QSPI        Yes      xSPI controller in QSPI mode, manual-command transfers only
 ==========  =======  ============================================================
 
@@ -88,6 +91,9 @@ Runtime baud-rate changes are supported through the standard termios
 
 Hardware flow control and DMA are not implemented yet.
 
+An SCI channel can be used for UART or for simple I2C (see SCI I2C
+below), but not for both at once.
+
 GPIO
 ----
 
@@ -110,11 +116,73 @@ Default SEL IDs
 The 127-line SEL pool (SEL0-SEL126, IRQ 353-479) is conventionally
 partitioned by module, allocated from the top of the range downward:
 
-======  ==================  ================================
-Module  Count                IRQ range (>= 353)
-======  ==================  ================================
-TINT    32 (tint0-tint31)    479-448
-======  ==================  ================================
+========  ==================  ================================
+Module    Count                IRQ range (>= 353)
+========  ==================  ================================
+TINT      32 (tint0-tint31)    479-448
+RIIC I2C  9 (riic0-riic8)      447-430 (txi/rxi only)
+========  ==================  ================================
+
+Changing interrupt-select IDs (RIIC2 as an example)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When the default interrupt-select ID needs to change, e.g. to move
+RIIC2 off its default TXI/RXI SEL IDs (443/442) and onto SEL IDs
+397/396 instead:
+
+#. Run ``make menuconfig`` and navigate to
+   ``System Type -> RZ/V2H Configuration Options -> RIIC I2C support ->
+   RIIC 2``.
+#. Set ``RIIC2 TXI interrupt-select (SEL) IRQ number`` to ``397``.
+#. Set ``RIIC2 RXI interrupt-select (SEL) IRQ number`` to ``396``.
+
+Rebuild and reflash after changing either option so the new INTSEL
+values are picked up.
+
+
+RIIC I2C
+--------
+
+The RIIC driver provides interrupt-driven I2C master
+operation on channels 0 through 8.
+
+``CONFIG_RZV2H_RIIC_I2C`` enables the driver and
+``CONFIG_RZV2H_RIICn`` selects each required channel. Each channel has
+independent Kconfig options for bus bitrate, SCL rise/fall times, duty
+cycle, noise filter stages, TXI/RXI interrupt-select (SEL) IRQ numbers,
+and interrupt priority.
+
+I2C bus reset recovery (``CONFIG_I2C_RESET``) is supported. The driver
+bit-bangs SCL to clock out stuck slaves, then generates a START+STOP
+sequence to reset slave state machines.
+
+SCI I2C
+-------
+
+The SCI I2C driver provides interrupt-driven I2C master operation (SCI simple
+I2C mode, up to 400 kHz) on channels 0 through 9.
+
+``CONFIG_RZV2H_SCI_I2C`` enables the driver and
+``CONFIG_RZV2H_SCI_I2Cn`` selects each required channel; the channel's
+SCI UART must be disabled. Each channel has independent Kconfig options
+for bus bitrate, SDA output delay, noise filter clock, bit-rate modulation,
+and interrupt priority. Channel ``n`` is registered as
+``/dev/i2c<CONFIG_RZV2H_SCI_I2C_BUS_OFFSET + n>``.
+
+I2C bus reset recovery (``CONFIG_I2C_RESET``) is supported, using the same
+method as RIIC I2C.
+
+PWM
+---
+
+The RZ/V2H use the pulsed output control
+implemented using the GPT (General PWM Timer). The driver supports PWM with
+configurable frequency and duty cycle on channels 0 through 15.
+
+``CONFIG_RZV2H_GPT_PWM`` enables the GPT PWM driver. Each channel is
+individually selectable via ``CONFIG_RZV2H_GPTn_PWM``.
+The output pin (GTIOCA or GTIOCB) for each channel is defined in the
+board's ``board.h`` (``BOARD_GPTn_GTIOC_GPIO`` and ``BOARD_GPTn_USE_GTIOCA``).
 
 QSPI
 ----

@@ -496,6 +496,179 @@ devices in ascending hardware-channel order. Their TX and RX pin choices are
 board-specific and are defined by <code class="docutils literal notranslate"><span class="pre">BOARD_SCIn_TXD_GPIO</span></code> and
 <code class="docutils literal notranslate"><span class="pre">BOARD_SCIn_RXD_GPIO</span></code> in <code class="docutils literal notranslate"><span class="pre">boards/arm/rzv2h/rzv2h-rdk/include/board.h</span></code>.</p>
 </section>
+<section id="sci-i2c">
+<h2>SCI I2C<a class="headerlink" href="#sci-i2c" title="Permalink to this heading"></a></h2>
+<p>The SCI channels listed below can run as I2C masters in simple I2C mode.
+SCI channel <code class="docutils literal notranslate"><span class="pre">n</span></code> is registered as
+<code class="docutils literal notranslate"><span class="pre">/dev/i2c&lt;CONFIG_RZV2H_SCI_I2C_BUS_OFFSET</span> <span class="pre">+</span> <span class="pre">n&gt;</span></code>. The default offset is
+10, so the SCI I2C buses do not overlap the RIIC I2C buses.</p>
+<section id="pin-assignments">
+<h3>Pin Assignments<a class="headerlink" href="#pin-assignments" title="Permalink to this heading"></a></h3>
+<p>SDA uses the TXDn pin and SCL uses the RXDn pin of each SCI channel.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Channel</p></th>
+<th class="head"><p>SDA Pin</p></th>
+<th class="head"><p>SCL Pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCI0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P5_0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P5_1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>SCI1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P5_2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P5_3</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>SCI4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_4</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_5</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>SCI5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P7_2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P7_3</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>SCI6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P7_4</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P7_5</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>SCI7</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P7_6</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P7_7</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>SCI9</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_3</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h3>
+<p>The relevant options for enabling SCI7 as an example are:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_I2C=y
+CONFIG_RZV2H_SCI_I2C=y
+CONFIG_RZV2H_SCI_I2C7=y
+CONFIG_I2C_RESET=y
+CONFIG_SYSTEM_I2CTOOL=y
+CONFIG_I2CTOOL_MAXBUS=19
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_I2CTOOL_MAXBUS</span></code> must be at least
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_SCI_I2C_BUS_OFFSET</span></code> plus the SCI channel number, or
+<code class="docutils literal notranslate"><span class="pre">i2ctool</span></code> rejects the bus number.</p>
+<p>Each channel has additional Kconfig options for bit rate, SDA output delay,
+noise filter clock, bit-rate modulation, and interrupt priority. TXI and
+TEI are fixed GIC interrupts, so SCI I2C has no interrupt-select (SEL)
+options.</p>
+<p>After boot, verify that the channel is registered:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ls /dev
+/dev:
+ ...
+ i2c17
+ ...
+</pre></div>
+</div>
+</section>
+<section id="using-the-i2ctool-application">
+<h3>Using the <code class="docutils literal notranslate"><span class="pre">i2ctool</span></code> Application<a class="headerlink" href="#using-the-i2ctool-application" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">sci-i2c</span></code> board configuration (<code class="docutils literal notranslate"><span class="pre">rzv2h-rdk:sci-i2c</span></code>) enables
+SCI7 and the <code class="docutils literal notranslate"><span class="pre">i2ctool</span></code> application. Use the <code class="docutils literal notranslate"><span class="pre">i2c</span></code> commands with the
+SCI I2C bus number.</p>
+<p>List which buses from <code class="docutils literal notranslate"><span class="pre">CONFIG_I2CTOOL_MINBUS</span></code> to <code class="docutils literal notranslate"><span class="pre">CONFIG_I2CTOOL_MAXBUS</span></code>
+exist; bus 17 should be reported as present:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c bus
+</pre></div>
+</div>
+<p>Scan for devices on bus 17 from address 0x03 to 0x77:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c dev -b 17 0x03 0x77
+</pre></div>
+</div>
+<p>Get the register at address 0x00 from a device at address 0x50 on bus 17:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c get -b 17 -a 0x50 -r 0x00
+</pre></div>
+</div>
+<p>Set value 0x5a to the register at address 0x10 of a device at address 0x50
+on bus 17:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c set -b 17 -a 0x50 -r 0x10 0x5a
+</pre></div>
+</div>
+<p>Reset bus 17 to recover a slave that holds the bus (requires
+<code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_RESET</span></code>):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; i2c reset -b 17
+</pre></div>
+</div>
+</section>
+</section>
+<section id="pwm">
+<h2>PWM<a class="headerlink" href="#pwm" title="Permalink to this heading"></a></h2>
+<p>The RZV2H-RDK exposes GPT-based PWM output on channels 0 through 15.</p>
+<section id="pwm-pin-assignments">
+<h3>PWM Pin Assignments<a class="headerlink" href="#pwm-pin-assignments" title="Permalink to this heading"></a></h3>
+<p>Each GPT channel is routed to the following board pin.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Channel</p></th>
+<th class="head"><p>Pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GPT0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P7_0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>GPT2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P4_4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P4_6</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>GPT4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P9_4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P9_6</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>GPT6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA_4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT7</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_6</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>GPT8</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P9_4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT9</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P9_6</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>GPT10</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PA_4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT11</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P6_2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>GPT12</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P3_0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT13</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P6_4</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>GPT14</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P3_5</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GPT15</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P6_6</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>These definitions are in <code class="docutils literal notranslate"><span class="pre">boards/arm/rzv2h/rzv2h-rdk/include/board.h</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">pwm</span></code> board configuration (<code class="docutils literal notranslate"><span class="pre">rzv2h-rdk:pwm</span></code>) enables GPT6
+(PWM output on <code class="docutils literal notranslate"><span class="pre">PA_4</span></code>) and the <code class="docutils literal notranslate"><span class="pre">pwm</span></code> application for interactive testing.</p>
+</section>
+</section>
 <section id="qspi-flash">
 <h2>QSPI Flash<a class="headerlink" href="#qspi-flash" title="Permalink to this heading"></a></h2>
 <p>The board port drives the xSPI controller in QSPI mode (see
@@ -598,6 +771,14 @@ and includes the standard NuttX <code class="docutils literal notranslate"><span
 active-low <code class="docutils literal notranslate"><span class="pre">P11_4</span></code> and <code class="docutils literal notranslate"><span class="pre">P11_5</span></code> LED outputs.  The generic <code class="docutils literal notranslate"><span class="pre">/dev/gpio0</span></code>,
 <code class="docutils literal notranslate"><span class="pre">/dev/gpio1</span></code>, and <code class="docutils literal notranslate"><span class="pre">/dev/gpio2</span></code> interfaces are also available for
 individual read/write testing.</p>
+</section>
+<section id="id1">
+<h3>sci-i2c<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<p>SCI I2C configuration enabling SCI channel 7 in simple I2C mode with the
+<code class="docutils literal notranslate"><span class="pre">i2ctool</span></code> application. The channel is registered as <code class="docutils literal notranslate"><span class="pre">/dev/i2c17</span></code> at
+boot. SDA is on J1 pin 3 (<code class="docutils literal notranslate"><span class="pre">P7_6</span></code>) and SCL on J1 pin 5 (<code class="docutils literal notranslate"><span class="pre">P7_7</span></code>), which
+have on-board pull-ups. Bus reset recovery (<code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_RESET</span></code>) is
+enabled.</p>
 </section>
 <section id="nsh-xspi">
 <h3>nsh-xspi<a class="headerlink" href="#nsh-xspi" title="Permalink to this heading"></a></h3>

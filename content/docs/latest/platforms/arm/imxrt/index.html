@@ -161,7 +161,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../imx9/index.html">NXP i.MX9</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">NXP i.MX RT</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#supported-mcus">Supported MCUs</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#i-mx-rt118x">i.MX RT118x</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#i-mx-rt118x">i.MX RT118x</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#netc-architecture-driver">NETC architecture driver</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="#data-and-instruction-cache">Data and Instruction Cache</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tickless-os">Tickless OS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#peripheral-support">Peripheral Support</a><ul>
@@ -424,6 +427,144 @@ selected for the newer RT118x eDMA IP.</p>
 ELE firmware, and the TRDC driver configures access to RT118x memory and
 peripheral resources. The Cortex-M7 release helper is used by Cortex-M33
 firmware to set the Cortex-M7 boot vector and start the M7 core.</p>
+<section id="netc-architecture-driver">
+<h3>NETC architecture driver<a class="headerlink" href="#netc-architecture-driver" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC</span></code> provides a NETDEV lower-half Ethernet driver for
+RT118x. ENETC0 (PF3, SI0) connects directly to a PHY on physical link 4;
+ENETC1 (PF4, SI0) connects through switch CPU port 4 to selected external
+ports 0–3. These are independent interfaces and may operate separately
+or together; ENETC0 is not bridged to the switch.</p>
+<section id="required-configuration">
+<h4>Required configuration<a class="headerlink" href="#required-configuration" title="Permalink to this heading"></a></h4>
+<p>On an RT118x target, enable <code class="docutils literal notranslate"><span class="pre">CONFIG_NET</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_ETHERNET</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NETDEVICES</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_MM_IOB</span></code>. In the <strong>NETC Ethernet ports</strong>
+menu, select at least one of the following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC0</span></code> enables the independent direct-PHY interface
+on physical link 4.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC1_PORT0</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC1_PORT1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC1_PORT2</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC1_PORT3</span></code> select external switch ports 0–3.
+Select each required port; selected ports share one ENETC1 interface.</p></li>
+</ul>
+<p>These selections enable the hidden <code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC</span></code> symbol, which
+automatically selects <code class="docutils literal notranslate"><span class="pre">CONFIG_NETDEV_LATEINIT</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_SCHED_LPWORK</span></code>.
+Do not try to enable <code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC</span></code> directly.</p>
+<p>Also ensure that the PHY drivers used by the board are enabled through
+<code class="docutils literal notranslate"><span class="pre">CONFIG_ETH0_PHY_*</span></code> and/or <code class="docutils literal notranslate"><span class="pre">CONFIG_ETH1_PHY_*</span></code> under
+<strong>Network Device/PHY Support</strong>. These selections enable compilation of
+the corresponding PHY drivers. A board may instead select the driver
+symbols directly in its Kconfig, as the i.MXRT1180-EVK does for its enabled
+NETC ports. The per-port PHY descriptors described below are required in
+addition to enabling the PHY drivers.</p>
+<p>The driver requires <code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_BUFSIZE</span> <span class="pre">&gt;=</span> <span class="pre">128</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_NBUFFERS</span> <span class="pre">&gt;=</span> <span class="pre">96</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_THROTTLE</span> <span class="pre">&lt;=</span> <span class="pre">16</span></code>.
+The TX descriptor choices require at least 96, 160, 320 or 640 IOBs for
+8, 16, 32 or 64 descriptors respectively; the default is 16 descriptors.
+Also keep <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_ETH_PKTSIZE</span> <span class="pre">&lt;=</span> <span class="pre">1518</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_NET_LL_GUARDSIZE</span> <span class="pre">&lt;=</span> <span class="pre">32</span></code>, and disable <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_PROMISCUOUS</span></code>.</p>
+<p>For example, for a board using an RTL8201F PHY, the following configuration
+fragment selects its PHY driver and switch port 0 with 16 TX and RX
+descriptors:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_NET=y
+CONFIG_NET_ETHERNET=y
+CONFIG_NETDEVICES=y
+CONFIG_MM_IOB=y
+CONFIG_IMXRT_NETC_ENETC1_PORT0=y
+CONFIG_ETH0_PHY_RTL8201F=y
+CONFIG_IMXRT_NETC_TX16=y
+CONFIG_IMXRT_NETC_RX16=y
+CONFIG_IOB_BUFSIZE=128
+CONFIG_IOB_NBUFFERS=160
+CONFIG_IOB_THROTTLE=0
+# CONFIG_NET_PROMISCUOUS is not set
+</pre></div>
+</div>
+<p>For the direct interface alone, replace
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC1_PORT0=y</span></code> with <code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC0=y</span></code>.
+Enable both to use both interfaces. This fragment covers driver selection
+and buffer sizing, not a complete board or network configuration. Kconfig
+selection alone does not initialize NETC or configure its PHYs. Replace
+the example PHY selection with the model selections needed by the board.</p>
+</section>
+<section id="board-integration">
+<h4>Board integration<a class="headerlink" href="#board-integration" title="Permalink to this heading"></a></h4>
+<p>Call <code class="docutils literal notranslate"><span class="pre">imxrt_netc_initialize(&amp;config)</span></code> from board late initialization with
+a <code class="docutils literal notranslate"><span class="pre">static</span> <span class="pre">const</span></code> configuration using the public types in
+<code class="docutils literal notranslate"><span class="pre">imxrt_netc.h</span></code>. The driver copies the configuration. Supply all interfaces
+together; shared IERB setup runs once.</p>
+<ul class="simple">
+<li><p>Match the board configuration to the Kconfig selections. For
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC0</span></code>, set both <code class="docutils literal notranslate"><span class="pre">enetc[0].enabled</span></code> and
+<code class="docutils literal notranslate"><span class="pre">enetc[0].ports[0].enabled</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code>; its other port slots must be
+disabled. For each selected <code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_ENETC1_PORTn</span></code>, set
+<code class="docutils literal notranslate"><span class="pre">enetc[1].enabled</span></code> and <code class="docutils literal notranslate"><span class="pre">enetc[1].ports[n].enabled</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code>.
+These slots describe external switch ports, not the CPU port.
+Each enabled controller needs at least one enabled port. Disabled entries
+are ignored; Kconfig does not populate these board configuration fields.</p></li>
+<li><p>Give each controller a distinct valid unicast MAC and an exclusive
+<code class="docutils literal notranslate"><span class="pre">msgintr</span></code> instance (1–6), including its NVIC interrupt and all three
+message registers. MAC changes take effect at the next interface up.</p></li>
+</ul>
+<section id="phy-configuration">
+<h5>PHY configuration<a class="headerlink" href="#phy-configuration" title="Permalink to this heading"></a></h5>
+<p>Each enabled port must supply its strapped <code class="docutils literal notranslate"><span class="pre">phyaddr</span></code> (0–31) and
+<code class="docutils literal notranslate"><span class="pre">interface</span></code> in <code class="docutils literal notranslate"><span class="pre">imxrt_netc_port_s</span></code>. NETC selects PHYLIB; board Kconfig
+must enable the corresponding PHY drivers. PHYLIB matches drivers by the
+hardware PHY ID and owns model-specific initialization and link decoding.
+MDIO endpoints are hardware-selected, not board-selectable.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">interface</span></code> to <code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_MII</span></code>, <code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_RMII</span></code>,
+<code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_RMII_PHY_CLK_OUT</span></code>, or an appropriate
+<code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_RGMII</span></code> variant. For RMII, use <code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_RMII</span></code> when
+NETC supplies the 50 MHz reference clock, or
+<code class="docutils literal notranslate"><span class="pre">PHY_INTERFACE_RMII_PHY_CLK_OUT</span></code> when the PHY supplies it. NETC and the
+PHY driver derive clock direction from this single interface setting.</p>
+<p>Enable <code class="docutils literal notranslate"><span class="pre">CONFIG_IMXRT_NETC_PHYINIT</span></code> only if the board needs the optional
+<code class="docutils literal notranslate"><span class="pre">board_netc_phyinit(unsigned</span> <span class="pre">int</span> <span class="pre">if_idx,</span>
+<span class="pre">const</span> <span class="pre">struct</span> <span class="pre">imxrt_netc_port_s</span> <span class="pre">*config)</span></code> hook, and provide that function
+in board code. It runs for each enabled port during port preparation,
+after interface mode and clock-direction setup but before MDIO probing.
+<code class="docutils literal notranslate"><span class="pre">if_idx</span></code> identifies physical link 0–4. Use this hook for board-specific
+GPIO/reset setup and complete any required reset delays before returning.</p>
+<p>The separate optional <code class="docutils literal notranslate"><span class="pre">phy.ops-&gt;phyinit</span></code> callback runs after PHY
+identification and before advertisement. It receives a PHY descriptor
+with the resolved address, MDIO operations and the hardware-selected
+MDIO endpoint. Use these supplied parameters for PHY-specific register
+setup, and restore the default PHY page before returning.</p>
+<p>The board owns pinmux, clock direction, PHY reset/timing, NETCMIX reset
+release and TRDC permissions. Stabilize the NETC root clock before
+initialization and keep it unchanged; its frequency must be supported and
+in whole MHz. RMII MAC clock output requires SION on the reference-clock
+pad. Apply RGMII delays at only one end and advertise only board/PHY-supported
+modes.</p>
+<p>DMA uses aligned heap allocations with cache maintenance and address
+translation through <code class="docutils literal notranslate"><span class="pre">imxrt_dma_address()</span></code>. Retain the supported TCM
+partition (256 KB M7 DTCM or 128 KB M33 system TCM) and ensure system-bus
+accessibility, TRDC permissions and external-memory setup. Size the common
+IOB pool for aggregate traffic when both interfaces operate.</p>
+</section>
+</section>
+<section id="operation-and-validation">
+<h4>Operation and validation<a class="headerlink" href="#operation-and-validation" title="Permalink to this heading"></a></h4>
+<p>Interface names depend on successful registrations and other network
+devices; identify interfaces by MAC rather than hardware index.
+Initialization stops at the first error, leaving earlier registrations
+active. Do not blindly retry after partial success.</p>
+<p>ENETC0 enables its MAC after full-duplex negotiation and removes carrier
+on link loss or PHY errors. ENETC1 carrier requires an operational CPU path
+and at least one selected external link. Interface down and TX-stall
+recovery reset only the affected ENETC function; external switching and
+link monitoring continue for ENETC1. Failed recovery leaves the interface
+failed, and DMA references are retained if quiesce/reset fails.</p>
+<p>PHY ioctls use Clause 22 registers 0–31. ENETC0 uses the resolved PHY
+address directly; ENETC1 encodes the switch port in <code class="docutils literal notranslate"><span class="pre">phy_id[9:8]</span></code> and
+address in <code class="docutils literal notranslate"><span class="pre">phy_id[4:0]</span></code>. <code class="docutils literal notranslate"><span class="pre">SIOCGMIIPHY</span></code> preserves the requested port.
+Register access returns <code class="docutils literal notranslate"><span class="pre">ENETDOWN</span></code> after interface down disables PF
+memory access; address queries do not access MDIO. MDIO helpers require
+task context and an initialized endpoint; runtime multi-register PHY
+paging requires the network lock.</p>
+</section>
+</section>
 </section>
 <section id="data-and-instruction-cache">
 <h2>Data and Instruction Cache<a class="headerlink" href="#data-and-instruction-cache" title="Permalink to this heading"></a></h2>

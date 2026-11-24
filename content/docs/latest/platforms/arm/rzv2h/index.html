@@ -200,6 +200,9 @@
 <li class="toctree-l5"><a class="reference internal" href="#sci">SCI</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#gpio">GPIO</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#intc-sel-interrupt-select-lines">INTC SEL (Interrupt Select) Lines</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#riic-i2c">RIIC I2C</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#sci-i2c">SCI I2C</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pwm">PWM</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#qspi">QSPI</a></li>
 </ul>
 </li>
@@ -362,7 +365,19 @@ core:</p>
 <td><p>Yes</p></td>
 <td><p>Basic operations (config/read/write), no interrupt support</p></td>
 </tr>
-<tr class="row-even"><td><p>QSPI</p></td>
+<tr class="row-even"><td><p>RIIC I2C</p></td>
+<td><p>Yes</p></td>
+<td><p>Interrupt-driven RIIC master on channels 0-8</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCI I2C</p></td>
+<td><p>Yes</p></td>
+<td><p>Interrupt-driven SCI simple I2C master on channels 0-9</p></td>
+</tr>
+<tr class="row-even"><td><p>PWM</p></td>
+<td><p>Yes</p></td>
+<td><p>GPT (General PWM Timer) PWM on channels 0-15</p></td>
+</tr>
+<tr class="row-odd"><td><p>QSPI</p></td>
 <td><p>Yes</p></td>
 <td><p>xSPI controller in QSPI mode, manual-command transfers only</p></td>
 </tr>
@@ -405,6 +420,8 @@ registered in ascending channel order.</p>
 <p>Runtime baud-rate changes are supported through the standard termios
 <code class="docutils literal notranslate"><span class="pre">TCGETS</span></code> and <code class="docutils literal notranslate"><span class="pre">TCSETS</span></code> operations.</p>
 <p>Hardware flow control and DMA are not implemented yet.</p>
+<p>An SCI channel can be used for UART or for simple I2C (see SCI I2C
+below), but not for both at once.</p>
 </section>
 <section id="gpio">
 <h3>GPIO<a class="headerlink" href="#gpio" title="Permalink to this heading"></a></h3>
@@ -435,9 +452,64 @@ partitioned by module, allocated from the top of the range downward:</p>
 <td><p>32 (tint0-tint31)</p></td>
 <td><p>479-448</p></td>
 </tr>
+<tr class="row-odd"><td><p>RIIC I2C</p></td>
+<td><p>9 (riic0-riic8)</p></td>
+<td><p>447-430 (txi/rxi only)</p></td>
+</tr>
 </tbody>
 </table>
 </section>
+<section id="changing-interrupt-select-ids-riic2-as-an-example">
+<h4>Changing interrupt-select IDs (RIIC2 as an example)<a class="headerlink" href="#changing-interrupt-select-ids-riic2-as-an-example" title="Permalink to this heading"></a></h4>
+<p>When the default interrupt-select ID needs to change, e.g. to move
+RIIC2 off its default TXI/RXI SEL IDs (443/442) and onto SEL IDs
+397/396 instead:</p>
+<ol class="arabic simple">
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menuconfig</span></code> and navigate to
+<code class="docutils literal notranslate"><span class="pre">System</span> <span class="pre">Type</span> <span class="pre">-&gt;</span> <span class="pre">RZ/V2H</span> <span class="pre">Configuration</span> <span class="pre">Options</span> <span class="pre">-&gt;</span> <span class="pre">RIIC</span> <span class="pre">I2C</span> <span class="pre">support</span> <span class="pre">-&gt;</span>
+<span class="pre">RIIC</span> <span class="pre">2</span></code>.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">RIIC2</span> <span class="pre">TXI</span> <span class="pre">interrupt-select</span> <span class="pre">(SEL)</span> <span class="pre">IRQ</span> <span class="pre">number</span></code> to <code class="docutils literal notranslate"><span class="pre">397</span></code>.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">RIIC2</span> <span class="pre">RXI</span> <span class="pre">interrupt-select</span> <span class="pre">(SEL)</span> <span class="pre">IRQ</span> <span class="pre">number</span></code> to <code class="docutils literal notranslate"><span class="pre">396</span></code>.</p></li>
+</ol>
+<p>Rebuild and reflash after changing either option so the new INTSEL
+values are picked up.</p>
+</section>
+</section>
+<section id="riic-i2c">
+<h3>RIIC I2C<a class="headerlink" href="#riic-i2c" title="Permalink to this heading"></a></h3>
+<p>The RIIC driver provides interrupt-driven I2C master
+operation on channels 0 through 8.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_RIIC_I2C</span></code> enables the driver and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_RIICn</span></code> selects each required channel. Each channel has
+independent Kconfig options for bus bitrate, SCL rise/fall times, duty
+cycle, noise filter stages, TXI/RXI interrupt-select (SEL) IRQ numbers,
+and interrupt priority.</p>
+<p>I2C bus reset recovery (<code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_RESET</span></code>) is supported. The driver
+bit-bangs SCL to clock out stuck slaves, then generates a START+STOP
+sequence to reset slave state machines.</p>
+</section>
+<section id="sci-i2c">
+<h3>SCI I2C<a class="headerlink" href="#sci-i2c" title="Permalink to this heading"></a></h3>
+<p>The SCI I2C driver provides interrupt-driven I2C master operation (SCI simple
+I2C mode, up to 400 kHz) on channels 0 through 9.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_SCI_I2C</span></code> enables the driver and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_SCI_I2Cn</span></code> selects each required channel; the channel’s
+SCI UART must be disabled. Each channel has independent Kconfig options
+for bus bitrate, SDA output delay, noise filter clock, bit-rate modulation,
+and interrupt priority. Channel <code class="docutils literal notranslate"><span class="pre">n</span></code> is registered as
+<code class="docutils literal notranslate"><span class="pre">/dev/i2c&lt;CONFIG_RZV2H_SCI_I2C_BUS_OFFSET</span> <span class="pre">+</span> <span class="pre">n&gt;</span></code>.</p>
+<p>I2C bus reset recovery (<code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_RESET</span></code>) is supported, using the same
+method as RIIC I2C.</p>
+</section>
+<section id="pwm">
+<h3>PWM<a class="headerlink" href="#pwm" title="Permalink to this heading"></a></h3>
+<p>The RZ/V2H use the pulsed output control
+implemented using the GPT (General PWM Timer). The driver supports PWM with
+configurable frequency and duty cycle on channels 0 through 15.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_GPT_PWM</span></code> enables the GPT PWM driver. Each channel is
+individually selectable via <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_GPTn_PWM</span></code>.
+The output pin (GTIOCA or GTIOCB) for each channel is defined in the
+board’s <code class="docutils literal notranslate"><span class="pre">board.h</span></code> (<code class="docutils literal notranslate"><span class="pre">BOARD_GPTn_GTIOC_GPIO</span></code> and <code class="docutils literal notranslate"><span class="pre">BOARD_GPTn_USE_GTIOCA</span></code>).</p>
 </section>
 <section id="qspi">
 <h3>QSPI<a class="headerlink" href="#qspi" title="Permalink to this heading"></a></h3>

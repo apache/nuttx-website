@@ -268,14 +268,26 @@ process group is one process: <code class="docutils literal notranslate"><span c
 ID as the process group ID, and <code class="docutils literal notranslate"><span class="pre">kill(-pgrp,</span> <span class="pre">signo)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">killpg()</span></code> send the signal to the process <code class="docutils literal notranslate"><span class="pre">pgrp</span></code>.</p>
 </li>
-<li><p><strong>Window size</strong>. <code class="docutils literal notranslate"><span class="pre">TIOCGWINSZ</span></code> returns the terminal size in a
-<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">winsize</span></code> and <code class="docutils literal notranslate"><span class="pre">TIOCSWINSZ</span></code> sets it.  The size is 0 rows
-and 0 columns until a program sets it (for example <code class="docutils literal notranslate"><span class="pre">openpty()</span></code> or
-a remote login server).  A change of the size sends <code class="docutils literal notranslate"><span class="pre">SIGWINCH</span></code> to
-the foreground process group, as above, when <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code> or
-<code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGTSTP</span></code> is enabled.  A pseudo-terminal keeps one size
-for the master and the slave; the signal goes to the foreground
-process group of the slave.</p></li>
+<li><p><strong>Window size</strong>. With <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_WINSIZE</span></code>, <code class="docutils literal notranslate"><span class="pre">TIOCGWINSZ</span></code>
+returns the terminal size in a <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">winsize</span></code> and <code class="docutils literal notranslate"><span class="pre">TIOCSWINSZ</span></code>
+sets it.  The size is 0 rows and 0 columns until a program sets it
+(for example <code class="docutils literal notranslate"><span class="pre">openpty()</span></code> or a remote login server).  A change of
+the size sends <code class="docutils literal notranslate"><span class="pre">SIGWINCH</span></code> to the foreground process group, as above,
+when <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGINT</span></code> or <code class="docutils literal notranslate"><span class="pre">CONFIG_TTY_SIGTSTP</span></code> is enabled.  A
+pseudo-terminal keeps one size for the master and the slave; the signal
+goes to the foreground process group of the slave.  When
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_WINSIZE</span></code> is disabled (default on <code class="docutils literal notranslate"><span class="pre">DEFAULT_SMALL</span></code>),
+these ioctl calls fail with <code class="docutils literal notranslate"><span class="pre">ENOTTY</span></code> (returning -1 and setting
+<code class="docutils literal notranslate"><span class="pre">errno</span></code> to <code class="docutils literal notranslate"><span class="pre">ENOTTY</span></code>), saving Flash and per-device
+SRAM.</p></li>
+<li><p><strong>Serial line break</strong>. When <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_BREAK</span></code> is enabled
+(the default except for <code class="docutils literal notranslate"><span class="pre">DEFAULT_SMALL</span></code>), <code class="docutils literal notranslate"><span class="pre">TCSBRK</span></code> and
+<code class="docutils literal notranslate"><span class="pre">TCSBRKP</span></code> (used by POSIX <code class="docutils literal notranslate"><span class="pre">tcsendbreak()</span></code>) request a line
+break via the lower half driver’s <code class="docutils literal notranslate"><span class="pre">TIOCSBRK</span></code> and <code class="docutils literal notranslate"><span class="pre">TIOCCBRK</span></code>
+ioctls.  When disabled, the driver returns <code class="docutils literal notranslate"><span class="pre">-ENOTTY</span></code> (causing
+<code class="docutils literal notranslate"><span class="pre">ioctl()</span></code> and <code class="docutils literal notranslate"><span class="pre">tcsendbreak()</span></code> to return -1 with <code class="docutils literal notranslate"><span class="pre">errno</span></code>
+set to <code class="docutils literal notranslate"><span class="pre">ENOTTY</span></code>), reducing code size on memory-constrained
+targets.</p></li>
 <li><p><strong>User Access</strong>. Serial drivers are, ultimately, normal
 <a class="reference external" href="#chardrivers">character drivers</a> and are accessed as other
 character drivers.</p></li>
