@@ -669,6 +669,216 @@ on bus 17:</p>
 (PWM output on <code class="docutils literal notranslate"><span class="pre">PA_4</span></code>) and the <code class="docutils literal notranslate"><span class="pre">pwm</span></code> application for interactive testing.</p>
 </section>
 </section>
+<section id="can">
+<h2>CAN<a class="headerlink" href="#can" title="Permalink to this heading"></a></h2>
+<p>The RZV2H-RDK board port defines pins for four CAN-FD channels
+(CANFD0-CANFD3). CANFD0 and CANFD3 go through the on-board TCAN1046
+transceiver to connectors J2 and J3; with <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFDn_STB_PIN</span></code>,
+the driver drives its standby pins (<code class="docutils literal notranslate"><span class="pre">PA_2</span></code>, <code class="docutils literal notranslate"><span class="pre">PA_3</span></code>) low when the
+channel is opened. CANFD1 and CANFD2 are on the 40-pin header J1 and need
+an external transceiver.</p>
+<section id="can-pin-assignments">
+<h3>CAN Pin Assignments<a class="headerlink" href="#can-pin-assignments" title="Permalink to this heading"></a></h3>
+<p>Each CAN-FD channel is routed to the following board pins.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Channel</p></th>
+<th class="head"><p>TX Pin</p></th>
+<th class="head"><p>RX Pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CANFD0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>CANFD1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_3</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>CANFD2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_4</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_5</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>CANFD3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_6</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">P8_7</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>These definitions are in <code class="docutils literal notranslate"><span class="pre">boards/arm/rzv2h/rzv2h-rdk/include/board.h</span></code>.</p>
+</section>
+<section id="can-default-interrupt-select-ids">
+<h3>CAN Default Interrupt Select IDs<a class="headerlink" href="#can-default-interrupt-select-ids" title="Permalink to this heading"></a></h3>
+<p>All CAN-FD interrupts are routed through the programmable INTC
+interrupt-select (SEL) lines. Each channel uses three: REC (reception
+into a Common FIFO), TRX (transmit complete or abort) and ERR (channel
+error). Two more lines are shared by all channels: GERR (global error)
+and GRECC (reception into an RX FIFO).</p>
+<p><strong>SEL IRQ numbers</strong> (configurable via Kconfig, valid range 353-479):</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Channel</p></th>
+<th class="head"><p>REC SEL (GIC IRQ)</p></th>
+<th class="head"><p>TRX SEL (GIC IRQ)</p></th>
+<th class="head"><p>ERR SEL (GIC IRQ)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CANFD0</p></td>
+<td><p>417 (SEL64)</p></td>
+<td><p>416 (SEL63)</p></td>
+<td><p>415 (SEL62)</p></td>
+</tr>
+<tr class="row-odd"><td><p>CANFD1</p></td>
+<td><p>414 (SEL61)</p></td>
+<td><p>413 (SEL60)</p></td>
+<td><p>412 (SEL59)</p></td>
+</tr>
+<tr class="row-even"><td><p>CANFD2</p></td>
+<td><p>411 (SEL58)</p></td>
+<td><p>410 (SEL57)</p></td>
+<td><p>409 (SEL56)</p></td>
+</tr>
+<tr class="row-odd"><td><p>CANFD3</p></td>
+<td><p>408 (SEL55)</p></td>
+<td><p>407 (SEL54)</p></td>
+<td><p>406 (SEL53)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The shared lines default to 419 (SEL66) for GERR
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD_GERR_INTSEL</span></code>) and 418 (SEL65) for GRECC
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD_GREEC_INTSEL</span></code>).</p>
+<p>The relevant options for enabling CANFD0 in external loopback mode, as in
+the <code class="docutils literal notranslate"><span class="pre">can-loopback</span></code> configuration, are:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CONFIG_CAN=y
+CONFIG_CAN_EXTID=y
+CONFIG_CAN_FD=y
+CONFIG_CAN_ERRORS=y
+CONFIG_CAN_LOOPBACK=y
+CONFIG_RZV2H_CANFD=y
+CONFIG_RZV2H_CANFD_LOOPBACK_EXTERNAL=y
+CONFIG_RZV2H_CANFD0=y
+CONFIG_RZV2H_CANFD_RXFIFO0_ENABLED=y
+CONFIG_EXAMPLES_CAN=y
+CONFIG_EXAMPLES_CAN_NMSGS=100
+</pre></div>
+</div>
+<p>By default channel n receives in RX FIFO n, so RX FIFO n must be enabled
+(<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD_RXFIFOn_ENABLED</span></code>) for each enabled channel. Each
+channel has additional Kconfig options for bit rates, receive FIFO, TX
+message buffers, error interrupts, REC/TRX/ERR interrupt-select (SEL) IRQ
+numbers, and interrupt priority.</p>
+<p>After boot, enabled CAN-FD channels are registered as <code class="docutils literal notranslate"><span class="pre">/dev/canX</span></code>
+devices, where X is the channel number. Verify with <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">/dev</span></code> that
+<code class="docutils literal notranslate"><span class="pre">can0</span></code> is listed.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">can-loopback</span></code> board configuration (<code class="docutils literal notranslate"><span class="pre">rzv2h-rdk:can-loopback</span></code>)
+enables CANFD0 in external loopback mode and the <code class="docutils literal notranslate"><span class="pre">can</span></code> example. Other
+channels can be enabled by adding the corresponding
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFDn</span></code> options.</p>
+</section>
+<section id="using-the-can-application">
+<h3>Using the <code class="docutils literal notranslate"><span class="pre">can</span></code> Application<a class="headerlink" href="#using-the-can-application" title="Permalink to this heading"></a></h3>
+<p>In the <code class="docutils literal notranslate"><span class="pre">can-loopback</span></code> configuration CANFD0 runs in external loopback
+mode: it receives its own frames back through the on-board CAN
+transceiver and sends its own acknowledge, so no other node is needed on
+the bus.</p>
+<p>Send and check 100 frames (<code class="docutils literal notranslate"><span class="pre">CONFIG_EXAMPLES_CAN_NMSGS</span></code>):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; can
+</pre></div>
+</div>
+<p>Send and check 20 frames:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; can -n 20
+</pre></div>
+</div>
+<p>Use standard IDs instead of extended IDs:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; can -s
+</pre></div>
+</div>
+<p>Send CAN FD frames without bit rate switching:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; can -e
+</pre></div>
+</div>
+<p>Each frame is printed when it is sent, then again with <code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">OK</span></code> when the
+frame read back matches it.</p>
+</section>
+<section id="socketcan">
+<h3>SocketCAN<a class="headerlink" href="#socketcan" title="Permalink to this heading"></a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD_SOCKET</span></code> (CAN-FD option “CAN character driver or
+SocketCAN support”), channel n is the SocketCAN network interface
+<code class="docutils literal notranslate"><span class="pre">can&lt;n&gt;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">/dev/can&lt;n&gt;</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">can-socketcan</span></code> board configuration (<code class="docutils literal notranslate"><span class="pre">rzv2h-rdk:can-socketcan</span></code>)
+enables CANFD0 (<code class="docutils literal notranslate"><span class="pre">can0</span></code>, J2) and CANFD3 (<code class="docutils literal notranslate"><span class="pre">can3</span></code>, J3) with the
+<code class="docutils literal notranslate"><span class="pre">candump</span></code> and <code class="docutils literal notranslate"><span class="pre">cansend</span></code> tools. Connect J2 to J3, then:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifup can0
+nsh&gt; ifup can3
+nsh&gt; candump can3 &amp;
+nsh&gt; cansend can0 123#DEADBEEF
+nsh&gt; cansend can0 12345678#1122
+nsh&gt; cansend can0 456##1DEADBEEF
+</pre></div>
+</div>
+<p>The last command sends a CAN FD frame with bit rate switching. Bit rates
+(<code class="docutils literal notranslate"><span class="pre">SIOCSCANBITRATE</span></code>, while the interface is down), filters
+(<code class="docutils literal notranslate"><span class="pre">SIOCACANSTDFILTER</span></code>, <code class="docutils literal notranslate"><span class="pre">SIOCACANEXTFILTER</span></code>) and bus-off recovery
+(<code class="docutils literal notranslate"><span class="pre">SIOCCANRECOVERY</span></code>) are set with ioctl() on a CAN socket.</p>
+</section>
+<section id="dronecan">
+<h3>DroneCAN<a class="headerlink" href="#dronecan" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">can-dronecan</span></code> board configuration (<code class="docutils literal notranslate"><span class="pre">rzv2h-rdk:can-dronecan</span></code>)
+enables CANFD0 (<code class="docutils literal notranslate"><span class="pre">/dev/can0</span></code>, J2) and CANFD3 (<code class="docutils literal notranslate"><span class="pre">/dev/can3</span></code>, J3) with the
+<code class="docutils literal notranslate"><span class="pre">dronecan</span></code> example. Connect J2 to J3, then listen on <code class="docutils literal notranslate"><span class="pre">/dev/can3</span></code> and
+start the example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; hexdump /dev/can3 &amp;
+nsh&gt; dronecan
+</pre></div>
+</div>
+</section>
+<section id="opencyphal">
+<h3>OpenCyphal<a class="headerlink" href="#opencyphal" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">can-opencyphal</span></code> board configuration (<code class="docutils literal notranslate"><span class="pre">rzv2h-rdk:can-opencyphal</span></code>)
+enables CANFD0 (<code class="docutils literal notranslate"><span class="pre">can0</span></code>, J2) and CANFD3 (<code class="docutils literal notranslate"><span class="pre">can3</span></code>, J3) with the
+<code class="docutils literal notranslate"><span class="pre">opencyphal</span></code> example and the <code class="docutils literal notranslate"><span class="pre">candump</span></code> and <code class="docutils literal notranslate"><span class="pre">cansend</span></code> tools. Connect
+J2 to J3, bring up both interfaces, listen on <code class="docutils literal notranslate"><span class="pre">can3</span></code> and start the
+example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifup can0
+nsh&gt; ifup can3
+nsh&gt; candump can3 &amp;
+nsh&gt; opencyphal
+</pre></div>
+</div>
+</section>
+<section id="slcan">
+<h3>SLCAN<a class="headerlink" href="#slcan" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">can-slcan</span></code> board configuration (<code class="docutils literal notranslate"><span class="pre">rzv2h-rdk:can-slcan</span></code>) enables
+CANFD0 (<code class="docutils literal notranslate"><span class="pre">can0</span></code>, J2), CANFD3 (<code class="docutils literal notranslate"><span class="pre">can3</span></code>, J3) and SCI1 (<code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code>,
+TXD1 on <code class="docutils literal notranslate"><span class="pre">P5_2</span></code>, RXD1 on <code class="docutils literal notranslate"><span class="pre">P5_3</span></code>) with the <code class="docutils literal notranslate"><span class="pre">slcan</span></code> tool, which bridges
+a CAN interface to a serial line using the SLCAN protocol. Connect J2 to
+J3 and a host serial terminal to SCI1. Bridge <code class="docutils literal notranslate"><span class="pre">can3</span></code> to <code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code>
+and listen on <code class="docutils literal notranslate"><span class="pre">can0</span></code>, both in the background:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nsh&gt; ifup can0
+nsh&gt; ifup can3
+nsh&gt; slcan can3 /dev/ttyS1 &amp;
+nsh&gt; candump can0 &amp;
+</pre></div>
+</div>
+<p>On the terminal, send <code class="docutils literal notranslate"><span class="pre">O</span></code> to open the channel so <code class="docutils literal notranslate"><span class="pre">slcan</span></code> accepts send
+commands. Frames typed after that are sent on <code class="docutils literal notranslate"><span class="pre">can3</span></code>. <code class="docutils literal notranslate"><span class="pre">t</span></code> sends a
+standard ID frame and <code class="docutils literal notranslate"><span class="pre">T</span></code> an extended ID frame, each followed by the ID
+(3 or 8 hex digits), the data length and the data bytes:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>O
+t7FF3010299
+t1238DEADBEEF11223344
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">candump</span></code> shows each frame received on <code class="docutils literal notranslate"><span class="pre">can0</span></code>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>can0  7FF   [3]  01 02 99
+can0  123   [8]  DE AD BE EF 11 22 33 44
+</pre></div>
+</div>
+</section>
+</section>
 <section id="qspi-flash">
 <h2>QSPI Flash<a class="headerlink" href="#qspi-flash" title="Permalink to this heading"></a></h2>
 <p>The board port drives the xSPI controller in QSPI mode (see
@@ -779,6 +989,37 @@ individual read/write testing.</p>
 boot. SDA is on J1 pin 3 (<code class="docutils literal notranslate"><span class="pre">P7_6</span></code>) and SCL on J1 pin 5 (<code class="docutils literal notranslate"><span class="pre">P7_7</span></code>), which
 have on-board pull-ups. Bus reset recovery (<code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_RESET</span></code>) is
 enabled.</p>
+</section>
+<section id="can-loopback">
+<h3>can-loopback<a class="headerlink" href="#can-loopback" title="Permalink to this heading"></a></h3>
+<p>CAN configuration enabling CANFD0 in external loopback mode with the
+<code class="docutils literal notranslate"><span class="pre">can</span></code> example, which sends 100 CAN FD frames and checks that each one is
+read back unchanged. The channel is registered as <code class="docutils literal notranslate"><span class="pre">/dev/can0</span></code> at boot.
+CANFD0 uses the on-board transceiver (J2); no other node is needed on the
+bus.</p>
+</section>
+<section id="can-socketcan">
+<h3>can-socketcan<a class="headerlink" href="#can-socketcan" title="Permalink to this heading"></a></h3>
+<p>SocketCAN configuration: CANFD0 and CANFD3 are the network interfaces
+<code class="docutils literal notranslate"><span class="pre">can0</span></code> (J2) and <code class="docutils literal notranslate"><span class="pre">can3</span></code> (J3), with the <code class="docutils literal notranslate"><span class="pre">candump</span></code> and <code class="docutils literal notranslate"><span class="pre">cansend</span></code>
+tools. Bring them up with <code class="docutils literal notranslate"><span class="pre">ifup</span> <span class="pre">can0</span></code> and <code class="docutils literal notranslate"><span class="pre">ifup</span> <span class="pre">can3</span></code>.</p>
+</section>
+<section id="can-dronecan">
+<h3>can-dronecan<a class="headerlink" href="#can-dronecan" title="Permalink to this heading"></a></h3>
+<p>DroneCAN configuration: CANFD0 and CANFD3 are the character devices
+<code class="docutils literal notranslate"><span class="pre">/dev/can0</span></code> (J2) and <code class="docutils literal notranslate"><span class="pre">/dev/can3</span></code> (J3), with the <code class="docutils literal notranslate"><span class="pre">dronecan</span></code> example
+node on <code class="docutils literal notranslate"><span class="pre">/dev/can0</span></code>.</p>
+</section>
+<section id="can-opencyphal">
+<h3>can-opencyphal<a class="headerlink" href="#can-opencyphal" title="Permalink to this heading"></a></h3>
+<p>OpenCyphal configuration: CANFD0 and CANFD3 are the network interfaces
+<code class="docutils literal notranslate"><span class="pre">can0</span></code> (J2) and <code class="docutils literal notranslate"><span class="pre">can3</span></code> (J3), with the <code class="docutils literal notranslate"><span class="pre">opencyphal</span></code> example node on
+<code class="docutils literal notranslate"><span class="pre">can0</span></code> and the <code class="docutils literal notranslate"><span class="pre">candump</span></code> and <code class="docutils literal notranslate"><span class="pre">cansend</span></code> tools.</p>
+</section>
+<section id="can-slcan">
+<h3>can-slcan<a class="headerlink" href="#can-slcan" title="Permalink to this heading"></a></h3>
+<p>SLCAN configuration: CANFD0 and CANFD3 are the network interfaces <code class="docutils literal notranslate"><span class="pre">can0</span></code>
+(J2) and <code class="docutils literal notranslate"><span class="pre">can3</span></code> (J3), with the <code class="docutils literal notranslate"><span class="pre">slcan</span></code> tool on SCI1 (<code class="docutils literal notranslate"><span class="pre">/dev/ttyS1</span></code>).</p>
 </section>
 <section id="nsh-xspi">
 <h3>nsh-xspi<a class="headerlink" href="#nsh-xspi" title="Permalink to this heading"></a></h3>

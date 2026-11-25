@@ -432,6 +432,20 @@ forwards transfers to the local I2C device node named in its config space.</p>
 host vhost-user backend, or against a second NuttX instance running the vhost
 backend over rptun/IVSHMEM.</p>
 </section>
+<section id="rpmsg-i2c">
+<h1>RPMsg I2C<a class="headerlink" href="#rpmsg-i2c" title="Permalink to this heading"></a></h1>
+<p>NuttX can expose an I2C controller across a RPMsg link. Enable
+<code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_RPMSG</span></code> on the client side and <code class="docutils literal notranslate"><span class="pre">CONFIG_I2C_RPMSG_SERVER</span></code> on
+the side that owns the real I2C bus.</p>
+<p>The client creates a normal <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_master_s</span></code> instance with
+<code class="docutils literal notranslate"><span class="pre">i2c_rpmsg_initialize(cpuname,</span> <span class="pre">name)</span></code>. The server exports a local I2C
+controller with <code class="docutils literal notranslate"><span class="pre">i2c_rpmsg_server_initialize(name,</span> <span class="pre">i2c)</span></code>. Board code may
+then pass the client instance to device drivers, or register it with
+<code class="docutils literal notranslate"><span class="pre">i2c_register()</span></code> so NSH tools can access it as <code class="docutils literal notranslate"><span class="pre">/dev/i2cN</span></code>.</p>
+<p>RPMsg is only the transport. I2C transfers use a private RPMsg payload
+format carrying each NuttX <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">i2c_msg_s</span></code> with its address, flags, and
+frequency.</p>
+</section>
 
 
            </div>

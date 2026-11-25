@@ -243,6 +243,23 @@ Linux VirtIO SPI definitions. An <code class="docutils literal notranslate"><spa
 bus-locked run of requests, with CS held between transfers that do not
 de-select. The frontend can be validated against a host vhost-user backend.</p>
 </section>
+<section id="rpmsg-spi">
+<h1>RPMsg SPI<a class="headerlink" href="#rpmsg-spi" title="Permalink to this heading"></a></h1>
+<p>NuttX can expose an SPI controller across a RPMsg link. Enable
+<code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_RPMSG</span></code> on the client side and <code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_RPMSG_SERVER</span></code> on
+the side that owns the real SPI bus. <code class="docutils literal notranslate"><span class="pre">CONFIG_SPI_EXCHANGE</span></code> is also required.</p>
+<p>The client creates a normal <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">spi_dev_s</span></code> instance with
+<code class="docutils literal notranslate"><span class="pre">spi_rpmsg_initialize(cpuname,</span> <span class="pre">name)</span></code>. The server exports a local SPI
+controller with <code class="docutils literal notranslate"><span class="pre">spi_rpmsg_server_initialize(name,</span> <span class="pre">spi)</span></code>. Board code may
+then pass the client instance to device drivers, or register it with
+<code class="docutils literal notranslate"><span class="pre">spi_register()</span></code> so NSH tools can access it as <code class="docutils literal notranslate"><span class="pre">/dev/spiN</span></code>.</p>
+<p>RPMsg is only the transport. SPI transfers use a private RPMsg payload
+format carrying the selected chip, mode, bits per word,
+frequency, delay, transmit data, receive data, and transfer result.</p>
+<p>Bus locking never crosses the link: every message executes atomically on
+the server, and an <code class="docutils literal notranslate"><span class="pre">spi_transfer()</span></code> sequence that fits into one RPMsg
+buffer is forwarded as a single message.</p>
+</section>
 
 
            </div>

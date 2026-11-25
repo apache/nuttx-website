@@ -203,6 +203,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#riic-i2c">RIIC I2C</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#sci-i2c">SCI I2C</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#pwm">PWM</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#can">CAN</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#qspi">QSPI</a></li>
 </ul>
 </li>
@@ -377,7 +378,11 @@ core:</p>
 <td><p>Yes</p></td>
 <td><p>GPT (General PWM Timer) PWM on channels 0-15</p></td>
 </tr>
-<tr class="row-odd"><td><p>QSPI</p></td>
+<tr class="row-odd"><td><p>CAN</p></td>
+<td><p>Yes</p></td>
+<td><p>CAN-FD on channels 0-5</p></td>
+</tr>
+<tr class="row-even"><td><p>QSPI</p></td>
 <td><p>Yes</p></td>
 <td><p>xSPI controller in QSPI mode, manual-command transfers only</p></td>
 </tr>
@@ -456,6 +461,10 @@ partitioned by module, allocated from the top of the range downward:</p>
 <td><p>9 (riic0-riic8)</p></td>
 <td><p>447-430 (txi/rxi only)</p></td>
 </tr>
+<tr class="row-even"><td><p>CAN</p></td>
+<td><p>6 (can0-can5)</p></td>
+<td><p>419-400 (gerr/grecc, rec/trx/err)</p></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -510,6 +519,23 @@ configurable frequency and duty cycle on channels 0 through 15.</p>
 individually selectable via <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_GPTn_PWM</span></code>.
 The output pin (GTIOCA or GTIOCB) for each channel is defined in the
 board’s <code class="docutils literal notranslate"><span class="pre">board.h</span></code> (<code class="docutils literal notranslate"><span class="pre">BOARD_GPTn_GTIOC_GPIO</span></code> and <code class="docutils literal notranslate"><span class="pre">BOARD_GPTn_USE_GTIOCA</span></code>).</p>
+</section>
+<section id="can">
+<h3>CAN<a class="headerlink" href="#can" title="Permalink to this heading"></a></h3>
+<p>The CAN-FD driver supports CAN FD operation on channels 0 through 5.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD</span></code> enables the driver and <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFDn</span></code>
+selects each required channel. Each channel has independent Kconfig
+options for the nominal and data bit rates (computed from the rates and
+sample point, or set manually), delay compensation, the receive FIFO,
+the number of TX message buffers, channel error interrupts, REC/TRX/ERR
+interrupt-select (SEL) IRQ numbers, and interrupt priority.</p>
+<p>Error reporting (<code class="docutils literal notranslate"><span class="pre">CONFIG_CAN_ERRORS</span></code>) is supported.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_CAN_LOOPBACK</span></code>, each channel enters internal or external
+loopback mode when opened, as selected by
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD_LOOPBACK_INTERNAL</span></code> or
+<code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD_LOOPBACK_EXTERNAL</span></code>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">CONFIG_RZV2H_CANFD_SOCKET</span></code>, the channels are SocketCAN network
+interfaces (<code class="docutils literal notranslate"><span class="pre">can0</span></code> to <code class="docutils literal notranslate"><span class="pre">can5</span></code>) instead of character devices.</p>
 </section>
 <section id="qspi">
 <h3>QSPI<a class="headerlink" href="#qspi" title="Permalink to this heading"></a></h3>
