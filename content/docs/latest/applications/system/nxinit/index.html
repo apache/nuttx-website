@@ -226,6 +226,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#commands">Commands</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#mounting-file-systems">Mounting File Systems</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#setting-power-states">Setting Power States</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#waiting-for-a-file">Waiting for a File</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#compound-commands">Compound Commands</a></li>
 </ul>
 </li>
@@ -535,6 +536,7 @@ property), <code class="docutils literal notranslate"><span class="pre">unlink</
 <li><p>Service management: <code class="docutils literal notranslate"><span class="pre">start</span></code>/<code class="docutils literal notranslate"><span class="pre">stop</span></code> (start/stop a service),
 <code class="docutils literal notranslate"><span class="pre">exec_start</span></code> (start a service and wait until it exits),
 <code class="docutils literal notranslate"><span class="pre">class_start</span></code>/<code class="docutils literal notranslate"><span class="pre">class_stop</span></code> (start/stop all services of a class).</p></li>
+<li><p>Waiting: <code class="docutils literal notranslate"><span class="pre">wait</span></code> (wait for a file, see below).</p></li>
 <li><p>Programs: <code class="docutils literal notranslate"><span class="pre">exec</span> <span class="pre">--</span> <span class="pre">&lt;program&gt;</span> <span class="pre">[&lt;argument&gt;]*</span></code> (run a program and wait until
 it exits).</p></li>
 <li><p>Others: <code class="docutils literal notranslate"><span class="pre">trigger</span></code> (trigger an event), and <code class="docutils literal notranslate"><span class="pre">netinit</span></code>, <code class="docutils literal notranslate"><span class="pre">boot</span></code>,
@@ -579,6 +581,22 @@ removes the request. <code class="docutils literal notranslate"><span class="pre
 arguments dumps the PM statistics; NXInit does not have that form, which
 init does not need. With <code class="docutils literal notranslate"><span class="pre">CONFIG_PM</span></code> disabled, NXInit has no
 <code class="docutils literal notranslate"><span class="pre">pmconfig</span></code> command.</p>
+</section>
+<section id="waiting-for-a-file">
+<h3>Waiting for a File<a class="headerlink" href="#waiting-for-a-file" title="Permalink to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>wait &lt;path&gt; [&lt;timeout&gt;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">wait</span></code> checks for the existence of <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> with stat() every 10 ms
+and returns when the file is found. <code class="docutils literal notranslate"><span class="pre">&lt;timeout&gt;</span></code> is in seconds and may
+be fractional; it defaults to 5. When the timeout is reached, the
+command only warns and continues, so the next command still runs.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>on boot
+    start foo_driver
+    wait /dev/xxx 2
+    start bar
+</pre></div>
+</div>
 </section>
 <section id="compound-commands">
 <h3>Compound Commands<a class="headerlink" href="#compound-commands" title="Permalink to this heading"></a></h3>
