@@ -388,6 +388,50 @@ testing on CI of 32-bit RISC-V using QEMU.</p>
 on 32-bit RISC-V. It boots directly into the ELF example and does not provide
 the NuttShell (NSH).</p>
 </section>
+<section id="gdbstub">
+<h3>gdbstub<a class="headerlink" href="#gdbstub" title="Permalink to this heading"></a></h3>
+<p>Debug configuration that runs a GDB remote stub on the console UART. The
+rv-virt machine has a single 16550 UART, so the console and the stub share
+<code class="docutils literal notranslate"><span class="pre">/dev/ttyS0</span></code>. <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_GDBSTUB_WAIT_CONNECT</span></code> makes the boot wait
+for GDB and <code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_GDBSTUB_AUTO_ATTACH</span></code> lets a character received
+on the port stop the running target (Ctrl-C).</p>
+<p>The stub is registered by the serial driver and uses the <code class="docutils literal notranslate"><span class="pre">uart_dev_s</span></code>
+operations for TX and RX (<code class="docutils literal notranslate"><span class="pre">CONFIG_SERIAL_GDBSTUB</span></code>). This is required for
+hardware breakpoints and watchpoints: their stop is reported from the
+breakpoint exception context, where the descriptor based transport of the
+<code class="docutils literal notranslate"><span class="pre">apps/system/gdbstub</span></code> application is not usable (the descriptor is looked
+up in the interrupted task’s file table, which typically fails with
+<code class="docutils literal notranslate"><span class="pre">-EBADF</span></code>).</p>
+<p>Build it with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./tools/configure.sh rv-virt:gdbstub
+$ make -j$(nproc)
+</pre></div>
+</div>
+<p>Export the serial line over TCP so that GDB can speak the remote protocol
+directly:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ qemu-system-riscv64 -M virt -bios none -kernel nuttx \
+    -display none -monitor none \
+    -serial tcp:127.0.0.1:1234,server=on,wait=off
+</pre></div>
+</div>
+<p>Then connect from the host:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ gdb-multiarch nuttx
+(gdb) target remote 127.0.0.1:1234
+(gdb) break up_idle
+(gdb) continue
+</pre></div>
+</div>
+<p>Hardware watchpoints work as well; the following stops on the next timer
+tick:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) watch g_hrtimer_last_expired
+(gdb) continue
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">-bios</span> <span class="pre">none</span> <span class="pre">-kernel</span> <span class="pre">nuttx</span></code> is used because this configuration runs in
+machine mode and does not need OpenSBI. A local PTY can be used instead of
+the TCP socket (<code class="docutils literal notranslate"><span class="pre">-serial</span> <span class="pre">pty</span></code>); GDB then connects to the printed
+<code class="docutils literal notranslate"><span class="pre">/dev/pts/N</span></code> path.</p>
+</section>
 <section id="libcxx64">
 <h3>libcxx64<a class="headerlink" href="#libcxx64" title="Permalink to this heading"></a></h3>
 <p>This configuration provides the NuttShell (NSH) with the C++ standard library

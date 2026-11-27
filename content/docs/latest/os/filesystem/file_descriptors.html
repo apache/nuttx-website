@@ -197,6 +197,28 @@
              
   <section id="file-descriptors">
 <span id="id1"></span><h1>File Descriptors<a class="headerlink" href="#file-descriptors" title="Permalink to this heading"></a></h1>
+<section id="file-object-allocation">
+<h2>File Object Allocation<a class="headerlink" href="#file-object-allocation" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PREALLOC_FILES</span></code> reserves a static pool of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">file</span></code>
+objects. <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_ALLOC_FILES</span></code> sets the number of objects added to the
+pool from <code class="docutils literal notranslate"><span class="pre">fs_heap</span></code> when the pool is empty. Both settings default to zero,
+which preserves direct allocation from <code class="docutils literal notranslate"><span class="pre">fs_heap</span></code>.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_PREALLOC_FILES</span></code> to a positive value and leave
+<code class="docutils literal notranslate"><span class="pre">CONFIG_FS_ALLOC_FILES</span></code> at zero for a fixed pool. Allocation fails
+immediately when all objects are in use. Include files opened during system
+startup when choosing its capacity. Set <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_ALLOC_FILES</span></code> to a
+positive value to allow growth, with or without statically reserved objects.
+Expanded storage remains allocated for reuse, so memory use follows the
+peak number of file objects. Dynamic chunks use the independent FS heap
+when <code class="docutils literal notranslate"><span class="pre">CONFIG_FS_HEAPSIZE</span></code> is enabled, and the kernel heap otherwise.</p>
+<p>The pool serves dynamically allocated open file objects across all tasks.
+<code class="docutils literal notranslate"><span class="pre">dup()</span></code> and inherited descriptors share references to an open file object;
+the object returns to the pool when its last reference is released. File
+descriptor tables, socket private data and filesystem private data have
+their own allocation policies. Caller-owned objects passed to
+<code class="docutils literal notranslate"><span class="pre">file_open()</span></code> are also outside this pool. Enabling this pool alone does
+not make <code class="docutils literal notranslate"><span class="pre">open()</span></code> free of heap allocations.</p>
+</section>
 <section id="drivers-within-drivers">
 <h2>Drivers within Drivers<a class="headerlink" href="#drivers-within-drivers" title="Permalink to this heading"></a></h2>
 <p>Have you ever wanted to write a driver the uses another driver?

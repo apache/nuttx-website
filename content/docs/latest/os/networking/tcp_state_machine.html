@@ -674,7 +674,8 @@ contains <code class="docutils literal notranslate"><span class="pre">TCP_CLOSE<
 <blockquote>
 <div><ul class="simple">
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">TCP_SYN_RCVD</span></code>: if SYN-ACK retransmits exceed limit, the half-open</dt><dd><p>connection is closed and freed.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">TCP_SYN_RCVD</span></code>: if SYN-ACK retransmits exceed limit, the half-open</dt><dd><p>connection is closed and freed.  No RST is sent: the source address
+of the SYN can be spoofed.</p>
 </dd>
 </dl>
 </li>
@@ -700,6 +701,13 @@ data (an ACK) does not restart it (RFC 6298, section 5).</p>
 <li><dl class="simple">
 <dt>An incoming ACK restarts the timer only when it acknowledges new data.  An</dt><dd><p>ACK that is not beyond the highest ACK so far gives no RTT sample and does
 not reset the count of retransmissions.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>An ACK of new data resets the count of retransmissions, also when it</dt><dd><p>acknowledges only a part of the data sent (RFC 1122, section 4.2.3.5).
+The first ACK after a retransmission gives no RTT sample (Karn’s
+algorithm).</p>
 </dd>
 </dl>
 </li>
