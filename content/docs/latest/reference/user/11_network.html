@@ -345,8 +345,9 @@ request failed because of a local firewall rule.</p>
 family in its sa_family field.</p>
 <p><code class="docutils literal notranslate"><span class="pre">EAGAIN</span></code> No more free local ports or insufficient entries in the
 routing cache. For PF_INET.</p>
-<p><code class="docutils literal notranslate"><span class="pre">EALREADY</span></code> The socket is non-blocking and a previous connection
-attempt has not yet been completed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">EALREADY</span></code> A previous connection attempt has not yet been completed:
+the socket is non-blocking, or a signal or the send timeout ended the
+wait of the earlier <code class="docutils literal notranslate"><span class="pre">connect()</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">EBADF</span></code> The file descriptor is not a valid index in the descriptor
 table.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ECONNREFUSED</span></code> No one listening on the remote address.</p>
@@ -358,8 +359,9 @@ space.</p>
 completed immediately, or the send timeout of the socket
 (<code class="docutils literal notranslate"><span class="pre">SO_SNDTIMEO</span></code>) expired first.  The connection goes on: <code class="docutils literal notranslate"><span class="pre">poll()</span></code>
 reports <code class="docutils literal notranslate"><span class="pre">POLLOUT</span></code> when it completes.</p>
-<p><code class="docutils literal notranslate"><span class="pre">EINTR</span></code> The system call was interrupted by a signal that was caught.</p>
-<p><code class="docutils literal notranslate"><span class="pre">EISCONN</span></code> The socket is already connected.</p>
+<p><code class="docutils literal notranslate"><span class="pre">EINTR</span></code> The system call was interrupted by a signal that was caught.
+The connection goes on: <code class="docutils literal notranslate"><span class="pre">poll()</span></code> reports <code class="docutils literal notranslate"><span class="pre">POLLOUT</span></code> when it completes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">EISCONN</span></code> The socket is already connected, or it listens.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ENETUNREACH</span></code> Network is unreachable.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ENOTSOCK</span></code> The file descriptor is not associated with a socket.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ETIMEDOUT</span></code> Timeout while attempting connection. The server may be too
@@ -411,10 +413,12 @@ listening for connections after a call to <code class="docutils literal notransl
 <p>On return, the <code class="docutils literal notranslate"><span class="pre">addr</span></code> structure is filled in with the address of the
 connecting entity. The <code class="docutils literal notranslate"><span class="pre">addrlen</span></code> argument initially contains the size
 of the structure pointed to by <code class="docutils literal notranslate"><span class="pre">addr</span></code>; on return it will contain the
-actual length of the address returned.</p>
+actual length of the address.  If the address is longer than the
+buffer, it is truncated to the size of the buffer.</p>
 <p>If no pending connections are present on the queue, and the socket is
 not marked as non-blocking, accept blocks the caller until a connection
-is present. If the socket is marked non-blocking and no pending
+is present, or until the receive timeout of the socket (<code class="docutils literal notranslate"><span class="pre">SO_RCVTIMEO</span></code>)
+expires. If the socket is marked non-blocking and no pending
 connections are present on the queue, accept returns <code class="docutils literal notranslate"><span class="pre">EAGAIN</span></code>.</p>
 <p><strong>Input Parameters:</strong></p>
 <ul class="simple">
@@ -427,7 +431,8 @@ of <code class="docutils literal notranslate"><span class="pre">addr</span></cod
 non-negative integer that is a descriptor for the accepted socket.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">EAGAIN</span></code> or <code class="docutils literal notranslate"><span class="pre">EWOULDBLOCK</span></code>: The socket is marked non-blocking and
-no connections are present to be accepted.</p></li>
+no connections are present to be accepted, or the receive timeout
+(<code class="docutils literal notranslate"><span class="pre">SO_RCVTIMEO</span></code>) expired.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EBADF</span></code>: The descriptor is invalid.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ENOTSOCK</span></code>: The descriptor references a file, not a socket.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EOPNOTSUPP</span></code>: The referenced socket is not of type <code class="docutils literal notranslate"><span class="pre">SOCK_STREAM</span></code>.</p></li>
@@ -439,7 +444,7 @@ caught before a valid connection arrived.</p></li>
 reached.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ENFILE</span></code>: The system maximum for file descriptors has been reached.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EFAULT</span></code>: The addr parameter is not in a writable part of the user
-address space.</p></li>
+address space, or <code class="docutils literal notranslate"><span class="pre">addr</span></code> is given without <code class="docutils literal notranslate"><span class="pre">addrlen</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ENOBUFS</span></code> or <code class="docutils literal notranslate"><span class="pre">ENOMEM</span></code>: Not enough free memory.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EPROTO</span></code>: Protocol error.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EPERM</span></code>: Firewall rules forbid connection.</p></li>

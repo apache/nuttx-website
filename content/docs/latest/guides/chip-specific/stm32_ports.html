@@ -211,6 +211,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#timer-tim-ip-cores">Timer (TIM) IP cores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ethernet-drivers">Ethernet drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#family-peripheral-inventory">Family peripheral inventory</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#stm32c0">STM32C0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stm32c5">STM32C5</a></li>
@@ -667,6 +668,37 @@ that the chip Kconfig <code class="docutils literal notranslate"><span class="pr
 16-bit cases - TIM2 on STM32F10xx/STM32L15xx/STM32L0 and TIM5 on
 STM32F10xx/STM32F30xx - simply leave them unset.</p>
 </section>
+<section id="ethernet-drivers">
+<h2>Ethernet drivers<a class="headerlink" href="#ethernet-drivers" title="Permalink to this heading"></a></h2>
+<p>The Ethernet MAC drivers of F1, F2, F4, F7
+(<code class="docutils literal notranslate"><span class="pre">common/stm32/stm32_eth_v1.c</span></code>) and H5, H7, N6
+(<code class="docutils literal notranslate"><span class="pre">common/stm32/stm32_eth_v2.c</span></code>) are lower half drivers of the network upper
+half (<code class="docutils literal notranslate"><span class="pre">include/nuttx/net/netdev_lowerhalf.h</span></code>, see
+<a class="reference internal" href="../../os/networking/netdriver.html#netdriver"><span class="std std-ref">Network Drivers</span></a>).  New STM32 network drivers must use this
+interface too.</p>
+<p>The drivers send and receive the IOBs of the network in place.  Each DMA
+descriptor holds one IOB and a frame spans <code class="docutils literal notranslate"><span class="pre">NSEGS</span></code> descriptors, where
+<code class="docutils literal notranslate"><span class="pre">NSEGS</span></code> is <code class="docutils literal notranslate"><span class="pre">CONFIG_NET_ETH_PKTSIZE</span> <span class="pre">+</span> <span class="pre">4</span></code> divided by the IOB data size
+that the DMA can use, rounded up.  The frames are received in the interrupt work
+(<code class="docutils literal notranslate"><span class="pre">NETDEV_RX_DIRECT</span></code>).  When no IOB is free, the received frame is
+dropped.  <code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_ETH_NRXDESC</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_STM32_ETH_NTXDESC</span></code> are the number of RX and TX frames (H5, H7 and
+N6 only, the other families use 8 and 4).  The build fails if the IOB pool
+is too small for the rings.  Recommended settings:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_NBUFFERS=100</span></code>: the rings hold <code class="docutils literal notranslate"><span class="pre">(NRXDESC</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">NSEGS</span> <span class="pre">+</span>
+<span class="pre">NTXDESC</span></code> IOBs, 76 with the default 8 RX and 4 TX frames of up to 1514
+bytes, and the network keeps the others,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_THROTTLE=8</span></code>: the IOBs that the driver needs to refill the
+RX ring for one frame.  Without this reserve the TCP receive window takes
+all free IOBs and received frames are dropped.</p></li>
+</ul>
+<p>With the D-Cache (<code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV7M_DCACHE</span></code> or <code class="docutils literal notranslate"><span class="pre">CONFIG_ARMV8M_DCACHE</span></code>),
+also in the write-through mode, <code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_ALIGNMENT</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_BUFSIZE</span></code> must be multiples of the D-Cache line size, for
+example <code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_ALIGNMENT=32</span></code> and <code class="docutils literal notranslate"><span class="pre">CONFIG_IOB_BUFSIZE=224</span></code>: the RX
+DMA corrupts other data in the D-Cache lines of its buffers.</p>
+</section>
 <section id="family-peripheral-inventory">
 <h2>Family peripheral inventory<a class="headerlink" href="#family-peripheral-inventory" title="Permalink to this heading"></a></h2>
 <p>Each family table records every peripheral group currently tracked by this
@@ -1044,8 +1076,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/common/stm32/stm32_dma_m3m4_v1_8ch.c</p></td>
 </tr>
 <tr class="row-even"><td><p>ETH</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_eth_m3m4_v1.c</p></td>
+<td><p>v1</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_eth_v1.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>EXTI</p></td>
 <td><p>v1</p></td>
@@ -1141,8 +1173,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/common/stm32/stm32_dma_m3m4_v2_stream.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>ETH</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_eth_m3m4_v1.c</p></td>
+<td><p>v1</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_eth_v1.c</p></td>
 </tr>
 <tr class="row-even"><td><p>EXTI</p></td>
 <td><p>v1</p></td>
@@ -1347,8 +1379,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/common/stm32/stm32_dma2d_v1.c</p></td>
 </tr>
 <tr class="row-even"><td><p>ETH</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/common/stm32/stm32_eth_m3m4_v1.c</p></td>
+<td><p>v1</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_eth_v1.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>EXTI</p></td>
 <td><p>v1</p></td>
@@ -1694,8 +1726,8 @@ exact IP core version has not been documented yet.</p>
 <td><p>arch/arm/src/common/stm32/stm32_dma2d_v1.c</p></td>
 </tr>
 <tr class="row-odd"><td><p>ETH</p></td>
-<td><p>to be done</p></td>
-<td><p>arch/arm/src/stm32f7/stm32_ethernet.c</p></td>
+<td><p>v1</p></td>
+<td><p>arch/arm/src/common/stm32/stm32_eth_v1.c</p></td>
 </tr>
 <tr class="row-even"><td><p>EXTI</p></td>
 <td><p>to be done</p></td>
